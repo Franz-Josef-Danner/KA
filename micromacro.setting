@@ -1,3 +1,21 @@
+FuRegisterClass("ZoomMacroPlugin", CT_Tool, {
++    REGS_Name = "ZoomMacroPlugin",
++    REGS_OpIconString = "ZMPlg",
++    REGS_ToolTip = "Macro wrapped into a FUSE plugin",
++    REGS_Category = "Fuses",
++    REG_Major = 1,
++    REG_Minor = 0,
++    REG_Build = 0,
++    })
++
++function Create(self)
++    local macro = [=[
++{\
++    Tools = ordered() {
++        MacroTool1 = MacroOperator {
++    
+
+
 {
 	Tools = ordered() {
 		MacroTool1 = MacroOperator {
@@ -3132,3 +3150,20 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 	},
 	ActiveTool = "MacroTool1"
 }
+
+
+
++        }
++    }
++}
++]=]
++    self:LoadSettings(macro)
++end
+ 
+EOF
+)
+
+
+
+
+
