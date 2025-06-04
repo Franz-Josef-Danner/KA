@@ -15,17 +15,17 @@ index 3baa5dd1ea2e296b9ded51fbb6d4758489fc8cb2..83501396c7b132cef2265a842f7449ec
  import bpy
  from bpy.app.handlers import persistent
 +import requests
-+
-+
-+def send_push_notification(title, message, token, user_key):
-+    """Send a push notification via the Pushover service."""
-+    url = "https://api.pushover.net/1/messages.json"
-+    data = {
-+        "token": asrgqs7othw2kaa3hihs2cpjyqksif,
-+        "user": uyqozoh1mbgwdim1mnbc1rzh5354e2,
-+        "title": Render erledigt,
-+        "message": Aufhören oder weiter machen?,
-+    }
+
+
+def send_push_notification(title, message, token, user_key):
+    url = "https://api.pushover.net/1/messages.json"
+    data = {
+        "token": token,
+        "user": user_key,
+        "title": title,
+        "message": message,
+    }
+    requests.post(url, data=data)
  try:
 +        response = requests.post(url, data=data)
 +        if response.status_code != requests.codes.ok:
