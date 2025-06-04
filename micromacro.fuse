@@ -1,19 +1,19 @@
 FuRegisterClass("ZoomMacroPlugin", CT_Tool, {
-+    REGS_Name = "ZoomMacroPlugin",
-+    REGS_OpIconString = "ZMPlg",
-+    REGS_ToolTip = "Macro wrapped into a FUSE plugin",
-+    REGS_Category = "Fuses",
-+    REG_Major = 1,
-+    REG_Minor = 0,
-+    REG_Build = 0,
-+    })
-+
-+function Create(self)
-+    local macro = [=[
-+{\
-+    Tools = ordered() {
-+        MacroTool1 = MacroOperator {
-+    
+REGS_Name = "ZoomMacroPlugin",
+REGS_OpIconString = "ZMPlg",
+REGS_ToolTip = "Macro wrapped into a FUSE plugin",
+REGS_Category = "Fuses",
+REG_Major = 1,
+REG_Minor = 0,
+REG_Build = 0,
+})
+
+function Create(self)
+local macro = [=[
+{\
+Tools = ordered() {
+MacroTool1 = MacroOperator {
+ 
 
 
 {
@@ -234,11 +234,11 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						},
 						Scale = Input {
 							Value = 0,
-							Expression = "iif(CONTROLS.InitialScale>CONTROLS.FinalScale, \n (-(max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n  +\n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5)))))))+1\n,\n 1-(1/max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n  +\n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5))))))\n)\n",
+							Expression = "iif(CONTROLS.InitialScale>CONTROLS.FinalScale, \n (-(max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n   \n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5))))))) 1\n,\n 1-(1/max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n   \n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5))))))\n)\n",
 						},
 						Offset = Input {
 							Value = 1,
-							Expression = "iif(CONTROLS.InitialScale>CONTROLS.FinalScale, \n max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n  +\n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5)))))\n,\n 1/max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n  +\n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5)))))\n)\n",
+							Expression = "iif(CONTROLS.InitialScale>CONTROLS.FinalScale, \n max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n   \n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5)))))\n,\n 1/max(1,(min(2.2,(2.2\n  *\n  ((log10(comp.RenderEnd)\n   \n  abs(log10(CONTROLS.InitialScale) - log10(CONTROLS.FinalScale)))/8.5)))))\n)\n",
 						},
 						TimeScale = Input {
 							Value = 1.11135857461025,
@@ -774,7 +774,7 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						},
 						XSize = Input {
 							Value = 26.6614018732449,
-							Expression = "pow(10,(log10(CONTROLS.runner)/-1)+6)",
+							Expression = "pow(10,(log10(CONTROLS.runner)/-1) 6)",
 						},
 						YSize = Input {
 							Value = 26.6614018732449,
@@ -815,7 +815,7 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						MotionBlur = Input { Expression = "CONTROLS.MotionBlur", },
 						Quality = Input {
 							Value = 4,
-							Expression = "(CONTROLS.MotionBlurQuality+2)*2",
+							Expression = "(CONTROLS.MotionBlurQuality 2)*2",
 						},
 						LayersNest = Input { Value = 0, },
 						GlobalOut = Input { Value = 10360, },
@@ -908,7 +908,7 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						},
 						TimeOffset = Input {
 							Value = 0.5,
-							Expression = "(1/comp.RenderEnd)*((((comp.RenderEnd-min((comp.RenderEnd-25)/2,(CONTROLS.Post_ZoomFrames))\n)-CONTROLS.Pre_ZoomFrames)*0.5)+min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames))\n)\n",
+							Expression = "(1/comp.RenderEnd)*((((comp.RenderEnd-min((comp.RenderEnd-25)/2,(CONTROLS.Post_ZoomFrames))\n)-CONTROLS.Pre_ZoomFrames)*0.5) min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames))\n)\n",
 						}
 					},
 				},
@@ -1002,7 +1002,7 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 				},
 				Transform1 = Transform {
 					Inputs = {
-						Center = Input { Expression = "Point(CONTROLS.ZoomTargetX+0.5, CONTROLS.ZoomTargetY+0.5)", },
+						Center = Input { Expression = "Point(CONTROLS.ZoomTargetX 0.5, CONTROLS.ZoomTargetY 0.5)", },
 						Input = Input {
 							SourceOp = "Background1",
 							Source = "Output",
@@ -1578,13 +1578,13 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						MotionBlur = Input { Expression = "CONTROLS.MotionBlur\n", },
 						Quality = Input {
 							Value = 4,
-							Expression = "(CONTROLS.MotionBlurQuality+2)*2",
+							Expression = "(CONTROLS.MotionBlurQuality 2)*2",
 						},
 						LayersNest = Input { Value = 0, },
-						Pivot = Input { Expression = "Point(CONTROLS.ZoomTargetX+0.5, CONTROLS.ZoomTargetY+0.5)", },
+						Pivot = Input { Expression = "Point(CONTROLS.ZoomTargetX 0.5, CONTROLS.ZoomTargetY 0.5)", },
 						Size = Input {
 							Value = 26.6614018732449,
-							Expression = "pow(10,(log10(CONTROLS.runner)/-1)+6)/pow(10,(log10(CONTROLS.FinalScale)/-1)+6)\n",
+							Expression = "pow(10,(log10(CONTROLS.runner)/-1) 6)/pow(10,(log10(CONTROLS.FinalScale)/-1) 6)\n",
 						},
 						XSize = Input { Value = 26.6614, },
 						YSize = Input { Value = 26.6614, },
@@ -1673,7 +1673,7 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 				},
 				Transform1_6 = Transform {
 					Inputs = {
-						Center = Input { Expression = "Point(CONTROLS.ZoomTargetX+0.5, CONTROLS.ZoomTargetY+0.5)", },
+						Center = Input { Expression = "Point(CONTROLS.ZoomTargetX 0.5, CONTROLS.ZoomTargetY 0.5)", },
 						Input = Input {
 							SourceOp = "Background1_5",
 							Source = "Output",
@@ -2196,7 +2196,7 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						Mirror = Input { Value = 1, },
 						Scale = Input {
 							Value = 0,
-							Expression = "\niif(CONTROLS.TransitionBlur==0,0,abs(log10(CONTROLS.InitialScale)-log10(CONTROLS.FinalScale))*(CONTROLS.TransitionBlurQuality+1))\n",
+							Expression = "\niif(CONTROLS.TransitionBlur==0,0,abs(log10(CONTROLS.InitialScale)-log10(CONTROLS.FinalScale))*(CONTROLS.TransitionBlurQuality 1))\n",
 						},
 						TimeScale = Input {
 							Value = 1.38919821826281,
@@ -2204,7 +2204,7 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						},
 						TimeOffset = Input {
 							Value = 0.140080160320641,
-							Expression = "(1/comp.RenderEnd)*((((comp.RenderEnd-min((comp.RenderEnd-25)/2,(CONTROLS.Post_ZoomFrames)))-min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames)))*0.1)+min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames)))\n",
+							Expression = "(1/comp.RenderEnd)*((((comp.RenderEnd-min((comp.RenderEnd-25)/2,(CONTROLS.Post_ZoomFrames)))-min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames)))*0.1) min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames)))\n",
 						}
 					},
 				},
@@ -2463,12 +2463,12 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 						MotionBlur = Input { Expression = "CONTROLS.MotionBlur\n", },
 						Quality = Input {
 							Value = 4,
-							Expression = "(CONTROLS.MotionBlurQuality+2)*2",
+							Expression = "(CONTROLS.MotionBlurQuality 2)*2",
 						},
-						Pivot = Input { Expression = "Point(CONTROLS.ZoomTargetX+0.5, CONTROLS.ZoomTargetY+0.5)", },
+						Pivot = Input { Expression = "Point(CONTROLS.ZoomTargetX 0.5, CONTROLS.ZoomTargetY 0.5)", },
 						Size = Input {
 							Value = 2.66614018732449e-05,
-							Expression = "pow(10,(log10(CONTROLS.runner)/-1)+6)/pow(10,(log10(CONTROLS.InitialScale)/-1)+6)\n",
+							Expression = "pow(10,(log10(CONTROLS.runner)/-1) 6)/pow(10,(log10(CONTROLS.InitialScale)/-1) 6)\n",
 						},
 						XSize = Input { Value = 2.66614019e-05, },
 						YSize = Input { Value = 2.66614019e-05, },
@@ -3153,15 +3153,17 @@ Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config"
 
 
 
-+        }
-+    }
-+}
-+]=]
-+    self:LoadSettings(macro)
-+end
+         }
+     }
+ }
+ ]=]
+     self:LoadSettings(macro)
+ end
  
 EOF
 )
+
+
 
 
 
