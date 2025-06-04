@@ -24,10 +24,6 @@ Input18 = InstanceInput {SourceOp = "TRANSFORM2_1", Source = "posX", Page = "Set
 Input19 = InstanceInput {SourceOp = "TRANSFORM2_1", Source = "posY", Page = "Setup", Default = 0},
 Input20 = InstanceInput {SourceOp = "TRANSFORM2_1", Source = "zoom", Page = "Setup", Default = 1},
 Input21 = InstanceInput {SourceOp = "TRANSFORM2_1", Source = "rotate", Page = "Setup", Default = 0},
-Input15 = InstanceInput {SourceOp = "CONTROLS", Source = "TransitionBlur", Page = "Advanced", Default = 0},
-Input14 = InstanceInput {SourceOp = "CONTROLS", Source = "TransitionBlurQuality", Page = "Advanced", Default = 0},
-Input16 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlur", Page = "Advanced", Default = 0},
-Input17 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlurQuality", Page = "Advanced", Default = 0},
 Input12 = InstanceInput {SourceOp = "CONTROLS", Source = "Scale", Page = "Config", Default = 1},
 Input13 = InstanceInput {SourceOp = "CONTROLS", Source = "Images", Page = "Config", Default = 1},
 
@@ -37,6 +33,10 @@ Input32 = InstanceInput {SourceOp = "SRECTANGLE", Source = "Blue", ControlGroup 
 Input33 = InstanceInput {SourceOp = "SRECTANGLE", Source = "Alpha", ControlGroup = 30, Default = 1},
 Input28 = InstanceInput {SourceOp = "SCALETRANSPARENZ", Source = "Mix", Page = "Config", Default = 1},
 Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config", Default = 1}
+Input15 = InstanceInput {SourceOp = "CONTROLS", Source = "TransitionBlur", Page = "Advanced", Default = 0},
+Input14 = InstanceInput {SourceOp = "CONTROLS", Source = "TransitionBlurQuality", Page = "Advanced", Default = 0},
+Input16 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlur", Page = "Advanced", Default = 0},
+Input17 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlurQuality", Page = "Advanced", Default = 0},
 			},
 			Outputs = {
 				MainOutput1 = InstanceOutput {
