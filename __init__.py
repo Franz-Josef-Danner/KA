@@ -26,16 +26,18 @@ index 3baa5dd1ea2e296b9ded51fbb6d4758489fc8cb2..83501396c7b132cef2265a842f7449ec
 +        "title": Render erledigt,
 +        "message": Aufhören oder weiter machen?,
 +    }
-+    requests.post(url, data=data)
+ try:
++        response = requests.post(url, data=data)
++        if response.status_code != requests.codes.ok:
++            print(f"Notification failed with status {response.status_code}")
++    except requests.RequestException as exc:
++        print(f"Failed to send push notification: {exc}")
  
  @persistent
  def notify_render_complete(scene):
--    # Beispiel: einfache Ausgabe in der Konsole
 +    """Handler that runs when rendering finishes."""
      print("Render fertig!")
--    # Hier könnten Sie auch eine E-Mail versenden oder einen Webhook aufrufen.
 +
-+    # Replace with your Pushover credentials
 +    token = asrgqs7othw2kaa3hihs2cpjyqksif
 +    user_key = uyqozoh1mbgwdim1mnbc1rzh5354e2
 +
