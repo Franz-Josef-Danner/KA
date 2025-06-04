@@ -1,6 +1,3 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/__init__.py b/__init__.py
-index 3baa5dd1ea2e296b9ded51fbb6d4758489fc8cb2..83501396c7b132cef2265a842f7449ecb95e174f 100644
 --- a/__init__.py
 +++ b/__init__.py
 @@ -1,22 +1,41 @@
@@ -14,7 +11,7 @@ index 3baa5dd1ea2e296b9ded51fbb6d4758489fc8cb2..83501396c7b132cef2265a842f7449ec
  }
  import bpy
  from bpy.app.handlers import persistent
-+import requests
+import requests
 
 
 def send_push_notification(title, message, token, user_key):
@@ -27,22 +24,22 @@ def send_push_notification(title, message, token, user_key):
     }
     requests.post(url, data=data)
  try:
-+        response = requests.post(url, data=data)
-+        if response.status_code != requests.codes.ok:
-+            print(f"Notification failed with status {response.status_code}")
-+    except requests.RequestException as exc:
-+        print(f"Failed to send push notification: {exc}")
+ response = requests.post(url, data=data)
+ if response.status_code != requests.codes.ok:
+ print(f"Notification failed with status {response.status_code}")
+except requests.RequestException as exc:
+      print(f"Failed to send push notification: {exc}")
  
  @persistent
  def notify_render_complete(scene):
-+    """Handler that runs when rendering finishes."""
+ """Handler that runs when rendering finishes."""
      print("Render fertig!")
-+
-+    token = asrgqs7othw2kaa3hihs2cpjyqksif
-+    user_key = uyqozoh1mbgwdim1mnbc1rzh5354e2
-+
-+    message = f"Render in Szene '{scene.name}' abgeschlossen."
-+    send_push_notification("Render fertig", message, token, user_key)
+
+ token = asrgqs7othw2kaa3hihs2cpjyqksif
+ user_key = uyqozoh1mbgwdim1mnbc1rzh5354e2
+
+ message = f"Render in Szene '{scene.name}' abgeschlossen."
+ send_push_notification("Render fertig", message, token, user_key)
  def register():
      bpy.app.handlers.render_complete.append(notify_render_complete)
  
