@@ -36,8 +36,8 @@ index 3baa5dd1ea2e296b9ded51fbb6d4758489fc8cb2..83501396c7b132cef2265a842f7449ec
 -    # Hier könnten Sie auch eine E-Mail versenden oder einen Webhook aufrufen.
 +
 +    # Replace with your Pushover credentials
-+    token = "your_app_token"
-+    user_key = "your_user_key"
++    token = asrgqs7othw2kaa3hihs2cpjyqksif
++    user_key = uyqozoh1mbgwdim1mnbc1rzh5354e2
 +
 +    message = f"Render in Szene '{scene.name}' abgeschlossen."
 +    send_push_notification("Render fertig", message, token, user_key)
