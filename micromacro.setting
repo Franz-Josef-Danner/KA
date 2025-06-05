@@ -8,7 +8,7 @@ Input23 = InstanceInput {SourceOp = "IMAGE2", Source = "Clip", Name = "Image 2"}
 Input3 = InstanceInput {SourceOp = "CONTROLS", Source = "LabelPosition", Page = "Controls", Default = 1},
 Input1 = InstanceInput {SourceOp = "CONTROLS", Source = "ScalePosition", Page = "Controls"},
 -- Zoom Settings group
-Input2 = InstanceInput {SourceOp = "CONTROLS", Source = "Pre_ZoomFrames", Page = "Controls", Name = "Zoom Settings", ControlGroup = 31, Default = 25},
+Input2 = InstanceInput {SourceOp = "CONTROLS", Source = "Pre_ZoomFrames", Page = "Controls", Name = "Pre-Zoom Frames", ControlGroup = 31, Default = 25},
 Input4 = InstanceInput {SourceOp = "CONTROLS", Source = "Post_ZoomFrames", Page = "Controls", ControlGroup = 31, Default = 25},
 Input8 = InstanceInput {SourceOp = "CONTROLS", Source = "FrameBreakdown", Page = "Controls", ControlGroup = 31, Default = 1},
 -- Scale Settings group
@@ -936,8 +936,8 @@ Input17 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlurQuality", Pa
 						},
 						TimeOffset = Input {
 							Value = 0.5,
-							Expression = "(1/comp.RenderEnd)*((((comp.RenderEnd-min((comp.RenderEnd-25)/2,(CONTROLS.Post_ZoomFrames))\n)-CONTROLS.Pre_ZoomFrames)*0.5) min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames))\n)\n",
-						}
+                                                        Expression = "(1/comp.RenderEnd)*((((comp.RenderEnd-min((comp.RenderEnd-25)/2,(CONTROLS.Post_ZoomFrames))\n)-CONTROLS.Pre_ZoomFrames)*0.5) + min((comp.RenderEnd-25)/2,(CONTROLS.Pre_ZoomFrames))\n)\n",
+}
 					},
 				},
 				AnimCurves16Lookup_1 = LUTBezier {
