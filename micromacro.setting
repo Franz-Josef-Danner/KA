@@ -34,11 +34,11 @@ Input31 = InstanceInput {SourceOp = "SRECTANGLE", Source = "Green", ControlGroup
 Input32 = InstanceInput {SourceOp = "SRECTANGLE", Source = "Blue", ControlGroup = 30, Default = 1},
 Input33 = InstanceInput {SourceOp = "SRECTANGLE", Source = "Alpha", ControlGroup = 30, Default = 1},
 Input28 = InstanceInput {SourceOp = "SCALETRANSPARENZ", Source = "Mix", Page = "Config", Default = 1},
-Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config", Default = 1}
+Input29 = InstanceInput {SourceOp = "BLENDMODE", Source = "Mix", Page = "Config", Default = 1},
 Input15 = InstanceInput {SourceOp = "CONTROLS", Source = "TransitionBlur", Page = "Advanced", Default = 0},
 Input14 = InstanceInput {SourceOp = "CONTROLS", Source = "TransitionBlurQuality", Page = "Advanced", Default = 0},
 Input16 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlur", Page = "Advanced", Default = 0},
-Input17 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlurQuality", Page = "Advanced", Default = 0},
+Input17 = InstanceInput {SourceOp = "CONTROLS", Source = "MotionBlurQuality", Page = "Advanced", Default = 0}
 			},
 			Outputs = {
 				MainOutput1 = InstanceOutput {
