@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>Stücke</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin-bottom: 10px; }
+        label { display:block; margin-bottom:4px; }
+        input[type="text"], textarea { width: 100%; padding: 4px; box-sizing:border-box; }
+        .roles { margin-top: 10px; }
+        .role-pair { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .buttons { margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Stücke</h1>
+    <div class="form-group">
+        <label for="NameBox">Stück Name</label>
+        <input type="text" id="NameBox" />
+    </div>
+    <div class="form-group">
+        <label for="FigCount">Figuren Anzahl:</label>
+        <input type="number" id="FigCount" min="0" />
+    </div>
+    <div id="roleContainer" class="roles"></div>
+    <div class="form-group">
+        <label for="Beschreibung">Stück Beschreibung</label>
+        <textarea id="Beschreibung" rows="5"></textarea>
+    </div>
+    <input type="hidden" id="RollenBox" />
+    <input type="hidden" id="RollenBeschBox" />
+    <div class="buttons">
+        <button id="StueckeOK">OK</button>
+        <button id="Abbrechen">Abbrechen</button>
+    </div>
+
+    <script>
+        const figCount = document.getElementById('FigCount');
+        const roleContainer = document.getElementById('roleContainer');
+        const rollenBox = document.getElementById('RollenBox');
+        const rollenBeschBox = document.getElementById('RollenBeschBox');
+
+        figCount.addEventListener('input', createRoleFields);
+        document.getElementById('StueckeOK').addEventListener('click', saveData);
+        document.getElementById('Abbrechen').addEventListener('click', () => {
+            document.querySelector('form')?.reset();
+            roleContainer.innerHTML = '';
+        });
+
+        function createRoleFields() {
+            const count = parseInt(figCount.value, 10) || 0;
+            const current = roleContainer.children.length / 2; // pair of input+textarea
+            // remove extra
+            for (let i = current; i > count; i--) {
+                roleContainer.removeChild(roleContainer.lastChild);
+                roleContainer.removeChild(roleContainer.lastChild);
+            }
+            // add new
+            for (let i = current + 1; i <= count; i++) {
+                const pair = document.createElement('div');
+                pair.className = 'role-pair';
+                const roleLabel = document.createElement('label');
+                roleLabel.textContent = 'Rolle ' + i;
+                const roleInput = document.createElement('input');
+                roleInput.type = 'text';
+                roleInput.className = 'role';
+                const descLabel = document.createElement('label');
+                descLabel.textContent = 'Beschreibung ' + i;
+                const descInput = document.createElement('textarea');
+                descInput.rows = 3;
+                descInput.className = 'description';
+                pair.appendChild(roleLabel);
+                pair.appendChild(roleInput);
+                pair.appendChild(descLabel);
+                pair.appendChild(descInput);
+                roleContainer.appendChild(pair);
+            }
+        }
+
+        function saveData() {
+            const roles = Array.from(roleContainer.querySelectorAll('input.role'));
+            const descs = Array.from(roleContainer.querySelectorAll('textarea.description'));
+            rollenBox.value = roles.map(r => r.value.trim()).join('; ');
+            rollenBeschBox.value = descs.map(d => d.value.trim()).join('; ');
+            alert('Daten gespeichert');
+        }
+    </script>
+</body>
+</html>
