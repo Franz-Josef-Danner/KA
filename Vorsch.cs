@@ -1,4 +1,4 @@
-// Vorst.cs
+﻿// Vorst.cs
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
