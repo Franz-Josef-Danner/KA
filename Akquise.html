@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>Akquise</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { display: flex; }
+        .list-area { width: 30%; margin-right: 20px; }
+        .list-area ul { height: 560px; overflow-y: auto; border: 1px solid #ccc; padding: 0; list-style: none; }
+        .list-area li { padding: 4px; border-bottom: 1px solid #eee; }
+        .actions button { display: block; margin-bottom: 5px; width: 100%; }
+        .filter-panel { flex-grow: 1; border: 1px solid #ccc; padding: 10px; }
+        .filter-panel textarea { width: 100%; height: 180px; }
+        .filter-panel .progress { width: 100%; height: 20px; }
+        .menu { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <nav class="menu">
+        <button>Öffnen</button>
+        <button>Speichern</button>
+        <button>Neu</button>
+    </nav>
+    <h2>Akquise</h2>
+    <div class="container">
+        <div class="list-area">
+            <label>Bestehende Bühnen</label>
+            <ul id="ZieAd">
+                <!-- Einträge -->
+            </ul>
+            <div class="actions">
+                <button id="Ein">Einfügen</button>
+                <button id="Bea">Bearbeiten</button>
+                <button id="Ent">Entfernen</button>
+                <button id="Map">Zur Liste</button>
+            </div>
+        </div>
+        <div class="filter-panel">
+            <label id="ResLiEin">Restaurant liste hier einfügen</label>
+            <textarea id="StaAd" placeholder="Status"></textarea>
+            <label>Autofahrt in Minuten</label>
+            <input type="number" id="MinAut" value="30" min="0" />
+            <button id="VErAr">Filtern</button>
+            <button id="Check">Check</button>
+            <button id="ReCh">Recheck</button>
+            <label id="StatusLabel"></label>
+            <progress id="ProgressBar1" class="progress" value="0" max="100"></progress>
+            <label id="GueRes">Gültige restaurants</label>
+            <textarea id="AdGo" placeholder="Adresse"></textarea>
+            <button id="FilSch">OK</button>
+        </div>
+    </div>
+</body>
+</html>
