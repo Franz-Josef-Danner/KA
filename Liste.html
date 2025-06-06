@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>Liste</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .group { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 4px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        .controls { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div id="res-group" class="group">
+        <h2>Restaurants</h2>
+        <div class="controls">
+            <label for="resFilter">Filter</label>
+            <select id="resFilter">
+                <option>Alle</option>
+                <option>Offen</option>
+                <option>Erste Mail</option>
+                <option>Erst Gespräch</option>
+                <option>Bühne</option>
+                <option>Nein</option>
+                <option>Zu nahe</option>
+                <option>leer</option>
+            </select>
+            <label for="resSuche" style="margin-left:15px;">Suche</label>
+            <input type="text" id="resSuche" />
+            <button id="neueRes">suchen</button>
+            <button id="resHinzu">Hinzufügen</button>
+            <button id="resLoesch">Löschen</button>
+            <span id="resAnzahl" style="margin-left:15px;">Anzahl der Zeilen: 0</span>
+        </div>
+        <table id="resListe">
+            <thead>
+                <tr>
+                    <th>Firma</th>
+                    <th>Adresse</th>
+                    <th>Inhaber</th>
+                    <th>Telefon</th>
+                    <th>EMail</th>
+                    <th>Termin</th>
+                    <th>Kommentar</th>
+                    <th>Land</th>
+                    <th>Bundesland</th>
+                    <th>Bezirk</th>
+                    <th>Ort</th>
+                    <th>S1</th>
+                    <th>S2</th>
+                    <th>S3</th>
+                    <th>S4</th>
+                    <th>S5</th>
+                    <th>Fahrzeit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Datenzeilen werden hier dynamisch eingefügt -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Platzhalter für weitere Bereiche wie SchauGroup, StueckeGroup usw. -->
+
+    <script>
+        // Beispiel: Update der Zeilenanzahl, wenn Daten dynamisch geladen werden
+        function updateCount() {
+            var count = document.querySelectorAll('#resListe tbody tr').length;
+            document.getElementById('resAnzahl').textContent = 'Anzahl der Zeilen: ' + count;
+        }
+    </script>
+</body>
+</html>
