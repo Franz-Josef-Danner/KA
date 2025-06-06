@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>Schauspieler</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .form-field { margin-bottom: 10px; }
+        .flow-panel {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            max-width: 600px;
+        }
+        .group-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Schauspieler</h2>
+    <form id="schauForm">
+        <div class="form-field">
+            <label for="AdresseBox">Adresse</label><br/>
+            <textarea id="AdresseBox" rows="3" cols="30"></textarea>
+        </div>
+        <div class="form-field">
+            <label for="NameBox">Schauspieler</label>
+            <input type="text" id="NameBox" />
+        </div>
+        <div class="form-field">
+            <label for="TelefonnummerBox">Telefonnummer</label>
+            <input type="text" id="TelefonnummerBox" />
+        </div>
+        <div class="form-field">
+            <label for="EmailBox">Email</label>
+            <input type="text" id="EmailBox" />
+        </div>
+        <div class="form-field">
+            <input type="checkbox" id="AbRgCheck" />
+            <label for="AbRgCheck">Abendregie</label>
+        </div>
+        <div class="flow-panel" id="flowLayoutPanel1">
+            <button type="button" id="NeuStueck">Neues Stück</button>
+        </div>
+        <div class="form-field">
+            <button type="submit" id="SchauOK">OK</button>
+            <button type="button" id="Abbrechen">Abbrechen</button>
+        </div>
+        <!-- Hidden fields mirroring the Windows Forms implementation -->
+        <input type="hidden" id="DataBox" />
+        <input type="hidden" id="StKl" />
+        <input type="hidden" id="StIn" />
+        <input type="hidden" id="RoKl" />
+        <input type="hidden" id="StRoBox" />
+    </form>
+
+    <script>
+        // Adds a new "Stück" group dynamically
+        document.getElementById('NeuStueck').addEventListener('click', addMainGroup);
+
+        function addMainGroup() {
+            const panel = document.getElementById('flowLayoutPanel1');
+            const count = panel.querySelectorAll('.group-box').length + 1;
+            const group = document.createElement('div');
+            group.className = 'group-box';
+            group.innerHTML = '<strong>Stück ' + count + '</strong>' +
+                '<div><label>Rolle</label> <input type="text" class="rolle"/></div>';
+            panel.appendChild(group);
+        }
+
+        // Simple cancel action similar to the Windows Forms version
+        document.getElementById('Abbrechen').addEventListener('click', () => {
+            document.getElementById('schauForm').reset();
+        });
+    </script>
+</body>
+</html>
