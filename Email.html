@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>Email</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        label { display: block; margin-top: 10px; }
+        textarea { width: 800px; height: 500px; }
+        .hidden { display: none; }
+        #sendButton { margin-top: 10px; }
+    </style>
+    <script src="Script1.js"></script>
+</head>
+<body>
+    <label for="emailBox">E-Mail-Adresse:</label>
+    <input type="text" id="emailBox" name="emailBox" style="width:200px;" />
+
+    <label for="betreffTextBox">Betreff:</label>
+    <input type="text" id="betreffTextBox" name="betreffTextBox" style="width:200px;" />
+
+    <label id="instructionLabel" for="emailBodyTextBox">E-Mail Inhalt:</label>
+    <textarea id="emailBodyTextBox" name="emailBodyTextBox"></textarea>
+
+    <!-- Hidden fields that map to the Windows Forms version -->
+    <textarea id="firmaBodyTextBox" class="hidden"></textarea>
+    <textarea id="telefonBodyTextBox" class="hidden"></textarea>
+    <textarea id="inhaberBodyTextBox" class="hidden"></textarea>
+    <textarea id="adresseBodyTextBox" class="hidden"></textarea>
+    <textarea id="kommentarBodyTextBox" class="hidden"></textarea>
+
+    <button id="sendButton">Senden</button>
+</body>
+</html>
