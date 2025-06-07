@@ -1,0 +1,23 @@
+[
+  {
+    "StueckeName": "Killer Con Carne",
+    "Beschreibung": "Die Fleischerei Fegan Jahres Feier",
+    "FigCount": "6",
+    "Rollen": "Mathilde Förstl; Margit Tschanderl; Sofie Einhausen; Johan Fegan; Max Kauper; Martin Reisenhofer",
+    "RollenBesch": "Chef-Sekretärin; Praktikantin; Buchhaltungschefin; JUNIOR-ChefIn; Hausmeister; Betriebsrat"
+  },
+  {
+    "StueckeName": "Menü a la Knast",
+    "Beschreibung": "Insassen im Macht streit",
+    "FigCount": "6",
+    "Rollen": "Sepp Kürzer; Karl Großhauser; Maik Schuster; Jessica Hahn; Gloria von Frauenberg; Hanna Metzkà",
+    "RollenBesch": "Kann sich nicht geschlagen geben, er darf kein verlierer sein; Kontrolle ist seine Technik, aber mit Hirn; fühlt sich schuldig und somit verantwortlich für Jessica und ihr Suchtproblem; wurde durch den Drogenhandel für Julius selbst abhängig.; Hat mit kontakten den Job hier bekommen, auch ohne kompetenzen; Ein Krankhaft schlechtes Verhältnis zum Vater führte zu einem Krankhaften Ablehnung von Fleischfresser"
+  },
+  {
+    "StueckeName": "Garten Gift Zwerge",
+    "Beschreibung": "Der Kleingartenverein „6 Zwerge“ ist in die engere Auswahl für den European Gardening Contest gekommen. Nun brauchen sie eine Idee für den Wettbewerb. Aber wie sollte es anders sein: eine Leiche taucht auf und der Mörder muss geschnappt werden. Zum Glück weiß man ja: Der Mörder ist immer der Gärtner. Aber wenn alle Verdächtigen mit Vorliebe im Garten arbeiten?",
+    "FigCount": "6",
+    "Rollen": "Ritchy Förster; Wolfgang Lipetzky; Hugo Kutscherer; Rosa Kutscherer; Charlotte Brosenik; Anastasia Buchinger",
+    "RollenBesch": "Der vereinseigene Kiffer; Beamter mit handwerklichem Händchen; Gemütlich und gut abgerichtet; Gartenzwerg-Fanatikerin und kontrollsüchtig; DIE Katzenlady und Tratschtante 1; DIE Hühnerlady und Tratschtante 2"
+  }
+]

@@ -1,0 +1,173 @@
+[
+  {
+    "Schauspieler": "Gernot Maxa",
+    "SchauAdresse": "Donaufelder Straße 44, 1210 Wien",
+    "SchauTelefonnummer": "+43 660 7374072",
+    "SchauEmail": "gernot.maxa@gmail.com",
+    "SchauArchi": "[3;0;1;4];[3;1;1;2];[3;2;1;1]",
+    "SchauRollen": "[Killer Con Carne]  Max Kauper, [Menü a la Knast]  Maik Schuster, [Garten Gift Zwerge]  Wolfgang Lipetzky",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Andreas Steiner",
+    "SchauAdresse": "Wiener Neustädter Straße 82, 2601 Sollenau",
+    "SchauTelefonnummer": "+43 650 5245534",
+    "SchauEmail": "andisteiner87@gmail.com",
+    "SchauArchi": "[2;1;1;0];[2;2;1;0]",
+    "SchauRollen": "[Menü a la Knast] Sepp Kürzer, [Garten Gift Zwerge] Ritchy Förster",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Aurelia Lanker",
+    "SchauAdresse": "Sporkenbühelgasse 3, 1090 Wien",
+    "SchauTelefonnummer": "+43 660 1300798",
+    "SchauEmail": "aurelia.lanker@gmy.at",
+    "SchauArchi": "[1;1;1;3]",
+    "SchauRollen": "[Menü a la Knast]  Jessica Hahn",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Barbara Edinger",
+    "SchauAdresse": "Seitenberggasse 20, 1160 Wien",
+    "SchauTelefonnummer": "+43 699 11912580",
+    "SchauEmail": "scener@gmx.net",
+    "SchauArchi": "[1;2;1;4]",
+    "SchauRollen": "[Garten Gift Zwerge]  Charlotte Brosenik",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Birgit Maria Wolf",
+    "SchauAdresse": "Franz Schell Straße 29, 7091 Breitenbrunn",
+    "SchauTelefonnummer": "+43 650 3064854",
+    "SchauEmail": "birgit-maria@gmx.at",
+    "SchauArchi": "[2;2;1;5];[2;0;1;0]",
+    "SchauRollen": "[Garten Gift Zwerge]  Anastasia Buchinger, [Killer Con Carne] Mathilde Förstl",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Birgit Waldsam",
+    "SchauAdresse": "Mooslackengasse 21, 1190 Wien",
+    "SchauTelefonnummer": "+43 664 5004146",
+    "SchauEmail": "Birgit96.bw@gmail.com",
+    "SchauArchi": "[3;2;1;4];[3;0;1;2];[3;1;1;3]",
+    "SchauRollen": "[Garten Gift Zwerge]  Charlotte Brosenik, [Killer Con Carne]  Sofie Einhausen, [Menü a la Knast]  Jessica Hahn",
+    "SchauAbendregie": "True"
+  },
+  {
+    "Schauspieler": "Christian Leutgeb",
+    "SchauAdresse": "Gassergasse 25, 1150 Wien",
+    "SchauTelefonnummer": "+43 650 6912607",
+    "SchauEmail": "cleutgeb13@gmail.com",
+    "SchauArchi": "[2;1;1;1];[2;2;1;0]",
+    "SchauRollen": "[Menü a la Knast]  Karl Großhauser, [Garten Gift Zwerge] Ritchy Förster",
+    "SchauAbendregie": "True"
+  },
+  {
+    "Schauspieler": "David Ignjatovic",
+    "SchauAdresse": "Gassergasse 25, 1050 Wien",
+    "SchauTelefonnummer": "+43 664 4893541",
+    "SchauEmail": "Ignjatovicdavid@hotmail.com",
+    "SchauArchi": "[1;1;1;1]",
+    "SchauRollen": "[Menü a la Knast]  Karl Großhauser",
+    "SchauAbendregie": "True"
+  },
+  {
+    "Schauspieler": "Elisabeth Kofler",
+    "SchauAdresse": "salztoergasse 7, 1010 wien",
+    "SchauTelefonnummer": "+43 660 4534448",
+    "SchauEmail": "koflerlissi@gmx.at",
+    "SchauArchi": "[1;1;1;5]",
+    "SchauRollen": "[Menü a la Knast]  Hanna Metzkà",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Katharina Hauer",
+    "SchauAdresse": "Trauttmansdorffgasse 7, 1130 Wien",
+    "SchauTelefonnummer": "+43 664 801855916",
+    "SchauEmail": "katharina.hauer.kh@gmail.com",
+    "SchauArchi": "[3;2;1;3];[3;0;1;2];[3;1;1;4]",
+    "SchauRollen": "[Garten Gift Zwerge]  Rosa Kutscherer, [Killer Con Carne]  Sofie Einhausen, [Menü a la Knast]  Gloria von Frauenberg",
+    "SchauAbendregie": "True"
+  },
+  {
+    "Schauspieler": "Marion Steinbach",
+    "SchauAdresse": "Zenogasse 7, 1120 Wien",
+    "SchauTelefonnummer": "+43 650 2727683",
+    "SchauEmail": "marion.steinbach@gmx.at",
+    "SchauArchi": "[2;0;1;1];[2;1;1;5]",
+    "SchauRollen": "[Killer Con Carne]  Margit Tschanderl, [Menü a la Knast]  Hanna Metzkà",
+    "SchauAbendregie": "True"
+  },
+  {
+    "Schauspieler": "Nela Jules",
+    "SchauAdresse": "Schlögelgasse 4, 1120 Wien",
+    "SchauTelefonnummer": "+43 699 11369083",
+    "SchauEmail": "nela.jules@gmail.com",
+    "SchauArchi": "[2;2;1;5];[2;0;1;2]",
+    "SchauRollen": "[Garten Gift Zwerge]  Anastasia Buchinger, [Killer Con Carne]  Sofie Einhausen",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Peter Masch",
+    "SchauAdresse": "Flurschützstraße 36 1120 wien",
+    "SchauTelefonnummer": "+43 699 19132915",
+    "SchauEmail": "peter.masch@gmx.at",
+    "SchauArchi": "[3;2;1;1];[3;0;1;5];[3;1;1;2]",
+    "SchauRollen": "[Garten Gift Zwerge]  Wolfgang Lipetzky, [Killer Con Carne]  Martin Reisenhofer, [Menü a la Knast]  Maik Schuster",
+    "SchauAbendregie": "True"
+  },
+  {
+    "Schauspieler": "Sandra Masch",
+    "SchauAdresse": "Flurschützstraße 36, 1120 wien",
+    "SchauTelefonnummer": "+43 699 19132914",
+    "SchauEmail": "sandra.masch@gmx.at",
+    "SchauArchi": "[2;2;1;3];[2;0;1;0]",
+    "SchauRollen": "[Garten Gift Zwerge]  Rosa Kutscherer, [Killer Con Carne] Mathilde Förstl",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Silke Müllner",
+    "SchauAdresse": "Kohlenrutschen 12, 1020 Wien",
+    "SchauTelefonnummer": "+43 650 6052266",
+    "SchauEmail": "Info@silkemuellner.com",
+    "SchauArchi": "[1;0;1;3]",
+    "SchauRollen": "[Killer Con Carne]  Johan Fegan",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Sophie Nawara",
+    "SchauAdresse": "Dammäckergasse 23, 1210 Wien",
+    "SchauTelefonnummer": "+43 676 3915008",
+    "SchauEmail": "scener@gmx.net",
+    "SchauArchi": "[1;2;1;5]",
+    "SchauRollen": "[Garten Gift Zwerge]  Anastasia Buchinger",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Verena Spiesz",
+    "SchauAdresse": "Taborstraße 118, 1020 Wien",
+    "SchauTelefonnummer": "+43 650 5052437",
+    "SchauEmail": "verena.spiesz@gmail.com",
+    "SchauArchi": "[1;1;1;4]",
+    "SchauRollen": "[Menü a la Knast]  Gloria von Frauenberg",
+    "SchauAbendregie": "False"
+  },
+  {
+    "Schauspieler": "Florian Burr",
+    "SchauAdresse": "Meinhartsdorfer Gasse 3, 1150 Wien",
+    "SchauTelefonnummer": "+43 676 4489383",
+    "SchauEmail": "burr@stagedive.at",
+    "SchauArchi": "",
+    "SchauRollen": "",
+    "SchauAbendregie": "True"
+  },
+  {
+    "Schauspieler": "Robert Tesar",
+    "SchauAdresse": "Ilz 79, 8262 Ilz",
+    "SchauTelefonnummer": "+43 06648444455",
+    "SchauEmail": "robert.tesar@a1.net",
+    "SchauArchi": "[1;0;1;5]",
+    "SchauRollen": "[Killer Con Carne]  Martin Reisenhofer",
+    "SchauAbendregie": "False"
+  }
+]
