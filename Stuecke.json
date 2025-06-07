@@ -1,1 +1,6 @@
-{}
+{
+  "Name1": "this is my long string",
+  "Color1": "Blue",
+  "Bitmap1": "[base64 mime encoded serialized .NET Framework object]",
+  "Icon1": "[base64 mime encoded string representing a byte array form of the .NET Framework object]"
+}
