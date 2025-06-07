@@ -56,25 +56,7 @@
         <input type="hidden" id="RoKl" />
         <input type="hidden" id="StRoBox" />
     </form>
-
-    <script>
-        // Adds a new "Stück" group dynamically
-        document.getElementById('NeuStueck').addEventListener('click', addMainGroup);
-
-        function addMainGroup() {
-            const panel = document.getElementById('flowLayoutPanel1');
-            const count = panel.querySelectorAll('.group-box').length + 1;
-            const group = document.createElement('div');
-            group.className = 'group-box';
-            group.innerHTML = '<strong>Stück ' + count + '</strong>' +
-                '<div><label>Rolle</label> <input type="text" class="rolle"/></div>';
-            panel.appendChild(group);
-        }
-
-        // Simple cancel action similar to the Windows Forms version
-        document.getElementById('Abbrechen').addEventListener('click', () => {
-            document.getElementById('schauForm').reset();
-        });
-    </script>
+    <script src="Schau.js"></script>
+    
 </body>
 </html>
