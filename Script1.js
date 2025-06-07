@@ -1,16 +1,33 @@
-// Basic JavaScript logic for the Email.html page
 window.addEventListener('DOMContentLoaded', function () {
     var sendBtn = document.getElementById('sendButton');
-    if (sendBtn) {
-        sendBtn.addEventListener('click', function () {
-            var email = document.getElementById('emailBox').value;
-            var subject = document.getElementById('betreffTextBox').value;
-            var body = document.getElementById('emailBodyTextBox').value;
-            alert('E-Mail an ' + email + ' mit Betreff "' + subject + '" gesendet!');
+    if (!sendBtn) return;
+
+    sendBtn.addEventListener('click', function () {
+        var payload = {
+            to: document.getElementById('emailBox').value,
+            subject: document.getElementById('betreffTextBox').value,
+            body: document.getElementById('emailBodyTextBox').value,
+            firma: document.getElementById('firmaBodyTextBox').value,
+            telefon: document.getElementById('telefonBodyTextBox').value,
+            inhaber: document.getElementById('inhaberBodyTextBox').value,
+            adresse: document.getElementById('adresseBodyTextBox').value,
+            kommentar: document.getElementById('kommentarBodyTextBox').value
+        };
+
+        fetch('/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(resp => {
+            if (!resp.ok) throw new Error('Server error');
+            return resp.json();
+        }).then(data => {
+            alert('E-Mail erfolgreich gesendet!');
+        }).catch(err => {
+            alert('Fehler beim Senden der E-Mail: ' + err.message);
         });
-    }
+    });
 });
-// Additional logic for Bearbeiten.html
 window.addEventListener('DOMContentLoaded', function () {
     var mapsBtn = document.getElementById('mapsBtn');
     if (mapsBtn) {
