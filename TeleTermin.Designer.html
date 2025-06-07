@@ -35,30 +35,8 @@
             <button type="button" id="CancelButton">Abbrechen</button>
         </div>
     </form>
+    <script src="TeleTermin.js"></script>
 
-    <script>
-        document.getElementById('CancelButton').addEventListener('click', function () {
-            document.getElementById('teleTerminForm').reset();
-        });
-
-        document.getElementById('teleTerminForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const date = document.getElementById('TerminPicker').value;
-            const time = document.getElementById('AnrufZeitBox').value;
-            document.getElementById('AnrufTerminBox').value = date + ' ' + time;
-            alert('Termin gespeichert: ' + document.getElementById('AnrufTerminBox').value);
-        });
-        function getParam(name) {
-            const params = new URLSearchParams(window.location.search);
-            return params.get(name) || '';
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const tel = getParam('telefon');
-            const firma = getParam('firma');
-            if (tel) document.getElementById('TelefonBox').value = tel;
-            if (firma) document.getElementById('FirmaBox').value = firma;
-        });
-    </script>
+   
 </body>
 </html>
