@@ -8,7 +8,7 @@
         .form-group { margin-bottom: 10px; }
         label { display:block; margin-bottom:4px; }
         input[type="text"], textarea { width: 100%; padding: 4px; box-sizing:border-box; }
-        .roles { margin-top: 10px; }
+        roles { margin-top: 10px; max-height: 400px; overflow-y: auto; }
         .role-pair { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
         .buttons { margin-top: 15px; }
     </style>
@@ -34,57 +34,6 @@
         <button id="StueckeOK">OK</button>
         <button id="Abbrechen">Abbrechen</button>
     </div>
-
-    <script>
-        const figCount = document.getElementById('FigCount');
-        const roleContainer = document.getElementById('roleContainer');
-        const rollenBox = document.getElementById('RollenBox');
-        const rollenBeschBox = document.getElementById('RollenBeschBox');
-
-        figCount.addEventListener('input', createRoleFields);
-        document.getElementById('StueckeOK').addEventListener('click', saveData);
-        document.getElementById('Abbrechen').addEventListener('click', () => {
-            document.querySelector('form')?.reset();
-            roleContainer.innerHTML = '';
-        });
-
-        function createRoleFields() {
-            const count = parseInt(figCount.value, 10) || 0;
-            const current = roleContainer.children.length / 2; // pair of input+textarea
-            // remove extra
-            for (let i = current; i > count; i--) {
-                roleContainer.removeChild(roleContainer.lastChild);
-                roleContainer.removeChild(roleContainer.lastChild);
-            }
-            // add new
-            for (let i = current + 1; i <= count; i++) {
-                const pair = document.createElement('div');
-                pair.className = 'role-pair';
-                const roleLabel = document.createElement('label');
-                roleLabel.textContent = 'Rolle ' + i;
-                const roleInput = document.createElement('input');
-                roleInput.type = 'text';
-                roleInput.className = 'role';
-                const descLabel = document.createElement('label');
-                descLabel.textContent = 'Beschreibung ' + i;
-                const descInput = document.createElement('textarea');
-                descInput.rows = 3;
-                descInput.className = 'description';
-                pair.appendChild(roleLabel);
-                pair.appendChild(roleInput);
-                pair.appendChild(descLabel);
-                pair.appendChild(descInput);
-                roleContainer.appendChild(pair);
-            }
-        }
-
-        function saveData() {
-            const roles = Array.from(roleContainer.querySelectorAll('input.role'));
-            const descs = Array.from(roleContainer.querySelectorAll('textarea.description'));
-            rollenBox.value = roles.map(r => r.value.trim()).join('; ');
-            rollenBeschBox.value = descs.map(d => d.value.trim()).join('; ');
-            alert('Daten gespeichert');
-        }
-    </script>
+    <script src="Stuecke.js" defer></script>    
 </body>
 </html>
