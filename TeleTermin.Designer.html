@@ -48,6 +48,17 @@
             document.getElementById('AnrufTerminBox').value = date + ' ' + time;
             alert('Termin gespeichert: ' + document.getElementById('AnrufTerminBox').value);
         });
+        function getParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name) || '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const tel = getParam('telefon');
+            const firma = getParam('firma');
+            if (tel) document.getElementById('TelefonBox').value = tel;
+            if (firma) document.getElementById('FirmaBox').value = firma;
+        });
     </script>
 </body>
 </html>
