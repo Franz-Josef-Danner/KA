@@ -59,7 +59,36 @@ app.post('/send-email', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Endpoint to add a phone appointment to Google Calendar
+app.post('/add-tele-termin', async (req, res) => {
+  const { firma, telefon, kommentar, date, time } = req.body;
 
+  try {
+    const auth = new google.auth.GoogleAuth({
+      keyFile: path.join(__dirname, 'json', 'service_account.json'),
+      scopes: ['https://www.googleapis.com/auth/calendar']
+    });
+    const client = await auth.getClient();
+    const calendar = google.calendar({ version: 'v3', auth: client });
+
+    const startDate = new Date(`${date}T${time}:00`);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    const event = {
+      summary: 'Anruf bei ' + (firma || ''),
+      description: `Telefon: ${telefon}\nKommentar: ${kommentar}`,
+      start: { dateTime: startDate.toISOString() },
+      end: { dateTime: endDate.toISOString() }
+    };
+
+    await calendar.events.insert({ calendarId: 'primary', requestBody: event });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
