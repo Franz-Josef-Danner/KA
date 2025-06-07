@@ -30,5 +30,18 @@
     <textarea id="kommentarBodyTextBox" class="hidden"></textarea>
 
     <button id="sendButton">Senden</button>
+    <script>
+        function getParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name) || '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const mail = getParam('email');
+            if (mail) {
+                document.getElementById('emailBox').value = mail;
+            }
+        });
+    </script>
 </body>
 </html>
