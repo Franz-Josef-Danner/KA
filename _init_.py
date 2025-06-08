@@ -1,103 +1,134 @@
 bl_info = {
-    "name": "Render Notify",
-    "author": "FJD",
-    "version": (1, 0, 0),
+    "name": "Render Watchdog",
     "blender": (2, 80, 0),
-    "description": "Sendet eine Nachricht, wenn das Rendering fertig ist",
-    "category": "Render",
+    "category": "System",
 }
 
+import atexit
 import bpy
-from bpy.app.handlers import persistent
-import requests
+import os
+import time
+import sys
+import tempfile
+from collections import deque
+from multiprocessing import Process
 
-def send_push_notification(title, message, token, user_key):
-    url = "https://api.pushover.net/1/messages.json"
-    data = {
-        "token": token,
-        "user": user_key,
-        "title": title,
-        "message": message,
-    }
+_watchdog = None
+_parent_pid = os.getpid()
+_stdout_orig = None
+_stderr_orig = None
+_last_lines = deque(maxlen=20)
+_log_path = os.path.join(tempfile.gettempdir(), "blender_watchdog.log")
+
+
+def send_push(message: str) -> None:
+    """Send a push notification. Placeholder implementation."""
     try:
-        response = requests.post(url, data=data)
-        if response.status_code != requests.codes.ok:
-            print(f"Notification failed with status {response.status_code}")
-    except requests.RequestException as exc:
-        print(f"Failed to send push notification: {exc}")
+        import requests
+        requests.post("https://example.com/push", json={"message": message})
+    except Exception:
+        # Fallback to console output if requests is unavailable
+        print("Push:", message)
 
-@persistent
-def notify_render_complete(scene):
-    """Handler that runs when rendering finishes."""
-    print("Render fertig!")
 
-    token = "asrgqs7othw2kaa3hihs2cpjyqksif"
-    user_key = "uyqozoh1mbgwdim1mnbc1rzh5354e2"
+class _ConsoleCapture:
+    """Capture stdout/stderr while keeping the original behavior."""
 
-    message = f"Render in Szene '{scene.name}' abgeschlossen."
-    send_push_notification("Render fertig", message, token, user_key)
+    def __init__(self, stream):
+        self.stream = stream
+        self._is_capture = True
 
-def register():
-    bpy.app.handlers.render_complete.append(notify_render_complete)
+    def write(self, data):
+        self.stream.write(data)
+        for line in data.splitlines():
+            if line.strip():
+                _last_lines.append(line)
+        with open(_log_path, "a", encoding="utf-8") as f:
+            f.write(data)
+            f.flush()
 
-def unregister():
-    if notify_render_complete in bpy.app.handlers.render_complete:
-        bpy.app.handlers.render_complete.remove(notify_render_complete)
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Render-Guard 1.0  –  Unified Blender Launcher + Crash Watchdog
-"""
+    def flush(self):
+        self.stream.flush()
 
-import subprocess, sys, os, time, signal, requests
 
-# --- Konfiguration ---------------------------------------------
-BLENDER_EXE = r"C:/Programme/Blender/blender.exe"       # ↔ Pfad anpassen
-PUSH_URL    = "https://api.pushover.net/1/messages.json"
-PUSH_PAYLD  = {
-    "token":  "APP_TOKEN",     # Pushover-App-Token
-    "user":   "USER_KEY",      # persönlicher User-Key
-    "title":  "⚠️  Blender Crash",
-    "message": ""
-}
-# ---------------------------------------------------------------
-
-def send_push(msg: str) -> None:
-    """Fire-and-forget Push-Notification (5 s Timeout)."""
+def _process_alive(pid: int) -> bool:
     try:
-        r = requests.post(PUSH_URL, data={**PUSH_PAYLD, "message": msg},
-                          timeout=5)
-        r.raise_for_status()
-    except Exception as e:
-        # Logging auf STDERR, aber nicht abbrechen
-        print(f"[Render-Guard] Push-Fehler → {e}", file=sys.stderr)
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    return True
 
-def main():
-    blender_args = sys.argv[1:]           # alle CLI-Parameter an Blender durchreichen
-    # Child 1 = Blender
-    proc = subprocess.Popen([BLENDER_EXE, *blender_args])
-    print(f"[Render-Guard] PID {proc.pid} gestartet …")
 
+def _get_last_log_lines(num: int = 20) -> str:
+    if not os.path.exists(_log_path):
+        return ""
+    with open(_log_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    return "".join(lines[-num:])
+
+
+def _setup_capture() -> None:
+    global _stdout_orig, _stderr_orig
+    if not getattr(sys.stdout, "_is_capture", False):
+        _stdout_orig = sys.stdout
+        sys.stdout = _ConsoleCapture(sys.stdout)
+    if not getattr(sys.stderr, "_is_capture", False):
+        _stderr_orig = sys.stderr
+        sys.stderr = _ConsoleCapture(sys.stderr)
+    open(_log_path, "w", encoding="utf-8").close()
+
+
+def _remove_capture() -> None:
+    global _stdout_orig, _stderr_orig
+    if _stdout_orig is not None and getattr(sys.stdout, "_is_capture", False):
+        sys.stdout = _stdout_orig
+        _stdout_orig = None
+    if _stderr_orig is not None and getattr(sys.stderr, "_is_capture", False):
+        sys.stderr = _stderr_orig
+        _stderr_orig = None
+
+
+def _watchdog_loop(pid: int) -> None:
     while True:
-        try:
-            rc = proc.wait(timeout=1)     # 1 s Poll-Intervall
-            break                         # Prozess ist beendet
-        except subprocess.TimeoutExpired:
-            continue                      # noch aktiv → weiter warten
-        except KeyboardInterrupt:
-            print("[Render-Guard] Cancel → SIGTERM an Blender")
-            proc.terminate()
-            proc.wait()
-            return 0
+        if not _process_alive(pid):
+            lines = _get_last_log_lines()
+            msg = "Blender crashed"  ("\n"  lines if lines else "")
+            send_push(msg)
+            break
+        time.sleep(2)
 
-    if rc == 0:
-        print("[Render-Guard] Blender normal beendet (RC 0).")
-    else:
-        msg = f"Blender ist unerwartet abgestürzt (RC {rc})."
-        print(f"[Render-Guard] {msg}")
-        send_push(msg)
 
-    return rc
+def start_watchdog() -> None:
+    global _watchdog
+    if _watchdog is None:
+        _setup_capture()
+        _watchdog = Process(target=_watchdog_loop, args=(_parent_pid,), daemon=True)
+        _watchdog.start()
 
-if __name__ == "__main__":
-    sys.exit(main())
+
+def stop_watchdog() -> None:
+    global _watchdog
+    if _watchdog is not None:
+        send_push("Blender closed")
+        _watchdog.terminate()
+        _watchdog.join()
+        _watchdog = None
+    _remove_capture()
+
+
+def render_finished(_scene: bpy.types.Scene) -> None:
+    send_push("Render finished")
+
+
+def register() -> None:
+    bpy.app.handlers.render_complete.append(render_finished)
+    start_watchdog()
+    atexit.register(stop_watchdog)
+
+
+def unregister() -> None:
+    stop_watchdog()
+    if render_finished in bpy.app.handlers.render_complete:
+        bpy.app.handlers.render_complete.remove(render_finished)
+
+
