@@ -50,6 +50,8 @@
       font-style: italic;
     }
     .actions { white-space: nowrap; }
+    .actions button { margin-right: 4px; }
+    .actions button:last-child { margin-right: 0; }
     .danger { border-color: #ffb3b3 !important; }
     .danger:hover { background: #fff5f5; }
     .small { font-size: 12px; color: #666; }
@@ -272,9 +274,6 @@
           render();
         });
         act.appendChild(plus);
-        
-        // Spacing between buttons
-        act.appendChild(document.createTextNode(" "));
         
         // Minus button - delete row with confirmation
         const minus = document.createElement("button");
