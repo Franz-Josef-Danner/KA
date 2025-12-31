@@ -295,24 +295,44 @@ function importCSV(file, fileInput) {
         const values = parseCSVLine(line);
         const newRow = newEmptyRow();
         
-        // Try to match by column name (case-insensitive)
-        let hasHeaderMatch = false;
+        // Track which columns have been mapped and which CSV indices have been used
+        const mappedColumns = new Set();
+        const usedIndices = new Set();
+        
+        // First pass: Try to match by column name (case-insensitive)
         headers.forEach((header, idx) => {
           const headerStr = String(header).trim();
           const matchingCol = COLUMNS.find(col => 
-            col.toLowerCase() === headerStr.toLowerCase()
+            col.toLowerCase() === headerStr.toLowerCase() && !mappedColumns.has(col)
           );
           
           if (matchingCol) {
-            hasHeaderMatch = true;
+            mappedColumns.add(matchingCol);
+            usedIndices.add(idx);
             newRow[matchingCol] = sanitizeText(values[idx] ?? "");
           }
         });
         
-        // If no header match found, map by position
-        if (!hasHeaderMatch) {
-          for (let i = 0; i < Math.min(values.length, COLUMNS.length); i++) {
-            newRow[COLUMNS[i]] = sanitizeText(values[i] ?? "");
+        // Second pass: Map remaining CSV columns by position to unmapped table columns
+        if (mappedColumns.size < COLUMNS.length && usedIndices.size < values.length) {
+          let tableColIdx = 0;
+          let csvIdx = 0;
+          
+          while (tableColIdx < COLUMNS.length && csvIdx < values.length) {
+            // Skip already mapped columns and indices
+            while (tableColIdx < COLUMNS.length && mappedColumns.has(COLUMNS[tableColIdx])) {
+              tableColIdx++;
+            }
+            while (csvIdx < values.length && usedIndices.has(csvIdx)) {
+              csvIdx++;
+            }
+            
+            // Map the remaining columns by position
+            if (tableColIdx < COLUMNS.length && csvIdx < values.length) {
+              newRow[COLUMNS[tableColIdx]] = sanitizeText(values[csvIdx] ?? "");
+              tableColIdx++;
+              csvIdx++;
+            }
           }
         }
         
