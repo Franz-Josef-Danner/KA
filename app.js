@@ -186,15 +186,127 @@ function render() {
 // -----------------------------
 // Events
 // -----------------------------
+const modal = document.getElementById("addModal");
+
 document.getElementById("addRowBtn").addEventListener("click", () => {
-  rows.unshift(newEmptyRow());
+  modal.classList.add("show");
+});
+
+document.getElementById("closeModalBtn").addEventListener("click", () => {
+  modal.classList.remove("show");
+});
+
+// Close modal when clicking outside of it
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) {
+    modal.classList.remove("show");
+  }
+});
+
+document.getElementById("addMultipleBtn").addEventListener("click", () => {
+  const count = parseInt(document.getElementById("rowCount").value, 10);
+  for (let i = 0; i < count; i++) {
+    rows.unshift(newEmptyRow());
+  }
   save();
   render();
+  modal.classList.remove("show");
+  
   // Fokus auf erste Zelle der neuen Zeile
   setTimeout(() => {
     const firstCell = tbody.querySelector('td[contenteditable="true"]');
     firstCell?.focus();
   }, 0);
+});
+
+document.getElementById("importExcelBtn").addEventListener("click", () => {
+  const fileInput = document.getElementById("excelFile");
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert("Bitte wählen Sie eine Excel-Datei aus.");
+    return;
+  }
+  
+  const reader = new FileReader();
+  
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      
+      // Get the first sheet
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // Convert to JSON (array of objects)
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+      
+      if (jsonData.length === 0) {
+        alert("Die Excel-Datei enthält keine Daten.");
+        return;
+      }
+      
+      // First row is typically headers, use it to map columns
+      const excelHeaders = jsonData[0];
+      const dataRows = jsonData.slice(1);
+      
+      if (dataRows.length === 0) {
+        alert("Die Excel-Datei enthält keine Datenzeilen.");
+        return;
+      }
+      
+      // Import rows
+      const importedRows = [];
+      for (const excelRow of dataRows) {
+        const newRow = newEmptyRow();
+        
+        // Map Excel columns to table columns
+        // Try to match by column name (case-insensitive)
+        excelHeaders.forEach((excelHeader, excelColIdx) => {
+          const headerStr = String(excelHeader).trim();
+          const matchingCol = COLUMNS.find(col => 
+            col.toLowerCase() === headerStr.toLowerCase()
+          );
+          
+          if (matchingCol) {
+            newRow[matchingCol] = sanitizeText(excelRow[excelColIdx] ?? "");
+          }
+        });
+        
+        // If no header match found, map by position (first N columns)
+        const hasHeaderMatch = excelHeaders.some((excelHeader) => {
+          const headerStr = String(excelHeader).trim();
+          return COLUMNS.some(col => col.toLowerCase() === headerStr.toLowerCase());
+        });
+        
+        if (!hasHeaderMatch) {
+          // No headers matched, map by position
+          for (let i = 0; i < Math.min(excelRow.length, COLUMNS.length); i++) {
+            newRow[COLUMNS[i]] = sanitizeText(excelRow[i] ?? "");
+          }
+        }
+        
+        importedRows.push(newRow);
+      }
+      
+      // Add imported rows to the beginning of the table
+      rows = [...importedRows, ...rows];
+      save();
+      render();
+      modal.classList.remove("show");
+      
+      alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
+      
+      // Reset file input
+      fileInput.value = "";
+    } catch (error) {
+      console.error("Error importing Excel:", error);
+      alert("Fehler beim Importieren der Excel-Datei. Bitte überprüfen Sie das Dateiformat.");
+    }
+  };
+  
+  reader.readAsArrayBuffer(file);
 });
 
 document.getElementById("saveBtn").addEventListener("click", () => {
