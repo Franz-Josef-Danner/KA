@@ -205,6 +205,13 @@ modal.addEventListener("click", (e) => {
 
 document.getElementById("addMultipleBtn").addEventListener("click", () => {
   const count = parseInt(document.getElementById("rowCount").value, 10);
+  
+  // Validate row count
+  if (isNaN(count) || count < 1 || count > 10) {
+    alert("Ungültige Anzahl von Zeilen. Bitte wählen Sie eine Zahl zwischen 1 und 10.");
+    return;
+  }
+  
   for (let i = 0; i < count; i++) {
     rows.unshift(newEmptyRow());
   }
@@ -220,7 +227,7 @@ document.getElementById("addMultipleBtn").addEventListener("click", () => {
 });
 
 document.getElementById("importExcelBtn").addEventListener("click", () => {
-  const fileInput = document.getElementById("excelFile");
+  const fileInput = document.getElementById("importFile");
   const file = fileInput.files[0];
   
   if (!file) {
@@ -230,7 +237,7 @@ document.getElementById("importExcelBtn").addEventListener("click", () => {
   
   const fileName = file.name.toLowerCase();
   
-  // Only support CSV for now
+  // Support CSV files
   if (!fileName.endsWith('.csv')) {
     alert("Bitte verwenden Sie eine CSV-Datei (.csv).");
     return;
@@ -277,6 +284,12 @@ function importCSV(file, fileInput) {
           }
         }
         result.push(current);
+        
+        // If still in quotes at end of line, it's malformed - close the quotes
+        if (inQuotes) {
+          console.warn("Malformed CSV: Unclosed quotes in line:", line);
+        }
+        
         return result.map(s => s.trim());
       };
       
