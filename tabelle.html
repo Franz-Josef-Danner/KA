@@ -41,9 +41,9 @@
       </div>
       <div class="modal-divider"></div>
       <div class="modal-section">
-        <h3>Excel-Tabelle importieren</h3>
-        <p class="modal-hint">Die erste Tabelle der Datei wird importiert. Spalten werden automatisch zugeordnet.</p>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" />
+        <h3>CSV-Tabelle importieren</h3>
+        <p class="modal-hint">Importieren Sie eine CSV-Datei. Die erste Zeile sollte die Spaltenüberschriften enthalten. Spalten werden automatisch zugeordnet.</p>
+        <input type="file" id="excelFile" accept=".csv" />
         <button id="importExcelBtn" class="modal-btn">Importieren</button>
       </div>
       <div class="modal-actions">
@@ -84,7 +84,6 @@
     </table>
   </div>
 
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

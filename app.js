@@ -224,66 +224,95 @@ document.getElementById("importExcelBtn").addEventListener("click", () => {
   const file = fileInput.files[0];
   
   if (!file) {
-    alert("Bitte wählen Sie eine Excel-Datei aus.");
+    alert("Bitte wählen Sie eine Datei aus.");
     return;
   }
   
+  const fileName = file.name.toLowerCase();
+  
+  // Only support CSV for now
+  if (!fileName.endsWith('.csv')) {
+    alert("Bitte verwenden Sie eine CSV-Datei (.csv).");
+    return;
+  }
+  
+  importCSV(file, fileInput);
+});
+
+function importCSV(file, fileInput) {
   const reader = new FileReader();
   
   reader.onload = (e) => {
     try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
+      const text = e.target.result;
+      const lines = text.split(/\r?\n/).filter(line => line.trim());
       
-      // Get the first sheet
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      
-      // Convert to JSON (array of objects)
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-      
-      if (jsonData.length === 0) {
-        alert("Die Excel-Datei enthält keine Daten.");
+      if (lines.length === 0) {
+        alert("Die CSV-Datei enthält keine Daten.");
         return;
       }
       
-      // First row is typically headers, use it to map columns
-      const excelHeaders = jsonData[0];
-      const dataRows = jsonData.slice(1);
+      // Parse CSV (simple parser, handles quotes)
+      const parseCSVLine = (line) => {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              current += '"';
+              i++; // skip next quote
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        result.push(current);
+        return result.map(s => s.trim());
+      };
       
-      if (dataRows.length === 0) {
-        alert("Die Excel-Datei enthält keine Datenzeilen.");
+      // First line is headers
+      const headers = parseCSVLine(lines[0]);
+      const dataLines = lines.slice(1);
+      
+      if (dataLines.length === 0) {
+        alert("Die CSV-Datei enthält keine Datenzeilen.");
         return;
       }
       
       // Import rows
       const importedRows = [];
-      for (const excelRow of dataRows) {
+      for (const line of dataLines) {
+        const values = parseCSVLine(line);
         const newRow = newEmptyRow();
         
-        // Map Excel columns to table columns
         // Try to match by column name (case-insensitive)
-        excelHeaders.forEach((excelHeader, excelColIdx) => {
-          const headerStr = String(excelHeader).trim();
+        let hasHeaderMatch = false;
+        headers.forEach((header, idx) => {
+          const headerStr = String(header).trim();
           const matchingCol = COLUMNS.find(col => 
             col.toLowerCase() === headerStr.toLowerCase()
           );
           
           if (matchingCol) {
-            newRow[matchingCol] = sanitizeText(excelRow[excelColIdx] ?? "");
+            hasHeaderMatch = true;
+            newRow[matchingCol] = sanitizeText(values[idx] ?? "");
           }
         });
         
-        // If no header match found, map by position (first N columns)
-        const hasHeaderMatch = excelHeaders.some((excelHeader) => {
-          const headerStr = String(excelHeader).trim();
-          return COLUMNS.some(col => col.toLowerCase() === headerStr.toLowerCase());
-        });
-        
+        // If no header match found, map by position
         if (!hasHeaderMatch) {
-          // No headers matched, map by position
-          for (let i = 0; i < Math.min(excelRow.length, COLUMNS.length); i++) {
-            newRow[COLUMNS[i]] = sanitizeText(excelRow[i] ?? "");
+          for (let i = 0; i < Math.min(values.length, COLUMNS.length); i++) {
+            newRow[COLUMNS[i]] = sanitizeText(values[i] ?? "");
           }
         }
         
@@ -301,13 +330,13 @@ document.getElementById("importExcelBtn").addEventListener("click", () => {
       // Reset file input
       fileInput.value = "";
     } catch (error) {
-      console.error("Error importing Excel:", error);
-      alert("Fehler beim Importieren der Excel-Datei. Bitte überprüfen Sie das Dateiformat.");
+      console.error("Error importing CSV:", error);
+      alert("Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.");
     }
   };
   
-  reader.readAsArrayBuffer(file);
-});
+  reader.readAsText(file, 'UTF-8');
+}
 
 document.getElementById("saveBtn").addEventListener("click", () => {
   save();
