@@ -50,6 +50,8 @@
       font-style: italic;
     }
     .actions { white-space: nowrap; }
+    .actions button { margin-right: 4px; }
+    .actions button:last-child { margin-right: 0; }
     .danger { border-color: #ffb3b3 !important; }
     .danger:hover { background: #fff5f5; }
     .small { font-size: 12px; color: #666; }
@@ -261,15 +263,32 @@
 
         const act = document.createElement("td");
         act.className = "actions";
-        const del = document.createElement("button");
-        del.textContent = "Löschen";
-        del.className = "danger";
-        del.addEventListener("click", () => {
+        
+        // Plus button - add row below
+        const plus = document.createElement("button");
+        plus.textContent = "+";
+        plus.title = "Zeile darunter einfügen";
+        plus.addEventListener("click", () => {
+          rows.splice(idx + 1, 0, newEmptyRow());
+          save();
+          render();
+        });
+        act.appendChild(plus);
+        
+        // Minus button - delete row with confirmation
+        const minus = document.createElement("button");
+        minus.textContent = "−";
+        minus.title = "Zeile löschen";
+        minus.className = "danger";
+        minus.addEventListener("click", () => {
+          const ok = confirm("Sind Sie sicher, dass Sie diese Zeile löschen möchten?");
+          if (!ok) return;
           rows.splice(idx, 1);
           save();
           render();
         });
-        act.appendChild(del);
+        act.appendChild(minus);
+        
         tr.appendChild(act);
 
         tbody.appendChild(tr);
