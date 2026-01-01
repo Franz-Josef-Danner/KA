@@ -120,7 +120,6 @@ function findDuplicatesSequential(filteredRows) {
   // 2. Check column 2 for duplicates, but skip rows already marked from column 1
   // 3. Continue this process through all columns
   
-  const rowIndices = filteredRows.map(item => item.idx);
   const markedRows = new Set(); // Track which row indices are marked as duplicates
   const duplicatesByColumn = {}; // Track which values in each column are duplicates
   
@@ -137,10 +136,7 @@ function findDuplicatesSequential(filteredRows) {
       const value = sanitizeText(row[col]).trim();
       if (value) { // Only count non-empty values
         valueCount[value] = (valueCount[value] || 0) + 1;
-        if (!valueToRows[value]) {
-          valueToRows[value] = [];
-        }
-        valueToRows[value].push(idx);
+        (valueToRows[value] ||= []).push(idx);
       }
     });
     
