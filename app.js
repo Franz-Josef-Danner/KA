@@ -158,11 +158,6 @@ function findDuplicatesSequential(filteredRows) {
   return { duplicatesByColumn, markedRows };
 }
 
-function rowHasDuplicate(rowIdx, markedRows) {
-  // Check if this row index is in the set of marked duplicate rows
-  return markedRows.has(rowIdx);
-}
-
 // -----------------------------
 // Render
 // -----------------------------
@@ -189,7 +184,7 @@ function render() {
   const normalRows = [];
   
   filteredRows.forEach(({ row, idx }) => {
-    const hasDuplicate = rowHasDuplicate(idx, markedRows);
+    const hasDuplicate = markedRows.has(idx);
     if (hasDuplicate) {
       duplicateRows.push({ row, idx, hasDuplicate: true });
     } else {
