@@ -516,8 +516,9 @@ function importCSV(file, fileInput) {
     } catch (error) {
       console.error("Error importing CSV:", error);
       let userMessage = "Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.";
-      if (error && typeof error.message === "string" && error.message.trim()) {
-        userMessage += "\n\nDetails: " + error.message;
+      const errorMsg = error?.message?.trim();
+      if (errorMsg) {
+        userMessage += "\n\nDetails: " + errorMsg;
       }
       alert(userMessage);
     } finally {
