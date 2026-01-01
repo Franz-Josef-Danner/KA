@@ -62,14 +62,15 @@ export function render() {
 
       // Beim Fokus: reiner Text zum Editieren
       td.addEventListener("focus", () => {
-        td.textContent = row[col] ?? "";
+        td.textContent = getRows()[idx][col] ?? "";
       });
 
       // Beim Blur: speichern + hübsch darstellen
       td.addEventListener("blur", () => {
         const newVal = td.textContent ?? "";
-        rows[idx][col] = sanitizeText(newVal);
-        td.innerHTML = toCellDisplay(col, rows[idx][col]);
+        const currentRows = getRows();
+        currentRows[idx][col] = sanitizeText(newVal);
+        td.innerHTML = toCellDisplay(col, currentRows[idx][col]);
         // Use debounced render to avoid multiple rapid re-renders during editing
         debouncedRender();
       });

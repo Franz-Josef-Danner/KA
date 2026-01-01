@@ -12,5 +12,5 @@ function init() {
   render();
 }
 
-// Start the application when DOM is ready
+// ES6 modules are deferred by default; at this point the DOM is ready, so start the application
 init();
