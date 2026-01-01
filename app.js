@@ -112,6 +112,53 @@ function rowMatchesSearch(row, q) {
 }
 
 // -----------------------------
+// Duplicate Detection
+// -----------------------------
+function findDuplicates(dataRows) {
+  // Map: column -> value -> [row indices that have this value]
+  const duplicateMap = new Map();
+  
+  for (const col of COLUMNS) {
+    const valueMap = new Map();
+    
+    dataRows.forEach((row, idx) => {
+      const value = String(row[col] ?? "").trim();
+      // Only consider non-empty values
+      if (value) {
+        if (!valueMap.has(value)) {
+          valueMap.set(value, []);
+        }
+        valueMap.get(value).push(idx);
+      }
+    });
+    
+    // Store only values that appear more than once
+    valueMap.forEach((indices, value) => {
+      if (indices.length > 1) {
+        if (!duplicateMap.has(col)) {
+          duplicateMap.set(col, new Map());
+        }
+        duplicateMap.get(col).set(value, indices);
+      }
+    });
+  }
+  
+  return duplicateMap;
+}
+
+function getRowsWithDuplicates(dataRows, duplicateMap) {
+  const rowsWithDuplicates = new Set();
+  
+  duplicateMap.forEach((valueMap) => {
+    valueMap.forEach((indices) => {
+      indices.forEach(idx => rowsWithDuplicates.add(idx));
+    });
+  });
+  
+  return rowsWithDuplicates;
+}
+
+// -----------------------------
 // Render
 // -----------------------------
 const tbody = document.getElementById("tbody");
@@ -121,7 +168,27 @@ function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
 
+  // Find duplicates in all rows (before filtering by search)
+  const duplicateMap = findDuplicates(rows);
+  const rowsWithDuplicates = getRowsWithDuplicates(rows, duplicateMap);
+  
+  // Sort rows: rows with duplicates first, then others
+  const sortedIndices = [];
+  const duplicateIndices = [];
+  const nonDuplicateIndices = [];
+  
   rows.forEach((row, idx) => {
+    if (rowsWithDuplicates.has(idx)) {
+      duplicateIndices.push(idx);
+    } else {
+      nonDuplicateIndices.push(idx);
+    }
+  });
+  
+  const orderedIndices = [...duplicateIndices, ...nonDuplicateIndices];
+
+  orderedIndices.forEach((idx) => {
+    const row = rows[idx];
     if (!rowMatchesSearch(row, q)) return;
 
     const tr = document.createElement("tr");
@@ -132,8 +199,17 @@ function render() {
       td.dataset.row = String(idx);
       td.dataset.col = col;
 
+      // Check if this cell contains a duplicate value
+      const value = String(row[col] ?? "").trim();
+      const isDuplicate = value && duplicateMap.has(col) && duplicateMap.get(col).has(value);
+      
       // Für Linkspalten (Email/Webseite) HTML anzeigen, aber Text editieren:
       td.innerHTML = toCellDisplay(col, row[col]);
+      
+      // Add duplicate class if this cell has a duplicate value
+      if (isDuplicate) {
+        td.classList.add("duplicate");
+      }
 
       // Beim Fokus: reiner Text zum Editieren
       td.addEventListener("focus", () => {
@@ -145,6 +221,8 @@ function render() {
         const newVal = td.textContent ?? "";
         rows[idx][col] = sanitizeText(newVal);
         td.innerHTML = toCellDisplay(col, rows[idx][col]);
+        // Re-render to update duplicate detection
+        render();
       });
 
       tr.appendChild(td);
