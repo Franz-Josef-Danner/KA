@@ -1,52 +1,17 @@
 // -----------------------------
 // Event Handlers
 // -----------------------------
-import { getRows, setRows, newEmptyRow, save } from './state.js';
+import { getRows, setRows, save } from './state.js';
 import { toCSV, parseCSV } from '../utils/csv.js';
 import { downloadText } from '../utils/helpers.js';
 import { render } from './render.js';
-import { openModal, closeModal } from './modal.js';
-
-const tbody = document.getElementById("tbody");
 
 export function initEventHandlers() {
-  // Add row button
-  document.getElementById("addRowBtn").addEventListener("click", () => {
-    openModal();
-  });
-
-  // Add multiple rows
-  document.getElementById("addMultipleBtn").addEventListener("click", () => {
-    const count = parseInt(document.getElementById("rowCount").value, 10);
-    
-    // Validate row count
-    if (isNaN(count) || count < 1 || count > 10) {
-      alert("Ungültige Anzahl von Zeilen. Bitte wählen Sie eine Zahl zwischen 1 und 10.");
-      return;
-    }
-    
-    const rows = getRows();
-    for (let i = 0; i < count; i++) {
-      rows.unshift(newEmptyRow());
-    }
-    save();
-    render();
-    closeModal();
-    
-    // Fokus auf erste Zelle der neuen Zeile
-    setTimeout(() => {
-      const firstCell = tbody.querySelector('td[contenteditable="true"]');
-      firstCell?.focus();
-    }, 0);
-  });
-
-  // Import CSV
-  document.getElementById("importCsvBtn").addEventListener("click", () => {
-    const fileInput = document.getElementById("importFile");
-    const file = fileInput.files[0];
+  // Import CSV - trigger file input when file is selected
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
     
     if (!file) {
-      alert("Bitte wählen Sie eine Datei aus.");
       return;
     }
     
@@ -55,10 +20,11 @@ export function initEventHandlers() {
     // Support CSV files
     if (!fileName.endsWith('.csv')) {
       alert("Bitte verwenden Sie eine CSV-Datei (.csv).");
+      e.target.value = "";
       return;
     }
     
-    importCSV(file, fileInput);
+    importCSV(file, e.target);
   });
 
   // Save button
@@ -92,7 +58,6 @@ function importCSV(file, fileInput) {
       setRows([...importedRows, ...rows]);
       save();
       render();
-      closeModal();
       
       alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
     } catch (error) {

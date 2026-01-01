@@ -10,45 +10,12 @@
   <h1>Firmen-Kontakte – Tabelle</h1>
 
   <div class="bar">
-    <button id="addRowBtn">+ Neue Zeile</button>
     <button id="saveBtn">Speichern</button>
     <button id="exportBtn">CSV Export</button>
+    <label for="importFile" class="import-btn">CSV Import</label>
+    <input type="file" id="importFile" accept=".csv" style="display: none;" />
     <input id="search" class="search" type="search" placeholder="Suchen (Firma, Name, E-mail, Status …)" />
     <span class="small">Autosave beim Speichern/Import.</span>
-  </div>
-
-  <!-- Modal for Add Row Options -->
-  <div id="addModal" class="modal">
-    <div class="modal-content">
-      <h2>Zeilen hinzufügen</h2>
-      <div class="modal-section">
-        <h3>Mehrere Zeilen hinzufügen</h3>
-        <label for="rowCount">Anzahl der Zeilen (1-10):</label>
-        <select id="rowCount">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-        </select>
-        <button id="addMultipleBtn" class="modal-btn">Hinzufügen</button>
-      </div>
-      <div class="modal-divider"></div>
-      <div class="modal-section">
-        <h3>CSV-Tabelle importieren</h3>
-        <p class="modal-hint">Importieren Sie eine CSV-Datei. Die erste Zeile sollte die Spaltenüberschriften enthalten. Spalten werden automatisch zugeordnet.</p>
-        <input type="file" id="importFile" accept=".csv" />
-        <button id="importCsvBtn" class="modal-btn">Importieren</button>
-      </div>
-      <div class="modal-actions">
-        <button id="closeModalBtn" class="modal-btn-cancel">Abbrechen</button>
-      </div>
-    </div>
   </div>
 
   <div class="hint">
