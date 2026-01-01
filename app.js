@@ -100,7 +100,8 @@ function toCSV(dataRows) {
 function csvEscape(value) {
   const v = String(value ?? "");
   // Excel/CSV: wrap if needed
-  if (/[",\n\r]/.test(v)) return `"${v.replaceAll('"','""')}"`;
+  // Quote fields that contain: commas, quotes, newlines, or have leading/trailing spaces
+  if (/[",\n\r]/.test(v) || v !== v.trim()) return `"${v.replaceAll('"','""')}"`;
   return v;
 }
 
@@ -376,30 +377,42 @@ function importCSV(file, fileInput) {
         const result = [];
         let current = '';
         let inQuotes = false;
+        let wasQuoted = false; // Track if the current field was quoted
         
         for (let i = 0; i < line.length; i++) {
           const char = line[i];
           const nextChar = line[i + 1];
           
           if (char === '"') {
-            if (inQuotes && nextChar === '"') {
+            if (current === '' && !inQuotes) {
+              // First quote at start of field (no content yet) - this is a quoted field
+              inQuotes = true;
+              wasQuoted = true;
+            } else if (inQuotes && nextChar === '"') {
               // Escaped quote: add single quote to output
               current += '"';
               i++; // skip next quote
+            } else if (inQuotes) {
+              // Closing quote
+              inQuotes = false;
             } else {
-              // Toggle quote state but do not include delimiter quotes in the output
-              inQuotes = !inQuotes;
+              // Quote in middle of unquoted field - treat as literal
+              current += char;
             }
           } else if (char === ',' && !inQuotes) {
-            result.push(current);
+            // End of field: preserve spaces in quoted fields, trim unquoted fields
+            result.push({ value: current, wasQuoted });
             current = '';
+            wasQuoted = false;
           } else {
             current += char;
           }
         }
-        result.push(current);
+        // Push the last field
+        result.push({ value: current, wasQuoted });
         
-        return result.map(s => s.trim());
+        // Only trim fields that were not quoted
+        return result.map(field => field.wasQuoted ? field.value : field.value.trim());
       };
       
       const lines = splitCsvRecords(text);
