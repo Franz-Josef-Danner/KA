@@ -112,6 +112,47 @@ function rowMatchesSearch(row, q) {
 }
 
 // -----------------------------
+// Duplicate Detection
+// -----------------------------
+function findDuplicates() {
+  // For each column, find values that appear more than once (ignoring empty values)
+  const duplicatesByColumn = {};
+  
+  for (const col of COLUMNS) {
+    const valueCount = {};
+    
+    // Count occurrences of each non-empty value in this column
+    rows.forEach(row => {
+      const value = sanitizeText(row[col]).trim();
+      if (value) { // Only count non-empty values
+        valueCount[value] = (valueCount[value] || 0) + 1;
+      }
+    });
+    
+    // Store values that appear more than once
+    duplicatesByColumn[col] = new Set();
+    for (const [value, count] of Object.entries(valueCount)) {
+      if (count > 1) {
+        duplicatesByColumn[col].add(value);
+      }
+    }
+  }
+  
+  return duplicatesByColumn;
+}
+
+function rowHasDuplicate(row, duplicatesByColumn) {
+  // Check if any value in the row is a duplicate in its column
+  for (const col of COLUMNS) {
+    const value = sanitizeText(row[col]).trim();
+    if (value && duplicatesByColumn[col].has(value)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// -----------------------------
 // Render
 // -----------------------------
 const tbody = document.getElementById("tbody");
@@ -120,11 +161,36 @@ const searchInput = document.getElementById("search");
 function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
-
+  
+  // Find all duplicates
+  const duplicatesByColumn = findDuplicates();
+  
+  // Separate rows into duplicates and non-duplicates
+  const duplicateRows = [];
+  const normalRows = [];
+  
   rows.forEach((row, idx) => {
     if (!rowMatchesSearch(row, q)) return;
-
+    
+    const hasDuplicate = rowHasDuplicate(row, duplicatesByColumn);
+    if (hasDuplicate) {
+      duplicateRows.push({ row, idx });
+    } else {
+      normalRows.push({ row, idx });
+    }
+  });
+  
+  // Render duplicates first, then normal rows
+  const orderedRows = [...duplicateRows, ...normalRows];
+  
+  orderedRows.forEach(({ row, idx }) => {
+    const hasDuplicate = rowHasDuplicate(row, duplicatesByColumn);
     const tr = document.createElement("tr");
+    
+    // Add duplicate class if row has duplicates
+    if (hasDuplicate) {
+      tr.classList.add("duplicate-row");
+    }
 
     for (const col of COLUMNS) {
       const td = document.createElement("td");

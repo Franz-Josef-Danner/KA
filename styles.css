@@ -23,6 +23,8 @@ tbody td {
   vertical-align: top;
 }
 tbody tr:hover { background: #fcfcfc; }
+tbody tr.duplicate-row { background: #ffe6e6; }
+tbody tr.duplicate-row:hover { background: #ffd6d6; }
 td[contenteditable="true"] { 
   outline: none; 
   cursor: text;
