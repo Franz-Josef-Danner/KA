@@ -1,7 +1,7 @@
 // -----------------------------
 // Search Functionality
 // -----------------------------
-import { COLUMNS } from '../modules/config.js';
+import { COLUMNS } from './config.js';
 
 export function rowMatchesSearch(row, q) {
   if (!q) return true;

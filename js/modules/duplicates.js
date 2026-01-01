@@ -1,7 +1,7 @@
 // -----------------------------
 // Duplicate Detection
 // -----------------------------
-import { COLUMNS } from '../modules/config.js';
+import { COLUMNS } from './config.js';
 
 export function findDuplicates(dataRows) {
   // Map: column -> value -> [row indices that have this value]
