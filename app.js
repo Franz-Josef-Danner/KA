@@ -20,6 +20,18 @@ function sanitizeText(s) {
   return String(s ?? "").replace(/\u0000/g, "");
 }
 
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 function toCellDisplay(col, value) {
   const v = sanitizeText(value).trim();
   if (!v) return "";
@@ -146,7 +158,7 @@ function findDuplicates(dataRows) {
   return duplicateMap;
 }
 
-function getRowsWithDuplicates(dataRows, duplicateMap) {
+function getRowsWithDuplicates(duplicateMap) {
   const rowsWithDuplicates = new Set();
   
   duplicateMap.forEach((valueMap) => {
@@ -170,7 +182,7 @@ function render() {
 
   // Find duplicates in all rows (before filtering by search)
   const duplicateMap = findDuplicates(rows);
-  const rowsWithDuplicates = getRowsWithDuplicates(rows, duplicateMap);
+  const rowsWithDuplicates = getRowsWithDuplicates(duplicateMap);
   
   // Sort rows: rows with duplicates first, then others
   const duplicateIndices = [];
@@ -220,8 +232,8 @@ function render() {
         const newVal = td.textContent ?? "";
         rows[idx][col] = sanitizeText(newVal);
         td.innerHTML = toCellDisplay(col, rows[idx][col]);
-        // Re-render to update duplicate detection
-        render();
+        // Use debounced render to avoid multiple rapid re-renders during editing
+        debouncedRender();
       });
 
       tr.appendChild(td);
@@ -260,6 +272,9 @@ function render() {
     tbody.appendChild(tr);
   });
 }
+
+// Create a debounced version of render to avoid multiple rapid re-renders
+const debouncedRender = debounce(render, 300);
 
 // -----------------------------
 // Events
