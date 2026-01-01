@@ -119,19 +119,7 @@ td[contenteditable="true"]:empty::before {
   border-top: 1px solid #e5e5e5;
   margin: 20px 0;
 }
-.modal-btn {
-  padding: 8px 16px;
-  border: 1px solid #ccc;
-  background: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-}
-.modal-btn:hover {
-  background: #f5f5f5;
-  border-color: #999;
-}
+.modal-btn,
 .modal-btn-cancel {
   padding: 8px 16px;
   border: 1px solid #ccc;
@@ -139,10 +127,19 @@ td[contenteditable="true"]:empty::before {
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+}
+.modal-btn {
+  font-weight: 500;
+}
+.modal-btn-cancel {
   color: #666;
 }
+.modal-btn:hover,
 .modal-btn-cancel:hover {
   background: #f5f5f5;
+}
+.modal-btn:hover {
+  border-color: #999;
 }
 .modal-actions {
   margin-top: 20px;
