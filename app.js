@@ -186,16 +186,202 @@ function render() {
 // -----------------------------
 // Events
 // -----------------------------
-document.getElementById("addRowBtn").addEventListener("click", () => {
-  rows.unshift(newEmptyRow());
+const modal = document.getElementById("addModal");
+const addRowBtn = document.getElementById("addRowBtn");
+
+addRowBtn.addEventListener("click", () => {
+  modal.classList.add("show");
+});
+
+document.getElementById("closeModalBtn").addEventListener("click", () => {
+  modal.classList.remove("show");
+  addRowBtn.focus();
+});
+
+// Close modal when clicking outside of it
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) {
+    modal.classList.remove("show");
+    addRowBtn.focus();
+  }
+});
+
+// Close modal when pressing the Escape key
+document.addEventListener("keydown", (e) => {
+  if ((e.key === "Escape" || e.key === "Esc") && modal.classList.contains("show")) {
+    modal.classList.remove("show");
+    addRowBtn.focus();
+  }
+});
+
+document.getElementById("addMultipleBtn").addEventListener("click", () => {
+  const count = parseInt(document.getElementById("rowCount").value, 10);
+  
+  // Validate row count
+  if (isNaN(count) || count < 1 || count > 10) {
+    alert("Ungültige Anzahl von Zeilen. Bitte wählen Sie eine Zahl zwischen 1 und 10.");
+    return;
+  }
+  
+  for (let i = 0; i < count; i++) {
+    rows.unshift(newEmptyRow());
+  }
   save();
   render();
+  modal.classList.remove("show");
+  
   // Fokus auf erste Zelle der neuen Zeile
   setTimeout(() => {
     const firstCell = tbody.querySelector('td[contenteditable="true"]');
     firstCell?.focus();
   }, 0);
 });
+
+document.getElementById("importExcelBtn").addEventListener("click", () => {
+  const fileInput = document.getElementById("importFile");
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert("Bitte wählen Sie eine Datei aus.");
+    return;
+  }
+  
+  const fileName = file.name.toLowerCase();
+  
+  // Support CSV files
+  if (!fileName.endsWith('.csv')) {
+    alert("Bitte verwenden Sie eine CSV-Datei (.csv).");
+    return;
+  }
+  
+  importCSV(file, fileInput);
+});
+
+function importCSV(file, fileInput) {
+  const reader = new FileReader();
+  
+  reader.onload = (e) => {
+    try {
+      const text = e.target.result;
+      const lines = text.split(/\r?\n/).filter(line => line.trim());
+      
+      if (lines.length === 0) {
+        alert("Die CSV-Datei enthält keine Daten.");
+        return;
+      }
+      
+      // Parse CSV (simple parser, handles quotes)
+      const parseCSVLine = (line) => {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              current += '"';
+              i++; // skip next quote
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        result.push(current);
+        
+        // If still in quotes at end of line, it's malformed - close the quotes
+        if (inQuotes) {
+          console.warn("Malformed CSV: Unclosed quotes in line:", line);
+        }
+        
+        return result.map(s => s.trim());
+      };
+      
+      // First line is headers
+      const headers = parseCSVLine(lines[0]);
+      const dataLines = lines.slice(1);
+      
+      if (dataLines.length === 0) {
+        alert("Die CSV-Datei enthält keine Datenzeilen.");
+        return;
+      }
+      
+      // Import rows
+      const importedRows = [];
+      for (const line of dataLines) {
+        const values = parseCSVLine(line);
+        const newRow = newEmptyRow();
+        
+        // Track which columns have been mapped and which CSV indices have been used
+        const mappedColumns = new Set();
+        const usedIndices = new Set();
+        
+        // First pass: Try to match by column name (case-insensitive)
+        headers.forEach((header, idx) => {
+          const headerStr = String(header).trim();
+          const matchingCol = COLUMNS.find(col => 
+            col.toLowerCase() === headerStr.toLowerCase() && !mappedColumns.has(col)
+          );
+          
+          if (matchingCol) {
+            mappedColumns.add(matchingCol);
+            usedIndices.add(idx);
+            newRow[matchingCol] = sanitizeText(values[idx] ?? "");
+          }
+        });
+        
+        // Second pass: Map remaining CSV columns by position to unmapped table columns
+        if (mappedColumns.size < COLUMNS.length && usedIndices.size < values.length) {
+          let tableColIdx = 0;
+          let csvIdx = 0;
+          
+          while (tableColIdx < COLUMNS.length && csvIdx < values.length) {
+            // Skip already mapped columns and indices
+            while (tableColIdx < COLUMNS.length && mappedColumns.has(COLUMNS[tableColIdx])) {
+              tableColIdx++;
+            }
+            while (csvIdx < values.length && usedIndices.has(csvIdx)) {
+              csvIdx++;
+            }
+            
+            // Map the remaining columns by position
+            if (tableColIdx < COLUMNS.length && csvIdx < values.length) {
+              newRow[COLUMNS[tableColIdx]] = sanitizeText(values[csvIdx] ?? "");
+              tableColIdx++;
+              csvIdx++;
+            }
+          }
+        }
+        
+        importedRows.push(newRow);
+      }
+      
+      // Add imported rows to the beginning of the table
+      rows = [...importedRows, ...rows];
+      save();
+      render();
+      modal.classList.remove("show");
+      
+      alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
+      
+      // Reset file input and restore focus
+      fileInput.value = "";
+      addRowBtn.focus();
+    } catch (error) {
+      console.error("Error importing CSV:", error);
+      alert("Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.");
+    }
+  };
+  
+  reader.readAsText(file, 'UTF-8');
+}
 
 document.getElementById("saveBtn").addEventListener("click", () => {
   save();
