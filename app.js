@@ -329,10 +329,10 @@ function importCSV(file, fileInput) {
     try {
       const text = e.target.result;
       
-      // Shared CSV parsing helper to handle quote escaping logic
-      // Used by both record splitting and field parsing functions
-      function parseCsvWithQuotes(csvText, delimiter) {
-        const results = [];
+      // Split CSV text into records (lines) - preserves quotes and escaping
+      // Only uses quote state to determine line boundaries
+      function splitCsvRecords(csvText) {
+        const records = [];
         let current = '';
         let inQuotes = false;
         
@@ -341,19 +341,21 @@ function importCSV(file, fileInput) {
           const nextChar = csvText[i + 1];
           
           if (char === '"') {
-            // Handle escaped quote ("")
+            current += char; // Keep the quote in the record
+            // Track escaped quotes for quote state tracking
             if (inQuotes && nextChar === '"') {
-              current += '"';
+              current += nextChar; // Keep both quotes
               i++; // skip the second quote
             } else {
-              // Toggle quote state but do not include delimiter quotes in the output
               inQuotes = !inQuotes;
             }
-          } else if (delimiter(char, nextChar, inQuotes)) {
-            // Delimiter found outside quotes
-            results.push(current);
+          } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            // End of record (only when not inside quotes)
+            if (current.trim()) {
+              records.push(current);
+            }
             current = '';
-            // Handle multi-character delimiters (e.g., \r\n)
+            // Treat \r\n as a single newline
             if (char === '\r' && nextChar === '\n') {
               i++;
             }
@@ -362,29 +364,45 @@ function importCSV(file, fileInput) {
           }
         }
         
-        if (current.length > 0 || results.length > 0) {
-          results.push(current);
+        if (current.trim()) {
+          records.push(current);
         }
         
-        return results;
+        return records;
       }
       
-      // Split CSV text into records (lines)
-      function splitCsvRecords(csvText) {
-        return parseCsvWithQuotes(csvText, (char, nextChar, inQuotes) => {
-          return (char === '\r' || char === '\n') && !inQuotes;
-        });
-      }
-      
-      // Parse a CSV line into fields
+      // Parse a CSV line into fields - removes delimiter quotes and handles escaping
       const parseCSVLine = (line) => {
-        const fields = parseCsvWithQuotes(line, (char, nextChar, inQuotes) => {
-          return char === ',' && !inQuotes;
-        });
-        return fields.map(s => s.trim());
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              // Escaped quote: add single quote to output
+              current += '"';
+              i++; // skip next quote
+            } else {
+              // Toggle quote state but do not include delimiter quotes in the output
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        result.push(current);
+        
+        return result.map(s => s.trim());
       };
       
-      const lines = splitCsvRecords(text).filter(line => line.trim());
+      const lines = splitCsvRecords(text);
       
       if (lines.length === 0) {
         alert("Die CSV-Datei enthält keine Daten.");
