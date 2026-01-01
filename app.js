@@ -371,7 +371,7 @@ function importCSV(file, fileInput) {
         
         // Check for unclosed quotes
         if (inQuotes) {
-          console.warn("CSV parsing warning: File has unclosed quotes");
+          throw new Error("CSV parsing error: File has unclosed quotes. This can cause data corruption. Please check your CSV file format.");
         }
         
         return records;
@@ -418,11 +418,11 @@ function importCSV(file, fileInput) {
         
         // Check for unclosed quotes
         if (inQuotes) {
-          console.warn("CSV parsing warning: Line has unclosed quotes");
+          throw new Error("CSV parsing error: Line has unclosed quotes. This can cause data corruption. Please check your CSV file format.");
         }
         
-        // Preserve whitespace for all fields (quoted and unquoted)
-        return result.map(field => field.value);
+        // Preserve whitespace for quoted fields, trim whitespace for unquoted fields
+        return result.map(field => (field.wasQuoted ? field.value : field.value.trim()));
       };
       
       const lines = splitCsvRecords(text);
