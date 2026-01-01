@@ -100,7 +100,8 @@ function toCSV(dataRows) {
 function csvEscape(value) {
   const v = String(value ?? "");
   // Excel/CSV: wrap if needed
-  if (/[",\n\r]/.test(v)) return `"${v.replaceAll('"','""')}"`;
+  // Quote fields that contain: commas, quotes, newlines, or have leading/trailing spaces
+  if (/[",\n\r]/.test(v) || v !== v.trim()) return `"${v.replaceAll('"','""')}"`;
   return v;
 }
 
