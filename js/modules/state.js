@@ -1,0 +1,43 @@
+// -----------------------------
+// State Management
+// -----------------------------
+import { STORAGE_KEY, COLUMNS } from './config.js';
+import { sanitizeText } from '../utils/sanitize.js';
+
+let rows = load() ?? [];
+
+export function getRows() {
+  return rows;
+}
+
+export function setRows(newRows) {
+  rows = newRows;
+}
+
+export function newEmptyRow() {
+  const obj = {};
+  for (const c of COLUMNS) obj[c] = "";
+  return obj;
+}
+
+export function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+}
+
+export function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return null;
+
+    // Normalize: ensure all columns exist
+    return data.map(r => {
+      const row = newEmptyRow();
+      for (const c of COLUMNS) row[c] = sanitizeText(r?.[c] ?? "");
+      return row;
+    });
+  } catch {
+    return null;
+  }
+}
