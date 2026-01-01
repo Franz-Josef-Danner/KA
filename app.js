@@ -173,7 +173,6 @@ function render() {
   const rowsWithDuplicates = getRowsWithDuplicates(rows, duplicateMap);
   
   // Sort rows: rows with duplicates first, then others
-  const sortedIndices = [];
   const duplicateIndices = [];
   const nonDuplicateIndices = [];
   
