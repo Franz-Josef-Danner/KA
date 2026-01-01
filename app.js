@@ -191,7 +191,7 @@ let lastFocusedElement = null;
 
 // Get all focusable elements in modal
 function getFocusableElements() {
-  const focusableSelector = 'select, input, button, [tabindex]:not([tabindex="-1"])';
+  const focusableSelector = 'select, input, button, a[href], textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
   const modalContent = modal.querySelector('.modal-content');
   return Array.from(modalContent.querySelectorAll(focusableSelector));
 }
@@ -226,11 +226,13 @@ function openModal() {
   lastFocusedElement = document.activeElement;
   modal.classList.add("show");
   
-  // Set focus to first focusable element
-  const focusableElements = getFocusableElements();
-  if (focusableElements.length > 0) {
-    focusableElements[0].focus();
-  }
+  // Set focus to first focusable element with a small delay for screen readers
+  setTimeout(() => {
+    const focusableElements = getFocusableElements();
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    }
+  }, 100);
   
   // Add keyboard event listeners
   document.addEventListener('keydown', handleModalKeydown);
@@ -252,6 +254,9 @@ function closeModal() {
 
 // Handle keyboard events in modal
 function handleModalKeydown(e) {
+  // Only handle keyboard events if modal is visible
+  if (!modal.classList.contains('show')) return;
+  
   if (e.key === 'Escape') {
     closeModal();
   } else if (e.key === 'Tab') {
