@@ -187,19 +187,22 @@ function render() {
 // Events
 // -----------------------------
 const modal = document.getElementById("addModal");
+const addRowBtn = document.getElementById("addRowBtn");
 
-document.getElementById("addRowBtn").addEventListener("click", () => {
+addRowBtn.addEventListener("click", () => {
   modal.classList.add("show");
 });
 
 document.getElementById("closeModalBtn").addEventListener("click", () => {
   modal.classList.remove("show");
+  addRowBtn.focus();
 });
 
 // Close modal when clicking outside of it
 modal.addEventListener("click", (e) => {
   if (e.target === modal) {
     modal.classList.remove("show");
+    addRowBtn.focus();
   }
 });
 
@@ -207,6 +210,7 @@ modal.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if ((e.key === "Escape" || e.key === "Esc") && modal.classList.contains("show")) {
     modal.classList.remove("show");
+    addRowBtn.focus();
   }
 });
 
@@ -367,8 +371,9 @@ function importCSV(file, fileInput) {
       
       alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
       
-      // Reset file input
+      // Reset file input and restore focus
       fileInput.value = "";
+      addRowBtn.focus();
     } catch (error) {
       console.error("Error importing CSV:", error);
       alert("Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.");
