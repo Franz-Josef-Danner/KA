@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Firmen-Tabelle</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>Firmen-Kontakte – Tabelle</h1>
+
+  <div class="bar">
+    <button id="addRowBtn">+ Neue Zeile</button>
+    <button id="saveBtn">Speichern</button>
+    <button id="exportBtn">CSV Export</button>
+    <button id="clearBtn" class="danger">Alles löschen</button>
+    <input id="search" class="search" type="search" placeholder="Suchen (Firma, Name, E-mail, Status …)" />
+    <span class="small">Autosave beim Speichern/Import.</span>
+  </div>
+
+  <!-- Modal for Add Row Options -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <h2>Zeilen hinzufügen</h2>
+      <div class="modal-section">
+        <h3>Mehrere Zeilen hinzufügen</h3>
+        <label for="rowCount">Anzahl der Zeilen (1-10):</label>
+        <select id="rowCount">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+        <button id="addMultipleBtn" class="modal-btn">Hinzufügen</button>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="modal-section">
+        <h3>CSV-Tabelle importieren</h3>
+        <p class="modal-hint">Importieren Sie eine CSV-Datei. Die erste Zeile sollte die Spaltenüberschriften enthalten. Spalten werden automatisch zugeordnet.</p>
+        <input type="file" id="importFile" accept=".csv" />
+        <button id="importCsvBtn" class="modal-btn">Importieren</button>
+      </div>
+      <div class="modal-actions">
+        <button id="closeModalBtn" class="modal-btn-cancel">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">
+    Bedienung: Zellen anklicken und direkt tippen. <span class="pill">Tab</span> springt zur nächsten Zelle.
+    Links und E-Mails werden beim Anzeigen automatisch als Link formatiert (Export bleibt Text).
+  </div>
+
+  <div class="wrap">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th>Firmen_ID</th>
+          <th>Firma</th>
+          <th>Gender</th>
+          <th>Titel</th>
+          <th>Vorname</th>
+          <th>Nachname</th>
+          <th>E-mail</th>
+          <th>Tell</th>
+          <th>Webseite</th>
+          <th>Status quo</th>
+          <th>CAM</th>
+          <th>CUT</th>
+          <th>Cgi</th>
+          <th>Status</th>
+          <th>Preisliste_Daten_ID</th>
+          <th>Adresse</th>
+          <th class="actions">Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
