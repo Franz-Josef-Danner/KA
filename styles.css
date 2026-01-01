@@ -42,6 +42,10 @@ td[contenteditable="true"]:empty::before {
   color: #ccc;
   font-style: italic;
 }
+.duplicate { 
+  background-color: #ffcccc !important;
+  color: #cc0000;
+}
 .actions { white-space: nowrap; }
 .actions button { margin-right: 4px; }
 .actions button:last-child { margin-right: 0; }
