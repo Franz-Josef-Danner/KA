@@ -174,17 +174,16 @@ function render() {
     
     const hasDuplicate = rowHasDuplicate(row, duplicatesByColumn);
     if (hasDuplicate) {
-      duplicateRows.push({ row, idx });
+      duplicateRows.push({ row, idx, hasDuplicate: true });
     } else {
-      normalRows.push({ row, idx });
+      normalRows.push({ row, idx, hasDuplicate: false });
     }
   });
   
   // Render duplicates first, then normal rows
   const orderedRows = [...duplicateRows, ...normalRows];
   
-  orderedRows.forEach(({ row, idx }) => {
-    const hasDuplicate = rowHasDuplicate(row, duplicatesByColumn);
+  orderedRows.forEach(({ row, idx, hasDuplicate }) => {
     const tr = document.createElement("tr");
     
     // Add duplicate class if row has duplicates
