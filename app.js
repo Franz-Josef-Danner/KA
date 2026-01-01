@@ -187,19 +187,90 @@ function render() {
 // Events
 // -----------------------------
 const modal = document.getElementById("addModal");
+let lastFocusedElement = null;
+
+// Get all focusable elements in modal
+function getFocusableElements() {
+  const focusableSelector = 'select, input, button, [tabindex]:not([tabindex="-1"])';
+  const modalContent = modal.querySelector('.modal-content');
+  return Array.from(modalContent.querySelectorAll(focusableSelector));
+}
+
+// Handle focus trap inside modal
+function trapFocus(e) {
+  if (e.key !== 'Tab') return;
+  
+  const focusableElements = getFocusableElements();
+  if (focusableElements.length === 0) return;
+  
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+  
+  if (e.shiftKey) {
+    // Shift+Tab: moving backwards
+    if (document.activeElement === firstElement) {
+      e.preventDefault();
+      lastElement.focus();
+    }
+  } else {
+    // Tab: moving forwards
+    if (document.activeElement === lastElement) {
+      e.preventDefault();
+      firstElement.focus();
+    }
+  }
+}
+
+// Open modal
+function openModal() {
+  lastFocusedElement = document.activeElement;
+  modal.classList.add("show");
+  
+  // Set focus to first focusable element
+  const focusableElements = getFocusableElements();
+  if (focusableElements.length > 0) {
+    focusableElements[0].focus();
+  }
+  
+  // Add keyboard event listeners
+  document.addEventListener('keydown', handleModalKeydown);
+}
+
+// Close modal
+function closeModal() {
+  modal.classList.remove("show");
+  
+  // Remove keyboard event listeners
+  document.removeEventListener('keydown', handleModalKeydown);
+  
+  // Restore focus to element that opened modal
+  if (lastFocusedElement) {
+    lastFocusedElement.focus();
+    lastFocusedElement = null;
+  }
+}
+
+// Handle keyboard events in modal
+function handleModalKeydown(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+  } else if (e.key === 'Tab') {
+    trapFocus(e);
+  }
+}
 
 document.getElementById("addRowBtn").addEventListener("click", () => {
-  modal.classList.add("show");
+  openModal();
 });
 
 document.getElementById("closeModalBtn").addEventListener("click", () => {
-  modal.classList.remove("show");
+  closeModal();
 });
 
 // Close modal when clicking outside of it
 modal.addEventListener("click", (e) => {
   if (e.target === modal) {
-    modal.classList.remove("show");
+    closeModal();
   }
 });
 
@@ -217,7 +288,7 @@ document.getElementById("addMultipleBtn").addEventListener("click", () => {
   }
   save();
   render();
-  modal.classList.remove("show");
+  closeModal();
   
   // Fokus auf erste Zelle der neuen Zeile
   setTimeout(() => {
@@ -393,7 +464,7 @@ function importCSV(file, fileInput) {
       rows = [...importedRows, ...rows];
       save();
       render();
-      modal.classList.remove("show");
+      closeModal();
       
       alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
       
