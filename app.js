@@ -112,44 +112,55 @@ function rowMatchesSearch(row, q) {
 }
 
 // -----------------------------
-// Duplicate Detection
+// Duplicate Detection (Sequential Column-by-Column)
 // -----------------------------
-function findDuplicates() {
-  // For each column, find values that appear more than once (ignoring empty values)
-  const duplicatesByColumn = {};
+function findDuplicatesSequential(filteredRows) {
+  // This function implements sequential duplicate detection:
+  // 1. Check column 1 for duplicates, mark those rows
+  // 2. Check column 2 for duplicates, but skip rows already marked from column 1
+  // 3. Continue this process through all columns
   
+  const rowIndices = filteredRows.map(item => item.idx);
+  const markedRows = new Set(); // Track which row indices are marked as duplicates
+  const duplicatesByColumn = {}; // Track which values in each column are duplicates
+  
+  // Process each column sequentially
   for (const col of COLUMNS) {
     const valueCount = {};
+    const valueToRows = {}; // Map values to row indices
     
     // Count occurrences of each non-empty value in this column
-    rows.forEach(row => {
+    // But only count rows that haven't been marked yet
+    filteredRows.forEach(({ row, idx }) => {
+      if (markedRows.has(idx)) return; // Skip already marked rows
+      
       const value = sanitizeText(row[col]).trim();
       if (value) { // Only count non-empty values
         valueCount[value] = (valueCount[value] || 0) + 1;
+        if (!valueToRows[value]) {
+          valueToRows[value] = [];
+        }
+        valueToRows[value].push(idx);
       }
     });
     
-    // Store values that appear more than once
+    // Find values that appear more than once and mark those rows
     duplicatesByColumn[col] = new Set();
     for (const [value, count] of Object.entries(valueCount)) {
       if (count > 1) {
         duplicatesByColumn[col].add(value);
+        // Mark all rows with this duplicate value
+        valueToRows[value].forEach(idx => markedRows.add(idx));
       }
     }
   }
   
-  return duplicatesByColumn;
+  return { duplicatesByColumn, markedRows };
 }
 
-function rowHasDuplicate(row, duplicatesByColumn) {
-  // Check if any value in the row is a duplicate in its column
-  for (const col of COLUMNS) {
-    const value = sanitizeText(row[col]).trim();
-    if (value && duplicatesByColumn[col].has(value)) {
-      return true;
-    }
-  }
-  return false;
+function rowHasDuplicate(rowIdx, markedRows) {
+  // Check if this row index is in the set of marked duplicate rows
+  return markedRows.has(rowIdx);
 }
 
 // -----------------------------
@@ -162,17 +173,23 @@ function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
   
-  // Find all duplicates
-  const duplicatesByColumn = findDuplicates();
+  // First, filter rows based on search
+  const filteredRows = [];
+  rows.forEach((row, idx) => {
+    if (rowMatchesSearch(row, q)) {
+      filteredRows.push({ row, idx });
+    }
+  });
+  
+  // Find duplicates using sequential column-by-column checking
+  const { duplicatesByColumn, markedRows } = findDuplicatesSequential(filteredRows);
   
   // Separate rows into duplicates and non-duplicates
   const duplicateRows = [];
   const normalRows = [];
   
-  rows.forEach((row, idx) => {
-    if (!rowMatchesSearch(row, q)) return;
-    
-    const hasDuplicate = rowHasDuplicate(row, duplicatesByColumn);
+  filteredRows.forEach(({ row, idx }) => {
+    const hasDuplicate = rowHasDuplicate(idx, markedRows);
     if (hasDuplicate) {
       duplicateRows.push({ row, idx, hasDuplicate: true });
     } else {
