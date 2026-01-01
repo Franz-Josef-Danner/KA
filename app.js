@@ -302,7 +302,7 @@ document.getElementById("addMultipleBtn").addEventListener("click", () => {
   }, 0);
 });
 
-document.getElementById("importExcelBtn").addEventListener("click", () => {
+document.getElementById("importCsvBtn").addEventListener("click", () => {
   const fileInput = document.getElementById("importFile");
   const file = fileInput.files[0];
   
@@ -328,31 +328,32 @@ function importCSV(file, fileInput) {
   reader.onload = (e) => {
     try {
       const text = e.target.result;
-      const lines = splitCsvRecords(text).filter(line => line.trim());
       
-      function splitCsvRecords(csvText) {
-        const records = [];
+      // Shared CSV parsing helper to handle quote escaping logic
+      // Used by both record splitting and field parsing functions
+      function parseCsvWithQuotes(csvText, delimiter) {
+        const results = [];
         let current = '';
         let inQuotes = false;
         
         for (let i = 0; i < csvText.length; i++) {
           const char = csvText[i];
           const nextChar = csvText[i + 1];
-
+          
           if (char === '"') {
             // Handle escaped quote ("")
             if (inQuotes && nextChar === '"') {
               current += '"';
               i++; // skip the second quote
             } else {
+              // Toggle quote state but do not include delimiter quotes in the output
               inQuotes = !inQuotes;
-              current += char;
             }
-          } else if ((char === '\r' || char === '\n') && !inQuotes) {
-            // End of record (only when not inside quotes)
-            records.push(current);
+          } else if (delimiter(char, nextChar, inQuotes)) {
+            // Delimiter found outside quotes
+            results.push(current);
             current = '';
-            // Treat \r\n as a single newline
+            // Handle multi-character delimiters (e.g., \r\n)
             if (char === '\r' && nextChar === '\n') {
               i++;
             }
@@ -360,51 +361,35 @@ function importCSV(file, fileInput) {
             current += char;
           }
         }
-
-        if (current.length > 0) {
-          records.push(current);
+        
+        if (current.length > 0 || results.length > 0) {
+          results.push(current);
         }
-
-        return records;
+        
+        return results;
       }
+      
+      // Split CSV text into records (lines)
+      function splitCsvRecords(csvText) {
+        return parseCsvWithQuotes(csvText, (char, nextChar, inQuotes) => {
+          return (char === '\r' || char === '\n') && !inQuotes;
+        });
+      }
+      
+      // Parse a CSV line into fields
+      const parseCSVLine = (line) => {
+        const fields = parseCsvWithQuotes(line, (char, nextChar, inQuotes) => {
+          return char === ',' && !inQuotes;
+        });
+        return fields.map(s => s.trim());
+      };
+      
+      const lines = splitCsvRecords(text).filter(line => line.trim());
+      
       if (lines.length === 0) {
         alert("Die CSV-Datei enthält keine Daten.");
         return;
       }
-      
-      // Parse CSV (simple parser, handles quotes)
-      const parseCSVLine = (line) => {
-        const result = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          const nextChar = line[i + 1];
-          
-          if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-              current += '"';
-              i++; // skip next quote
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === ',' && !inQuotes) {
-            result.push(current);
-            current = '';
-          } else {
-            current += char;
-          }
-        }
-        result.push(current);
-        
-        // If still in quotes at end of line, it's malformed - close the quotes
-        if (inQuotes) {
-          console.warn("Malformed CSV: Unclosed quotes in line:", line);
-        }
-        
-        return result.map(s => s.trim());
-      };
       
       // First line is headers
       const headers = parseCSVLine(lines[0]);
@@ -424,6 +409,21 @@ function importCSV(file, fileInput) {
         // Track which columns have been mapped and which CSV indices have been used
         const mappedColumns = new Set();
         const usedIndices = new Set();
+        
+        // COLUMN MAPPING ALGORITHM (Two-pass approach):
+        // We use a two-pass approach to maximize correct column mapping:
+        // 
+        // Pass 1: Name-based mapping
+        //   - Matches CSV headers to table columns by name (case-insensitive)
+        //   - This ensures columns with matching names are correctly mapped
+        //   - The Set tracking prevents duplicate mappings if CSV has duplicate headers
+        // 
+        // Pass 2: Position-based mapping for remaining columns
+        //   - Maps any remaining unmapped CSV columns to unmapped table columns by position
+        //   - This handles cases where CSV columns don't match our column names
+        //   - Only processes columns/indices not used in Pass 1
+        // 
+        // Result: Named columns get priority, then remaining data fills in by position
         
         // First pass: Try to match by column name (case-insensitive)
         headers.forEach((header, idx) => {
@@ -478,6 +478,14 @@ function importCSV(file, fileInput) {
     } catch (error) {
       console.error("Error importing CSV:", error);
       alert("Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.");
+    }
+  };
+  
+  reader.onerror = () => {
+    console.error("Fehler beim Lesen der Datei:", reader.error);
+    alert("Fehler beim Lesen der Datei.");
+    if (fileInput) {
+      fileInput.value = "";
     }
   };
   
