@@ -119,6 +119,16 @@ function findDuplicatesSequential(filteredRows) {
   // 1. Check column 1 for duplicates, mark those rows
   // 2. Check column 2 for duplicates, but skip rows already marked from column 1
   // 3. Continue this process through all columns
+  //
+  // Key behavior: Once a row is marked as a duplicate in an earlier column,
+  // it is excluded from duplicate detection in all subsequent columns.
+  // This prevents "double counting" and prioritizes earlier columns.
+  //
+  // Example:
+  // Row 1: [ID=1, Name=A]
+  // Row 2: [ID=1, Name=B]  
+  // Row 3: [ID=2, Name=A]
+  // Result: Rows 1 & 2 marked (ID duplicate), Row 3 NOT marked (rows 1 & 2 skipped when checking Name)
   
   const markedRows = new Set(); // Track which row indices are marked as duplicates
   const duplicatesByColumn = {}; // Track which values in each column are duplicates
