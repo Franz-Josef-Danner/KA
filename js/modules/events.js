@@ -75,15 +75,6 @@ export function initEventHandlers() {
     downloadText(`firmen_export_${ts}.csv`, csv);
   });
 
-  // Clear button
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    const ok = confirm("Wirklich alles löschen? (Nicht rückgängig)");
-    if (!ok) return;
-    setRows([]);
-    save();
-    render();
-  });
-
   // Search input
   document.getElementById("search").addEventListener("input", () => render());
 }
