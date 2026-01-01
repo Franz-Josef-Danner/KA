@@ -252,8 +252,45 @@ function importCSV(file, fileInput) {
   reader.onload = (e) => {
     try {
       const text = e.target.result;
-      const lines = text.split(/\r?\n/).filter(line => line.trim());
+      const lines = splitCsvRecords(text).filter(line => line.trim());
       
+      function splitCsvRecords(csvText) {
+        const records = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < csvText.length; i++) {
+          const char = csvText[i];
+          const nextChar = csvText[i + 1];
+
+          if (char === '"') {
+            // Handle escaped quote ("")
+            if (inQuotes && nextChar === '"') {
+              current += '"';
+              i++; // skip the second quote
+            } else {
+              inQuotes = !inQuotes;
+              current += char;
+            }
+          } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            // End of record (only when not inside quotes)
+            records.push(current);
+            current = '';
+            // Treat \r\n as a single newline
+            if (char === '\r' && nextChar === '\n') {
+              i++;
+            }
+          } else {
+            current += char;
+          }
+        }
+
+        if (current.length > 0) {
+          records.push(current);
+        }
+
+        return records;
+      }
       if (lines.length === 0) {
         alert("Die CSV-Datei enthält keine Daten.");
         return;
