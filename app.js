@@ -513,9 +513,6 @@ function importCSV(file, fileInput) {
       closeModal();
       
       alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
-      
-      // Reset file input
-      fileInput.value = "";
     } catch (error) {
       console.error("Error importing CSV:", error);
       let userMessage = "Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.";
@@ -523,6 +520,8 @@ function importCSV(file, fileInput) {
         userMessage += "\n\nDetails: " + error.message;
       }
       alert(userMessage);
+    } finally {
+      // Reset file input
       if (fileInput) {
         fileInput.value = "";
       }
