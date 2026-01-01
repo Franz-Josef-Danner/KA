@@ -369,6 +369,11 @@ function importCSV(file, fileInput) {
           records.push(current);
         }
         
+        // Check for unclosed quotes
+        if (inQuotes) {
+          console.warn("CSV parsing warning: File has unclosed quotes");
+        }
+        
         return records;
       }
       
@@ -411,8 +416,13 @@ function importCSV(file, fileInput) {
         // Push the last field
         result.push({ value: current, wasQuoted });
         
-        // Only trim fields that were not quoted
-        return result.map(field => field.wasQuoted ? field.value : field.value.trim());
+        // Check for unclosed quotes
+        if (inQuotes) {
+          console.warn("CSV parsing warning: Line has unclosed quotes");
+        }
+        
+        // Preserve whitespace for all fields (quoted and unquoted)
+        return result.map(field => field.value);
       };
       
       const lines = splitCsvRecords(text);
@@ -508,7 +518,14 @@ function importCSV(file, fileInput) {
       fileInput.value = "";
     } catch (error) {
       console.error("Error importing CSV:", error);
-      alert("Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.");
+      let userMessage = "Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.";
+      if (error && typeof error.message === "string" && error.message.trim()) {
+        userMessage += "\n\nDetails: " + error.message;
+      }
+      alert(userMessage);
+      if (fileInput) {
+        fileInput.value = "";
+      }
     }
   };
   
