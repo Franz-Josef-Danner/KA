@@ -3,6 +3,19 @@
 // -----------------------------
 import { COLUMNS } from './config.js';
 
+// Helper function to merge indices into duplicate map
+function mergeIndicesIntoMap(columnMap, indicesMap) {
+  indicesMap.forEach((idxSet, value) => {
+    if (!columnMap.has(value)) {
+      columnMap.set(value, Array.from(idxSet));
+    } else {
+      // Merge with existing indices using Set for deduplication
+      const mergedSet = new Set([...columnMap.get(value), ...idxSet]);
+      columnMap.set(value, Array.from(mergedSet));
+    }
+  });
+}
+
 export function findDuplicates(dataRows) {
   // Map: column -> value -> [row indices that have this value]
   const duplicateMap = new Map();
@@ -89,29 +102,9 @@ export function findDuplicates(dataRows) {
         nachnameIndicesMap.get(nachname).add(idx);
       });
       
-      // Store vorname duplicates (convert Set to Array)
-      vornameIndicesMap.forEach((idxSet, vorname) => {
-        const vornameMap = duplicateMap.get("Vorname");
-        if (!vornameMap.has(vorname)) {
-          vornameMap.set(vorname, Array.from(idxSet));
-        } else {
-          // Merge with existing indices using Set for deduplication
-          const mergedSet = new Set([...vornameMap.get(vorname), ...idxSet]);
-          vornameMap.set(vorname, Array.from(mergedSet));
-        }
-      });
-      
-      // Store nachname duplicates (convert Set to Array)
-      nachnameIndicesMap.forEach((idxSet, nachname) => {
-        const nachnameMap = duplicateMap.get("Nachname");
-        if (!nachnameMap.has(nachname)) {
-          nachnameMap.set(nachname, Array.from(idxSet));
-        } else {
-          // Merge with existing indices using Set for deduplication
-          const mergedSet = new Set([...nachnameMap.get(nachname), ...idxSet]);
-          nachnameMap.set(nachname, Array.from(mergedSet));
-        }
-      });
+      // Store vorname and nachname duplicates using helper function
+      mergeIndicesIntoMap(duplicateMap.get("Vorname"), vornameIndicesMap);
+      mergeIndicesIntoMap(duplicateMap.get("Nachname"), nachnameIndicesMap);
     }
   });
   

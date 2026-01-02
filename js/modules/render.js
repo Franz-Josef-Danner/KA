@@ -78,7 +78,6 @@ export function render() {
         });
         
         td.appendChild(select);
-        td.removeAttribute("contenteditable");
       } else {
         // Regular contenteditable cells for other columns
         td.setAttribute("contenteditable", "true");
