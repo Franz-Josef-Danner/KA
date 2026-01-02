@@ -66,27 +66,53 @@ export function findDuplicates(dataRows) {
         duplicateMap.set("Nachname", new Map());
       }
       
-      // For each row with this full name, store the individual parts
+      // Use Sets to track indices efficiently (avoid O(n²) with .includes())
+      const vornameIndicesMap = new Map();
+      const nachnameIndicesMap = new Map();
+      
+      // For each row with this full name, collect the individual parts
       indices.forEach(idx => {
         const row = dataRows[idx];
         const vorname = String(row["Vorname"] ?? "").trim();
         const nachname = String(row["Nachname"] ?? "").trim();
         
-        // Store vorname value
+        // Collect vorname indices
+        if (!vornameIndicesMap.has(vorname)) {
+          vornameIndicesMap.set(vorname, new Set());
+        }
+        vornameIndicesMap.get(vorname).add(idx);
+        
+        // Collect nachname indices
+        if (!nachnameIndicesMap.has(nachname)) {
+          nachnameIndicesMap.set(nachname, new Set());
+        }
+        nachnameIndicesMap.get(nachname).add(idx);
+      });
+      
+      // Store vorname duplicates
+      vornameIndicesMap.forEach((idxSet, vorname) => {
         if (!duplicateMap.get("Vorname").has(vorname)) {
           duplicateMap.get("Vorname").set(vorname, []);
         }
-        if (!duplicateMap.get("Vorname").get(vorname).includes(idx)) {
-          duplicateMap.get("Vorname").get(vorname).push(idx);
-        }
-        
-        // Store nachname value
+        const existingIndices = duplicateMap.get("Vorname").get(vorname);
+        idxSet.forEach(idx => {
+          if (!existingIndices.includes(idx)) {
+            existingIndices.push(idx);
+          }
+        });
+      });
+      
+      // Store nachname duplicates
+      nachnameIndicesMap.forEach((idxSet, nachname) => {
         if (!duplicateMap.get("Nachname").has(nachname)) {
           duplicateMap.get("Nachname").set(nachname, []);
         }
-        if (!duplicateMap.get("Nachname").get(nachname).includes(idx)) {
-          duplicateMap.get("Nachname").get(nachname).push(idx);
-        }
+        const existingIndices = duplicateMap.get("Nachname").get(nachname);
+        idxSet.forEach(idx => {
+          if (!existingIndices.includes(idx)) {
+            existingIndices.push(idx);
+          }
+        });
       });
     }
   });
