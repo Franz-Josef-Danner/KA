@@ -2,12 +2,13 @@
 // Rendering Module
 // -----------------------------
 import { COLUMNS, STATUS_OPTIONS } from './config.js';
-import { getRows, newEmptyRow, save } from './state.js';
+import { getRows, setRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { findDuplicates, getRowsWithDuplicates } from './duplicates.js';
 import { rowMatchesSearch } from './search.js';
+import { updateUndoRedoButtons } from './ui.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -72,6 +73,7 @@ export function render() {
         select.addEventListener("change", (e) => {
           const currentRows = getRows();
           currentRows[idx][col] = e.target.value;
+          setRows(currentRows);
           save();
         });
         
@@ -98,6 +100,7 @@ export function render() {
           const newVal = td.textContent ?? "";
           const currentRows = getRows();
           currentRows[idx][col] = sanitizeText(newVal);
+          setRows(currentRows);
           td.innerHTML = toCellDisplay(col, currentRows[idx][col]);
           // Use debounced render to avoid multiple rapid re-renders during editing
           debouncedRender();
@@ -116,6 +119,7 @@ export function render() {
     plus.title = "Zeile darunter einfügen";
     plus.addEventListener("click", () => {
       rows.splice(idx + 1, 0, newEmptyRow());
+      setRows(rows);
       save();
       render();
     });
@@ -130,6 +134,7 @@ export function render() {
       const ok = confirm("Sind Sie sicher, dass Sie diese Zeile löschen möchten?");
       if (!ok) return;
       rows.splice(idx, 1);
+      setRows(rows);
       save();
       render();
     });
@@ -139,6 +144,9 @@ export function render() {
 
     tbody.appendChild(tr);
   });
+  
+  // Update undo/redo button states after render
+  updateUndoRedoButtons();
 }
 
 // Create a debounced version of render to avoid multiple rapid re-renders

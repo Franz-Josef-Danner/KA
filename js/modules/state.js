@@ -3,15 +3,22 @@
 // -----------------------------
 import { STORAGE_KEY, COLUMNS, STATUS_OPTIONS } from './config.js';
 import { sanitizeText } from '../utils/sanitize.js';
+import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
 
 let rows = load() ?? [];
+
+// Initialize history with the loaded state
+pushState(rows);
 
 export function getRows() {
   return rows;
 }
 
-export function setRows(newRows) {
+export function setRows(newRows, skipHistory = false) {
   rows = newRows;
+  if (!skipHistory) {
+    pushState(rows);
+  }
 }
 
 export function newEmptyRow() {
@@ -54,3 +61,26 @@ export function load() {
     return null;
   }
 }
+
+// Undo/Redo functions
+export function undo() {
+  const previousState = historyUndo();
+  if (previousState) {
+    rows = previousState;
+    save();
+    return true;
+  }
+  return false;
+}
+
+export function redo() {
+  const nextState = historyRedo();
+  if (nextState) {
+    rows = nextState;
+    save();
+    return true;
+  }
+  return false;
+}
+
+export { canUndo, canRedo };
