@@ -17,7 +17,6 @@ KA/
 │   │   ├── state.js            # State-Verwaltung (Daten laden/speichern)
 │   │   ├── render.js           # DOM-Rendering-Logik
 │   │   ├── events.js           # Event-Handler für UI-Interaktionen
-│   │   ├── modal.js            # Modal-Verwaltung
 │   │   ├── duplicates.js       # Duplikatserkennung
 │   │   └── search.js           # Such-Funktionalität
 │   └── utils/                  # Hilfsfunktionen
@@ -53,11 +52,6 @@ KA/
   - CSV-Import
   - Datenexport
   - Zeilen hinzufügen/löschen
-
-- **modal.js**: Modal-Verwaltung
-  - Modal öffnen/schließen
-  - Tastatur-Navigation (Tab-Trap, ESC)
-  - Fokus-Management
 
 - **duplicates.js**: Duplikatserkennung
   - Erkennen von doppelten Werten
@@ -102,7 +96,6 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Duplikatserkennung mit Highlighting
 - ✅ Suchfunktion
 - ✅ Automatische Link-Formatierung für E-Mails und Websites
-- ✅ Barrierefreie Modal-Dialoge
 
 ## Technologie
 
