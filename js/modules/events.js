@@ -1,10 +1,11 @@
 // -----------------------------
 // Event Handlers
 // -----------------------------
-import { getRows, setRows, save } from './state.js';
+import { getRows, setRows, save, undo, redo, canUndo, canRedo } from './state.js';
 import { toCSV, parseCSV } from '../utils/csv.js';
 import { downloadText } from '../utils/helpers.js';
 import { render } from './render.js';
+import { updateUndoRedoButtons } from './ui.js';
 
 export function initEventHandlers() {
   // Import CSV - trigger file input when file is selected
@@ -43,6 +44,53 @@ export function initEventHandlers() {
 
   // Search input
   document.getElementById("search").addEventListener("input", () => render());
+  
+  // Undo button
+  document.getElementById("undoBtn").addEventListener("click", () => {
+    if (undo()) {
+      render();
+      updateUndoRedoButtons();
+    }
+  });
+  
+  // Redo button
+  document.getElementById("redoBtn").addEventListener("click", () => {
+    if (redo()) {
+      render();
+      updateUndoRedoButtons();
+    }
+  });
+  
+  // Keyboard shortcuts
+  document.addEventListener("keydown", (e) => {
+    // Skip if user is typing in contenteditable or input fields
+    if (e.target.isContentEditable || 
+        e.target.tagName === 'INPUT' || 
+        e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+    
+    // Ctrl+Z or Cmd+Z for undo
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      if (undo()) {
+        render();
+        updateUndoRedoButtons();
+      }
+    }
+    // Ctrl+Y or Cmd+Y or Ctrl+Shift+Z for redo
+    if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') || 
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+      e.preventDefault();
+      if (redo()) {
+        render();
+        updateUndoRedoButtons();
+      }
+    }
+  });
+  
+  // Initial button state update
+  updateUndoRedoButtons();
 }
 
 function importCSV(file, fileInput) {

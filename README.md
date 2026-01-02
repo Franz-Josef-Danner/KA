@@ -40,6 +40,7 @@ KA/
   - Laden und Speichern von Daten
   - Verwaltung des Zeilen-Arrays
   - Erstellen leerer Zeilen
+  - Rückgängig/Wiederholen-Funktionen
 
 - **render.js**: Rendering
   - DOM-Manipulation
@@ -52,6 +53,16 @@ KA/
   - CSV-Import
   - Datenexport
   - Zeilen hinzufügen/löschen
+  - Tastatur-Shortcuts für Rückgängig/Wiederholen
+
+- **history.js**: Verlaufs-Verwaltung
+  - Speichert bis zu 100 Zustände
+  - Ermöglicht Rückgängig/Wiederholen
+  - Verhindert rekursive History-Einträge
+
+- **ui.js**: UI-Aktualisierungen
+  - Aktualisiert Button-Zustände
+  - Aktiviert/Deaktiviert Rückgängig/Wiederholen-Buttons
 
 - **duplicates.js**: Duplikatserkennung
   - Erkennen von doppelten Werten
@@ -96,6 +107,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Duplikatserkennung mit Highlighting
 - ✅ Suchfunktion
 - ✅ Automatische Link-Formatierung für E-Mails und Websites
+- ✅ Rückgängig/Wiederholen mit bis zu 100 Schritten (Strg+Z / Strg+Y)
 
 ## Technologie
 
