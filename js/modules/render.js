@@ -92,7 +92,7 @@ export function render() {
 
         // Beim Fokus: reiner Text zum Editieren
         td.addEventListener("focus", () => {
-          td.textContent = getRows()[idx][col] ?? "";
+          td.textContent = sanitizeText(getRows()[idx][col] ?? "");
         });
 
         // Beim Blur: speichern + hübsch darstellen
