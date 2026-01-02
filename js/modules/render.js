@@ -1,7 +1,7 @@
 // -----------------------------
 // Rendering Module
 // -----------------------------
-import { COLUMNS } from './config.js';
+import { COLUMNS, STATUS_OPTIONS } from './config.js';
 import { getRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
@@ -11,9 +11,6 @@ import { rowMatchesSearch } from './search.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
-
-// Status column dropdown options
-const STATUS_OPTIONS = ["offen", "erste mail", "erster Anruf", "Laufend melden", "nein", "Kunde"];
 
 export function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
@@ -60,22 +57,12 @@ export function render() {
         select.className = "status-select";
         select.setAttribute("aria-label", "Status");
         
-        // Normalize Status value: if empty or not in STATUS_OPTIONS, default to "offen"
-        let currentStatus = row[col];
-        if (!currentStatus || !STATUS_OPTIONS.includes(currentStatus)) {
-          currentStatus = "offen";
-          // Update the row with the normalized value
-          const currentRows = getRows();
-          currentRows[idx][col] = currentStatus;
-          save();
-        }
-        
         // Add all status options
         STATUS_OPTIONS.forEach(option => {
           const optionElement = document.createElement("option");
           optionElement.value = option;
           optionElement.textContent = option;
-          if (currentStatus === option) {
+          if (row[col] === option) {
             optionElement.selected = true;
           }
           select.appendChild(optionElement);

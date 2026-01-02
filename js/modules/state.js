@@ -1,7 +1,7 @@
 // -----------------------------
 // State Management
 // -----------------------------
-import { STORAGE_KEY, COLUMNS } from './config.js';
+import { STORAGE_KEY, COLUMNS, STATUS_OPTIONS } from './config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 
 let rows = load() ?? [];
@@ -37,7 +37,13 @@ export function load() {
     // Normalize: ensure all columns exist
     return data.map(r => {
       const row = newEmptyRow();
-      for (const c of COLUMNS) row[c] = sanitizeText(r?.[c] ?? "");
+      for (const c of COLUMNS) {
+        row[c] = sanitizeText(r?.[c] ?? "");
+        // Normalize Status: if empty or not in STATUS_OPTIONS, default to "offen"
+        if (c === "Status" && (!row[c] || !STATUS_OPTIONS.includes(row[c]))) {
+          row[c] = "offen";
+        }
+      }
       return row;
     });
   } catch {
