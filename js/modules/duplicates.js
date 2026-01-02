@@ -66,7 +66,7 @@ export function findDuplicates(dataRows) {
         duplicateMap.set("Nachname", new Map());
       }
       
-      // Use Sets to track indices efficiently (avoid O(n²) with .includes())
+      // Use Sets to efficiently collect unique indices for each vorname/nachname value
       const vornameIndicesMap = new Map();
       const nachnameIndicesMap = new Map();
       
@@ -76,43 +76,41 @@ export function findDuplicates(dataRows) {
         const vorname = String(row["Vorname"] ?? "").trim();
         const nachname = String(row["Nachname"] ?? "").trim();
         
-        // Collect vorname indices
+        // Collect vorname indices using Set for automatic deduplication
         if (!vornameIndicesMap.has(vorname)) {
           vornameIndicesMap.set(vorname, new Set());
         }
         vornameIndicesMap.get(vorname).add(idx);
         
-        // Collect nachname indices
+        // Collect nachname indices using Set for automatic deduplication
         if (!nachnameIndicesMap.has(nachname)) {
           nachnameIndicesMap.set(nachname, new Set());
         }
         nachnameIndicesMap.get(nachname).add(idx);
       });
       
-      // Store vorname duplicates
+      // Store vorname duplicates (convert Set to Array)
       vornameIndicesMap.forEach((idxSet, vorname) => {
-        if (!duplicateMap.get("Vorname").has(vorname)) {
-          duplicateMap.get("Vorname").set(vorname, []);
+        const vornameMap = duplicateMap.get("Vorname");
+        if (!vornameMap.has(vorname)) {
+          vornameMap.set(vorname, Array.from(idxSet));
+        } else {
+          // Merge with existing indices using Set for deduplication
+          const mergedSet = new Set([...vornameMap.get(vorname), ...idxSet]);
+          vornameMap.set(vorname, Array.from(mergedSet));
         }
-        const existingIndices = duplicateMap.get("Vorname").get(vorname);
-        idxSet.forEach(idx => {
-          if (!existingIndices.includes(idx)) {
-            existingIndices.push(idx);
-          }
-        });
       });
       
-      // Store nachname duplicates
+      // Store nachname duplicates (convert Set to Array)
       nachnameIndicesMap.forEach((idxSet, nachname) => {
-        if (!duplicateMap.get("Nachname").has(nachname)) {
-          duplicateMap.get("Nachname").set(nachname, []);
+        const nachnameMap = duplicateMap.get("Nachname");
+        if (!nachnameMap.has(nachname)) {
+          nachnameMap.set(nachname, Array.from(idxSet));
+        } else {
+          // Merge with existing indices using Set for deduplication
+          const mergedSet = new Set([...nachnameMap.get(nachname), ...idxSet]);
+          nachnameMap.set(nachname, Array.from(mergedSet));
         }
-        const existingIndices = duplicateMap.get("Nachname").get(nachname);
-        idxSet.forEach(idx => {
-          if (!existingIndices.includes(idx)) {
-            existingIndices.push(idx);
-          }
-        });
       });
     }
   });
