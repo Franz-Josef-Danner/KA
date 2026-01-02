@@ -7,7 +7,15 @@ export function findDuplicates(dataRows) {
   // Map: column -> value -> [row indices that have this value]
   const duplicateMap = new Map();
   
+  // Columns to exclude from duplicate detection
+  const excludedColumns = ["Gender", "Titel", "Status"];
+  
   for (const col of COLUMNS) {
+    // Skip excluded columns
+    if (excludedColumns.includes(col)) {
+      continue;
+    }
+    
     const valueMap = new Map();
     
     dataRows.forEach((row, idx) => {
@@ -31,6 +39,57 @@ export function findDuplicates(dataRows) {
       }
     });
   }
+  
+  // Special handling: combine Vorname and Nachname for duplicate detection
+  const fullNameMap = new Map();
+  dataRows.forEach((row, idx) => {
+    const vorname = String(row["Vorname"] ?? "").trim();
+    const nachname = String(row["Nachname"] ?? "").trim();
+    // Only consider when both parts are non-empty
+    if (vorname && nachname) {
+      const fullName = `${vorname} ${nachname}`;
+      if (!fullNameMap.has(fullName)) {
+        fullNameMap.set(fullName, []);
+      }
+      fullNameMap.get(fullName).push(idx);
+    }
+  });
+  
+  // Store combined name duplicates under both Vorname and Nachname
+  fullNameMap.forEach((indices, fullName) => {
+    if (indices.length > 1) {
+      // Mark both Vorname and Nachname columns as having duplicates
+      if (!duplicateMap.has("Vorname")) {
+        duplicateMap.set("Vorname", new Map());
+      }
+      if (!duplicateMap.has("Nachname")) {
+        duplicateMap.set("Nachname", new Map());
+      }
+      
+      // For each row with this full name, store the individual parts
+      indices.forEach(idx => {
+        const row = dataRows[idx];
+        const vorname = String(row["Vorname"] ?? "").trim();
+        const nachname = String(row["Nachname"] ?? "").trim();
+        
+        // Store vorname value
+        if (!duplicateMap.get("Vorname").has(vorname)) {
+          duplicateMap.get("Vorname").set(vorname, []);
+        }
+        if (!duplicateMap.get("Vorname").get(vorname).includes(idx)) {
+          duplicateMap.get("Vorname").get(vorname).push(idx);
+        }
+        
+        // Store nachname value
+        if (!duplicateMap.get("Nachname").has(nachname)) {
+          duplicateMap.get("Nachname").set(nachname, []);
+        }
+        if (!duplicateMap.get("Nachname").get(nachname).includes(idx)) {
+          duplicateMap.get("Nachname").get(nachname).push(idx);
+        }
+      });
+    }
+  });
   
   return duplicateMap;
 }

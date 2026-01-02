@@ -16,7 +16,10 @@ export function setRows(newRows) {
 
 export function newEmptyRow() {
   const obj = {};
-  for (const c of COLUMNS) obj[c] = "";
+  for (const c of COLUMNS) {
+    // Set default value for Status column
+    obj[c] = (c === "Status") ? "offen" : "";
+  }
   return obj;
 }
 
