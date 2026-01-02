@@ -3,11 +3,32 @@
 // -----------------------------
 import { COLUMNS } from './config.js';
 
+// Helper function to merge indices into duplicate map
+function mergeIndicesIntoMap(columnMap, indicesMap) {
+  indicesMap.forEach((idxSet, value) => {
+    if (!columnMap.has(value)) {
+      columnMap.set(value, Array.from(idxSet));
+    } else {
+      // Merge with existing indices using Set for deduplication
+      const mergedSet = new Set([...columnMap.get(value), ...idxSet]);
+      columnMap.set(value, Array.from(mergedSet));
+    }
+  });
+}
+
 export function findDuplicates(dataRows) {
   // Map: column -> value -> [row indices that have this value]
   const duplicateMap = new Map();
   
+  // Columns to exclude from duplicate detection
+  const excludedColumns = ["Gender", "Titel", "Status"];
+  
   for (const col of COLUMNS) {
+    // Skip excluded columns
+    if (excludedColumns.includes(col)) {
+      continue;
+    }
+    
     const valueMap = new Map();
     
     dataRows.forEach((row, idx) => {
@@ -31,6 +52,61 @@ export function findDuplicates(dataRows) {
       }
     });
   }
+  
+  // Special handling: combine Vorname and Nachname for duplicate detection
+  const fullNameMap = new Map();
+  dataRows.forEach((row, idx) => {
+    const vorname = String(row["Vorname"] ?? "").trim();
+    const nachname = String(row["Nachname"] ?? "").trim();
+    // Only consider when both parts are non-empty
+    if (vorname && nachname) {
+      const fullName = `${vorname} ${nachname}`;
+      if (!fullNameMap.has(fullName)) {
+        fullNameMap.set(fullName, []);
+      }
+      fullNameMap.get(fullName).push(idx);
+    }
+  });
+  
+  // Store combined name duplicates under both Vorname and Nachname
+  fullNameMap.forEach((indices, fullName) => {
+    if (indices.length > 1) {
+      // Mark both Vorname and Nachname columns as having duplicates
+      if (!duplicateMap.has("Vorname")) {
+        duplicateMap.set("Vorname", new Map());
+      }
+      if (!duplicateMap.has("Nachname")) {
+        duplicateMap.set("Nachname", new Map());
+      }
+      
+      // Use Sets to efficiently collect unique indices for each vorname/nachname value
+      const vornameIndicesMap = new Map();
+      const nachnameIndicesMap = new Map();
+      
+      // For each row with this full name, collect the individual parts
+      indices.forEach(idx => {
+        const row = dataRows[idx];
+        const vorname = String(row["Vorname"] ?? "").trim();
+        const nachname = String(row["Nachname"] ?? "").trim();
+        
+        // Collect vorname indices using Set for automatic deduplication
+        if (!vornameIndicesMap.has(vorname)) {
+          vornameIndicesMap.set(vorname, new Set());
+        }
+        vornameIndicesMap.get(vorname).add(idx);
+        
+        // Collect nachname indices using Set for automatic deduplication
+        if (!nachnameIndicesMap.has(nachname)) {
+          nachnameIndicesMap.set(nachname, new Set());
+        }
+        nachnameIndicesMap.get(nachname).add(idx);
+      });
+      
+      // Store vorname and nachname duplicates using helper function
+      mergeIndicesIntoMap(duplicateMap.get("Vorname"), vornameIndicesMap);
+      mergeIndicesIntoMap(duplicateMap.get("Nachname"), nachnameIndicesMap);
+    }
+  });
   
   return duplicateMap;
 }
