@@ -95,7 +95,7 @@ export function render() {
           const originalValue = getRows()[idx][col] ?? "";
           td.textContent = originalValue;
           // Store original value to compare on blur
-          td.dataset.originalValue = originalValue;
+          td.dataset.originalValue = sanitizeText(originalValue);
         });
 
         // Beim Blur: speichern + hübsch darstellen
