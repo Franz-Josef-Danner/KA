@@ -58,13 +58,24 @@ export function render() {
       if (col === "Status") {
         const select = document.createElement("select");
         select.className = "status-select";
+        select.setAttribute("aria-label", "Status");
+        
+        // Normalize Status value: if empty or not in STATUS_OPTIONS, default to "offen"
+        let currentStatus = row[col];
+        if (!currentStatus || !STATUS_OPTIONS.includes(currentStatus)) {
+          currentStatus = "offen";
+          // Update the row with the normalized value
+          const currentRows = getRows();
+          currentRows[idx][col] = currentStatus;
+          save();
+        }
         
         // Add all status options
         STATUS_OPTIONS.forEach(option => {
           const optionElement = document.createElement("option");
           optionElement.value = option;
           optionElement.textContent = option;
-          if (row[col] === option) {
+          if (currentStatus === option) {
             optionElement.selected = true;
           }
           select.appendChild(optionElement);
