@@ -63,8 +63,15 @@ export function initEventHandlers() {
   
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
+    // Skip if user is typing in contenteditable or input fields
+    if (e.target.isContentEditable || 
+        e.target.tagName === 'INPUT' || 
+        e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+    
     // Ctrl+Z or Cmd+Z for undo
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
       e.preventDefault();
       if (undo()) {
         render();
@@ -72,8 +79,8 @@ export function initEventHandlers() {
       }
     }
     // Ctrl+Y or Cmd+Y or Ctrl+Shift+Z for redo
-    if (((e.ctrlKey || e.metaKey) && e.key === 'y') || 
-        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) {
+    if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') || 
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
       e.preventDefault();
       if (redo()) {
         render();
