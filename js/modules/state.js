@@ -66,7 +66,7 @@ export function load() {
 export function undo() {
   const previousState = historyUndo();
   if (previousState) {
-    rows = previousState;
+    setRows(previousState, true);
     save();
     return true;
   }
@@ -76,7 +76,7 @@ export function undo() {
 export function redo() {
   const nextState = historyRedo();
   if (nextState) {
-    rows = nextState;
+    setRows(nextState, true);
     save();
     return true;
   }
