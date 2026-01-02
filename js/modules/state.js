@@ -39,9 +39,13 @@ export function load() {
       const row = newEmptyRow();
       for (const c of COLUMNS) {
         row[c] = sanitizeText(r?.[c] ?? "");
-        // Normalize Status: if empty or not in STATUS_OPTIONS, default to "offen"
-        if (c === "Status" && (!row[c] || !STATUS_OPTIONS.includes(row[c]))) {
-          row[c] = "offen";
+        // Normalize Status: trim whitespace and validate
+        if (c === "Status") {
+          row[c] = row[c].trim();
+          // If empty or not in STATUS_OPTIONS, default to "offen"
+          if (!row[c] || !STATUS_OPTIONS.includes(row[c])) {
+            row[c] = "offen";
+          }
         }
       }
       return row;
