@@ -1,7 +1,7 @@
 // -----------------------------
 // Rendering Module
 // -----------------------------
-import { COLUMNS } from './config.js';
+import { COLUMNS, STATUS_OPTIONS } from './config.js';
 import { getRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
@@ -11,9 +11,6 @@ import { rowMatchesSearch } from './search.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
-
-// Status column dropdown options
-const STATUS_OPTIONS = ["offen", "erste mail", "erster Anruf", "Laufend melden", "nein", "Kunde"];
 
 export function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
@@ -58,6 +55,7 @@ export function render() {
       if (col === "Status") {
         const select = document.createElement("select");
         select.className = "status-select";
+        select.setAttribute("aria-label", "Status");
         
         // Add all status options
         STATUS_OPTIONS.forEach(option => {
