@@ -246,14 +246,13 @@ td[contenteditable="true"]:empty::before {
 
 .nav-item a:focus {
   outline: none;
-  background: #f8f8f8;
-  color: #667eea;
-  box-shadow: inset 0 0 0 2px #667eea;
 }
 
 .nav-item a:focus-visible {
   outline: 2px solid #667eea;
   outline-offset: -2px;
+  background: #f8f8f8;
+  color: #667eea;
 }
 
 .nav-item.active a {
@@ -284,8 +283,6 @@ td[contenteditable="true"]:empty::before {
 
 .logout-btn:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
 }
 
 .logout-btn:focus-visible {
