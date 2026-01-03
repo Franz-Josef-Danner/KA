@@ -11,9 +11,68 @@ const NAV_ITEMS = [
   { label: 'Kampagnen', href: 'kampagnen.html' }
 ];
 
+// Create an accessible logout confirmation modal
+function createLogoutModal() {
+  const modal = document.createElement('div');
+  modal.className = 'logout-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-labelledby', 'logout-title');
+  modal.setAttribute('aria-modal', 'true');
+  
+  modal.innerHTML = `
+    <div class="logout-modal-overlay"></div>
+    <div class="logout-modal-content">
+      <h2 id="logout-title">Abmelden</h2>
+      <p>Möchten Sie sich wirklich abmelden?</p>
+      <div class="logout-modal-buttons">
+        <button class="modal-btn modal-btn-cancel" aria-label="Abbrechen">Abbrechen</button>
+        <button class="modal-btn modal-btn-confirm" aria-label="Abmelden bestätigen">Abmelden</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Focus the confirm button
+  const confirmBtn = modal.querySelector('.modal-btn-confirm');
+  confirmBtn.focus();
+  
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      document.body.removeChild(modal);
+    };
+    
+    modal.querySelector('.modal-btn-confirm').onclick = () => {
+      cleanup();
+      resolve(true);
+    };
+    
+    modal.querySelector('.modal-btn-cancel').onclick = () => {
+      cleanup();
+      resolve(false);
+    };
+    
+    modal.querySelector('.logout-modal-overlay').onclick = () => {
+      cleanup();
+      resolve(false);
+    };
+    
+    // Handle Escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        cleanup();
+        resolve(false);
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+  });
+}
+
 export function renderNavigation(currentPage = '') {
   const nav = document.createElement('nav');
   nav.className = 'main-nav';
+  nav.setAttribute('aria-label', 'Hauptnavigation');
   
   const navList = document.createElement('ul');
   navList.className = 'nav-list';
@@ -30,6 +89,7 @@ export function renderNavigation(currentPage = '') {
     // Mark current page as active
     if (currentPage && item.href === currentPage) {
       li.classList.add('active');
+      a.setAttribute('aria-current', 'page');
     }
     
     li.appendChild(a);
@@ -43,9 +103,11 @@ export function renderNavigation(currentPage = '') {
   const logoutBtn = document.createElement('button');
   logoutBtn.textContent = 'Abmelden';
   logoutBtn.className = 'logout-btn';
-  logoutBtn.onclick = (e) => {
+  logoutBtn.setAttribute('aria-label', 'Vom System abmelden');
+  logoutBtn.onclick = async (e) => {
     e.preventDefault();
-    if (confirm('Möchten Sie sich wirklich abmelden?')) {
+    const confirmed = await createLogoutModal();
+    if (confirmed) {
       logout();
     }
   };

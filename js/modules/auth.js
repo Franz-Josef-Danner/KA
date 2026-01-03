@@ -5,14 +5,26 @@
 const AUTH_KEY = 'ka_auth_session';
 const USERS_KEY = 'ka_users';
 
+// Simple hash function for password storage
+// Note: This is NOT cryptographically secure, but better than plaintext
+// In production, use proper backend authentication with bcrypt or similar
+async function simpleHash(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
 // Initialize with a default user if no users exist
-function initializeUsers() {
+async function initializeUsers() {
   const users = getUsers();
   if (users.length === 0) {
     // Create a default demo user
     const defaultUser = {
       email: 'demo@example.com',
-      password: 'demo123' // In production, this should be hashed
+      password: await simpleHash('demo123') // Hash the password
     };
     users.push(defaultUser);
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
@@ -29,11 +41,12 @@ function getUsers() {
   }
 }
 
-export function login(email, password) {
-  initializeUsers();
+export async function login(email, password) {
+  await initializeUsers();
   const users = getUsers();
+  const passwordHash = await simpleHash(password);
   
-  const user = users.find(u => u.email === email && u.password === password);
+  const user = users.find(u => u.email === email && u.password === passwordHash);
   
   if (user) {
     const session = {

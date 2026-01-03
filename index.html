@@ -61,13 +61,13 @@
     const form = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
     
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
-      if (login(email, password)) {
+      if (await login(email, password)) {
         window.location.href = 'dashboard.html';
       } else {
         errorMessage.textContent = 'Ungültige E-Mail-Adresse oder Passwort.';
