@@ -97,7 +97,8 @@ function checkSessionValidity() {
     const sessionAge = now - session.timestamp;
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     
-    // Check if sessionAge is negative (timestamp in future) or exceeds maxAge
+    // Check if sessionAge is negative (session timestamp is in the future, possibly due to clock changes)
+    // or if sessionAge exceeds maxAge (session has expired)
     const isValid = sessionAge >= 0 && sessionAge < maxAge;
     
     // Clean up expired session

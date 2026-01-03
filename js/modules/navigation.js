@@ -67,8 +67,8 @@ function createLogoutModal() {
     }
   };
   
-  // Focus the confirm button
-  confirmBtn.focus();
+  // Focus the cancel button (safer, non-destructive default)
+  cancelBtn.focus();
   
   return new Promise((resolve) => {
     // Handle Escape key

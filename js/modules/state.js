@@ -33,11 +33,12 @@ export function newEmptyRow() {
 export function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    return true;
   } catch (error) {
     console.error('Failed to save data to localStorage:', error);
     // Show user-friendly error message
     alert('Fehler beim Speichern: Daten konnten nicht gespeichert werden. Bitte überprüfen Sie die Speichereinstellungen Ihres Browsers.');
-    throw error;
+    return false;
   }
 }
 
@@ -70,21 +71,29 @@ export function load() {
 }
 
 // Undo/Redo functions
+/**
+ * Undo to previous state
+ * @returns {boolean} - True if history operation succeeded (does NOT indicate save success)
+ */
 export function undo() {
   const previousState = historyUndo();
   if (previousState) {
     setRows(previousState, true);
-    save();
+    save(); // Best-effort save; user is notified via alert if it fails
     return true;
   }
   return false;
 }
 
+/**
+ * Redo to next state
+ * @returns {boolean} - True if history operation succeeded (does NOT indicate save success)
+ */
 export function redo() {
   const nextState = historyRedo();
   if (nextState) {
     setRows(nextState, true);
-    save();
+    save(); // Best-effort save; user is notified via alert if it fails
     return true;
   }
   return false;
