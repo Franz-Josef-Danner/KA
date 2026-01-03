@@ -108,8 +108,12 @@ function importCSV(file, fileInput) {
       const saved = save();
       render();
       
+      // Always notify about import success, but adjust message if save failed
       if (saved) {
-        alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
+        alert(`${importedRows.length} Zeilen erfolgreich importiert und gespeichert.`);
+      } else {
+        // Save already showed error alert, just confirm import worked
+        alert(`${importedRows.length} Zeilen erfolgreich importiert (Warnung: Daten wurden nicht dauerhaft gespeichert).`);
       }
     } catch (error) {
       console.error("Error importing CSV:", error);
