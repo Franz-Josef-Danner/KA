@@ -42,10 +42,8 @@ function getUsers() {
 }
 
 export async function login(email, password) {
-  // Clean up any expired session before login
-  if (!isAuthenticated()) {
-    localStorage.removeItem(AUTH_KEY);
-  }
+  // isAuthenticated() will clean up any expired session automatically
+  isAuthenticated();
   
   await initializeUsers();
   const users = getUsers();
@@ -95,13 +93,14 @@ export function isAuthenticated() {
 }
 
 export async function requireAuth() {
-  // Check if there's an expired session
+  // Check if there's a session in localStorage before calling isAuthenticated
   const raw = localStorage.getItem(AUTH_KEY);
-  const hasExpiredSession = raw && !isAuthenticated();
+  const hadSession = !!raw;
   
   if (!isAuthenticated()) {
-    // Add session expiration message to URL if session expired
-    if (hasExpiredSession) {
+    // If there was a session but isAuthenticated returned false, it was expired
+    // (isAuthenticated cleans up expired sessions)
+    if (hadSession) {
       window.location.href = 'index.html?expired=true';
     } else {
       window.location.href = 'index.html';
