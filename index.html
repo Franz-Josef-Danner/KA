@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="login-page">
+  <div class="login-container">
+    <div class="login-card">
+      <h1>KA System - Login</h1>
+      <p class="login-subtitle">Melden Sie sich an, um auf Ihre Daten zuzugreifen</p>
+      
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="email">E-Mail-Adresse</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            placeholder="ihre@email.com"
+            autocomplete="email"
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Passwort</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            required 
+            placeholder="Ihr Passwort"
+            autocomplete="current-password"
+          />
+        </div>
+        
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        
+        <button type="submit" class="login-btn">Anmelden</button>
+      </form>
+      
+      <div class="demo-info">
+        <p><strong>Demo-Zugangsdaten:</strong></p>
+        <p>E-Mail: demo@example.com</p>
+        <p>Passwort: demo123</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { login, isAuthenticated } from './js/modules/auth.js';
+    
+    // If already authenticated, redirect to dashboard
+    if (isAuthenticated()) {
+      window.location.href = 'dashboard.html';
+    }
+    
+    const form = document.getElementById('loginForm');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (login(email, password)) {
+        window.location.href = 'dashboard.html';
+      } else {
+        errorMessage.textContent = 'Ungültige E-Mail-Adresse oder Passwort.';
+        errorMessage.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

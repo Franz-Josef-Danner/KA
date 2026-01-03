@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kampagnen - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <div class="page-container">
+    <h1>Kampagnen</h1>
+    <p class="page-subtitle">Verwalten Sie Ihre Marketing-Kampagnen</p>
+    
+    <div class="placeholder-content">
+      <p>Diese Seite ist noch in Entwicklung.</p>
+      <p>Hier können Sie bald Kampagnen planen und verfolgen.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    // Require authentication
+    requireAuth();
+    
+    // Initialize navigation
+    initNavigation('kampagnen.html');
+  </script>
+</body>
+</html>
