@@ -68,13 +68,13 @@ export function logout() {
   window.location.href = 'index.html';
 }
 
-export function isAuthenticated() {
+// Helper function to check session validity and clean up if expired
+function checkSessionValidity() {
   try {
     const raw = localStorage.getItem(AUTH_KEY);
-    if (!raw) return false;
+    if (!raw) return { isValid: false, hadSession: false };
     
     const session = JSON.parse(raw);
-    // Check if session exists and is less than 24 hours old
     const now = Date.now();
     const sessionAge = now - session.timestamp;
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
@@ -86,20 +86,22 @@ export function isAuthenticated() {
       localStorage.removeItem(AUTH_KEY);
     }
     
-    return isValid;
+    return { isValid, hadSession: true };
   } catch {
-    return false;
+    return { isValid: false, hadSession: false };
   }
 }
 
+export function isAuthenticated() {
+  return checkSessionValidity().isValid;
+}
+
 export async function requireAuth() {
-  // Check if there's a session in localStorage before calling isAuthenticated
-  const raw = localStorage.getItem(AUTH_KEY);
-  const hadSession = !!raw;
+  // Check session validity once to avoid race conditions
+  const { isValid, hadSession } = checkSessionValidity();
   
-  if (!isAuthenticated()) {
-    // If there was a session but isAuthenticated returned false, it was expired
-    // (isAuthenticated cleans up expired sessions)
+  if (!isValid) {
+    // If there was a session but it was expired, show expiration message
     if (hadSession) {
       window.location.href = 'index.html?expired=true';
     } else {
