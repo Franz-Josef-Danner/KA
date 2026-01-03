@@ -33,11 +33,12 @@ export function newEmptyRow() {
 export function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    return true;
   } catch (error) {
     console.error('Failed to save data to localStorage:', error);
     // Show user-friendly error message
     alert('Fehler beim Speichern: Daten konnten nicht gespeichert werden. Bitte überprüfen Sie die Speichereinstellungen Ihres Browsers.');
-    throw error;
+    return false;
   }
 }
 
