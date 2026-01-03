@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <div class="dashboard-container">
+    <h1>Willkommen im KA System</h1>
+    <p class="dashboard-subtitle">Wählen Sie einen Bereich aus dem Menü oben</p>
+    
+    <div class="dashboard-grid">
+      <a href="firmenliste.html" class="dashboard-card">
+        <div class="card-icon">🏢</div>
+        <h2>Firmenliste</h2>
+        <p>Verwalten Sie Ihre Firmenkontakte</p>
+      </a>
+      
+      <a href="preislisten.html" class="dashboard-card">
+        <div class="card-icon">💰</div>
+        <h2>Preislisten</h2>
+        <p>Übersicht und Verwaltung von Preislisten</p>
+      </a>
+      
+      <a href="auftraege.html" class="dashboard-card">
+        <div class="card-icon">📋</div>
+        <h2>Aufträge</h2>
+        <p>Aufträge verwalten und bearbeiten</p>
+      </a>
+      
+      <a href="rechnungen.html" class="dashboard-card">
+        <div class="card-icon">🧾</div>
+        <h2>Rechnungen</h2>
+        <p>Rechnungen erstellen und verwalten</p>
+      </a>
+      
+      <a href="kampagnen.html" class="dashboard-card">
+        <div class="card-icon">📢</div>
+        <h2>Kampagnen</h2>
+        <p>Marketing-Kampagnen planen und verfolgen</p>
+      </a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    (() => {
+      try {
+        // Require authentication; if this fails or redirects, do not continue
+        requireAuth();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('dashboard.html');
+      } catch (error) {
+        // Authentication failed or a redirect is in progress; avoid further DOM manipulation
+        console.error('Authentication error on dashboard page:', error);
+      }
+    })();
+  </script>
+</body>
+</html>

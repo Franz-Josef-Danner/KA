@@ -1,6 +1,6 @@
-# Firmen-Kontakte Tabelle
+# KA System - Firmen-Kontakte Management
 
-Eine browserbasierte Anwendung zur Verwaltung von Firmenkontakten mit Import/Export-Funktionalität.
+Eine browserbasierte Anwendung zur Verwaltung von Firmenkontakten, Preislisten, Aufträgen, Rechnungen und Kampagnen mit Login-System und Import/Export-Funktionalität.
 
 ## Projekt-Struktur
 
@@ -9,28 +9,49 @@ Das Projekt wurde in eine modulare Struktur reorganisiert, um die Wartbarkeit zu
 ```
 KA/
 ├── css/
-│   └── styles.css              # Alle CSS-Styles
+│   └── styles.css              # Alle CSS-Styles inkl. Login & Navigation
 ├── js/
 │   ├── app.js                  # Haupt-Einstiegspunkt der Anwendung
 │   ├── modules/                # Kernmodule
+│   │   ├── auth.js             # Authentifizierung und Session-Management
+│   │   ├── navigation.js       # Navigationsmenü-Komponente
 │   │   ├── config.js           # Konfiguration (STORAGE_KEY, COLUMNS)
 │   │   ├── state.js            # State-Verwaltung (Daten laden/speichern)
 │   │   ├── render.js           # DOM-Rendering-Logik
 │   │   ├── events.js           # Event-Handler für UI-Interaktionen
 │   │   ├── duplicates.js       # Duplikatserkennung
+│   │   ├── history.js          # Undo/Redo-Funktionalität
+│   │   ├── ui.js               # UI-Aktualisierungen
 │   │   └── search.js           # Such-Funktionalität
 │   └── utils/                  # Hilfsfunktionen
 │       ├── sanitize.js         # Text-Bereinigung und Escaping
 │       ├── formatting.js       # Formatierung für Zellenanzeige
 │       ├── helpers.js          # Allgemeine Hilfsfunktionen
 │       └── csv.js              # CSV-Import/Export
-└── tabelle.html                # HTML-Hauptdatei
+├── index.html                  # Login-Seite
+├── dashboard.html              # Hauptdashboard mit Übersicht
+├── firmenliste.html            # Firmenkontakte-Tabelle
+├── preislisten.html            # Preislisten-Verwaltung (Platzhalter)
+├── auftraege.html              # Aufträge-Verwaltung (Platzhalter)
+├── rechnungen.html             # Rechnungs-Verwaltung (Platzhalter)
+└── kampagnen.html              # Kampagnen-Verwaltung (Platzhalter)
 
 ```
 
 ## Module-Übersicht
 
 ### Kernmodule (`js/modules/`)
+
+- **auth.js**: Authentifizierung
+  - Login/Logout-Funktionalität
+  - Session-Management mit LocalStorage
+  - Seitenschutz (requireAuth)
+  - Demo-User: demo@example.com / demo123
+
+- **navigation.js**: Navigationsmenü
+  - Einheitliches Menü für alle Seiten
+  - Aktuelle Seite hervorheben
+  - Logout-Button
 
 - **config.js**: Zentrale Konfiguration
   - Speicherschlüssel für LocalStorage
@@ -95,12 +116,30 @@ KA/
 
 Die Anwendung kann direkt im Browser geöffnet werden:
 
-1. Öffnen Sie `tabelle.html` in einem modernen Webbrowser
-2. Die Anwendung verwendet ES6-Module (type="module")
-3. Alle Daten werden im LocalStorage des Browsers gespeichert
+1. Öffnen Sie `index.html` in einem modernen Webbrowser
+2. Melden Sie sich mit den Demo-Zugangsdaten an:
+   - E-Mail: `demo@example.com`
+   - Passwort: `demo123`
+3. Nach dem Login gelangen Sie zum Dashboard mit folgenden Bereichen:
+   - **Firmenliste**: Verwaltung von Firmenkontakten (vollständig implementiert)
+   - **Preislisten**: Preislisten-Verwaltung (Platzhalter)
+   - **Aufträge**: Auftrags-Verwaltung (Platzhalter)
+   - **Rechnungen**: Rechnungs-Verwaltung (Platzhalter)
+   - **Kampagnen**: Kampagnen-Verwaltung (Platzhalter)
+4. Die Anwendung verwendet ES6-Module (type="module")
+5. Alle Daten werden im LocalStorage des Browsers gespeichert
+6. Sessions sind 24 Stunden gültig
 
 ## Funktionen
 
+### Authentifizierung & Navigation
+- ✅ Login-System mit E-Mail und Passwort
+- ✅ Session-Management (24 Stunden Gültigkeit)
+- ✅ Automatische Weiterleitung zu Login bei unautorisierten Zugriffen
+- ✅ Einheitliches Navigationsmenü auf allen Seiten
+- ✅ Logout-Funktionalität mit Bestätigung
+
+### Firmenliste (vollständig implementiert)
 - ✅ Zeilen hinzufügen/löschen
 - ✅ Inline-Bearbeitung
 - ✅ CSV-Import/Export
@@ -108,6 +147,12 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Suchfunktion
 - ✅ Automatische Link-Formatierung für E-Mails und Websites
 - ✅ Rückgängig/Wiederholen mit bis zu 100 Schritten (Strg+Z / Strg+Y)
+
+### Weitere Module (Platzhalter)
+- 🚧 Preislisten
+- 🚧 Aufträge
+- 🚧 Rechnungen
+- 🚧 Kampagnen
 
 ## Technologie
 

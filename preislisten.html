@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Preislisten - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <div class="page-container">
+    <h1>Preislisten</h1>
+    <p class="page-subtitle">Verwalten Sie Ihre Preislisten</p>
+    
+    <div class="placeholder-content">
+      <p>Diese Seite ist noch in Entwicklung.</p>
+      <p>Hier können Sie bald Preislisten verwalten und bearbeiten.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    (() => {
+      try {
+        // Require authentication; if this fails or redirects, do not continue
+        requireAuth();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('preislisten.html');
+      } catch (error) {
+        // Authentication failed or a redirect is in progress; avoid further DOM manipulation
+        console.error('Authentication error on preislisten page:', error);
+      }
+    })();
+  </script>
+</body>
+</html>
