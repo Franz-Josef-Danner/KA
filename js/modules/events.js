@@ -30,8 +30,9 @@ export function initEventHandlers() {
 
   // Save button
   document.getElementById("saveBtn").addEventListener("click", () => {
-    save();
-    alert("Gespeichert (LocalStorage im Browser).");
+    if (save()) {
+      alert("Gespeichert (LocalStorage im Browser).");
+    }
   });
 
   // Export button
@@ -104,10 +105,16 @@ function importCSV(file, fileInput) {
       // Add imported rows to the beginning of the table
       const rows = getRows();
       setRows([...importedRows, ...rows]);
-      save();
+      const saved = save();
       render();
       
-      alert(`${importedRows.length} Zeilen erfolgreich importiert.`);
+      // Always notify about import success, but only show alert when save succeeded
+      if (saved) {
+        alert(`${importedRows.length} Zeilen erfolgreich importiert und gespeichert.`);
+      } else {
+        // Save already showed error alert; log that import worked without showing another popup
+        console.warn(`${importedRows.length} Zeilen erfolgreich importiert, aber die Daten wurden nicht dauerhaft gespeichert.`);
+      }
     } catch (error) {
       console.error("Error importing CSV:", error);
       let userMessage = "Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Dateiformat.";

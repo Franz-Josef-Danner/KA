@@ -76,10 +76,15 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
-      if (await login(email, password)) {
-        window.location.href = 'dashboard.html';
-      } else {
-        errorMessage.textContent = 'Ungültige E-Mail-Adresse oder Passwort.';
+      try {
+        if (await login(email, password)) {
+          window.location.href = 'dashboard.html';
+        } else {
+          errorMessage.textContent = 'Ungültige E-Mail-Adresse oder Passwort.';
+          errorMessage.style.display = 'block';
+        }
+      } catch (error) {
+        errorMessage.textContent = error.message || 'Ein Fehler ist beim Anmelden aufgetreten.';
         errorMessage.style.display = 'block';
       }
     });

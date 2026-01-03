@@ -33,9 +33,42 @@ function createLogoutModal() {
   
   document.body.appendChild(modal);
   
-  // Focus the confirm button
+  // Get focusable elements
+  const cancelBtn = modal.querySelector('.modal-btn-cancel');
   const confirmBtn = modal.querySelector('.modal-btn-confirm');
-  confirmBtn.focus();
+  
+  // Guard against missing elements
+  if (!cancelBtn || !confirmBtn) {
+    console.error('Modal buttons not found');
+    document.body.removeChild(modal);
+    return Promise.resolve(false);
+  }
+  
+  const focusableElements = [cancelBtn, confirmBtn];
+  const firstFocusable = focusableElements[0];
+  const lastFocusable = focusableElements[focusableElements.length - 1];
+  
+  // Focus trap implementation
+  const trapFocus = (e) => {
+    if (e.key === 'Tab') {
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable.focus();
+        }
+      }
+    }
+  };
+  
+  // Focus the cancel button (safer, non-destructive default)
+  cancelBtn.focus();
   
   return new Promise((resolve) => {
     // Handle Escape key
@@ -48,6 +81,7 @@ function createLogoutModal() {
     
     const cleanup = () => {
       document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', trapFocus);
       document.body.removeChild(modal);
     };
     
@@ -67,6 +101,7 @@ function createLogoutModal() {
     };
     
     document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', trapFocus);
   });
 }
 
