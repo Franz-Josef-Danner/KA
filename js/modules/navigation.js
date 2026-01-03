@@ -38,7 +38,16 @@ function createLogoutModal() {
   confirmBtn.focus();
   
   return new Promise((resolve) => {
+    // Handle Escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        cleanup();
+        resolve(false);
+      }
+    };
+    
     const cleanup = () => {
+      document.removeEventListener('keydown', handleEscape);
       document.body.removeChild(modal);
     };
     
@@ -57,14 +66,6 @@ function createLogoutModal() {
       resolve(false);
     };
     
-    // Handle Escape key
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        cleanup();
-        resolve(false);
-        document.removeEventListener('keydown', handleEscape);
-      }
-    };
     document.addEventListener('keydown', handleEscape);
   });
 }
