@@ -92,15 +92,25 @@ export function render() {
 
         // Beim Fokus: reiner Text zum Editieren
         td.addEventListener("focus", () => {
-          td.textContent = sanitizeText(getRows()[idx][col] ?? "");
+          const originalValue = getRows()[idx][col] ?? "";
+          td.textContent = originalValue;
+          // Store original value to compare on blur
+          td.dataset.originalValue = sanitizeText(originalValue);
         });
 
         // Beim Blur: speichern + hübsch darstellen
         td.addEventListener("blur", () => {
           const newVal = td.textContent ?? "";
+          const originalValue = td.dataset.originalValue ?? "";
           const currentRows = getRows();
-          currentRows[idx][col] = sanitizeText(newVal);
-          setRows(currentRows);
+          const sanitizedNewVal = sanitizeText(newVal);
+          
+          // Only update and save to history if the value actually changed
+          if (sanitizedNewVal !== originalValue) {
+            currentRows[idx][col] = sanitizedNewVal;
+            setRows(currentRows);
+          }
+          
           td.innerHTML = toCellDisplay(col, currentRows[idx][col]);
           // Use debounced render to avoid multiple rapid re-renders during editing
           debouncedRender();
