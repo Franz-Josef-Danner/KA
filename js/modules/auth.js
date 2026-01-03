@@ -42,6 +42,11 @@ function getUsers() {
 }
 
 export async function login(email, password) {
+  // Clean up any expired session before login
+  if (!isAuthenticated()) {
+    localStorage.removeItem(AUTH_KEY);
+  }
+  
   await initializeUsers();
   const users = getUsers();
   const passwordHash = await simpleHash(password);
@@ -76,15 +81,33 @@ export function isAuthenticated() {
     const sessionAge = now - session.timestamp;
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     
-    return sessionAge < maxAge;
+    const isValid = sessionAge < maxAge;
+    
+    // Clean up expired session
+    if (!isValid) {
+      localStorage.removeItem(AUTH_KEY);
+    }
+    
+    return isValid;
   } catch {
     return false;
   }
 }
 
-export function requireAuth() {
+export async function requireAuth() {
+  // Check if there's an expired session
+  const raw = localStorage.getItem(AUTH_KEY);
+  const hasExpiredSession = raw && !isAuthenticated();
+  
   if (!isAuthenticated()) {
-    window.location.href = 'index.html';
+    // Add session expiration message to URL if session expired
+    if (hasExpiredSession) {
+      window.location.href = 'index.html?expired=true';
+    } else {
+      window.location.href = 'index.html';
+    }
+    // Throw error to prevent further execution
+    throw new Error('Authentication required');
   }
 }
 

@@ -54,11 +54,18 @@
     import { requireAuth } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
     
-    // Require authentication
-    requireAuth();
-    
-    // Initialize navigation
-    initNavigation('firmenliste.html');
+    (async () => {
+      try {
+        // Require authentication; if this fails or redirects, do not continue
+        await requireAuth();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('firmenliste.html');
+      } catch (error) {
+        // Authentication failed or a redirect is in progress; avoid further DOM manipulation
+        console.error('Authentication error on firmenliste page:', error);
+      }
+    })();
   </script>
   <script type="module" src="js/app.js"></script>
 </body>
