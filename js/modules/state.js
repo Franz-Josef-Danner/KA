@@ -71,6 +71,10 @@ export function load() {
 }
 
 // Undo/Redo functions
+/**
+ * Undo to previous state
+ * @returns {boolean} - True if history operation succeeded (does NOT indicate save success)
+ */
 export function undo() {
   const previousState = historyUndo();
   if (previousState) {
@@ -81,6 +85,10 @@ export function undo() {
   return false;
 }
 
+/**
+ * Redo to next state
+ * @returns {boolean} - True if history operation succeeded (does NOT indicate save success)
+ */
 export function redo() {
   const nextState = historyRedo();
   if (nextState) {
