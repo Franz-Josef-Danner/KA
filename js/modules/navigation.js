@@ -36,6 +36,14 @@ function createLogoutModal() {
   // Get focusable elements
   const cancelBtn = modal.querySelector('.modal-btn-cancel');
   const confirmBtn = modal.querySelector('.modal-btn-confirm');
+  
+  // Guard against missing elements
+  if (!cancelBtn || !confirmBtn) {
+    console.error('Modal buttons not found');
+    document.body.removeChild(modal);
+    return Promise.resolve(false);
+  }
+  
   const focusableElements = [cancelBtn, confirmBtn];
   const firstFocusable = focusableElements[0];
   const lastFocusable = focusableElements[focusableElements.length - 1];
