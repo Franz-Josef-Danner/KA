@@ -65,26 +65,58 @@ export function logout() {
   window.location.href = 'index.html';
 }
 
-export function isAuthenticated() {
+// Helper function to check session validity and clean up if expired
+function checkSessionValidity() {
   try {
     const raw = localStorage.getItem(AUTH_KEY);
-    if (!raw) return false;
+    if (!raw) return { isValid: false, hadSession: false };
     
     const session = JSON.parse(raw);
-    // Check if session exists and is less than 24 hours old
+
+    // Validate session structure; treat malformed sessions as expired
+    if (
+      !session ||
+      typeof session.timestamp !== 'number' ||
+      !Number.isFinite(session.timestamp)
+    ) {
+      localStorage.removeItem(AUTH_KEY);
+      return { isValid: false, hadSession: true };
+    }
+    
     const now = Date.now();
     const sessionAge = now - session.timestamp;
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     
-    return sessionAge < maxAge;
+    const isValid = sessionAge < maxAge;
+    
+    // Clean up expired session
+    if (!isValid) {
+      localStorage.removeItem(AUTH_KEY);
+    }
+    
+    return { isValid, hadSession: true };
   } catch {
-    return false;
+    return { isValid: false, hadSession: false };
   }
 }
 
+export function isAuthenticated() {
+  return checkSessionValidity().isValid;
+}
+
 export function requireAuth() {
-  if (!isAuthenticated()) {
-    window.location.href = 'index.html';
+  // Check session validity once to avoid race conditions
+  const { isValid, hadSession } = checkSessionValidity();
+  
+  if (!isValid) {
+    // If there was a session but it was expired, show expiration message
+    if (hadSession) {
+      window.location.href = 'index.html?expired=true';
+    } else {
+      window.location.href = 'index.html';
+    }
+    // Throw error to prevent further execution
+    throw new Error('Authentication required');
   }
 }
 

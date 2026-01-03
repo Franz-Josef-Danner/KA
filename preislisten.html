@@ -23,11 +23,18 @@
     import { requireAuth } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
     
-    // Require authentication
-    requireAuth();
-    
-    // Initialize navigation
-    initNavigation('preislisten.html');
+    (() => {
+      try {
+        // Require authentication; if this fails or redirects, do not continue
+        requireAuth();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('preislisten.html');
+      } catch (error) {
+        // Authentication failed or a redirect is in progress; avoid further DOM manipulation
+        console.error('Authentication error on preislisten page:', error);
+      }
+    })();
   </script>
 </body>
 </html>

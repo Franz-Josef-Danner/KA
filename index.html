@@ -61,6 +61,15 @@
     const form = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
     
+    // Check if redirected due to expired session
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('expired') === 'true') {
+      errorMessage.textContent = 'Ihre Session ist abgelaufen. Bitte melden Sie sich erneut an.';
+      errorMessage.style.display = 'block';
+      // Clean up URL parameter
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
