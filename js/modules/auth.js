@@ -42,9 +42,6 @@ function getUsers() {
 }
 
 export async function login(email, password) {
-  // isAuthenticated() will clean up any expired session automatically
-  isAuthenticated();
-  
   await initializeUsers();
   const users = getUsers();
   const passwordHash = await simpleHash(password);
@@ -75,6 +72,17 @@ function checkSessionValidity() {
     if (!raw) return { isValid: false, hadSession: false };
     
     const session = JSON.parse(raw);
+
+    // Validate session structure; treat malformed sessions as expired
+    if (
+      !session ||
+      typeof session.timestamp !== 'number' ||
+      !Number.isFinite(session.timestamp)
+    ) {
+      localStorage.removeItem(AUTH_KEY);
+      return { isValid: false, hadSession: true };
+    }
+    
     const now = Date.now();
     const sessionAge = now - session.timestamp;
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
@@ -96,7 +104,7 @@ export function isAuthenticated() {
   return checkSessionValidity().isValid;
 }
 
-export async function requireAuth() {
+export function requireAuth() {
   // Check session validity once to avoid race conditions
   const { isValid, hadSession } = checkSessionValidity();
   

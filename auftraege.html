@@ -23,10 +23,10 @@
     import { requireAuth } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
     
-    (async () => {
+    (() => {
       try {
         // Require authentication; if this fails or redirects, do not continue
-        await requireAuth();
+        requireAuth();
 
         // Initialize navigation only after successful authentication
         initNavigation('auftraege.html');
