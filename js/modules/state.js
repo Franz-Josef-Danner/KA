@@ -75,7 +75,7 @@ export function undo() {
   const previousState = historyUndo();
   if (previousState) {
     setRows(previousState, true);
-    save();
+    save(); // Best-effort save; user is notified via alert if it fails
     return true;
   }
   return false;
@@ -85,7 +85,7 @@ export function redo() {
   const nextState = historyRedo();
   if (nextState) {
     setRows(nextState, true);
-    save();
+    save(); // Best-effort save; user is notified via alert if it fails
     return true;
   }
   return false;
