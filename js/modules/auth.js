@@ -27,7 +27,12 @@ async function initializeUsers() {
       password: await simpleHash('demo123') // Hash the password
     };
     users.push(defaultUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    try {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    } catch (error) {
+      console.error('Failed to initialize users in localStorage:', error);
+      throw new Error('Storage initialization failed. Please check browser storage settings.');
+    }
   }
 }
 
@@ -53,8 +58,13 @@ export async function login(email, password) {
       email: user.email,
       timestamp: Date.now()
     };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(session));
-    return true;
+    try {
+      localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+      return true;
+    } catch (error) {
+      console.error('Failed to create session in localStorage:', error);
+      throw new Error('Login failed: Unable to create session. Please check browser storage settings.');
+    }
   }
   
   return false;
@@ -87,7 +97,8 @@ function checkSessionValidity() {
     const sessionAge = now - session.timestamp;
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     
-    const isValid = sessionAge < maxAge;
+    // Check if sessionAge is negative (timestamp in future) or exceeds maxAge
+    const isValid = sessionAge >= 0 && sessionAge < maxAge;
     
     // Clean up expired session
     if (!isValid) {

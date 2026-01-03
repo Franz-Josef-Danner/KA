@@ -33,8 +33,33 @@ function createLogoutModal() {
   
   document.body.appendChild(modal);
   
-  // Focus the confirm button
+  // Get focusable elements
+  const cancelBtn = modal.querySelector('.modal-btn-cancel');
   const confirmBtn = modal.querySelector('.modal-btn-confirm');
+  const focusableElements = [cancelBtn, confirmBtn];
+  const firstFocusable = focusableElements[0];
+  const lastFocusable = focusableElements[focusableElements.length - 1];
+  
+  // Focus trap implementation
+  const trapFocus = (e) => {
+    if (e.key === 'Tab') {
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable.focus();
+        }
+      }
+    }
+  };
+  
+  // Focus the confirm button
   confirmBtn.focus();
   
   return new Promise((resolve) => {
@@ -48,6 +73,7 @@ function createLogoutModal() {
     
     const cleanup = () => {
       document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', trapFocus);
       document.body.removeChild(modal);
     };
     
@@ -67,6 +93,7 @@ function createLogoutModal() {
     };
     
     document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', trapFocus);
   });
 }
 
