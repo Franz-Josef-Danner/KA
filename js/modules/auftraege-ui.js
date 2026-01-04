@@ -91,10 +91,16 @@ function getFormData() {
 function validateForm() {
   const auftragsId = document.getElementById("edit_Auftrags_ID");
   
+  // Check if Auftrags-ID element exists
+  if (!auftragsId) {
+    console.error("Auftrags-ID field not found");
+    return false;
+  }
+  
   // Check if Auftrags-ID is filled (required field)
-  if (!auftragsId || !auftragsId.value.trim()) {
+  if (!auftragsId.value.trim()) {
     alert("Auftrags-ID ist ein Pflichtfeld und muss ausgefüllt werden.");
-    if (auftragsId) auftragsId.focus();
+    auftragsId.focus();
     return false;
   }
   
