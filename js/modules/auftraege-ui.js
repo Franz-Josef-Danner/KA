@@ -162,12 +162,15 @@ function populateForm(rowData) {
           input.appendChild(customOption);
         }
         
-        // Set the value
+        // Set the value before cloning
         input.value = currentFirma;
         
         // Remove any existing event listeners by cloning and replacing the element
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
+        
+        // Set the value again after cloning (cloneNode doesn't preserve value property)
+        newInput.value = currentFirma;
         
         // Add event listener for company selection change
         newInput.addEventListener("change", onCompanySelectionChange);
