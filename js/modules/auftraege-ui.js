@@ -2,7 +2,7 @@
 // Aufträge UI Updates
 // -----------------------------
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
-import { COLUMNS, STATUS_OPTIONS, ORDER_ITEM_COLUMNS } from './auftraege-config.js';
+import { COLUMNS, ORDER_ITEM_COLUMNS } from './auftraege-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 
@@ -483,19 +483,7 @@ function populateForm(rowData) {
     }
     
     if (input) {
-      if (col === "Status" && input.tagName === "SELECT") {
-        // Populate status dropdown options dynamically
-        input.innerHTML = "";
-        STATUS_OPTIONS.forEach(option => {
-          const optionElement = document.createElement("option");
-          optionElement.value = option;
-          optionElement.textContent = option;
-          if (rowData[col] === option) {
-            optionElement.selected = true;
-          }
-          input.appendChild(optionElement);
-        });
-      } else if (col === "Firma" && input.tagName === "SELECT") {
+      if (col === "Firma" && input.tagName === "SELECT") {
         // Populate company dropdown with customers
         input.innerHTML = "";
         
