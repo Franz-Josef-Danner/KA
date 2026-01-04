@@ -9,14 +9,42 @@
 <body>
   <div id="nav-container"></div>
   
-  <div class="page-container">
-    <h1>Aufträge</h1>
-    <p class="page-subtitle">Verwalten Sie Ihre Aufträge</p>
-    
-    <div class="placeholder-content">
-      <p>Diese Seite ist noch in Entwicklung.</p>
-      <p>Hier können Sie bald Aufträge verwalten und bearbeiten.</p>
-    </div>
+  <h1>Aufträge – Verwaltung</h1>
+
+  <div class="bar">
+    <button id="newOrderBtn">+ Neuer Auftrag</button>
+    <button id="undoBtn" title="Rückgängig (Strg+Z)">↶ Rückgängig</button>
+    <button id="redoBtn" title="Wiederholen (Strg+Y)">↷ Wiederholen</button>
+    <button id="saveBtn">Speichern</button>
+    <button id="exportBtn">CSV Export</button>
+    <label for="importFile" class="import-btn">CSV Import</label>
+    <input type="file" id="importFile" accept=".csv" style="display: none;" />
+    <input id="search" class="search" type="search" placeholder="Suchen (Auftrags-ID, Firma, Beschreibung, Status …)" />
+    <span class="small">Autosave beim Speichern/Import.</span>
+  </div>
+
+  <div class="hint">
+    Bedienung: Zellen anklicken und direkt tippen. <span class="pill">Tab</span> springt zur nächsten Zelle.
+  </div>
+
+  <div class="wrap">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th>Auftrags_ID</th>
+          <th>Auftragsdatum</th>
+          <th>Firma</th>
+          <th>Ansprechpartner</th>
+          <th>Beschreibung</th>
+          <th>Budget</th>
+          <th>Status</th>
+          <th>Fälligkeit</th>
+          <th>Kommentare</th>
+          <th class="actions">Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
 
   <script type="module">
@@ -36,5 +64,6 @@
       }
     })();
   </script>
+  <script type="module" src="js/auftraege-app.js"></script>
 </body>
 </html>
