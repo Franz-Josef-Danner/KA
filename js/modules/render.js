@@ -89,7 +89,17 @@ export function render() {
             return;
           }
           
-          // If validation passed, proceed with the change
+          // If confirmation is required, ask user
+          if (validation.requiresConfirmation) {
+            const confirmed = confirm(validation.confirmationMessage);
+            if (!confirmed) {
+              // User declined, revert the dropdown to the old value
+              e.target.value = oldStatus;
+              return;
+            }
+          }
+          
+          // If validation passed (and confirmation given if required), proceed with the change
           currentRows[idx][col] = newStatus;
           setRows(currentRows);
           save();
