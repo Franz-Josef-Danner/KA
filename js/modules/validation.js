@@ -5,10 +5,8 @@
 
 /**
  * Check if a company has any active orders (Aufträge)
- * Note: Currently considers all orders as "active" since the orders module
- * does not yet implement a Status field. When Status is added to orders,
- * this function should be updated to only check for orders with status
- * "offen" or "in Bearbeitung".
+ * Active orders are those with status "offen" or "in Bearbeitung".
+ * Orders with status "abgeschlossen" or "storniert" are not considered active.
  * 
  * @param {string} firmaName - The company name to check (orders are linked by company name)
  * @returns {boolean} - True if the company has active orders
@@ -24,13 +22,22 @@ export function hasActiveOrders(firmaName) {
     const orders = JSON.parse(auftraegeData);
     if (!Array.isArray(orders)) return false;
     
-    // Check if any order belongs to this company
+    // Check if any order belongs to this company and has an active status
     // Orders are linked by Firma name (company name)
-    // TODO: When Status field is implemented in orders, filter by:
-    //       order.Status === "offen" || order.Status === "in Bearbeitung"
+    // Only consider orders with Status "offen" or "in Bearbeitung" as active
     const hasOrders = orders.some(order => {
       const orderFirma = (order.Firma || "").trim();
-      return orderFirma && orderFirma === firmaName;
+      const orderStatus = (order.Status || "").trim();
+      
+      // Consider order active if:
+      // 1. It belongs to the company
+      // 2. Status is "offen" or "in Bearbeitung"
+      // 3. Status is empty (backward compatibility - treat as active)
+      const isActive = orderStatus === "offen" || 
+                      orderStatus === "in Bearbeitung" || 
+                      orderStatus === "";
+      
+      return orderFirma && orderFirma === firmaName && isActive;
     });
     
     return hasOrders;

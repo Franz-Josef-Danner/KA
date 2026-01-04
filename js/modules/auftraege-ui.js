@@ -439,6 +439,8 @@ export function openOrderModal(rowIndex) {
   const modal = document.getElementById("orderModal");
   const modalTitle = document.getElementById("modalTitle");
   const form = document.getElementById("orderForm");
+  const modalSave = document.getElementById("modalSave");
+  const convertToInvoiceBtn = document.getElementById("convertToInvoiceBtn");
   
   // Set modal title
   if (rowIndex === null) {
@@ -453,12 +455,37 @@ export function openOrderModal(rowIndex) {
     const emptyRow = newEmptyRow();
     currentOrderItems = emptyRow.items || [];
     populateForm(emptyRow);
+    
+    // Enable all inputs for new order
+    setFormInputsEnabled(true);
+    if (modalSave) modalSave.disabled = false;
+    if (convertToInvoiceBtn) convertToInvoiceBtn.disabled = false;
   } else {
     // Edit existing order
     const rows = getRows();
     const row = rows[rowIndex];
     currentOrderItems = Array.isArray(row.items) ? [...row.items] : [];
     populateForm(row);
+    
+    // Check if order is completed (abgeschlossen)
+    const isCompleted = row.Status === "abgeschlossen";
+    
+    if (isCompleted) {
+      // Disable all inputs and buttons for completed orders
+      setFormInputsEnabled(false);
+      if (modalSave) modalSave.disabled = true;
+      if (convertToInvoiceBtn) convertToInvoiceBtn.disabled = true;
+      
+      // Show a warning message
+      modalTitle.textContent = "Auftrag bearbeiten (Abgeschlossen - Nur Lesezugriff)";
+      modalTitle.style.color = "#dc2626";
+    } else {
+      // Enable all inputs for orders that are not completed
+      setFormInputsEnabled(true);
+      if (modalSave) modalSave.disabled = false;
+      if (convertToInvoiceBtn) convertToInvoiceBtn.disabled = false;
+      modalTitle.style.color = "";
+    }
   }
   
   // Render order items table
@@ -614,6 +641,28 @@ function hideCompanyInfo() {
   if (addressGroup) addressGroup.style.display = "none";
   if (emailGroup) emailGroup.style.display = "none";
   if (ansprechpartnerInput) ansprechpartnerInput.value = "";
+}
+
+// Function to enable/disable form inputs
+function setFormInputsEnabled(enabled) {
+  // Disable/enable all form inputs
+  const form = document.getElementById("orderForm");
+  if (form) {
+    const inputs = form.querySelectorAll("input, select, textarea, button");
+    inputs.forEach(input => {
+      input.disabled = !enabled;
+    });
+  }
+  
+  // Disable/enable the "Add Article" button
+  const addOrderItemBtn = document.getElementById("addOrderItemBtn");
+  if (addOrderItemBtn) addOrderItemBtn.disabled = !enabled;
+  
+  // Disable/enable delete buttons in order items table
+  const deleteButtons = document.querySelectorAll("#orderItemsTableBody button");
+  deleteButtons.forEach(btn => {
+    btn.disabled = !enabled;
+  });
 }
 
 function getFormData() {
@@ -774,7 +823,25 @@ function convertToInvoice() {
   // Save invoices back to localStorage
   try {
     localStorage.setItem(RECHNUNGEN_STORAGE_KEY, JSON.stringify(invoices));
-    alert(`Rechnung ${newInvoice.Rechnungs_ID} wurde erfolgreich erstellt!`);
+    
+    // Update the order status to "abgeschlossen" (completed)
+    formData.Status = "abgeschlossen";
+    
+    // Save the updated order
+    const rows = getRows();
+    if (currentEditingRowIndex !== null) {
+      rows[currentEditingRowIndex] = formData;
+    } else {
+      // If it's a new order, add it with status "abgeschlossen"
+      rows.unshift(formData);
+    }
+    setRows(rows);
+    save();
+    
+    // Trigger render event
+    window.dispatchEvent(new Event('ordersChanged'));
+    
+    alert(`Rechnung ${newInvoice.Rechnungs_ID} wurde erfolgreich erstellt!\n\nDer Auftrag wurde als "abgeschlossen" markiert und ist nun schreibgeschützt.`);
     
     // Close modal
     closeModal();

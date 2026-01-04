@@ -12,6 +12,7 @@ export const COLUMNS = [
   "Beschreibung",
   "Budget",
   "Projekt",
+  "Status",
   "Kommentare"
 ];
 
