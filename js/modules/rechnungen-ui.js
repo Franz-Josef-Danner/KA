@@ -1,8 +1,8 @@
 // -----------------------------
-// Aufträge UI Updates
+// Rechnungen UI Updates
 // -----------------------------
-import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
-import { COLUMNS, ORDER_ITEM_COLUMNS } from './auftraege-config.js';
+import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyInvoiceItem } from './rechnungen-state.js';
+import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 
@@ -118,16 +118,15 @@ function getArticleDataByName(firmaName, artikelName) {
   }
 }
 
-
-// Function to generate order ID based on company selection
-function generateOrderId(firmaName) {
+// Function to generate invoice ID based on company selection
+function generateInvoiceId(firmaName) {
   if (!firmaName) {
-    return "AUF-" + Date.now();
+    return "RE-" + Date.now();
   }
   
   const company = getCompanyByName(firmaName);
   if (!company || !company.Firmen_ID) {
-    return "AUF-" + Date.now();
+    return "RE-" + Date.now();
   }
   
   // Get current date in YYYYMMDD format
@@ -136,13 +135,13 @@ function generateOrderId(firmaName) {
                   (now.getMonth() + 1).toString().padStart(2, '0') + 
                   now.getDate().toString().padStart(2, '0');
   
-  // Calculate sequence number: count existing orders for this company today
+  // Calculate sequence number: count existing invoices for this company today
   const rows = getRows();
   const todayPrefix = company.Firmen_ID + "-" + dateStr + "-";
-  const existingOrdersToday = rows.filter(row => 
-    row.Auftrags_ID && row.Auftrags_ID.startsWith(todayPrefix)
+  const existingInvoicesToday = rows.filter(row => 
+    row.Rechnungs_ID && row.Rechnungs_ID.startsWith(todayPrefix)
   );
-  const sequenceNumber = (existingOrdersToday.length + 1).toString().padStart(3, '0');
+  const sequenceNumber = (existingInvoicesToday.length + 1).toString().padStart(3, '0');
   
   // Format: Firmen_ID-YYYYMMDD-XXX
   return `${company.Firmen_ID}-${dateStr}-${sequenceNumber}`;
@@ -162,26 +161,26 @@ export function updateUndoRedoButtons() {
 }
 
 let currentEditingRowIndex = null;
-let currentOrderItems = []; // Holds the items being edited in the modal
+let currentInvoiceItems = []; // Holds the items being edited in the modal
 
-// Function to calculate Gesamtpreis for an order item
+// Function to calculate Gesamtpreis for an invoice item
 function calculateItemGesamtpreis(menge, einzelpreis) {
   const m = parseFloat(menge) || 0;
   const e = parseFloat(einzelpreis) || 0;
   return (m * e).toFixed(2);
 }
 
-// Function to calculate and update order totals
-function updateOrderTotals() {
+// Function to calculate and update invoice totals
+function updateInvoiceTotals() {
   let subtotal = 0;
   
-  currentOrderItems.forEach(item => {
+  currentInvoiceItems.forEach(item => {
     const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
     subtotal += gesamtpreis;
   });
   
-  const subtotalElement = document.getElementById("orderSubtotal");
-  const totalElement = document.getElementById("orderTotal");
+  const subtotalElement = document.getElementById("invoiceSubtotal");
+  const totalElement = document.getElementById("invoiceTotal");
   
   if (subtotalElement) {
     subtotalElement.textContent = subtotal.toFixed(2).replace('.', ',') + ' €';
@@ -193,28 +192,28 @@ function updateOrderTotals() {
   }
 }
 
-// Function to render order items table in the modal
-function renderOrderItemsTable() {
-  const tbody = document.getElementById("orderItemsTableBody");
-  const emptyDiv = document.getElementById("orderItemsEmpty");
+// Function to render invoice items table in the modal
+function renderInvoiceItemsTable() {
+  const tbody = document.getElementById("invoiceItemsTableBody");
+  const emptyDiv = document.getElementById("invoiceItemsEmpty");
   
   if (!tbody) return;
   
   tbody.innerHTML = "";
   
-  if (currentOrderItems.length === 0) {
-    emptyDiv.style.display = "block";
-    updateOrderTotals();
+  if (currentInvoiceItems.length === 0) {
+    if (emptyDiv) emptyDiv.style.display = "block";
+    updateInvoiceTotals();
     return;
   }
   
-  emptyDiv.style.display = "none";
+  if (emptyDiv) emptyDiv.style.display = "none";
   
   // Get selected company for auto-fill
   const firmaInput = document.getElementById("edit_Firma");
   const selectedFirma = firmaInput ? firmaInput.value : "";
   
-  currentOrderItems.forEach((item, idx) => {
+  currentInvoiceItems.forEach((item, idx) => {
     const tr = document.createElement("tr");
     tr.style.borderBottom = "1px solid #ddd";
     
@@ -263,28 +262,28 @@ function renderOrderItemsTable() {
     artikelSelect.addEventListener("change", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
       const selectedArtikel = e.target.value;
-      currentOrderItems[itemIndex].Artikel = selectedArtikel;
+      currentInvoiceItems[itemIndex].Artikel = selectedArtikel;
       
       // Auto-fill Beschreibung and Einheit from article list
       if (selectedArtikel && selectedFirma) {
         const articleData = getArticleDataByName(selectedFirma, selectedArtikel);
         if (articleData) {
           // Only auto-fill if fields are currently empty
-          if (!currentOrderItems[itemIndex].Beschreibung) {
-            currentOrderItems[itemIndex].Beschreibung = articleData.Beschreibung || "";
+          if (!currentInvoiceItems[itemIndex].Beschreibung) {
+            currentInvoiceItems[itemIndex].Beschreibung = articleData.Beschreibung || "";
           }
-          if (!currentOrderItems[itemIndex].Einheit) {
-            currentOrderItems[itemIndex].Einheit = articleData.Einheit || "";
+          if (!currentInvoiceItems[itemIndex].Einheit) {
+            currentInvoiceItems[itemIndex].Einheit = articleData.Einheit || "";
           }
-          if (!currentOrderItems[itemIndex].Einzelpreis) {
-            currentOrderItems[itemIndex].Einzelpreis = articleData.Einzelpreis || "";
+          if (!currentInvoiceItems[itemIndex].Einzelpreis) {
+            currentInvoiceItems[itemIndex].Einzelpreis = articleData.Einzelpreis || "";
           }
           // Recalculate Gesamtpreis
-          currentOrderItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
-            currentOrderItems[itemIndex].Menge,
-            currentOrderItems[itemIndex].Einzelpreis
+          currentInvoiceItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
+            currentInvoiceItems[itemIndex].Menge,
+            currentInvoiceItems[itemIndex].Einzelpreis
           );
-          renderOrderItemsTable();
+          renderInvoiceItemsTable();
         }
       }
     });
@@ -307,7 +306,7 @@ function renderOrderItemsTable() {
     beschreibungInput.setAttribute("aria-label", `Beschreibung für Artikel ${idx + 1}`);
     beschreibungInput.addEventListener("input", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
-      currentOrderItems[itemIndex].Beschreibung = e.target.value;
+      currentInvoiceItems[itemIndex].Beschreibung = e.target.value;
     });
     
     beschreibungTd.appendChild(beschreibungInput);
@@ -328,13 +327,13 @@ function renderOrderItemsTable() {
     mengeInput.setAttribute("aria-label", `Menge für Artikel ${idx + 1}`);
     mengeInput.addEventListener("input", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
-      currentOrderItems[itemIndex].Menge = e.target.value;
+      currentInvoiceItems[itemIndex].Menge = e.target.value;
       // Recalculate Gesamtpreis
-      currentOrderItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
-        currentOrderItems[itemIndex].Menge,
-        currentOrderItems[itemIndex].Einzelpreis
+      currentInvoiceItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
+        currentInvoiceItems[itemIndex].Menge,
+        currentInvoiceItems[itemIndex].Einzelpreis
       );
-      renderOrderItemsTable();
+      renderInvoiceItemsTable();
     });
     
     mengeTd.appendChild(mengeInput);
@@ -355,7 +354,7 @@ function renderOrderItemsTable() {
     einheitInput.setAttribute("aria-label", `Einheit für Artikel ${idx + 1}`);
     einheitInput.addEventListener("input", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
-      currentOrderItems[itemIndex].Einheit = e.target.value;
+      currentInvoiceItems[itemIndex].Einheit = e.target.value;
     });
     
     einheitTd.appendChild(einheitInput);
@@ -376,13 +375,13 @@ function renderOrderItemsTable() {
     einzelpreisInput.setAttribute("aria-label", `Einzelpreis für Artikel ${idx + 1}`);
     einzelpreisInput.addEventListener("input", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
-      currentOrderItems[itemIndex].Einzelpreis = e.target.value;
+      currentInvoiceItems[itemIndex].Einzelpreis = e.target.value;
       // Recalculate Gesamtpreis
-      currentOrderItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
-        currentOrderItems[itemIndex].Menge,
-        currentOrderItems[itemIndex].Einzelpreis
+      currentInvoiceItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
+        currentInvoiceItems[itemIndex].Menge,
+        currentInvoiceItems[itemIndex].Einzelpreis
       );
-      renderOrderItemsTable();
+      renderInvoiceItemsTable();
     });
     
     einzelpreisTd.appendChild(einzelpreisInput);
@@ -414,8 +413,8 @@ function renderOrderItemsTable() {
     deleteBtn.dataset.itemIndex = idx;
     deleteBtn.addEventListener("click", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
-      currentOrderItems.splice(itemIndex, 1);
-      renderOrderItemsTable();
+      currentInvoiceItems.splice(itemIndex, 1);
+      renderInvoiceItemsTable();
     });
     
     actionTd.appendChild(deleteBtn);
@@ -425,51 +424,57 @@ function renderOrderItemsTable() {
   });
   
   // Update totals
-  updateOrderTotals();
+  updateInvoiceTotals();
 }
 
-// Function to add a new order item
-function addOrderItem() {
-  currentOrderItems.push(newEmptyOrderItem());
-  renderOrderItemsTable();
+// Function to add a new invoice item
+function addInvoiceItem() {
+  currentInvoiceItems.push(newEmptyInvoiceItem());
+  renderInvoiceItemsTable();
 }
 
-export function openOrderModal(rowIndex) {
+export function openInvoiceModal(rowIndex) {
   currentEditingRowIndex = rowIndex;
-  const modal = document.getElementById("orderModal");
+  const modal = document.getElementById("invoiceModal");
   const modalTitle = document.getElementById("modalTitle");
-  const form = document.getElementById("orderForm");
+  const form = document.getElementById("invoiceForm");
+  
+  if (!modal || !modalTitle || !form) {
+    console.warn('Invoice modal elements not found');
+    return;
+  }
   
   // Set modal title
   if (rowIndex === null) {
-    modalTitle.textContent = "Neuer Auftrag";
+    modalTitle.textContent = "Neue Rechnung";
   } else {
-    modalTitle.textContent = "Auftrag bearbeiten";
+    modalTitle.textContent = "Rechnung bearbeiten";
   }
   
   // Populate form with data
   if (rowIndex === null) {
-    // New order - populate with defaults
+    // New invoice - populate with defaults
     const emptyRow = newEmptyRow();
-    currentOrderItems = emptyRow.items || [];
+    currentInvoiceItems = emptyRow.items || [];
     populateForm(emptyRow);
   } else {
-    // Edit existing order
+    // Edit existing invoice
     const rows = getRows();
     const row = rows[rowIndex];
-    currentOrderItems = Array.isArray(row.items) ? [...row.items] : [];
+    currentInvoiceItems = Array.isArray(row.items) ? [...row.items] : [];
     populateForm(row);
   }
   
-  // Render order items table
-  renderOrderItemsTable();
+  // Render invoice items table
+  renderInvoiceItemsTable();
   
   // Show modal
   modal.style.display = "flex";
   
   // Focus first input
   setTimeout(() => {
-    document.getElementById("edit_Auftrags_ID").focus();
+    const firstInput = document.getElementById("edit_Rechnungs_ID");
+    if (firstInput) firstInput.focus();
   }, 100);
 }
 
@@ -477,7 +482,7 @@ function populateForm(rowData) {
   for (const col of COLUMNS) {
     const input = document.getElementById(`edit_${col}`);
     
-    // Skip Artikel and Beschreibung as they are now part of order items
+    // Skip Artikel and Beschreibung as they are now part of invoice items
     if (col === "Artikel" || col === "Beschreibung") {
       continue;
     }
@@ -544,24 +549,22 @@ function onCompanySelectionChange(event) {
   if (selectedFirma) {
     updateCompanyInfo(selectedFirma);
     
-    // Re-render order items table to update article dropdowns
-    renderOrderItemsTable();
+    // Re-render invoice items table to update article dropdowns
+    renderInvoiceItemsTable();
     
-    // Auto-generate order ID only for new orders (when currentEditingRowIndex is null)
+    // Auto-generate invoice ID only for new invoices (when currentEditingRowIndex is null)
     if (currentEditingRowIndex === null) {
-      const auftragsIdInput = document.getElementById("edit_Auftrags_ID");
-      if (auftragsIdInput) {
-        auftragsIdInput.value = generateOrderId(selectedFirma);
+      const rechnungsIdInput = document.getElementById("edit_Rechnungs_ID");
+      if (rechnungsIdInput) {
+        rechnungsIdInput.value = generateInvoiceId(selectedFirma);
       }
     }
   } else {
     hideCompanyInfo();
-    // Re-render order items table to clear article dropdowns
-    renderOrderItemsTable();
+    // Re-render invoice items table to clear article dropdowns
+    renderInvoiceItemsTable();
   }
 }
-
-// Function to update article dropdown based on selected company
 
 // Function to display company address and email
 function updateCompanyInfo(firmaName) {
@@ -575,18 +578,18 @@ function updateCompanyInfo(firmaName) {
   
   if (company) {
     // Show and populate address
-    if (company.Adresse) {
+    if (company.Adresse && addressDiv && addressGroup) {
       addressDiv.textContent = company.Adresse;
       addressGroup.style.display = "block";
-    } else {
+    } else if (addressGroup) {
       addressGroup.style.display = "none";
     }
     
     // Show and populate email
-    if (company["E-mail"]) {
+    if (company["E-mail"] && emailDiv && emailGroup) {
       emailDiv.textContent = company["E-mail"];
       emailGroup.style.display = "block";
-    } else {
+    } else if (emailGroup) {
       emailGroup.style.display = "none";
     }
     
@@ -619,7 +622,7 @@ function hideCompanyInfo() {
 function getFormData() {
   const formData = {};
   for (const col of COLUMNS) {
-    // Skip Artikel and Beschreibung as they are now part of order items
+    // Skip Artikel and Beschreibung as they are now part of invoice items
     if (col === "Artikel" || col === "Beschreibung") {
       formData[col] = ""; // Keep empty for backward compatibility
       continue;
@@ -631,8 +634,8 @@ function getFormData() {
     }
   }
   
-  // Add order items to formData with all fields
-  formData.items = currentOrderItems.map(item => ({
+  // Add invoice items to formData with all fields
+  formData.items = currentInvoiceItems.map(item => ({
     Artikel: sanitizeText(item.Artikel || ""),
     Beschreibung: sanitizeText(item.Beschreibung || ""),
     Menge: sanitizeText(item.Menge || ""),
@@ -645,18 +648,18 @@ function getFormData() {
 }
 
 function validateForm() {
-  const auftragsId = document.getElementById("edit_Auftrags_ID");
+  const rechnungsId = document.getElementById("edit_Rechnungs_ID");
   
-  // Check if Auftrags-ID element exists
-  if (!auftragsId) {
-    console.error("Auftrags-ID field not found");
+  // Check if Rechnungs-ID element exists
+  if (!rechnungsId) {
+    console.error("Rechnungs-ID field not found");
     return false;
   }
   
-  // Check if Auftrags-ID is filled (required field)
-  if (!auftragsId.value.trim()) {
-    alert("Auftrags-ID ist ein Pflichtfeld und muss ausgefüllt werden.");
-    auftragsId.focus();
+  // Check if Rechnungs-ID is filled (required field)
+  if (!rechnungsId.value.trim()) {
+    alert("Rechnungs-ID ist ein Pflichtfeld und muss ausgefüllt werden.");
+    rechnungsId.focus();
     return false;
   }
   
@@ -664,12 +667,14 @@ function validateForm() {
 }
 
 function closeModal() {
-  const modal = document.getElementById("orderModal");
-  modal.style.display = "none";
+  const modal = document.getElementById("invoiceModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
   currentEditingRowIndex = null;
 }
 
-function saveOrder() {
+function saveInvoice() {
   // Validate form before saving
   if (!validateForm()) {
     return false;
@@ -679,10 +684,10 @@ function saveOrder() {
   const rows = getRows();
   
   if (currentEditingRowIndex === null) {
-    // New order - add to beginning
+    // New invoice - add to beginning
     rows.unshift(formData);
   } else {
-    // Edit existing order
+    // Edit existing invoice
     rows[currentEditingRowIndex] = formData;
   }
   
@@ -690,106 +695,10 @@ function saveOrder() {
   save();
   
   // Trigger render event - avoid circular dependency by using custom event
-  window.dispatchEvent(new Event('ordersChanged'));
+  window.dispatchEvent(new Event('invoicesChanged'));
   
   closeModal();
   return true;
-}
-
-// Function to convert current order to invoice
-function convertToInvoice() {
-  // Validate form before converting
-  if (!validateForm()) {
-    return false;
-  }
-  
-  const formData = getFormData();
-  
-  // Load invoices from localStorage
-  const RECHNUNGEN_STORAGE_KEY = "rechnungen_tabelle_v1";
-  let invoices = [];
-  try {
-    const raw = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (Array.isArray(data)) {
-        invoices = data;
-      }
-    }
-  } catch (error) {
-    console.error('Error loading invoices:', error);
-  }
-  
-  // Create new invoice from order data
-  const newInvoice = {
-    Rechnungs_ID: "", // Will be auto-generated
-    Rechnungsdatum: new Date().toISOString().split('T')[0],
-    Firma: formData.Firma,
-    Ansprechpartner: formData.Ansprechpartner,
-    Artikel: "", // Kept for backward compatibility
-    Beschreibung: "", // Kept for backward compatibility
-    Budget: formData.Budget,
-    Projekt: formData.Projekt,
-    Kommentare: formData.Kommentare,
-    Auftrags_ID: formData.Auftrags_ID, // Reference to the order
-    items: formData.items // Copy all items from order
-  };
-  
-  // Generate invoice ID
-  if (formData.Firma) {
-    // Use similar logic as in rechnungen-ui.js
-    const firmenData = localStorage.getItem("firmen_tabelle_v1");
-    if (firmenData) {
-      try {
-        const companies = JSON.parse(firmenData);
-        const company = companies.find(c => c.Firma === formData.Firma);
-        if (company && company.Firmen_ID) {
-          const now = new Date();
-          const dateStr = now.getFullYear().toString() + 
-                          (now.getMonth() + 1).toString().padStart(2, '0') + 
-                          now.getDate().toString().padStart(2, '0');
-          
-          const todayPrefix = company.Firmen_ID + "-" + dateStr + "-";
-          const existingInvoicesToday = invoices.filter(inv => 
-            inv.Rechnungs_ID && inv.Rechnungs_ID.startsWith(todayPrefix)
-          );
-          const sequenceNumber = (existingInvoicesToday.length + 1).toString().padStart(3, '0');
-          
-          newInvoice.Rechnungs_ID = `${company.Firmen_ID}-${dateStr}-${sequenceNumber}`;
-        }
-      } catch (error) {
-        console.error('Error generating invoice ID:', error);
-      }
-    }
-  }
-  
-  // Fallback if invoice ID wasn't generated
-  if (!newInvoice.Rechnungs_ID) {
-    newInvoice.Rechnungs_ID = "RE-" + Date.now();
-  }
-  
-  // Add invoice to the beginning of the list
-  invoices.unshift(newInvoice);
-  
-  // Save invoices back to localStorage
-  try {
-    localStorage.setItem(RECHNUNGEN_STORAGE_KEY, JSON.stringify(invoices));
-    alert(`Rechnung ${newInvoice.Rechnungs_ID} wurde erfolgreich erstellt!`);
-    
-    // Close modal
-    closeModal();
-    
-    // Optionally, navigate to invoices page
-    if (confirm("Möchten Sie zur Rechnungsseite wechseln?")) {
-      window.location.href = "rechnungen.html";
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error saving invoice:', error);
-    alert('Fehler beim Erstellen der Rechnung. Bitte versuchen Sie es erneut.');
-    return false;
-  }
 }
 
 // Initialize modal event handlers
@@ -797,8 +706,7 @@ function initModalHandlers() {
   const modalClose = document.getElementById("modalClose");
   const modalCancel = document.getElementById("modalCancel");
   const modalSave = document.getElementById("modalSave");
-  const convertToInvoiceBtn = document.getElementById("convertToInvoiceBtn");
-  const modal = document.getElementById("orderModal");
+  const modal = document.getElementById("invoiceModal");
   
   // Close button
   if (modalClose) {
@@ -813,14 +721,7 @@ function initModalHandlers() {
   // Save button
   if (modalSave) {
     modalSave.addEventListener("click", () => {
-      saveOrder();
-    });
-  }
-  
-  // Convert to Invoice button
-  if (convertToInvoiceBtn) {
-    convertToInvoiceBtn.addEventListener("click", () => {
-      convertToInvoice();
+      saveInvoice();
     });
   }
   
@@ -834,22 +735,22 @@ function initModalHandlers() {
   }
   
   // Handle Enter key in form inputs (except textarea)
-  const form = document.getElementById("orderForm");
+  const form = document.getElementById("invoiceForm");
   if (form) {
     form.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
         e.preventDefault();
-        saveOrder();
+        saveInvoice();
       }
     });
   }
   
-  // Add order item button
-  const addOrderItemBtn = document.getElementById("addOrderItemBtn");
-  if (addOrderItemBtn) {
-    addOrderItemBtn.addEventListener("click", (e) => {
+  // Add invoice item button
+  const addInvoiceItemBtn = document.getElementById("addInvoiceItemBtn");
+  if (addInvoiceItemBtn) {
+    addInvoiceItemBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      addOrderItem();
+      addInvoiceItem();
     });
   }
 }
@@ -858,13 +759,13 @@ function initModalHandlers() {
 initModalHandlers();
 
 // Listen for custom events to avoid circular dependencies
-window.addEventListener('openOrderModal', (e) => {
-  openOrderModal(e.detail.rowIndex);
+window.addEventListener('openInvoiceModal', (e) => {
+  openInvoiceModal(e.detail.rowIndex);
 });
 
-window.addEventListener('ordersChanged', () => {
+window.addEventListener('invoicesChanged', () => {
   // Dynamically import render to avoid circular dependency at module load time
-  import('./auftraege-render.js').then(module => {
+  import('./rechnungen-render.js').then(module => {
     module.render();
   });
 });
