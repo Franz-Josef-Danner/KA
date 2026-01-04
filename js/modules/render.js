@@ -75,9 +75,17 @@ export function render() {
           currentRows[idx][col] = e.target.value;
           setRows(currentRows);
           save();
+          // Re-render to update Firmen_ID based on new status
+          render();
         });
         
         td.appendChild(select);
+      } else if (col === "Firmen_ID") {
+        // Firmen_ID column is read-only - auto-generated based on Status
+        td.setAttribute("contenteditable", "false");
+        td.classList.add("readonly");
+        td.innerHTML = toCellDisplay(col, row[col]);
+        td.title = "Automatisch generierte ID für Kunden";
       } else {
         // Regular contenteditable cells for other columns
         td.setAttribute("contenteditable", "true");

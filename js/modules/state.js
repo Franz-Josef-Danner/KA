@@ -4,6 +4,7 @@
 import { STORAGE_KEY, COLUMNS, STATUS_OPTIONS } from './config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
+import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
 
 let rows = load() ?? [];
 
@@ -14,8 +15,57 @@ export function getRows() {
   return rows;
 }
 
+/**
+ * Sync Firmen_ID based on Status: assign ID if Status is "Kunde", remove otherwise
+ * Also creates/deletes article lists accordingly
+ * @param {Array} rowsToSync - Rows to synchronize IDs for
+ * @returns {Array} - Rows with synchronized IDs
+ */
+function syncFirmenIds(rowsToSync) {
+  // First pass: find the highest existing ID to avoid duplicates
+  let maxId = 0;
+  rowsToSync.forEach(row => {
+    if (row.Firmen_ID && typeof row.Firmen_ID === 'string' && row.Firmen_ID.startsWith('F-')) {
+      const idNum = parseInt(row.Firmen_ID.substring(2), 10);
+      if (!isNaN(idNum) && idNum > maxId) {
+        maxId = idNum;
+      }
+    }
+  });
+  
+  // Second pass: assign or remove IDs and manage article lists
+  return rowsToSync.map(row => {
+    if (row.Status === 'Kunde') {
+      // If status is "Kunde" and no ID exists, generate one
+      const idStr = typeof row.Firmen_ID === 'string' ? row.Firmen_ID : '';
+      if (!idStr || idStr.trim() === '') {
+        maxId += 1;
+        row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
+        // Create empty article list for new customer
+        const firmenName = row.Firma || 'Unbekannt';
+        createEmptyArtikelliste(row.Firmen_ID, firmenName);
+      } else {
+        // Customer already has ID - ensure article list exists
+        if (!artikellisteExists(idStr)) {
+          const firmenName = row.Firma || 'Unbekannt';
+          createEmptyArtikelliste(idStr, firmenName);
+        }
+      }
+    } else {
+      // If status is not "Kunde", remove any existing ID and article list
+      const oldId = row.Firmen_ID;
+      if (oldId && typeof oldId === 'string' && oldId.trim() !== '') {
+        deleteArtikelliste(oldId);
+      }
+      row.Firmen_ID = '';
+    }
+    return row;
+  });
+}
+
 export function setRows(newRows, skipHistory = false) {
-  rows = newRows;
+  // Sync Firmen_IDs based on Status before setting rows
+  rows = syncFirmenIds(newRows);
   if (!skipHistory) {
     pushState(rows);
   }
@@ -50,7 +100,7 @@ export function load() {
     if (!Array.isArray(data)) return null;
 
     // Normalize: ensure all columns exist
-    return data.map(r => {
+    const normalizedRows = data.map(r => {
       const row = newEmptyRow();
       for (const c of COLUMNS) {
         row[c] = sanitizeText(r?.[c] ?? "");
@@ -65,6 +115,9 @@ export function load() {
       }
       return row;
     });
+    
+    // Sync Firmen_IDs based on Status after loading
+    return syncFirmenIds(normalizedRows);
   } catch {
     return null;
   }
