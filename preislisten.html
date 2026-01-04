@@ -13,9 +13,23 @@
     <h1>Preislisten</h1>
     <p class="page-subtitle">Verwalten Sie Ihre Preislisten</p>
     
-    <div class="placeholder-content">
-      <p>Diese Seite ist noch in Entwicklung.</p>
-      <p>Hier können Sie bald Preislisten verwalten und bearbeiten.</p>
+    <div class="hint">
+      Doppelklick auf eine Zeile, um die Preisliste zu öffnen und zu bearbeiten.
+    </div>
+    
+    <div class="wrap">
+      <table id="preislisten-grid">
+        <thead>
+          <tr>
+            <th>Firmen_ID</th>
+            <th>Firma</th>
+            <th style="text-align: center;">Positionen</th>
+            <th>Erstellt</th>
+            <th>Geändert</th>
+          </tr>
+        </thead>
+        <tbody id="preislisten-tbody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -36,5 +50,6 @@
       }
     })();
   </script>
+  <script type="module" src="js/preislisten-app.js"></script>
 </body>
 </html>
