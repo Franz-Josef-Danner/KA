@@ -6,6 +6,28 @@ import { COLUMNS, STATUS_OPTIONS } from './auftraege-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { render } from './auftraege-render.js';
 
+// Function to get companies with "Kunde" status from firmenliste
+function getCustomerCompanies() {
+  try {
+    const firmenData = localStorage.getItem("firmen_tabelle_v1");
+    if (!firmenData) return [];
+    
+    const companies = JSON.parse(firmenData);
+    if (!Array.isArray(companies)) return [];
+    
+    // Filter companies with Status = "Kunde" and extract unique company names
+    const customerCompanies = companies
+      .filter(company => company.Status === "Kunde" && company.Firma)
+      .map(company => company.Firma.trim())
+      .filter((firma, index, self) => firma && self.indexOf(firma) === index); // Remove duplicates and empty values
+    
+    return customerCompanies.sort(); // Sort alphabetically
+  } catch (error) {
+    console.error('Error loading customer companies:', error);
+    return [];
+  }
+}
+
 export function updateUndoRedoButtons() {
   const undoBtn = document.getElementById("undoBtn");
   const redoBtn = document.getElementById("redoBtn");
@@ -71,6 +93,37 @@ function populateForm(rowData) {
           }
           input.appendChild(optionElement);
         });
+      } else if (col === "Firma" && input.tagName === "SELECT") {
+        // Populate company dropdown with customers
+        input.innerHTML = "";
+        
+        // Add empty option first
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "-- Firma auswählen --";
+        input.appendChild(emptyOption);
+        
+        // Add customer companies
+        const customerCompanies = getCustomerCompanies();
+        customerCompanies.forEach(firma => {
+          const optionElement = document.createElement("option");
+          optionElement.value = firma;
+          optionElement.textContent = firma;
+          if (rowData[col] === firma) {
+            optionElement.selected = true;
+          }
+          input.appendChild(optionElement);
+        });
+        
+        // If the current value is not in the list, add it as an option and select it
+        const currentFirma = rowData[col] || "";
+        if (currentFirma && !customerCompanies.includes(currentFirma)) {
+          const customOption = document.createElement("option");
+          customOption.value = currentFirma;
+          customOption.textContent = currentFirma + " (nicht in Kundenliste)";
+          customOption.selected = true;
+          input.appendChild(customOption);
+        }
       } else {
         input.value = rowData[col] || "";
       }
