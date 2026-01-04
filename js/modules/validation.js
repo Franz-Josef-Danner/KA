@@ -3,8 +3,7 @@
 // -----------------------------
 // This module provides validation functions for business rules
 
-// Active order statuses - orders with these statuses are considered "active"
-const ACTIVE_ORDER_STATUSES = ["offen", "in Bearbeitung", ""];
+import { ACTIVE_ORDER_STATUSES } from './auftraege-config.js';
 
 /**
  * Check if a company has any active orders (Aufträge)

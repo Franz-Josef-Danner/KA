@@ -835,12 +835,7 @@ function convertToInvoice() {
     
     // Save the updated order
     const rows = getRows();
-    if (currentEditingRowIndex !== null) {
-      rows[currentEditingRowIndex] = formData;
-    } else {
-      // If it's a new order, add it with status "abgeschlossen"
-      rows.unshift(formData);
-    }
+    rows[currentEditingRowIndex] = formData;
     setRows(rows);
     save();
     
