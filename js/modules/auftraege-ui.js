@@ -16,10 +16,12 @@ function getCustomerCompanies() {
     if (!Array.isArray(companies)) return [];
     
     // Filter companies with Status = "Kunde" and extract unique company names
-    const customerCompanies = companies
-      .filter(company => company.Status === "Kunde" && company.Firma)
-      .map(company => company.Firma.trim())
-      .filter((firma, index, self) => firma && self.indexOf(firma) === index); // Remove duplicates and empty values
+    const customerCompanies = [...new Set(
+      companies
+        .filter(company => company.Status === "Kunde" && company.Firma)
+        .map(company => company.Firma.trim())
+        .filter(firma => firma) // Remove empty values
+    )];
     
     return customerCompanies.sort(); // Sort alphabetically
   } catch (error) {
