@@ -27,11 +27,14 @@ export function hasActiveOrders(firmaName) {
     // Check if any order belongs to this company and has an active status
     // Orders are linked by Firma name (company name)
     // Only consider orders with Status "offen" or "in Bearbeitung" as active
+    // Empty string is included for backward compatibility (orders created before status field was added)
     const hasOrders = orders.some(order => {
       const orderFirma = (order.Firma || "").trim();
       const orderStatus = (order.Status || "").trim();
       
       // Consider order active if it has one of the active statuses
+      // Note: Empty status is treated as active for backward compatibility
+      // The load() function in auftraege-state.js sets empty statuses to "offen"
       const isActive = ACTIVE_ORDER_STATUSES.includes(orderStatus);
       
       return orderFirma && orderFirma === firmaName && isActive;

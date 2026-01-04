@@ -20,7 +20,11 @@ export const COLUMNS = [
 export const STATUS_OPTIONS = ["offen", "in Bearbeitung", "abgeschlossen", "storniert"];
 
 // Active order statuses - used for validation (orders with these statuses are considered "active")
+// Empty string included for backward compatibility with orders that don't have a status yet
 export const ACTIVE_ORDER_STATUSES = ["offen", "in Bearbeitung", ""];
+
+// Completed status constant
+export const COMPLETED_STATUS = "abgeschlossen";
 
 // Columns for order items (Positionen) - used for displaying multiple articles per order
 export const ORDER_ITEM_COLUMNS = [

@@ -2,7 +2,7 @@
 // Aufträge UI Updates
 // -----------------------------
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
-import { COLUMNS, ORDER_ITEM_COLUMNS } from './auftraege-config.js';
+import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 
@@ -468,7 +468,7 @@ export function openOrderModal(rowIndex) {
     populateForm(row);
     
     // Check if order is completed (abgeschlossen)
-    const isCompleted = row.Status === "abgeschlossen";
+    const isCompleted = row.Status === COMPLETED_STATUS;
     
     if (isCompleted) {
       // Disable all inputs and buttons for completed orders
@@ -831,7 +831,7 @@ function convertToInvoice() {
     localStorage.setItem(RECHNUNGEN_STORAGE_KEY, JSON.stringify(invoices));
     
     // Update the order status to "abgeschlossen" (completed)
-    formData.Status = "abgeschlossen";
+    formData.Status = COMPLETED_STATUS;
     
     // Save the updated order
     const rows = getRows();
