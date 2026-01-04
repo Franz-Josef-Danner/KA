@@ -4,6 +4,7 @@
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
 import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
+import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
@@ -761,7 +762,6 @@ function convertToInvoice() {
   const formData = getFormData();
   
   // Load invoices from localStorage
-  const RECHNUNGEN_STORAGE_KEY = "rechnungen_tabelle_v1";
   let invoices = [];
   try {
     const raw = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);

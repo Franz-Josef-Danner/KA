@@ -4,6 +4,7 @@
 // This module provides validation functions for business rules
 
 import { ACTIVE_ORDER_STATUSES } from './auftraege-config.js';
+import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
 
 /**
  * Check if a company has any active orders (Aufträge)
@@ -61,7 +62,7 @@ export function hasUnpaidInvoices(firmaName) {
   try {
     // Get invoices data from localStorage
     // Note: Invoice system is not yet fully implemented, so this is a placeholder
-    const rechnungenData = localStorage.getItem("rechnungen_tabelle_v1");
+    const rechnungenData = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);
     if (!rechnungenData) return false;
     
     const invoices = JSON.parse(rechnungenData);
