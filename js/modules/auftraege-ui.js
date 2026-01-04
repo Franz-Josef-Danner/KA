@@ -22,7 +22,10 @@ function getCustomerCompanies() {
         Firmen_ID: company.Firmen_ID || "",
         Firma: (company.Firma || "").trim(),
         Adresse: company.Adresse || "",
-        "E-mail": company["E-mail"] || ""
+        "E-mail": company["E-mail"] || "",
+        Titel: company.Titel || "",
+        Vorname: company.Vorname || "",
+        Nachname: company.Nachname || ""
       }))
       .filter(company => company.Firma); // Remove empty company names
     
@@ -215,6 +218,7 @@ function updateCompanyInfo(firmaName) {
   const addressDiv = document.getElementById("company_address");
   const emailGroup = document.getElementById("company_email_group");
   const emailDiv = document.getElementById("company_email");
+  const ansprechpartnerInput = document.getElementById("edit_Ansprechpartner");
   
   if (company) {
     // Show and populate address
@@ -232,6 +236,17 @@ function updateCompanyInfo(firmaName) {
     } else {
       emailGroup.style.display = "none";
     }
+    
+    // Populate contact person field (Ansprechpartner) from Titel, Vorname, Nachname
+    if (ansprechpartnerInput) {
+      const contactParts = [];
+      if (company.Titel) contactParts.push(company.Titel);
+      if (company.Vorname) contactParts.push(company.Vorname);
+      if (company.Nachname) contactParts.push(company.Nachname);
+      
+      const contactPerson = contactParts.join(" ").trim();
+      ansprechpartnerInput.value = contactPerson;
+    }
   } else {
     hideCompanyInfo();
   }
@@ -241,9 +256,11 @@ function updateCompanyInfo(firmaName) {
 function hideCompanyInfo() {
   const addressGroup = document.getElementById("company_address_group");
   const emailGroup = document.getElementById("company_email_group");
+  const ansprechpartnerInput = document.getElementById("edit_Ansprechpartner");
   
   if (addressGroup) addressGroup.style.display = "none";
   if (emailGroup) emailGroup.style.display = "none";
+  if (ansprechpartnerInput) ansprechpartnerInput.value = "";
 }
 
 function getFormData() {
