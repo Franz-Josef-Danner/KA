@@ -37,7 +37,19 @@ export function newEmptyRow() {
       obj[c] = "";
     }
   }
+  // Add items array for order items (Positionen)
+  obj.items = [];
   return obj;
+}
+
+// Create a new empty order item
+export function newEmptyOrderItem() {
+  return {
+    Artikel: "",
+    Beschreibung: "",
+    Menge: "",
+    Einheit: ""
+  };
 }
 
 export function save() {
@@ -72,6 +84,8 @@ export function load() {
           }
         }
       }
+      // Initialize items array if not present (backward compatibility)
+      row.items = Array.isArray(r?.items) ? r.items : [];
       return row;
     });
   } catch {

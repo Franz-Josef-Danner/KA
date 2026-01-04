@@ -1,8 +1,8 @@
 // -----------------------------
 // Aufträge UI Updates
 // -----------------------------
-import { canUndo, canRedo, getRows, setRows, save, newEmptyRow } from './auftraege-state.js';
-import { COLUMNS, STATUS_OPTIONS } from './auftraege-config.js';
+import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
+import { COLUMNS, STATUS_OPTIONS, ORDER_ITEM_COLUMNS } from './auftraege-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 
@@ -135,6 +135,165 @@ export function updateUndoRedoButtons() {
 }
 
 let currentEditingRowIndex = null;
+let currentOrderItems = []; // Holds the items being edited in the modal
+
+// Function to render order items table in the modal
+function renderOrderItemsTable() {
+  const tbody = document.getElementById("orderItemsTableBody");
+  const emptyDiv = document.getElementById("orderItemsEmpty");
+  
+  if (!tbody) return;
+  
+  tbody.innerHTML = "";
+  
+  if (currentOrderItems.length === 0) {
+    emptyDiv.style.display = "block";
+    return;
+  }
+  
+  emptyDiv.style.display = "none";
+  
+  currentOrderItems.forEach((item, idx) => {
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #ddd";
+    
+    // Artikel column - dropdown
+    const artikelTd = document.createElement("td");
+    artikelTd.style.padding = "8px";
+    artikelTd.style.borderRight = "1px solid #ddd";
+    
+    const artikelSelect = document.createElement("select");
+    artikelSelect.style.width = "100%";
+    artikelSelect.style.padding = "4px";
+    artikelSelect.dataset.itemIndex = idx;
+    artikelSelect.dataset.field = "Artikel";
+    
+    // Populate artikel dropdown
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = "-- Artikel auswählen --";
+    artikelSelect.appendChild(emptyOption);
+    
+    // Get selected company
+    const firmaInput = document.getElementById("edit_Firma");
+    const selectedFirma = firmaInput ? firmaInput.value : "";
+    
+    if (selectedFirma) {
+      const articles = getArticlesForCompany(selectedFirma);
+      articles.forEach(article => {
+        const option = document.createElement("option");
+        option.value = article;
+        option.textContent = article;
+        if (item.Artikel === article) {
+          option.selected = true;
+        }
+        artikelSelect.appendChild(option);
+      });
+    }
+    
+    // Set current value
+    if (item.Artikel && !selectedFirma) {
+      const customOption = document.createElement("option");
+      customOption.value = item.Artikel;
+      customOption.textContent = item.Artikel;
+      customOption.selected = true;
+      artikelSelect.appendChild(customOption);
+    } else {
+      artikelSelect.value = item.Artikel || "";
+    }
+    
+    artikelSelect.addEventListener("change", (e) => {
+      currentOrderItems[idx].Artikel = e.target.value;
+    });
+    
+    artikelTd.appendChild(artikelSelect);
+    tr.appendChild(artikelTd);
+    
+    // Beschreibung column - input
+    const beschreibungTd = document.createElement("td");
+    beschreibungTd.style.padding = "8px";
+    beschreibungTd.style.borderRight = "1px solid #ddd";
+    
+    const beschreibungInput = document.createElement("input");
+    beschreibungInput.type = "text";
+    beschreibungInput.style.width = "100%";
+    beschreibungInput.style.padding = "4px";
+    beschreibungInput.value = item.Beschreibung || "";
+    beschreibungInput.dataset.itemIndex = idx;
+    beschreibungInput.dataset.field = "Beschreibung";
+    beschreibungInput.addEventListener("input", (e) => {
+      currentOrderItems[idx].Beschreibung = e.target.value;
+    });
+    
+    beschreibungTd.appendChild(beschreibungInput);
+    tr.appendChild(beschreibungTd);
+    
+    // Menge column - input
+    const mengeTd = document.createElement("td");
+    mengeTd.style.padding = "8px";
+    mengeTd.style.borderRight = "1px solid #ddd";
+    
+    const mengeInput = document.createElement("input");
+    mengeInput.type = "text";
+    mengeInput.style.width = "100%";
+    mengeInput.style.padding = "4px";
+    mengeInput.value = item.Menge || "";
+    mengeInput.dataset.itemIndex = idx;
+    mengeInput.dataset.field = "Menge";
+    mengeInput.addEventListener("input", (e) => {
+      currentOrderItems[idx].Menge = e.target.value;
+    });
+    
+    mengeTd.appendChild(mengeInput);
+    tr.appendChild(mengeTd);
+    
+    // Einheit column - input
+    const einheitTd = document.createElement("td");
+    einheitTd.style.padding = "8px";
+    einheitTd.style.borderRight = "1px solid #ddd";
+    
+    const einheitInput = document.createElement("input");
+    einheitInput.type = "text";
+    einheitInput.style.width = "100%";
+    einheitInput.style.padding = "4px";
+    einheitInput.value = item.Einheit || "";
+    einheitInput.dataset.itemIndex = idx;
+    einheitInput.dataset.field = "Einheit";
+    einheitInput.addEventListener("input", (e) => {
+      currentOrderItems[idx].Einheit = e.target.value;
+    });
+    
+    einheitTd.appendChild(einheitInput);
+    tr.appendChild(einheitTd);
+    
+    // Actions column
+    const actionTd = document.createElement("td");
+    actionTd.style.padding = "8px";
+    actionTd.style.textAlign = "center";
+    
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "−";
+    deleteBtn.className = "danger";
+    deleteBtn.title = "Artikel entfernen";
+    deleteBtn.type = "button";
+    deleteBtn.style.padding = "4px 8px";
+    deleteBtn.addEventListener("click", () => {
+      currentOrderItems.splice(idx, 1);
+      renderOrderItemsTable();
+    });
+    
+    actionTd.appendChild(deleteBtn);
+    tr.appendChild(actionTd);
+    
+    tbody.appendChild(tr);
+  });
+}
+
+// Function to add a new order item
+function addOrderItem() {
+  currentOrderItems.push(newEmptyOrderItem());
+  renderOrderItemsTable();
+}
 
 export function openOrderModal(rowIndex) {
   currentEditingRowIndex = rowIndex;
@@ -153,13 +312,18 @@ export function openOrderModal(rowIndex) {
   if (rowIndex === null) {
     // New order - populate with defaults
     const emptyRow = newEmptyRow();
+    currentOrderItems = emptyRow.items || [];
     populateForm(emptyRow);
   } else {
     // Edit existing order
     const rows = getRows();
     const row = rows[rowIndex];
+    currentOrderItems = Array.isArray(row.items) ? [...row.items] : [];
     populateForm(row);
   }
+  
+  // Render order items table
+  renderOrderItemsTable();
   
   // Show modal
   modal.style.display = "flex";
@@ -173,6 +337,12 @@ export function openOrderModal(rowIndex) {
 function populateForm(rowData) {
   for (const col of COLUMNS) {
     const input = document.getElementById(`edit_${col}`);
+    
+    // Skip Artikel and Beschreibung as they are now part of order items
+    if (col === "Artikel" || col === "Beschreibung") {
+      continue;
+    }
+    
     if (input) {
       if (col === "Status" && input.tagName === "SELECT") {
         // Populate status dropdown options dynamically
@@ -230,40 +400,8 @@ function populateForm(rowData) {
         // Trigger initial update if a company is already selected
         if (currentFirma) {
           updateCompanyInfo(currentFirma);
-          // Also update article dropdown
-          updateArticleDropdown(currentFirma, rowData["Artikel"] || "");
         } else {
           hideCompanyInfo();
-        }
-      } else if (col === "Artikel" && input.tagName === "SELECT") {
-        // Populate article dropdown based on selected company
-        // This will be updated when company is selected
-        input.innerHTML = "";
-        
-        // Add empty option first
-        const emptyOption = document.createElement("option");
-        emptyOption.value = "";
-        emptyOption.textContent = "-- Artikel auswählen --";
-        input.appendChild(emptyOption);
-        
-        // Get selected company
-        const firmaInput = document.getElementById("edit_Firma");
-        const selectedFirma = firmaInput ? firmaInput.value : "";
-        
-        if (selectedFirma) {
-          const articles = getArticlesForCompany(selectedFirma);
-          articles.forEach(article => {
-            const optionElement = document.createElement("option");
-            optionElement.value = article;
-            optionElement.textContent = article;
-            input.appendChild(optionElement);
-          });
-        }
-        
-        // Set the current value
-        const currentArtikel = rowData[col] || "";
-        if (currentArtikel) {
-          addCustomOptionIfNeeded(input, currentArtikel);
         }
       } else {
         input.value = rowData[col] || "";
@@ -278,7 +416,9 @@ function onCompanySelectionChange(event) {
   
   if (selectedFirma) {
     updateCompanyInfo(selectedFirma);
-    updateArticleDropdown(selectedFirma);
+    
+    // Re-render order items table to update article dropdowns
+    renderOrderItemsTable();
     
     // Auto-generate order ID only for new orders (when currentEditingRowIndex is null)
     if (currentEditingRowIndex === null) {
@@ -289,41 +429,12 @@ function onCompanySelectionChange(event) {
     }
   } else {
     hideCompanyInfo();
-    updateArticleDropdown(""); // Clear article dropdown
+    // Re-render order items table to clear article dropdowns
+    renderOrderItemsTable();
   }
 }
 
 // Function to update article dropdown based on selected company
-function updateArticleDropdown(firmaName, currentArtikel = "") {
-  const artikelInput = document.getElementById("edit_Artikel");
-  if (!artikelInput) return;
-  
-  // Clear existing options
-  artikelInput.innerHTML = "";
-  
-  // Add empty option first
-  const emptyOption = document.createElement("option");
-  emptyOption.value = "";
-  emptyOption.textContent = "-- Artikel auswählen --";
-  artikelInput.appendChild(emptyOption);
-  
-  // If a company is selected, populate with articles
-  if (firmaName) {
-    const articles = getArticlesForCompany(firmaName);
-    articles.forEach(article => {
-      const optionElement = document.createElement("option");
-      optionElement.value = article;
-      optionElement.textContent = article;
-      artikelInput.appendChild(optionElement);
-    });
-    
-    // If there's a current article value, try to set it
-    if (currentArtikel) {
-      addCustomOptionIfNeeded(artikelInput, currentArtikel, articles);
-    }
-  }
-}
-
 
 // Function to display company address and email
 function updateCompanyInfo(firmaName) {
@@ -381,11 +492,26 @@ function hideCompanyInfo() {
 function getFormData() {
   const formData = {};
   for (const col of COLUMNS) {
+    // Skip Artikel and Beschreibung as they are now part of order items
+    if (col === "Artikel" || col === "Beschreibung") {
+      formData[col] = ""; // Keep empty for backward compatibility
+      continue;
+    }
+    
     const input = document.getElementById(`edit_${col}`);
     if (input) {
       formData[col] = sanitizeText(input.value || "");
     }
   }
+  
+  // Add order items to formData
+  formData.items = currentOrderItems.map(item => ({
+    Artikel: sanitizeText(item.Artikel || ""),
+    Beschreibung: sanitizeText(item.Beschreibung || ""),
+    Menge: sanitizeText(item.Menge || ""),
+    Einheit: sanitizeText(item.Einheit || "")
+  }));
+  
   return formData;
 }
 
@@ -482,6 +608,15 @@ function initModalHandlers() {
         e.preventDefault();
         saveOrder();
       }
+    });
+  }
+  
+  // Add order item button
+  const addOrderItemBtn = document.getElementById("addOrderItemBtn");
+  if (addOrderItemBtn) {
+    addOrderItemBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      addOrderItem();
     });
   }
 }

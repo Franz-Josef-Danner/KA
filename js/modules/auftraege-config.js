@@ -18,3 +18,11 @@ export const COLUMNS = [
 
 // Status column dropdown options
 export const STATUS_OPTIONS = ["offen", "in Bearbeitung", "abgeschlossen", "storniert"];
+
+// Columns for order items (Positionen) - used for displaying multiple articles per order
+export const ORDER_ITEM_COLUMNS = [
+  "Artikel",
+  "Beschreibung",
+  "Menge",
+  "Einheit"
+];
