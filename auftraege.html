@@ -15,7 +15,7 @@
     <button id="newOrderBtn">+ Neuer Auftrag</button>
     <button id="undoBtn" title="Rückgängig (Strg+Z)">↶ Rückgängig</button>
     <button id="redoBtn" title="Wiederholen (Strg+Y)">↷ Wiederholen</button>
-    <input id="search" class="search" type="search" placeholder="Suchen (Auftrags-ID, Firma, Beschreibung, Status …)" />
+    <input id="search" class="search" type="search" placeholder="Suchen (Auftrags-ID, Firma, Beschreibung, Projekt …)" />
   </div>
 
   <div class="hint">
@@ -33,8 +33,7 @@
           <th>Artikel</th>
           <th>Beschreibung</th>
           <th>Budget</th>
-          <th>Status</th>
-          <th>Fälligkeit</th>
+          <th>Projekt</th>
           <th>Kommentare</th>
           <th class="actions">Aktion</th>
         </tr>
@@ -123,14 +122,8 @@
             <input type="text" id="edit_Budget" name="Budget" />
           </div>
           <div class="form-group">
-            <label for="edit_Status">Status:</label>
-            <select id="edit_Status" name="Status">
-              <!-- Options will be populated dynamically from STATUS_OPTIONS -->
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="edit_Fälligkeit">Fälligkeit:</label>
-            <input type="date" id="edit_Fälligkeit" name="Fälligkeit" />
+            <label for="edit_Projekt">Projekt:</label>
+            <input type="text" id="edit_Projekt" name="Projekt" />
           </div>
           <div class="form-group">
             <label for="edit_Kommentare">Kommentare:</label>

@@ -1,7 +1,7 @@
 // -----------------------------
 // Aufträge Rendering Module
 // -----------------------------
-import { COLUMNS, STATUS_OPTIONS } from './auftraege-config.js';
+import { COLUMNS } from './auftraege-config.js';
 import { getRows, setRows, newEmptyRow, save } from './auftraege-state.js';
 import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
