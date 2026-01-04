@@ -92,6 +92,11 @@ KA/
 - **search.js**: Such-Funktionalität
   - Filtern von Zeilen nach Suchbegriff
 
+- **validation.js**: Geschäftslogik-Validierung
+  - Prüfung auf aktive Aufträge für Firmen
+  - Prüfung auf unbezahlte Rechnungen (Platzhalter für zukünftige Implementierung)
+  - Validierung von Statusänderungen von "Kunde" zu anderen Status
+
 ### Hilfsfunktionen (`js/utils/`)
 
 - **sanitize.js**: Sicherheit
@@ -147,6 +152,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Suchfunktion
 - ✅ Automatische Link-Formatierung für E-Mails und Websites
 - ✅ Rückgängig/Wiederholen mit bis zu 100 Schritten (Strg+Z / Strg+Y)
+- ✅ Statusvalidierung: Verhindert Statusänderung von "Kunde" zu einem anderen Status, wenn noch aktive Aufträge oder unbezahlte Rechnungen existieren
 
 ### Weitere Module (Platzhalter)
 - 🚧 Artikellisten
