@@ -258,9 +258,11 @@ function updateCompanyInfo(firmaName) {
 function hideCompanyInfo() {
   const addressGroup = document.getElementById("company_address_group");
   const emailGroup = document.getElementById("company_email_group");
+  const ansprechpartnerInput = document.getElementById("edit_Ansprechpartner");
   
   if (addressGroup) addressGroup.style.display = "none";
   if (emailGroup) emailGroup.style.display = "none";
+  if (ansprechpartnerInput) ansprechpartnerInput.value = "";
 }
 
 function getFormData() {
