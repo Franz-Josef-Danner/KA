@@ -48,7 +48,9 @@ export function newEmptyOrderItem() {
     Artikel: "",
     Beschreibung: "",
     Menge: "",
-    Einheit: ""
+    Einheit: "",
+    Einzelpreis: "",
+    Gesamtpreis: ""
   };
 }
 

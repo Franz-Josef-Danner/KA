@@ -91,6 +91,33 @@ function getArticlesForCompany(firmaName) {
   }
 }
 
+// Function to get full article data by name from a company's article list
+function getArticleDataByName(firmaName, artikelName) {
+  try {
+    const company = getCompanyByName(firmaName);
+    if (!company || !company.Firmen_ID) return null;
+    
+    const artikellistenData = localStorage.getItem(ARTIKELLISTEN_STORAGE_KEY);
+    if (!artikellistenData) return null;
+    
+    const artikellisten = JSON.parse(artikellistenData);
+    if (typeof artikellisten !== 'object' || artikellisten === null) return null;
+    
+    const artikelliste = artikellisten[company.Firmen_ID];
+    if (!artikelliste || !Array.isArray(artikelliste.items)) return null;
+    
+    // Find the article by name
+    const article = artikelliste.items.find(item => 
+      item.Artikel && item.Artikel.trim() === artikelName.trim()
+    );
+    
+    return article || null;
+  } catch (error) {
+    console.error('Error loading article data:', error);
+    return null;
+  }
+}
+
 
 // Function to generate order ID based on company selection
 function generateOrderId(firmaName) {
@@ -137,6 +164,35 @@ export function updateUndoRedoButtons() {
 let currentEditingRowIndex = null;
 let currentOrderItems = []; // Holds the items being edited in the modal
 
+// Function to calculate Gesamtpreis for an order item
+function calculateItemGesamtpreis(menge, einzelpreis) {
+  const m = parseFloat(menge) || 0;
+  const e = parseFloat(einzelpreis) || 0;
+  return (m * e).toFixed(2);
+}
+
+// Function to calculate and update order totals
+function updateOrderTotals() {
+  let subtotal = 0;
+  
+  currentOrderItems.forEach(item => {
+    const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+    subtotal += gesamtpreis;
+  });
+  
+  const subtotalElement = document.getElementById("orderSubtotal");
+  const totalElement = document.getElementById("orderTotal");
+  
+  if (subtotalElement) {
+    subtotalElement.textContent = subtotal.toFixed(2).replace('.', ',') + ' €';
+  }
+  
+  if (totalElement) {
+    // For now, final total is the same as subtotal (could add tax/discounts later)
+    totalElement.textContent = subtotal.toFixed(2).replace('.', ',') + ' €';
+  }
+}
+
 // Function to render order items table in the modal
 function renderOrderItemsTable() {
   const tbody = document.getElementById("orderItemsTableBody");
@@ -148,10 +204,15 @@ function renderOrderItemsTable() {
   
   if (currentOrderItems.length === 0) {
     emptyDiv.style.display = "block";
+    updateOrderTotals();
     return;
   }
   
   emptyDiv.style.display = "none";
+  
+  // Get selected company for auto-fill
+  const firmaInput = document.getElementById("edit_Firma");
+  const selectedFirma = firmaInput ? firmaInput.value : "";
   
   currentOrderItems.forEach((item, idx) => {
     const tr = document.createElement("tr");
@@ -174,10 +235,6 @@ function renderOrderItemsTable() {
     emptyOption.value = "";
     emptyOption.textContent = "-- Artikel auswählen --";
     artikelSelect.appendChild(emptyOption);
-    
-    // Get selected company
-    const firmaInput = document.getElementById("edit_Firma");
-    const selectedFirma = firmaInput ? firmaInput.value : "";
     
     if (selectedFirma) {
       const articles = getArticlesForCompany(selectedFirma);
@@ -205,7 +262,31 @@ function renderOrderItemsTable() {
     
     artikelSelect.addEventListener("change", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
-      currentOrderItems[itemIndex].Artikel = e.target.value;
+      const selectedArtikel = e.target.value;
+      currentOrderItems[itemIndex].Artikel = selectedArtikel;
+      
+      // Auto-fill Beschreibung and Einheit from article list
+      if (selectedArtikel && selectedFirma) {
+        const articleData = getArticleDataByName(selectedFirma, selectedArtikel);
+        if (articleData) {
+          // Only auto-fill if fields are currently empty
+          if (!currentOrderItems[itemIndex].Beschreibung) {
+            currentOrderItems[itemIndex].Beschreibung = articleData.Beschreibung || "";
+          }
+          if (!currentOrderItems[itemIndex].Einheit) {
+            currentOrderItems[itemIndex].Einheit = articleData.Einheit || "";
+          }
+          if (!currentOrderItems[itemIndex].Einzelpreis) {
+            currentOrderItems[itemIndex].Einzelpreis = articleData.Einzelpreis || "";
+          }
+          // Recalculate Gesamtpreis
+          currentOrderItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
+            currentOrderItems[itemIndex].Menge,
+            currentOrderItems[itemIndex].Einzelpreis
+          );
+          renderOrderItemsTable();
+        }
+      }
     });
     
     artikelTd.appendChild(artikelSelect);
@@ -248,6 +329,12 @@ function renderOrderItemsTable() {
     mengeInput.addEventListener("input", (e) => {
       const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
       currentOrderItems[itemIndex].Menge = e.target.value;
+      // Recalculate Gesamtpreis
+      currentOrderItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
+        currentOrderItems[itemIndex].Menge,
+        currentOrderItems[itemIndex].Einzelpreis
+      );
+      renderOrderItemsTable();
     });
     
     mengeTd.appendChild(mengeInput);
@@ -274,6 +361,44 @@ function renderOrderItemsTable() {
     einheitTd.appendChild(einheitInput);
     tr.appendChild(einheitTd);
     
+    // Einzelpreis column - input
+    const einzelpreisTd = document.createElement("td");
+    einzelpreisTd.style.padding = "8px";
+    einzelpreisTd.style.borderRight = "1px solid #ddd";
+    
+    const einzelpreisInput = document.createElement("input");
+    einzelpreisInput.type = "text";
+    einzelpreisInput.style.width = "100%";
+    einzelpreisInput.style.padding = "4px";
+    einzelpreisInput.value = item.Einzelpreis || "";
+    einzelpreisInput.dataset.itemIndex = idx;
+    einzelpreisInput.dataset.field = "Einzelpreis";
+    einzelpreisInput.setAttribute("aria-label", `Einzelpreis für Artikel ${idx + 1}`);
+    einzelpreisInput.addEventListener("input", (e) => {
+      const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+      currentOrderItems[itemIndex].Einzelpreis = e.target.value;
+      // Recalculate Gesamtpreis
+      currentOrderItems[itemIndex].Gesamtpreis = calculateItemGesamtpreis(
+        currentOrderItems[itemIndex].Menge,
+        currentOrderItems[itemIndex].Einzelpreis
+      );
+      renderOrderItemsTable();
+    });
+    
+    einzelpreisTd.appendChild(einzelpreisInput);
+    tr.appendChild(einzelpreisTd);
+    
+    // Gesamtpreis column - readonly display
+    const gesamtpreisTd = document.createElement("td");
+    gesamtpreisTd.style.padding = "8px";
+    gesamtpreisTd.style.borderRight = "1px solid #ddd";
+    gesamtpreisTd.style.backgroundColor = "#f5f5f5";
+    gesamtpreisTd.style.fontWeight = "600";
+    gesamtpreisTd.style.textAlign = "right";
+    gesamtpreisTd.textContent = (item.Gesamtpreis || "0.00") + " €";
+    
+    tr.appendChild(gesamtpreisTd);
+    
     // Actions column
     const actionTd = document.createElement("td");
     actionTd.style.padding = "8px";
@@ -298,6 +423,9 @@ function renderOrderItemsTable() {
     
     tbody.appendChild(tr);
   });
+  
+  // Update totals
+  updateOrderTotals();
 }
 
 // Function to add a new order item
@@ -515,12 +643,14 @@ function getFormData() {
     }
   }
   
-  // Add order items to formData
+  // Add order items to formData with all fields
   formData.items = currentOrderItems.map(item => ({
     Artikel: sanitizeText(item.Artikel || ""),
     Beschreibung: sanitizeText(item.Beschreibung || ""),
     Menge: sanitizeText(item.Menge || ""),
-    Einheit: sanitizeText(item.Einheit || "")
+    Einheit: sanitizeText(item.Einheit || ""),
+    Einzelpreis: sanitizeText(item.Einzelpreis || ""),
+    Gesamtpreis: sanitizeText(item.Gesamtpreis || "")
   }));
   
   return formData;

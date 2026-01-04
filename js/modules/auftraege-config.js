@@ -24,5 +24,7 @@ export const ORDER_ITEM_COLUMNS = [
   "Artikel",
   "Beschreibung",
   "Menge",
-  "Einheit"
+  "Einheit",
+  "Einzelpreis",
+  "Gesamtpreis"
 ];
