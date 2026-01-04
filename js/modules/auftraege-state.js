@@ -31,8 +31,8 @@ export function newEmptyRow() {
       // Set today's date in YYYY-MM-DD format
       obj[c] = new Date().toISOString().split('T')[0];
     } else if (c === "Auftrags_ID") {
-      // Generate a simple unique ID
-      obj[c] = "AUF-" + Date.now();
+      // Leave empty - will be generated when company is selected
+      obj[c] = "";
     } else {
       obj[c] = "";
     }
