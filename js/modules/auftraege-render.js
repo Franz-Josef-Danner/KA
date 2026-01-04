@@ -3,7 +3,6 @@
 // -----------------------------
 import { COLUMNS, STATUS_OPTIONS } from './auftraege-config.js';
 import { getRows, setRows, newEmptyRow, save } from './auftraege-state.js';
-import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './auftraege-search.js';
@@ -22,69 +21,23 @@ export function render() {
     if (!rowMatchesSearch(row, q)) return;
 
     const tr = document.createElement("tr");
+    
+    // Add double-click handler to open edit modal
+    tr.addEventListener("dblclick", () => {
+      // Dispatch custom event to avoid circular dependency
+      window.dispatchEvent(new CustomEvent('openOrderModal', { detail: { rowIndex: idx } }));
+    });
+    
+    // Add cursor pointer style
+    tr.style.cursor = "pointer";
 
     for (const col of COLUMNS) {
       const td = document.createElement("td");
       td.dataset.row = String(idx);
       td.dataset.col = col;
 
-      // Special handling for Status column - use dropdown
-      if (col === "Status") {
-        const select = document.createElement("select");
-        select.className = "status-select";
-        select.setAttribute("aria-label", "Status");
-        
-        // Add all status options
-        STATUS_OPTIONS.forEach(option => {
-          const optionElement = document.createElement("option");
-          optionElement.value = option;
-          optionElement.textContent = option;
-          if (row[col] === option) {
-            optionElement.selected = true;
-          }
-          select.appendChild(optionElement);
-        });
-        
-        // Handle change event
-        select.addEventListener("change", (e) => {
-          const currentRows = getRows();
-          currentRows[idx][col] = e.target.value;
-          setRows(currentRows);
-          save();
-        });
-        
-        td.appendChild(select);
-      } else {
-        // Regular contenteditable cells for other columns
-        td.setAttribute("contenteditable", "true");
-        
-        // Display HTML formatting
-        td.innerHTML = toCellDisplay(col, row[col]);
-
-        // On focus: show plain text for editing
-        td.addEventListener("focus", () => {
-          const originalValue = getRows()[idx][col] ?? "";
-          td.textContent = originalValue;
-          td.dataset.originalValue = sanitizeText(originalValue);
-        });
-
-        // On blur: save and format display
-        td.addEventListener("blur", () => {
-          const newVal = td.textContent ?? "";
-          const originalValue = td.dataset.originalValue ?? "";
-          const currentRows = getRows();
-          const sanitizedNewVal = sanitizeText(newVal);
-          
-          // Only update and save to history if the value actually changed
-          if (sanitizedNewVal !== originalValue) {
-            currentRows[idx][col] = sanitizedNewVal;
-            setRows(currentRows);
-            save();
-          }
-          
-          td.innerHTML = toCellDisplay(col, currentRows[idx][col]);
-        });
-      }
+      // Display formatted content (read-only)
+      td.innerHTML = toCellDisplay(col, row[col]);
 
       tr.appendChild(td);
     }
