@@ -31,6 +31,9 @@ export function newEmptyRow() {
     } else if (c === "Auftrags_ID") {
       // Leave empty - will be generated when company is selected
       obj[c] = "";
+    } else if (c === "Status") {
+      // Default status is "offen" (open)
+      obj[c] = "offen";
     } else {
       obj[c] = "";
     }
@@ -75,6 +78,10 @@ export function load() {
       const row = {};
       for (const c of COLUMNS) {
         row[c] = sanitizeText(r?.[c] ?? "");
+      }
+      // Set default Status if not present (backward compatibility)
+      if (!row.Status) {
+        row.Status = "offen";
       }
       // Initialize items array if not present (backward compatibility)
       row.items = Array.isArray(r?.items) ? r.items : [];

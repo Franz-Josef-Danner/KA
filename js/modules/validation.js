@@ -3,12 +3,13 @@
 // -----------------------------
 // This module provides validation functions for business rules
 
+import { ACTIVE_ORDER_STATUSES } from './auftraege-config.js';
+import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
+
 /**
  * Check if a company has any active orders (Aufträge)
- * Note: Currently considers all orders as "active" since the orders module
- * does not yet implement a Status field. When Status is added to orders,
- * this function should be updated to only check for orders with status
- * "offen" or "in Bearbeitung".
+ * Active orders are those with status "offen" or "in Bearbeitung".
+ * Orders with status "abgeschlossen" or "storniert" are not considered active.
  * 
  * @param {string} firmaName - The company name to check (orders are linked by company name)
  * @returns {boolean} - True if the company has active orders
@@ -24,13 +25,20 @@ export function hasActiveOrders(firmaName) {
     const orders = JSON.parse(auftraegeData);
     if (!Array.isArray(orders)) return false;
     
-    // Check if any order belongs to this company
+    // Check if any order belongs to this company and has an active status
     // Orders are linked by Firma name (company name)
-    // TODO: When Status field is implemented in orders, filter by:
-    //       order.Status === "offen" || order.Status === "in Bearbeitung"
+    // Only consider orders with Status "offen" or "in Bearbeitung" as active
+    // Empty string is included for backward compatibility (orders created before status field was added)
     const hasOrders = orders.some(order => {
       const orderFirma = (order.Firma || "").trim();
-      return orderFirma && orderFirma === firmaName;
+      const orderStatus = (order.Status || "").trim();
+      
+      // Consider order active if it has one of the active statuses
+      // Note: Empty status is treated as active for backward compatibility
+      // The load() function in auftraege-state.js sets empty statuses to "offen"
+      const isActive = ACTIVE_ORDER_STATUSES.includes(orderStatus);
+      
+      return orderFirma && orderFirma === firmaName && isActive;
     });
     
     return hasOrders;
@@ -54,7 +62,7 @@ export function hasUnpaidInvoices(firmaName) {
   try {
     // Get invoices data from localStorage
     // Note: Invoice system is not yet fully implemented, so this is a placeholder
-    const rechnungenData = localStorage.getItem("rechnungen_tabelle_v1");
+    const rechnungenData = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);
     if (!rechnungenData) return false;
     
     const invoices = JSON.parse(rechnungenData);

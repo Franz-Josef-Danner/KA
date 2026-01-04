@@ -2,8 +2,9 @@
 // Aufträge UI Updates
 // -----------------------------
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
-import { COLUMNS, ORDER_ITEM_COLUMNS } from './auftraege-config.js';
+import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
+import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
@@ -439,6 +440,8 @@ export function openOrderModal(rowIndex) {
   const modal = document.getElementById("orderModal");
   const modalTitle = document.getElementById("modalTitle");
   const form = document.getElementById("orderForm");
+  const modalSave = document.getElementById("modalSave");
+  const convertToInvoiceBtn = document.getElementById("convertToInvoiceBtn");
   
   // Set modal title
   if (rowIndex === null) {
@@ -453,12 +456,37 @@ export function openOrderModal(rowIndex) {
     const emptyRow = newEmptyRow();
     currentOrderItems = emptyRow.items || [];
     populateForm(emptyRow);
+    
+    // Enable all inputs for new order
+    setFormInputsEnabled(true);
+    if (modalSave) modalSave.disabled = false;
+    if (convertToInvoiceBtn) convertToInvoiceBtn.disabled = false;
   } else {
     // Edit existing order
     const rows = getRows();
     const row = rows[rowIndex];
     currentOrderItems = Array.isArray(row.items) ? [...row.items] : [];
     populateForm(row);
+    
+    // Check if order is completed (abgeschlossen)
+    const isCompleted = row.Status === COMPLETED_STATUS;
+    
+    if (isCompleted) {
+      // Disable all inputs and buttons for completed orders
+      setFormInputsEnabled(false);
+      if (modalSave) modalSave.disabled = true;
+      if (convertToInvoiceBtn) convertToInvoiceBtn.disabled = true;
+      
+      // Show a warning message
+      modalTitle.textContent = "Auftrag bearbeiten (Abgeschlossen - Nur Lesezugriff)";
+      modalTitle.style.color = "#dc2626";
+    } else {
+      // Enable all inputs for orders that are not completed
+      setFormInputsEnabled(true);
+      if (modalSave) modalSave.disabled = false;
+      if (convertToInvoiceBtn) convertToInvoiceBtn.disabled = false;
+      modalTitle.style.color = "";
+    }
   }
   
   // Render order items table
@@ -616,6 +644,28 @@ function hideCompanyInfo() {
   if (ansprechpartnerInput) ansprechpartnerInput.value = "";
 }
 
+// Function to enable/disable form inputs
+function setFormInputsEnabled(enabled) {
+  // Disable/enable all form inputs (but not buttons in modal footer)
+  const form = document.getElementById("orderForm");
+  if (form) {
+    const inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(input => {
+      input.disabled = !enabled;
+    });
+  }
+  
+  // Disable/enable the "Add Article" button
+  const addOrderItemBtn = document.getElementById("addOrderItemBtn");
+  if (addOrderItemBtn) addOrderItemBtn.disabled = !enabled;
+  
+  // Disable/enable delete buttons in order items table
+  const deleteButtons = document.querySelectorAll("#orderItemsTableBody button");
+  deleteButtons.forEach(btn => {
+    btn.disabled = !enabled;
+  });
+}
+
 function getFormData() {
   const formData = {};
   for (const col of COLUMNS) {
@@ -703,10 +753,15 @@ function convertToInvoice() {
     return false;
   }
   
+  // Check if this is a new order (not yet saved)
+  if (currentEditingRowIndex === null) {
+    alert("Bitte speichern Sie den Auftrag zuerst, bevor Sie ihn in eine Rechnung umwandeln.");
+    return false;
+  }
+  
   const formData = getFormData();
   
   // Load invoices from localStorage
-  const RECHNUNGEN_STORAGE_KEY = "rechnungen_tabelle_v1";
   let invoices = [];
   try {
     const raw = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);
@@ -774,7 +829,20 @@ function convertToInvoice() {
   // Save invoices back to localStorage
   try {
     localStorage.setItem(RECHNUNGEN_STORAGE_KEY, JSON.stringify(invoices));
-    alert(`Rechnung ${newInvoice.Rechnungs_ID} wurde erfolgreich erstellt!`);
+    
+    // Update the order status to "abgeschlossen" (completed)
+    formData.Status = COMPLETED_STATUS;
+    
+    // Save the updated order
+    const rows = getRows();
+    rows[currentEditingRowIndex] = formData;
+    setRows(rows);
+    save();
+    
+    // Trigger render event
+    window.dispatchEvent(new Event('ordersChanged'));
+    
+    alert(`Rechnung ${newInvoice.Rechnungs_ID} wurde erfolgreich erstellt!\n\nDer Auftrag wurde als "abgeschlossen" markiert und ist nun schreibgeschützt.`);
     
     // Close modal
     closeModal();
