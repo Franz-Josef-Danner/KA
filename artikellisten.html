@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Artikellisten - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <div class="page-container">
+    <h1>Artikellisten</h1>
+    <p class="page-subtitle">Verwalten Sie Ihre Artikellisten</p>
+    
+    <div class="hint">
+      Doppelklick auf eine Zeile, um die Artikelliste zu öffnen und zu bearbeiten.
+    </div>
+    
+    <div class="wrap">
+      <table id="artikellisten-grid">
+        <thead>
+          <tr>
+            <th>Firmen_ID</th>
+            <th>Firma</th>
+            <th style="text-align: center;">Positionen</th>
+            <th>Erstellt</th>
+            <th>Geändert</th>
+          </tr>
+        </thead>
+        <tbody id="artikellisten-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    (() => {
+      try {
+        // Require authentication; if this fails or redirects, do not continue
+        requireAuth();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('artikellisten.html');
+      } catch (error) {
+        // Authentication failed or a redirect is in progress; avoid further DOM manipulation
+        console.error('Authentication error on artikellisten page:', error);
+      }
+    })();
+  </script>
+  <script type="module" src="js/artikellisten-app.js"></script>
+</body>
+</html>

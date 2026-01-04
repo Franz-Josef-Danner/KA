@@ -5,7 +5,7 @@ import { logout } from './auth.js';
 
 const NAV_ITEMS = [
   { label: 'Firmenliste', href: 'firmenliste.html' },
-  { label: 'Preislisten', href: 'preislisten.html' },
+  { label: 'Artikellisten', href: 'artikellisten.html' },
   { label: 'Aufträge', href: 'auftraege.html' },
   { label: 'Rechnungen', href: 'rechnungen.html' },
   { label: 'Kampagnen', href: 'kampagnen.html' }

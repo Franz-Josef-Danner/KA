@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Artikelliste Details - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <div class="page-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <div>
+        <h1 id="detail-title">Artikelliste Details</h1>
+        <p class="page-subtitle" id="detail-subtitle"></p>
+      </div>
+      <button id="backBtn" style="padding: 8px 16px; border: 1px solid #ccc; background: #fff; border-radius: 8px; cursor: pointer;">
+        ← Zurück zur Übersicht
+      </button>
+    </div>
+    
+    <div class="bar">
+      <button id="addItemBtn">+ Position hinzufügen</button>
+      <button id="saveBtn">Speichern</button>
+      <button id="deleteArtikellisteBtn" class="danger">Artikelliste löschen</button>
+    </div>
+
+    <div class="hint">
+      Zellen anklicken und direkt bearbeiten. <span class="pill">Tab</span> springt zur nächsten Zelle.
+    </div>
+
+    <div class="wrap">
+      <table id="detail-grid">
+        <thead>
+          <tr>
+            <th>Position</th>
+            <th>Artikel</th>
+            <th>Beschreibung</th>
+            <th>Menge</th>
+            <th>Einheit</th>
+            <th>Einzelpreis (€)</th>
+            <th>Gesamtpreis (€)</th>
+            <th class="actions">Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="detail-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    (() => {
+      try {
+        // Require authentication; if this fails or redirects, do not continue
+        requireAuth();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('artikelliste-detail.html');
+      } catch (error) {
+        // Authentication failed or a redirect is in progress; avoid further DOM manipulation
+        console.error('Authentication error on artikelliste-detail page:', error);
+      }
+    })();
+  </script>
+  <script type="module" src="js/artikelliste-detail-app.js"></script>
+</body>
+</html>
