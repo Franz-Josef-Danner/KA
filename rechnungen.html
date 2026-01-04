@@ -9,13 +9,137 @@
 <body>
   <div id="nav-container"></div>
   
-  <div class="page-container">
-    <h1>Rechnungen</h1>
-    <p class="page-subtitle">Verwalten Sie Ihre Rechnungen</p>
-    
-    <div class="placeholder-content">
-      <p>Diese Seite ist noch in Entwicklung.</p>
-      <p>Hier können Sie bald Rechnungen erstellen und verwalten.</p>
+  <h1>Rechnungen – Verwaltung</h1>
+
+  <div class="bar">
+    <button id="newInvoiceBtn">+ Neue Rechnung</button>
+    <button id="undoBtn" title="Rückgängig (Strg+Z)">↶ Rückgängig</button>
+    <button id="redoBtn" title="Wiederholen (Strg+Y)">↷ Wiederholen</button>
+    <input id="search" class="search" type="search" placeholder="Suchen (Rechnungs-ID, Firma, Beschreibung, Projekt …)" />
+  </div>
+
+  <div class="hint">
+    Bedienung: Doppelklick auf eine Rechnung zum Bearbeiten. <span class="pill">Tab</span> springt zum nächsten Feld im Bearbeitungsdialog.
+  </div>
+
+  <div class="wrap">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th>Rechnungs_ID</th>
+          <th>Rechnungsdatum</th>
+          <th>Firma</th>
+          <th>Ansprechpartner</th>
+          <th>Artikel</th>
+          <th>Beschreibung</th>
+          <th>Budget</th>
+          <th>Projekt</th>
+          <th>Kommentare</th>
+          <th>Auftrags_ID</th>
+          <th class="actions">Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Invoice Edit Modal -->
+  <div id="invoiceModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Rechnung bearbeiten</h2>
+        <button id="modalClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="invoiceForm">
+          <div class="form-group">
+            <label for="edit_Rechnungs_ID">Rechnungs-ID:</label>
+            <input type="text" id="edit_Rechnungs_ID" name="Rechnungs_ID" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Rechnungsdatum">Rechnungsdatum:</label>
+            <input type="date" id="edit_Rechnungsdatum" name="Rechnungsdatum" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Firma">Firma:</label>
+            <select id="edit_Firma" name="Firma">
+              <!-- Options will be populated dynamically from companies with "Kunde" status -->
+            </select>
+          </div>
+          <div class="form-group" id="company_address_group" style="display: none;">
+            <label>Adresse:</label>
+            <div id="company_address" style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; min-height: 20px;"></div>
+          </div>
+          <div class="form-group" id="company_email_group" style="display: none;">
+            <label>E-Mail:</label>
+            <div id="company_email" style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; min-height: 20px;"></div>
+          </div>
+          <div class="form-group">
+            <label for="edit_Ansprechpartner">Ansprechpartner:</label>
+            <input type="text" id="edit_Ansprechpartner" name="Ansprechpartner" />
+          </div>
+          
+          <!-- Invoice Items Section -->
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label style="font-weight: bold; margin-bottom: 8px; display: block;">Artikel / Positionen:</label>
+            <button type="button" id="addInvoiceItemBtn" class="btn-secondary" style="margin-bottom: 8px;">+ Artikel hinzufügen</button>
+            <div id="invoiceItemsContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+              <table id="invoiceItemsTable" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Artikel</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Beschreibung</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Menge</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Einheit</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 120px;">Einzelpreis (€)</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 120px;">Gesamtpreis (€)</th>
+                    <th style="padding: 8px; text-align: center; width: 80px;">Aktion</th>
+                  </tr>
+                </thead>
+                <tbody id="invoiceItemsTableBody">
+                  <!-- Items will be added dynamically -->
+                </tbody>
+              </table>
+              <div id="invoiceItemsEmpty" style="padding: 20px; text-align: center; color: #666; display: none;">
+                Keine Artikel hinzugefügt. Klicken Sie auf '+ Artikel hinzufügen', um Artikel zur Rechnung hinzuzufügen.
+              </div>
+            </div>
+            <!-- Sum displays -->
+            <div style="margin-top: 12px; padding: 12px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+              <div style="display: flex; justify-content: flex-end; gap: 24px; font-size: 14px;">
+                <div>
+                  <span style="font-weight: 500;">Gesamtsumme:</span>
+                  <span id="invoiceSubtotal" style="margin-left: 8px; font-weight: 600;">0,00 €</span>
+                </div>
+                <div>
+                  <span style="font-weight: 600;">Finale Summe:</span>
+                  <span id="invoiceTotal" style="margin-left: 8px; font-weight: 700; font-size: 16px; color: #667eea;">0,00 €</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit_Budget">Budget:</label>
+            <input type="text" id="edit_Budget" name="Budget" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Projekt">Projekt:</label>
+            <input type="text" id="edit_Projekt" name="Projekt" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Kommentare">Kommentare:</label>
+            <textarea id="edit_Kommentare" name="Kommentare" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="edit_Auftrags_ID">Auftrags-ID (Referenz):</label>
+            <input type="text" id="edit_Auftrags_ID" name="Auftrags_ID" readonly style="background-color: #f5f5f5;" />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="modalCancel" class="btn-secondary">Abbrechen</button>
+        <button id="modalSave" class="btn-primary">Speichern</button>
+      </div>
     </div>
   </div>
 
@@ -36,5 +160,6 @@
       }
     })();
   </script>
+  <script type="module" src="js/rechnungen-app.js"></script>
 </body>
 </html>
