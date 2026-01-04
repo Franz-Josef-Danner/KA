@@ -167,6 +167,7 @@ function renderOrderItemsTable() {
     artikelSelect.style.padding = "4px";
     artikelSelect.dataset.itemIndex = idx;
     artikelSelect.dataset.field = "Artikel";
+    artikelSelect.setAttribute("aria-label", `Artikel auswählen für Position ${idx + 1}`);
     
     // Populate artikel dropdown
     const emptyOption = document.createElement("option");
@@ -203,7 +204,8 @@ function renderOrderItemsTable() {
     }
     
     artikelSelect.addEventListener("change", (e) => {
-      currentOrderItems[idx].Artikel = e.target.value;
+      const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+      currentOrderItems[itemIndex].Artikel = e.target.value;
     });
     
     artikelTd.appendChild(artikelSelect);
@@ -221,8 +223,10 @@ function renderOrderItemsTable() {
     beschreibungInput.value = item.Beschreibung || "";
     beschreibungInput.dataset.itemIndex = idx;
     beschreibungInput.dataset.field = "Beschreibung";
+    beschreibungInput.setAttribute("aria-label", `Beschreibung für Artikel ${idx + 1}`);
     beschreibungInput.addEventListener("input", (e) => {
-      currentOrderItems[idx].Beschreibung = e.target.value;
+      const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+      currentOrderItems[itemIndex].Beschreibung = e.target.value;
     });
     
     beschreibungTd.appendChild(beschreibungInput);
@@ -240,8 +244,10 @@ function renderOrderItemsTable() {
     mengeInput.value = item.Menge || "";
     mengeInput.dataset.itemIndex = idx;
     mengeInput.dataset.field = "Menge";
+    mengeInput.setAttribute("aria-label", `Menge für Artikel ${idx + 1}`);
     mengeInput.addEventListener("input", (e) => {
-      currentOrderItems[idx].Menge = e.target.value;
+      const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+      currentOrderItems[itemIndex].Menge = e.target.value;
     });
     
     mengeTd.appendChild(mengeInput);
@@ -259,8 +265,10 @@ function renderOrderItemsTable() {
     einheitInput.value = item.Einheit || "";
     einheitInput.dataset.itemIndex = idx;
     einheitInput.dataset.field = "Einheit";
+    einheitInput.setAttribute("aria-label", `Einheit für Artikel ${idx + 1}`);
     einheitInput.addEventListener("input", (e) => {
-      currentOrderItems[idx].Einheit = e.target.value;
+      const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+      currentOrderItems[itemIndex].Einheit = e.target.value;
     });
     
     einheitTd.appendChild(einheitInput);
@@ -277,8 +285,11 @@ function renderOrderItemsTable() {
     deleteBtn.title = "Artikel entfernen";
     deleteBtn.type = "button";
     deleteBtn.style.padding = "4px 8px";
-    deleteBtn.addEventListener("click", () => {
-      currentOrderItems.splice(idx, 1);
+    deleteBtn.setAttribute("aria-label", `Artikel ${idx + 1} entfernen`);
+    deleteBtn.dataset.itemIndex = idx;
+    deleteBtn.addEventListener("click", (e) => {
+      const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+      currentOrderItems.splice(itemIndex, 1);
       renderOrderItemsTable();
     });
     
