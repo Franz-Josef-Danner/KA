@@ -15,19 +15,58 @@ function getCustomerCompanies() {
     const companies = JSON.parse(firmenData);
     if (!Array.isArray(companies)) return [];
     
-    // Filter companies with Status = "Kunde" and extract unique company names
-    const customerCompanies = [...new Set(
-      companies
-        .filter(company => company.Status === "Kunde" && company.Firma)
-        .map(company => company.Firma.trim())
-        .filter(firma => firma) // Remove empty values
-    )];
+    // Filter companies with Status = "Kunde" and return full company objects
+    const customerCompanies = companies
+      .filter(company => company.Status === "Kunde" && company.Firma)
+      .map(company => ({
+        Firmen_ID: company.Firmen_ID || "",
+        Firma: (company.Firma || "").trim(),
+        Adresse: company.Adresse || "",
+        "E-mail": company["E-mail"] || ""
+      }))
+      .filter(company => company.Firma); // Remove empty company names
     
-    return customerCompanies.sort(); // Sort alphabetically
+    // Sort by company name alphabetically
+    return customerCompanies.sort((a, b) => a.Firma.localeCompare(b.Firma));
   } catch (error) {
     console.error('Error loading customer companies:', error);
     return [];
   }
+}
+
+// Function to get company data by company name
+function getCompanyByName(firmaName) {
+  const companies = getCustomerCompanies();
+  return companies.find(company => company.Firma === firmaName);
+}
+
+// Function to generate order ID based on company selection
+function generateOrderId(firmaName) {
+  if (!firmaName) {
+    return "AUF-" + Date.now();
+  }
+  
+  const company = getCompanyByName(firmaName);
+  if (!company || !company.Firmen_ID) {
+    return "AUF-" + Date.now();
+  }
+  
+  // Get current date in YYYYMMDD format
+  const now = new Date();
+  const dateStr = now.getFullYear().toString() + 
+                  (now.getMonth() + 1).toString().padStart(2, '0') + 
+                  now.getDate().toString().padStart(2, '0');
+  
+  // Calculate sequence number: count existing orders for this company today
+  const rows = getRows();
+  const todayPrefix = company.Firmen_ID + "-" + dateStr + "-";
+  const existingOrdersToday = rows.filter(row => 
+    row.Auftrags_ID && row.Auftrags_ID.startsWith(todayPrefix)
+  );
+  const sequenceNumber = (existingOrdersToday.length + 1).toString().padStart(3, '0');
+  
+  // Format: Firmen_ID-YYYYMMDD-XXX
+  return `${company.Firmen_ID}-${dateStr}-${sequenceNumber}`;
 }
 
 export function updateUndoRedoButtons() {
@@ -107,30 +146,101 @@ function populateForm(rowData) {
         
         // Add customer companies
         const customerCompanies = getCustomerCompanies();
-        customerCompanies.forEach(firma => {
+        customerCompanies.forEach(company => {
           const optionElement = document.createElement("option");
-          optionElement.value = firma;
-          optionElement.textContent = firma;
-          if (rowData[col] === firma) {
-            optionElement.selected = true;
-          }
+          optionElement.value = company.Firma;
+          optionElement.textContent = company.Firma;
           input.appendChild(optionElement);
         });
         
-        // If the current value is not in the list, add it as an option and select it
+        // If the current value is not in the list, add it as an option
         const currentFirma = rowData[col] || "";
-        if (currentFirma && !customerCompanies.includes(currentFirma)) {
+        if (currentFirma && !customerCompanies.some(c => c.Firma === currentFirma)) {
           const customOption = document.createElement("option");
           customOption.value = currentFirma;
           customOption.textContent = currentFirma + " (nicht in Kundenliste)";
-          customOption.selected = true;
           input.appendChild(customOption);
+        }
+        
+        // Set the value
+        input.value = currentFirma;
+        
+        // Remove any existing event listeners by cloning and replacing the element
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        
+        // Add event listener for company selection change
+        newInput.addEventListener("change", onCompanySelectionChange);
+        
+        // Trigger initial update if a company is already selected
+        if (currentFirma) {
+          updateCompanyInfo(currentFirma);
+        } else {
+          hideCompanyInfo();
         }
       } else {
         input.value = rowData[col] || "";
       }
     }
   }
+}
+
+// Function to update company info (address and email) when company is selected
+function onCompanySelectionChange(event) {
+  const selectedFirma = event.target.value;
+  
+  if (selectedFirma) {
+    updateCompanyInfo(selectedFirma);
+    
+    // Auto-generate order ID only for new orders (when currentEditingRowIndex is null)
+    if (currentEditingRowIndex === null) {
+      const auftragsIdInput = document.getElementById("edit_Auftrags_ID");
+      if (auftragsIdInput) {
+        auftragsIdInput.value = generateOrderId(selectedFirma);
+      }
+    }
+  } else {
+    hideCompanyInfo();
+  }
+}
+
+// Function to display company address and email
+function updateCompanyInfo(firmaName) {
+  const company = getCompanyByName(firmaName);
+  
+  const addressGroup = document.getElementById("company_address_group");
+  const addressDiv = document.getElementById("company_address");
+  const emailGroup = document.getElementById("company_email_group");
+  const emailDiv = document.getElementById("company_email");
+  
+  if (company) {
+    // Show and populate address
+    if (company.Adresse) {
+      addressDiv.textContent = company.Adresse;
+      addressGroup.style.display = "block";
+    } else {
+      addressGroup.style.display = "none";
+    }
+    
+    // Show and populate email
+    if (company["E-mail"]) {
+      emailDiv.textContent = company["E-mail"];
+      emailGroup.style.display = "block";
+    } else {
+      emailGroup.style.display = "none";
+    }
+  } else {
+    hideCompanyInfo();
+  }
+}
+
+// Function to hide company info fields
+function hideCompanyInfo() {
+  const addressGroup = document.getElementById("company_address_group");
+  const emailGroup = document.getElementById("company_email_group");
+  
+  if (addressGroup) addressGroup.style.display = "none";
+  if (emailGroup) emailGroup.style.display = "none";
 }
 
 function getFormData() {
