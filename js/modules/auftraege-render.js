@@ -7,7 +7,7 @@ import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './auftraege-search.js';
-import { updateUndoRedoButtons } from './ui.js';
+import { updateUndoRedoButtons } from './auftraege-ui.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -79,10 +79,10 @@ export function render() {
           if (sanitizedNewVal !== originalValue) {
             currentRows[idx][col] = sanitizedNewVal;
             setRows(currentRows);
+            save();
           }
           
           td.innerHTML = toCellDisplay(col, currentRows[idx][col]);
-          debouncedRender();
         });
       }
 

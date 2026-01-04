@@ -5,7 +5,7 @@ import { getRows, setRows, save, undo, redo, newEmptyRow } from './auftraege-sta
 import { toCSV, parseCSV } from '../utils/csv.js';
 import { downloadText } from '../utils/helpers.js';
 import { render } from './auftraege-render.js';
-import { updateUndoRedoButtons } from './ui.js';
+import { updateUndoRedoButtons } from './auftraege-ui.js';
 
 export function initEventHandlers() {
   // New order button
