@@ -1,6 +1,6 @@
 # KA System - Firmen-Kontakte Management
 
-Eine browserbasierte Anwendung zur Verwaltung von Firmenkontakten, Preislisten, Aufträgen, Rechnungen und Kampagnen mit Login-System und Import/Export-Funktionalität.
+Eine browserbasierte Anwendung zur Verwaltung von Firmenkontakten, Artikellisten, Aufträgen, Rechnungen und Kampagnen mit Login-System und Import/Export-Funktionalität.
 
 ## Projekt-Struktur
 
@@ -31,7 +31,7 @@ KA/
 ├── index.html                  # Login-Seite
 ├── dashboard.html              # Hauptdashboard mit Übersicht
 ├── firmenliste.html            # Firmenkontakte-Tabelle
-├── preislisten.html            # Preislisten-Verwaltung (Platzhalter)
+├── artikellisten.html          # Artikellisten-Verwaltung (Platzhalter)
 ├── auftraege.html              # Aufträge-Verwaltung (Platzhalter)
 ├── rechnungen.html             # Rechnungs-Verwaltung (Platzhalter)
 └── kampagnen.html              # Kampagnen-Verwaltung (Platzhalter)
@@ -122,7 +122,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - Passwort: `demo123`
 3. Nach dem Login gelangen Sie zum Dashboard mit folgenden Bereichen:
    - **Firmenliste**: Verwaltung von Firmenkontakten (vollständig implementiert)
-   - **Preislisten**: Preislisten-Verwaltung (Platzhalter)
+   - **Artikellisten**: Artikellisten-Verwaltung (Platzhalter)
    - **Aufträge**: Auftrags-Verwaltung (Platzhalter)
    - **Rechnungen**: Rechnungs-Verwaltung (Platzhalter)
    - **Kampagnen**: Kampagnen-Verwaltung (Platzhalter)
@@ -149,7 +149,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Rückgängig/Wiederholen mit bis zu 100 Schritten (Strg+Z / Strg+Y)
 
 ### Weitere Module (Platzhalter)
-- 🚧 Preislisten
+- 🚧 Artikellisten
 - 🚧 Aufträge
 - 🚧 Rechnungen
 - 🚧 Kampagnen

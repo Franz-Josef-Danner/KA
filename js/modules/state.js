@@ -4,7 +4,7 @@
 import { STORAGE_KEY, COLUMNS, STATUS_OPTIONS } from './config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
-import { createEmptyPreisliste, deletePreisliste, preislisteExists } from './preislisten-state.js';
+import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
 
 let rows = load() ?? [];
 
@@ -17,7 +17,7 @@ export function getRows() {
 
 /**
  * Sync Firmen_ID based on Status: assign ID if Status is "Kunde", remove otherwise
- * Also creates/deletes price lists accordingly
+ * Also creates/deletes article lists accordingly
  * @param {Array} rowsToSync - Rows to synchronize IDs for
  * @returns {Array} - Rows with synchronized IDs
  */
@@ -33,7 +33,7 @@ function syncFirmenIds(rowsToSync) {
     }
   });
   
-  // Second pass: assign or remove IDs and manage price lists
+  // Second pass: assign or remove IDs and manage article lists
   return rowsToSync.map(row => {
     if (row.Status === 'Kunde') {
       // If status is "Kunde" and no ID exists, generate one
@@ -41,21 +41,21 @@ function syncFirmenIds(rowsToSync) {
       if (!idStr || idStr.trim() === '') {
         maxId += 1;
         row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
-        // Create empty price list for new customer
+        // Create empty article list for new customer
         const firmenName = row.Firma || 'Unbekannt';
-        createEmptyPreisliste(row.Firmen_ID, firmenName);
+        createEmptyArtikelliste(row.Firmen_ID, firmenName);
       } else {
-        // Customer already has ID - ensure price list exists
-        if (!preislisteExists(idStr)) {
+        // Customer already has ID - ensure article list exists
+        if (!artikellisteExists(idStr)) {
           const firmenName = row.Firma || 'Unbekannt';
-          createEmptyPreisliste(idStr, firmenName);
+          createEmptyArtikelliste(idStr, firmenName);
         }
       }
     } else {
-      // If status is not "Kunde", remove any existing ID and price list
+      // If status is not "Kunde", remove any existing ID and article list
       const oldId = row.Firmen_ID;
       if (oldId && typeof oldId === 'string' && oldId.trim() !== '') {
-        deletePreisliste(oldId);
+        deleteArtikelliste(oldId);
       }
       row.Firmen_ID = '';
     }

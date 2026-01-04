@@ -1,12 +1,12 @@
 // -----------------------------
-// Preisliste Detail Application
+// Artikelliste Detail Application
 // -----------------------------
-import { getPreisliste, updatePreisliste, deletePreisliste } from './modules/preislisten-state.js';
-import { PREISLISTEN_ITEM_COLUMNS } from './modules/preislisten-config.js';
+import { getArtikelliste, updateArtikelliste, deleteArtikelliste } from './modules/artikellisten-state.js';
+import { ARTIKELLISTEN_ITEM_COLUMNS } from './modules/artikellisten-config.js';
 import { sanitizeText } from './utils/sanitize.js';
 
 let currentFirmenId = null;
-let currentPreisliste = null;
+let currentArtikelliste = null;
 
 function getUrlParameter(name) {
   const urlParams = new URLSearchParams(window.location.search);
@@ -33,11 +33,11 @@ function calculateGesamtpreis(menge, einzelpreis) {
 
 function render() {
   const tbody = document.getElementById("detail-tbody");
-  if (!tbody || !currentPreisliste) return;
+  if (!tbody || !currentArtikelliste) return;
   
   tbody.innerHTML = "";
   
-  if (currentPreisliste.items.length === 0) {
+  if (currentArtikelliste.items.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.setAttribute("colspan", "8");
@@ -50,10 +50,10 @@ function render() {
     return;
   }
   
-  currentPreisliste.items.forEach((item, idx) => {
+  currentArtikelliste.items.forEach((item, idx) => {
     const tr = document.createElement("tr");
     
-    PREISLISTEN_ITEM_COLUMNS.forEach(col => {
+    ARTIKELLISTEN_ITEM_COLUMNS.forEach(col => {
       const td = document.createElement("td");
       td.dataset.row = String(idx);
       td.dataset.col = col;
@@ -81,13 +81,13 @@ function render() {
           
           // Only update if value changed
           if (sanitizedNewVal !== originalValue) {
-            currentPreisliste.items[idx][col] = sanitizedNewVal;
+            currentArtikelliste.items[idx][col] = sanitizedNewVal;
             
             // If Menge or Einzelpreis changed, recalculate Gesamtpreis
             if (col === "Menge" || col === "Einzelpreis") {
-              const menge = currentPreisliste.items[idx].Menge;
-              const einzelpreis = currentPreisliste.items[idx].Einzelpreis;
-              currentPreisliste.items[idx].Gesamtpreis = calculateGesamtpreis(menge, einzelpreis);
+              const menge = currentArtikelliste.items[idx].Menge;
+              const einzelpreis = currentArtikelliste.items[idx].Einzelpreis;
+              currentArtikelliste.items[idx].Gesamtpreis = calculateGesamtpreis(menge, einzelpreis);
             }
             
             render();
@@ -118,7 +118,7 @@ function render() {
     plus.textContent = "+";
     plus.title = "Position darunter einfügen";
     plus.addEventListener("click", () => {
-      currentPreisliste.items.splice(idx + 1, 0, newEmptyItem());
+      currentArtikelliste.items.splice(idx + 1, 0, newEmptyItem());
       render();
     });
     act.appendChild(plus);
@@ -131,7 +131,7 @@ function render() {
     minus.addEventListener("click", () => {
       const ok = confirm("Sind Sie sicher, dass Sie diese Position löschen möchten?");
       if (!ok) return;
-      currentPreisliste.items.splice(idx, 1);
+      currentArtikelliste.items.splice(idx, 1);
       render();
     });
     act.appendChild(minus);
@@ -144,11 +144,11 @@ function render() {
 function findNextCell(currentCell) {
   const currentRow = parseInt(currentCell.dataset.row, 10);
   const currentCol = currentCell.dataset.col;
-  const colIndex = PREISLISTEN_ITEM_COLUMNS.indexOf(currentCol);
+  const colIndex = ARTIKELLISTEN_ITEM_COLUMNS.indexOf(currentCol);
   
   // Try next column in same row (skip Gesamtpreis which is readonly)
-  if (colIndex < PREISLISTEN_ITEM_COLUMNS.indexOf("Gesamtpreis") - 1) {
-    const nextColName = PREISLISTEN_ITEM_COLUMNS[colIndex + 1];
+  if (colIndex < ARTIKELLISTEN_ITEM_COLUMNS.indexOf("Gesamtpreis") - 1) {
+    const nextColName = ARTIKELLISTEN_ITEM_COLUMNS[colIndex + 1];
     const nextCell = document.querySelector(`td[data-row="${currentRow}"][data-col="${nextColName}"]`);
     if (nextCell && nextCell.getAttribute("contenteditable") === "true") {
       return nextCell;
@@ -156,8 +156,8 @@ function findNextCell(currentCell) {
   }
   
   // Try first column of next row
-  if (currentRow < currentPreisliste.items.length - 1) {
-    const firstColName = PREISLISTEN_ITEM_COLUMNS[0];
+  if (currentRow < currentArtikelliste.items.length - 1) {
+    const firstColName = ARTIKELLISTEN_ITEM_COLUMNS[0];
     const nextRowCell = document.querySelector(`td[data-row="${currentRow + 1}"][data-col="${firstColName}"]`);
     if (nextRowCell && nextRowCell.getAttribute("contenteditable") === "true") {
       return nextRowCell;
@@ -168,28 +168,28 @@ function findNextCell(currentCell) {
 }
 
 function save() {
-  if (!currentFirmenId || !currentPreisliste) {
-    alert("Fehler: Keine Preisliste geladen.");
+  if (!currentFirmenId || !currentArtikelliste) {
+    alert("Fehler: Keine Artikelliste geladen.");
     return;
   }
   
-  updatePreisliste(currentFirmenId, currentPreisliste);
-  alert("Preisliste gespeichert.");
+  updateArtikelliste(currentFirmenId, currentArtikelliste);
+  alert("Artikelliste gespeichert.");
 }
 
 function addItem() {
-  if (!currentPreisliste) return;
-  currentPreisliste.items.push(newEmptyItem());
+  if (!currentArtikelliste) return;
+  currentArtikelliste.items.push(newEmptyItem());
   render();
 }
 
-function deleteCurrentPreisliste() {
-  const ok = confirm("Sind Sie sicher, dass Sie diese Preisliste löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.");
+function deleteCurrentArtikelliste() {
+  const ok = confirm("Sind Sie sicher, dass Sie diese Artikelliste löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.");
   if (!ok) return;
   
-  deletePreisliste(currentFirmenId);
-  alert("Preisliste gelöscht.");
-  window.location.href = "preislisten.html";
+  deleteArtikelliste(currentFirmenId);
+  alert("Artikelliste gelöscht.");
+  window.location.href = "artikellisten.html";
 }
 
 function init() {
@@ -198,31 +198,31 @@ function init() {
   
   if (!currentFirmenId) {
     alert("Fehler: Keine Firmen-ID angegeben.");
-    window.location.href = "preislisten.html";
+    window.location.href = "artikellisten.html";
     return;
   }
   
-  // Load price list
-  currentPreisliste = getPreisliste(currentFirmenId);
+  // Load article list
+  currentArtikelliste = getArtikelliste(currentFirmenId);
   
-  if (!currentPreisliste) {
-    alert("Fehler: Preisliste nicht gefunden.");
-    window.location.href = "preislisten.html";
+  if (!currentArtikelliste) {
+    alert("Fehler: Artikelliste nicht gefunden.");
+    window.location.href = "artikellisten.html";
     return;
   }
   
   // Update title and subtitle
-  document.getElementById("detail-title").textContent = `Preisliste: ${currentPreisliste.firmenName}`;
+  document.getElementById("detail-title").textContent = `Artikelliste: ${currentArtikelliste.firmenName}`;
   document.getElementById("detail-subtitle").textContent = `Firmen-ID: ${currentFirmenId}`;
   
   // Event handlers
   document.getElementById("backBtn").addEventListener("click", () => {
-    window.location.href = "preislisten.html";
+    window.location.href = "artikellisten.html";
   });
   
   document.getElementById("saveBtn").addEventListener("click", save);
   document.getElementById("addItemBtn").addEventListener("click", addItem);
-  document.getElementById("deletePreislisteBtn").addEventListener("click", deleteCurrentPreisliste);
+  document.getElementById("deleteArtikellisteBtn").addEventListener("click", deleteCurrentArtikelliste);
   
   // Initial render
   render();

@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Preislisten - KA System</title>
+  <title>Artikellisten - KA System</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <div id="nav-container"></div>
   
   <div class="page-container">
-    <h1>Preislisten</h1>
-    <p class="page-subtitle">Verwalten Sie Ihre Preislisten</p>
+    <h1>Artikellisten</h1>
+    <p class="page-subtitle">Verwalten Sie Ihre Artikellisten</p>
     
     <div class="hint">
-      Doppelklick auf eine Zeile, um die Preisliste zu öffnen und zu bearbeiten.
+      Doppelklick auf eine Zeile, um die Artikelliste zu öffnen und zu bearbeiten.
     </div>
     
     <div class="wrap">
-      <table id="preislisten-grid">
+      <table id="artikellisten-grid">
         <thead>
           <tr>
             <th>Firmen_ID</th>
@@ -28,7 +28,7 @@
             <th>Geändert</th>
           </tr>
         </thead>
-        <tbody id="preislisten-tbody"></tbody>
+        <tbody id="artikellisten-tbody"></tbody>
       </table>
     </div>
   </div>
@@ -43,13 +43,13 @@
         requireAuth();
 
         // Initialize navigation only after successful authentication
-        initNavigation('preislisten.html');
+        initNavigation('artikellisten.html');
       } catch (error) {
         // Authentication failed or a redirect is in progress; avoid further DOM manipulation
-        console.error('Authentication error on preislisten page:', error);
+        console.error('Authentication error on artikellisten page:', error);
       }
     })();
   </script>
-  <script type="module" src="js/preislisten-app.js"></script>
+  <script type="module" src="js/artikellisten-app.js"></script>
 </body>
 </html>

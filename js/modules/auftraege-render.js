@@ -36,8 +36,23 @@ export function render() {
       td.dataset.row = String(idx);
       td.dataset.col = col;
 
-      // Display formatted content (read-only)
-      td.innerHTML = toCellDisplay(col, row[col]);
+      // Special handling for Artikel column to display items count
+      if (col === "Artikel") {
+        const itemCount = row.items?.length || 0;
+        if (itemCount === 0) {
+          td.innerHTML = '<span style="color: #999;">Keine Artikel</span>';
+        } else if (itemCount === 1) {
+          td.innerHTML = `<span style="font-weight: 500;">${toCellDisplay(col, row.items[0].Artikel)}</span>`;
+        } else {
+          td.innerHTML = `<span style="font-weight: 500;">${itemCount} Artikel</span>`;
+        }
+      } else if (col === "Beschreibung") {
+        // Skip beschreibung column since it's now part of items
+        td.innerHTML = "";
+      } else {
+        // Display formatted content (read-only)
+        td.innerHTML = toCellDisplay(col, row[col]);
+      }
 
       tr.appendChild(td);
     }
