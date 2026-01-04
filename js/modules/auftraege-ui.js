@@ -59,7 +59,21 @@ function populateForm(rowData) {
   for (const col of COLUMNS) {
     const input = document.getElementById(`edit_${col}`);
     if (input) {
-      input.value = rowData[col] || "";
+      if (col === "Status" && input.tagName === "SELECT") {
+        // Populate status dropdown options dynamically
+        input.innerHTML = "";
+        STATUS_OPTIONS.forEach(option => {
+          const optionElement = document.createElement("option");
+          optionElement.value = option;
+          optionElement.textContent = option;
+          if (rowData[col] === option) {
+            optionElement.selected = true;
+          }
+          input.appendChild(optionElement);
+        });
+      } else {
+        input.value = rowData[col] || "";
+      }
     }
   }
 }
@@ -73,6 +87,19 @@ function getFormData() {
     }
   }
   return formData;
+}
+
+function validateForm() {
+  const auftragsId = document.getElementById("edit_Auftrags_ID");
+  
+  // Check if Auftrags-ID is filled (required field)
+  if (!auftragsId || !auftragsId.value.trim()) {
+    alert("Auftrags-ID ist ein Pflichtfeld und muss ausgefüllt werden.");
+    if (auftragsId) auftragsId.focus();
+    return false;
+  }
+  
+  return true;
 }
 
 function closeModal() {
@@ -101,6 +128,11 @@ function initModalHandlers() {
   // Save button
   if (modalSave) {
     modalSave.addEventListener("click", () => {
+      // Validate form before saving
+      if (!validateForm()) {
+        return;
+      }
+      
       const formData = getFormData();
       const rows = getRows();
       
@@ -134,7 +166,10 @@ function initModalHandlers() {
     form.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
         e.preventDefault();
-        modalSave.click();
+        // Validate before triggering save
+        if (validateForm()) {
+          modalSave.click();
+        }
       }
     });
   }
