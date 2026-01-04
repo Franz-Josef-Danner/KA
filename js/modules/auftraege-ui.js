@@ -645,10 +645,10 @@ function hideCompanyInfo() {
 
 // Function to enable/disable form inputs
 function setFormInputsEnabled(enabled) {
-  // Disable/enable all form inputs
+  // Disable/enable all form inputs (but not buttons in modal footer)
   const form = document.getElementById("orderForm");
   if (form) {
-    const inputs = form.querySelectorAll("input, select, textarea, button");
+    const inputs = form.querySelectorAll("input, select, textarea");
     inputs.forEach(input => {
       input.disabled = !enabled;
     });
@@ -749,6 +749,12 @@ function saveOrder() {
 function convertToInvoice() {
   // Validate form before converting
   if (!validateForm()) {
+    return false;
+  }
+  
+  // Check if this is a new order (not yet saved)
+  if (currentEditingRowIndex === null) {
+    alert("Bitte speichern Sie den Auftrag zuerst, bevor Sie ihn in eine Rechnung umwandeln.");
     return false;
   }
   

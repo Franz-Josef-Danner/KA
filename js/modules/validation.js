@@ -3,6 +3,9 @@
 // -----------------------------
 // This module provides validation functions for business rules
 
+// Active order statuses - orders with these statuses are considered "active"
+const ACTIVE_ORDER_STATUSES = ["offen", "in Bearbeitung", ""];
+
 /**
  * Check if a company has any active orders (Aufträge)
  * Active orders are those with status "offen" or "in Bearbeitung".
@@ -29,13 +32,8 @@ export function hasActiveOrders(firmaName) {
       const orderFirma = (order.Firma || "").trim();
       const orderStatus = (order.Status || "").trim();
       
-      // Consider order active if:
-      // 1. It belongs to the company
-      // 2. Status is "offen" or "in Bearbeitung"
-      // 3. Status is empty (backward compatibility - treat as active)
-      const isActive = orderStatus === "offen" || 
-                      orderStatus === "in Bearbeitung" || 
-                      orderStatus === "";
+      // Consider order active if it has one of the active statuses
+      const isActive = ACTIVE_ORDER_STATUSES.includes(orderStatus);
       
       return orderFirma && orderFirma === firmaName && isActive;
     });
