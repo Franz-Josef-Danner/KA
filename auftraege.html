@@ -78,16 +78,30 @@
             <label for="edit_Ansprechpartner">Ansprechpartner:</label>
             <input type="text" id="edit_Ansprechpartner" name="Ansprechpartner" />
           </div>
-          <div class="form-group">
-            <label for="edit_Artikel">Artikel:</label>
-            <select id="edit_Artikel" name="Artikel">
-              <option value="">-- Artikel auswählen --</option>
-              <!-- Options will be populated dynamically from company's article list -->
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="edit_Beschreibung">Beschreibung:</label>
-            <textarea id="edit_Beschreibung" name="Beschreibung" rows="3"></textarea>
+          
+          <!-- Order Items Section -->
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label style="font-weight: bold; margin-bottom: 8px; display: block;">Artikel / Positionen:</label>
+            <button type="button" id="addOrderItemBtn" class="btn-secondary" style="margin-bottom: 8px;">+ Artikel hinzufügen</button>
+            <div id="orderItemsContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+              <table id="orderItemsTable" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Artikel</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Beschreibung</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Menge</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Einheit</th>
+                    <th style="padding: 8px; text-align: center; width: 80px;">Aktion</th>
+                  </tr>
+                </thead>
+                <tbody id="orderItemsTableBody">
+                  <!-- Items will be added dynamically -->
+                </tbody>
+              </table>
+              <div id="orderItemsEmpty" style="padding: 20px; text-align: center; color: #666; display: none;">
+                Keine Artikel hinzugefügt. Klicken Sie auf '+ Artikel hinzufügen', um Artikel zum Auftrag hinzuzufügen.
+              </div>
+            </div>
           </div>
           <div class="form-group">
             <label for="edit_Budget">Budget:</label>
