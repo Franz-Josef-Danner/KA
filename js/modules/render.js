@@ -9,6 +9,7 @@ import { debounce } from '../utils/helpers.js';
 import { findDuplicates, getRowsWithDuplicates } from './duplicates.js';
 import { rowMatchesSearch } from './search.js';
 import { updateUndoRedoButtons } from './ui.js';
+import { validateStatusChange } from './validation.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -72,7 +73,34 @@ export function render() {
         // Handle change event
         select.addEventListener("change", (e) => {
           const currentRows = getRows();
-          currentRows[idx][col] = e.target.value;
+          const oldStatus = currentRows[idx][col];
+          const newStatus = e.target.value;
+          const firmenId = currentRows[idx]["Firmen_ID"] || "";
+          const firmaName = currentRows[idx]["Firma"] || "";
+          
+          // Validate status change
+          const validation = validateStatusChange(oldStatus, newStatus, firmenId, firmaName);
+          
+          if (!validation.allowed) {
+            // Revert the dropdown to the old value
+            e.target.value = oldStatus;
+            // Show warning message
+            alert(validation.message);
+            return;
+          }
+          
+          // If confirmation is required, ask user
+          if (validation.requiresConfirmation) {
+            const confirmed = confirm(validation.confirmationMessage);
+            if (!confirmed) {
+              // User declined, revert the dropdown to the old value
+              e.target.value = oldStatus;
+              return;
+            }
+          }
+          
+          // If validation passed (and confirmation given if required), proceed with the change
+          currentRows[idx][col] = newStatus;
           setRows(currentRows);
           save();
           // Re-render to update Firmen_ID based on new status

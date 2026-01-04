@@ -15,13 +15,11 @@ function getUrlParameter(name) {
 
 function newEmptyItem() {
   return {
-    Position: "",
+    Artikel_ID: "",
     Artikel: "",
     Beschreibung: "",
-    Menge: "",
     Einheit: "",
-    Einzelpreis: "",
-    Gesamtpreis: ""
+    Einzelpreis: ""
   };
 }
 
@@ -29,6 +27,11 @@ function calculateGesamtpreis(menge, einzelpreis) {
   const m = parseFloat(menge) || 0;
   const e = parseFloat(einzelpreis) || 0;
   return (m * e).toFixed(2);
+}
+
+// Function to generate Artikel_ID based on Firmen_ID and sequence
+function generateArtikelId(firmenId, sequenceNumber) {
+  return `${firmenId}-ART-${sequenceNumber.toString().padStart(3, '0')}`;
 }
 
 function render() {
@@ -40,7 +43,7 @@ function render() {
   if (currentArtikelliste.items.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.setAttribute("colspan", "8");
+    td.setAttribute("colspan", "6");
     td.style.textAlign = "center";
     td.style.padding = "20px";
     td.style.color = "#666";
@@ -51,6 +54,11 @@ function render() {
   }
   
   currentArtikelliste.items.forEach((item, idx) => {
+    // Auto-generate Artikel_ID if not present
+    if (!item.Artikel_ID) {
+      item.Artikel_ID = generateArtikelId(currentFirmenId, idx + 1);
+    }
+    
     const tr = document.createElement("tr");
     
     ARTIKELLISTEN_ITEM_COLUMNS.forEach(col => {
@@ -58,11 +66,11 @@ function render() {
       td.dataset.row = String(idx);
       td.dataset.col = col;
       
-      if (col === "Gesamtpreis") {
-        // Gesamtpreis is calculated, not editable
+      if (col === "Artikel_ID") {
+        // Artikel_ID is auto-generated, display as readonly
         td.setAttribute("contenteditable", "false");
         td.classList.add("readonly");
-        td.textContent = item[col] || "0.00";
+        td.textContent = item[col] || "";
       } else {
         // Regular contenteditable cells
         td.setAttribute("contenteditable", "true");
@@ -82,14 +90,6 @@ function render() {
           // Only update if value changed
           if (sanitizedNewVal !== originalValue) {
             currentArtikelliste.items[idx][col] = sanitizedNewVal;
-            
-            // If Menge or Einzelpreis changed, recalculate Gesamtpreis
-            if (col === "Menge" || col === "Einzelpreis") {
-              const menge = currentArtikelliste.items[idx].Menge;
-              const einzelpreis = currentArtikelliste.items[idx].Einzelpreis;
-              currentArtikelliste.items[idx].Gesamtpreis = calculateGesamtpreis(menge, einzelpreis);
-            }
-            
             render();
           }
         });
@@ -146,8 +146,8 @@ function findNextCell(currentCell) {
   const currentCol = currentCell.dataset.col;
   const colIndex = ARTIKELLISTEN_ITEM_COLUMNS.indexOf(currentCol);
   
-  // Try next column in same row (skip Gesamtpreis which is readonly)
-  if (colIndex < ARTIKELLISTEN_ITEM_COLUMNS.indexOf("Gesamtpreis") - 1) {
+  // Try next column in same row (skip Artikel_ID which is readonly)
+  if (colIndex < ARTIKELLISTEN_ITEM_COLUMNS.length - 1) {
     const nextColName = ARTIKELLISTEN_ITEM_COLUMNS[colIndex + 1];
     const nextCell = document.querySelector(`td[data-row="${currentRow}"][data-col="${nextColName}"]`);
     if (nextCell && nextCell.getAttribute("contenteditable") === "true") {
@@ -155,10 +155,10 @@ function findNextCell(currentCell) {
     }
   }
   
-  // Try first column of next row
+  // Try first editable column of next row (skip Artikel_ID)
   if (currentRow < currentArtikelliste.items.length - 1) {
-    const firstColName = ARTIKELLISTEN_ITEM_COLUMNS[0];
-    const nextRowCell = document.querySelector(`td[data-row="${currentRow + 1}"][data-col="${firstColName}"]`);
+    const firstEditableColName = ARTIKELLISTEN_ITEM_COLUMNS.find(col => col !== "Artikel_ID");
+    const nextRowCell = document.querySelector(`td[data-row="${currentRow + 1}"][data-col="${firstEditableColName}"]`);
     if (nextRowCell && nextRowCell.getAttribute("contenteditable") === "true") {
       return nextRowCell;
     }
@@ -175,6 +175,8 @@ function save() {
   
   updateArtikelliste(currentFirmenId, currentArtikelliste);
   alert("Artikelliste gespeichert.");
+  // Redirect back to overview page
+  window.location.href = "artikellisten.html";
 }
 
 function addItem() {

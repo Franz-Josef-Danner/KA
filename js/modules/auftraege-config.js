@@ -11,8 +11,7 @@ export const COLUMNS = [
   "Artikel",
   "Beschreibung",
   "Budget",
-  "Status",
-  "Fälligkeit",
+  "Projekt",
   "Kommentare"
 ];
 
@@ -24,5 +23,7 @@ export const ORDER_ITEM_COLUMNS = [
   "Artikel",
   "Beschreibung",
   "Menge",
-  "Einheit"
+  "Einheit",
+  "Einzelpreis",
+  "Gesamtpreis"
 ];
