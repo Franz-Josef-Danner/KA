@@ -245,9 +245,7 @@ function updateCompanyInfo(firmaName) {
       if (company.Nachname) contactParts.push(company.Nachname);
       
       const contactPerson = contactParts.join(" ").trim();
-      if (contactPerson) {
-        ansprechpartnerInput.value = contactPerson;
-      }
+      ansprechpartnerInput.value = contactPerson;
     }
   } else {
     hideCompanyInfo();
