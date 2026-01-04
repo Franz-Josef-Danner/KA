@@ -76,17 +76,42 @@ export function hasUnpaidInvoices(firmaName) {
 }
 
 /**
+ * Check if a company has an article list with items
+ * @param {string} firmenId - The Firmen_ID to check
+ * @returns {boolean} - True if the company has an article list with items
+ */
+export function hasArticleListWithItems(firmenId) {
+  if (!firmenId) return false;
+  
+  try {
+    // Get article lists data from localStorage
+    const artikellistenData = localStorage.getItem("artikellisten_v1");
+    if (!artikellistenData) return false;
+    
+    const artikellisten = JSON.parse(artikellistenData);
+    if (typeof artikellisten !== 'object' || artikellisten === null) return false;
+    
+    // Check if article list exists for this company and has items
+    const artikelliste = artikellisten[firmenId];
+    return artikelliste && Array.isArray(artikelliste.items) && artikelliste.items.length > 0;
+  } catch (error) {
+    console.error('Error checking for article list with items:', error);
+    return false;
+  }
+}
+
+/**
  * Validate if a company status can be changed from "Kunde" to another status
  * @param {string} oldStatus - The current status
  * @param {string} newStatus - The new status to change to
- * @param {string} firmenId - The Firmen_ID (currently not used, kept for API consistency)
+ * @param {string} firmenId - The Firmen_ID
  * @param {string} firmaName - The company name (used to check orders and invoices)
- * @returns {Object} - { allowed: boolean, message: string }
+ * @returns {Object} - { allowed: boolean, message: string, requiresConfirmation: boolean, confirmationMessage: string }
  */
 export function validateStatusChange(oldStatus, newStatus, firmenId, firmaName) {
   // Only validate when changing FROM "Kunde" status TO another status
   if (oldStatus !== "Kunde" || newStatus === "Kunde") {
-    return { allowed: true, message: "" };
+    return { allowed: true, message: "", requiresConfirmation: false, confirmationMessage: "" };
   }
   
   // Check if company has active orders (using company name)
@@ -95,7 +120,7 @@ export function validateStatusChange(oldStatus, newStatus, firmenId, firmaName) 
   // Check if company has unpaid invoices (using company name)
   const hasInvoices = hasUnpaidInvoices(firmaName);
   
-  // Build warning message
+  // Block status change if there are orders or unpaid invoices
   if (hasOrders || hasInvoices) {
     let message = "Die Statusänderung kann nicht durchgeführt werden.\n\n";
     message += `Für die Firma "${firmaName}" existieren noch:\n`;
@@ -109,8 +134,20 @@ export function validateStatusChange(oldStatus, newStatus, firmenId, firmaName) 
     
     message += "\nBitte schließen Sie alle Aufträge ab und stellen Sie sicher, dass alle Rechnungen bezahlt sind, bevor Sie den Status ändern.";
     
-    return { allowed: false, message };
+    return { allowed: false, message, requiresConfirmation: false, confirmationMessage: "" };
   }
   
-  return { allowed: true, message: "" };
+  // Check if company has article list with items
+  const hasArticles = hasArticleListWithItems(firmenId);
+  
+  // If article list with items exists, require confirmation
+  if (hasArticles) {
+    let confirmationMessage = `Die Firma "${firmaName}" hat eine Artikelliste mit Artikeln.\n\n`;
+    confirmationMessage += "Wenn Sie den Status ändern, wird diese Artikelliste gelöscht.\n\n";
+    confirmationMessage += "Sind Sie sicher, dass Sie fortfahren möchten?";
+    
+    return { allowed: true, message: "", requiresConfirmation: true, confirmationMessage };
+  }
+  
+  return { allowed: true, message: "", requiresConfirmation: false, confirmationMessage: "" };
 }
