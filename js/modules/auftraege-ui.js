@@ -42,23 +42,23 @@ function getCompanyByName(firmaName) {
   return companies.find(company => company.Firma === firmaName);
 }
 
-// Function to get articles from a company's price list (preisliste)
+// Function to get articles from a company's article list (artikelliste)
 function getArticlesForCompany(firmaName) {
   try {
     const company = getCompanyByName(firmaName);
     if (!company || !company.Firmen_ID) return [];
     
-    const preislistenData = localStorage.getItem("preislisten_v1");
-    if (!preislistenData) return [];
+    const artikellistenData = localStorage.getItem("artikellisten_v1");
+    if (!artikellistenData) return [];
     
-    const preislisten = JSON.parse(preislistenData);
-    if (typeof preislisten !== 'object' || preislisten === null) return [];
+    const artikellisten = JSON.parse(artikellistenData);
+    if (typeof artikellisten !== 'object' || artikellisten === null) return [];
     
-    const preisliste = preislisten[company.Firmen_ID];
-    if (!preisliste || !Array.isArray(preisliste.items)) return [];
+    const artikelliste = artikellisten[company.Firmen_ID];
+    if (!artikelliste || !Array.isArray(artikelliste.items)) return [];
     
-    // Extract unique article names from the price list
-    const articles = preisliste.items
+    // Extract unique article names from the article list
+    const articles = artikelliste.items
       .filter(item => item.Artikel && item.Artikel.trim())
       .map(item => item.Artikel.trim());
     

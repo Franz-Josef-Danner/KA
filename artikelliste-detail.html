@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Preisliste Details - KA System</title>
+  <title>Artikelliste Details - KA System</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
   <div class="page-container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
       <div>
-        <h1 id="detail-title">Preisliste Details</h1>
+        <h1 id="detail-title">Artikelliste Details</h1>
         <p class="page-subtitle" id="detail-subtitle"></p>
       </div>
       <button id="backBtn" style="padding: 8px 16px; border: 1px solid #ccc; background: #fff; border-radius: 8px; cursor: pointer;">
@@ -23,7 +23,7 @@
     <div class="bar">
       <button id="addItemBtn">+ Position hinzufügen</button>
       <button id="saveBtn">Speichern</button>
-      <button id="deletePreislisteBtn" class="danger">Preisliste löschen</button>
+      <button id="deleteArtikellisteBtn" class="danger">Artikelliste löschen</button>
     </div>
 
     <div class="hint">
@@ -59,13 +59,13 @@
         requireAuth();
 
         // Initialize navigation only after successful authentication
-        initNavigation('preisliste-detail.html');
+        initNavigation('artikelliste-detail.html');
       } catch (error) {
         // Authentication failed or a redirect is in progress; avoid further DOM manipulation
-        console.error('Authentication error on preisliste-detail page:', error);
+        console.error('Authentication error on artikelliste-detail page:', error);
       }
     })();
   </script>
-  <script type="module" src="js/preisliste-detail-app.js"></script>
+  <script type="module" src="js/artikelliste-detail-app.js"></script>
 </body>
 </html>
