@@ -146,8 +146,8 @@ function findNextCell(currentCell) {
   const currentCol = currentCell.dataset.col;
   const colIndex = PREISLISTEN_ITEM_COLUMNS.indexOf(currentCol);
   
-  // Try next column in same row
-  if (colIndex < PREISLISTEN_ITEM_COLUMNS.length - 2) { // -2 because Gesamtpreis is not editable
+  // Try next column in same row (skip Gesamtpreis which is readonly)
+  if (colIndex < PREISLISTEN_ITEM_COLUMNS.indexOf("Gesamtpreis") - 1) {
     const nextColName = PREISLISTEN_ITEM_COLUMNS[colIndex + 1];
     const nextCell = document.querySelector(`td[data-row="${currentRow}"][data-col="${nextColName}"]`);
     if (nextCell && nextCell.getAttribute("contenteditable") === "true") {
