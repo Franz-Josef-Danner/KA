@@ -1,7 +1,10 @@
 // -----------------------------
 // Aufträge UI Updates
 // -----------------------------
-import { canUndo, canRedo } from './auftraege-state.js';
+import { canUndo, canRedo, getRows, setRows, save, newEmptyRow } from './auftraege-state.js';
+import { COLUMNS, STATUS_OPTIONS } from './auftraege-config.js';
+import { sanitizeText } from '../utils/sanitize.js';
+import { render } from './auftraege-render.js';
 
 export function updateUndoRedoButtons() {
   const undoBtn = document.getElementById("undoBtn");
@@ -15,3 +18,127 @@ export function updateUndoRedoButtons() {
     redoBtn.disabled = !canRedo();
   }
 }
+
+let currentEditingRowIndex = null;
+
+export function openOrderModal(rowIndex) {
+  currentEditingRowIndex = rowIndex;
+  const modal = document.getElementById("orderModal");
+  const modalTitle = document.getElementById("modalTitle");
+  const form = document.getElementById("orderForm");
+  
+  // Set modal title
+  if (rowIndex === null) {
+    modalTitle.textContent = "Neuer Auftrag";
+  } else {
+    modalTitle.textContent = "Auftrag bearbeiten";
+  }
+  
+  // Populate form with data
+  if (rowIndex === null) {
+    // New order - populate with defaults
+    const emptyRow = newEmptyRow();
+    populateForm(emptyRow);
+  } else {
+    // Edit existing order
+    const rows = getRows();
+    const row = rows[rowIndex];
+    populateForm(row);
+  }
+  
+  // Show modal
+  modal.style.display = "flex";
+  
+  // Focus first input
+  setTimeout(() => {
+    document.getElementById("edit_Auftrags_ID").focus();
+  }, 100);
+}
+
+function populateForm(rowData) {
+  for (const col of COLUMNS) {
+    const input = document.getElementById(`edit_${col}`);
+    if (input) {
+      input.value = rowData[col] || "";
+    }
+  }
+}
+
+function getFormData() {
+  const formData = {};
+  for (const col of COLUMNS) {
+    const input = document.getElementById(`edit_${col}`);
+    if (input) {
+      formData[col] = sanitizeText(input.value || "");
+    }
+  }
+  return formData;
+}
+
+function closeModal() {
+  const modal = document.getElementById("orderModal");
+  modal.style.display = "none";
+  currentEditingRowIndex = null;
+}
+
+// Initialize modal event handlers
+function initModalHandlers() {
+  const modalClose = document.getElementById("modalClose");
+  const modalCancel = document.getElementById("modalCancel");
+  const modalSave = document.getElementById("modalSave");
+  const modal = document.getElementById("orderModal");
+  
+  // Close button
+  if (modalClose) {
+    modalClose.addEventListener("click", closeModal);
+  }
+  
+  // Cancel button
+  if (modalCancel) {
+    modalCancel.addEventListener("click", closeModal);
+  }
+  
+  // Save button
+  if (modalSave) {
+    modalSave.addEventListener("click", () => {
+      const formData = getFormData();
+      const rows = getRows();
+      
+      if (currentEditingRowIndex === null) {
+        // New order - add to beginning
+        rows.unshift(formData);
+      } else {
+        // Edit existing order
+        rows[currentEditingRowIndex] = formData;
+      }
+      
+      setRows(rows);
+      save();
+      render();
+      closeModal();
+    });
+  }
+  
+  // Close modal when clicking outside
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  }
+  
+  // Handle Enter key in form inputs (except textarea)
+  const form = document.getElementById("orderForm");
+  if (form) {
+    form.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        modalSave.click();
+      }
+    });
+  }
+}
+
+// Initialize modal handlers when the module loads
+initModalHandlers();
