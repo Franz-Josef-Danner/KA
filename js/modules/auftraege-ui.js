@@ -4,7 +4,6 @@
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow } from './auftraege-state.js';
 import { COLUMNS, STATUS_OPTIONS } from './auftraege-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { render } from './auftraege-render.js';
 
 export function updateUndoRedoButtons() {
   const undoBtn = document.getElementById("undoBtn");
@@ -108,6 +107,33 @@ function closeModal() {
   currentEditingRowIndex = null;
 }
 
+function saveOrder() {
+  // Validate form before saving
+  if (!validateForm()) {
+    return false;
+  }
+  
+  const formData = getFormData();
+  const rows = getRows();
+  
+  if (currentEditingRowIndex === null) {
+    // New order - add to beginning
+    rows.unshift(formData);
+  } else {
+    // Edit existing order
+    rows[currentEditingRowIndex] = formData;
+  }
+  
+  setRows(rows);
+  save();
+  
+  // Trigger render event - avoid circular dependency by using custom event
+  window.dispatchEvent(new Event('ordersChanged'));
+  
+  closeModal();
+  return true;
+}
+
 // Initialize modal event handlers
 function initModalHandlers() {
   const modalClose = document.getElementById("modalClose");
@@ -128,26 +154,7 @@ function initModalHandlers() {
   // Save button
   if (modalSave) {
     modalSave.addEventListener("click", () => {
-      // Validate form before saving
-      if (!validateForm()) {
-        return;
-      }
-      
-      const formData = getFormData();
-      const rows = getRows();
-      
-      if (currentEditingRowIndex === null) {
-        // New order - add to beginning
-        rows.unshift(formData);
-      } else {
-        // Edit existing order
-        rows[currentEditingRowIndex] = formData;
-      }
-      
-      setRows(rows);
-      save();
-      render();
-      closeModal();
+      saveOrder();
     });
   }
   
@@ -166,10 +173,7 @@ function initModalHandlers() {
     form.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
         e.preventDefault();
-        // Validate before triggering save
-        if (validateForm()) {
-          modalSave.click();
-        }
+        saveOrder();
       }
     });
   }
@@ -177,3 +181,15 @@ function initModalHandlers() {
 
 // Initialize modal handlers when the module loads
 initModalHandlers();
+
+// Listen for custom events to avoid circular dependencies
+window.addEventListener('openOrderModal', (e) => {
+  openOrderModal(e.detail.rowIndex);
+});
+
+window.addEventListener('ordersChanged', () => {
+  // Dynamically import render to avoid circular dependency at module load time
+  import('./auftraege-render.js').then(module => {
+    module.render();
+  });
+});

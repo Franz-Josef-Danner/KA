@@ -6,7 +6,7 @@ import { getRows, setRows, newEmptyRow, save } from './auftraege-state.js';
 import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './auftraege-search.js';
-import { updateUndoRedoButtons, openOrderModal } from './auftraege-ui.js';
+import { updateUndoRedoButtons } from './auftraege-ui.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -24,7 +24,8 @@ export function render() {
     
     // Add double-click handler to open edit modal
     tr.addEventListener("dblclick", () => {
-      openOrderModal(idx);
+      // Dispatch custom event to avoid circular dependency
+      window.dispatchEvent(new CustomEvent('openOrderModal', { detail: { rowIndex: idx } }));
     });
     
     // Add cursor pointer style
