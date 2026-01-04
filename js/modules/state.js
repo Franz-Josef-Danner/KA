@@ -23,7 +23,7 @@ function syncFirmenIds(rowsToSync) {
   // First pass: find the highest existing ID to avoid duplicates
   let maxId = 0;
   rowsToSync.forEach(row => {
-    if (row.Firmen_ID && row.Firmen_ID.startsWith('F-')) {
+    if (row.Firmen_ID && typeof row.Firmen_ID === 'string' && row.Firmen_ID.startsWith('F-')) {
       const idNum = parseInt(row.Firmen_ID.substring(2), 10);
       if (!isNaN(idNum) && idNum > maxId) {
         maxId = idNum;
@@ -35,7 +35,8 @@ function syncFirmenIds(rowsToSync) {
   return rowsToSync.map(row => {
     if (row.Status === 'Kunde') {
       // If status is "Kunde" and no ID exists, generate one
-      if (!row.Firmen_ID || row.Firmen_ID.trim() === '') {
+      const idStr = typeof row.Firmen_ID === 'string' ? row.Firmen_ID : '';
+      if (!idStr || idStr.trim() === '') {
         maxId += 1;
         row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
       }
