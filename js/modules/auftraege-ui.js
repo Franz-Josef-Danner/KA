@@ -3,7 +3,28 @@
 // -----------------------------
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow } from './auftraege-state.js';
 import { COLUMNS, STATUS_OPTIONS } from './auftraege-config.js';
+import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
+
+// Helper function to add a custom option to a select element if it doesn't exist
+function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
+  if (!value) return;
+  
+  let hasOption;
+  if (availableValues) {
+    hasOption = availableValues.includes(value);
+  } else {
+    hasOption = Array.from(selectElement.options).some(opt => opt.value === value);
+  }
+  
+  if (!hasOption) {
+    const customOption = document.createElement("option");
+    customOption.value = value;
+    customOption.textContent = value;
+    selectElement.appendChild(customOption);
+  }
+  selectElement.value = value;
+}
 
 // Function to get companies with "Kunde" status from firmenliste
 function getCustomerCompanies() {
@@ -48,7 +69,7 @@ function getArticlesForCompany(firmaName) {
     const company = getCompanyByName(firmaName);
     if (!company || !company.Firmen_ID) return [];
     
-    const artikellistenData = localStorage.getItem("artikellisten_v1");
+    const artikellistenData = localStorage.getItem(ARTIKELLISTEN_STORAGE_KEY);
     if (!artikellistenData) return [];
     
     const artikellisten = JSON.parse(artikellistenData);
@@ -242,15 +263,7 @@ function populateForm(rowData) {
         // Set the current value
         const currentArtikel = rowData[col] || "";
         if (currentArtikel) {
-          // If the current value is not in the list, add it as an option
-          const hasOption = Array.from(input.options).some(opt => opt.value === currentArtikel);
-          if (!hasOption && currentArtikel) {
-            const customOption = document.createElement("option");
-            customOption.value = currentArtikel;
-            customOption.textContent = currentArtikel;
-            input.appendChild(customOption);
-          }
-          input.value = currentArtikel;
+          addCustomOptionIfNeeded(input, currentArtikel);
         }
       } else {
         input.value = rowData[col] || "";
@@ -306,15 +319,7 @@ function updateArticleDropdown(firmaName, currentArtikel = "") {
     
     // If there's a current article value, try to set it
     if (currentArtikel) {
-      const hasOption = articles.includes(currentArtikel);
-      if (!hasOption && currentArtikel) {
-        // Add the current artikel as an option if it's not in the list
-        const customOption = document.createElement("option");
-        customOption.value = currentArtikel;
-        customOption.textContent = currentArtikel;
-        artikelInput.appendChild(customOption);
-      }
-      artikelInput.value = currentArtikel;
+      addCustomOptionIfNeeded(artikelInput, currentArtikel, articles);
     }
   }
 }
