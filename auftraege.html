@@ -30,6 +30,7 @@
           <th>Auftragsdatum</th>
           <th>Firma</th>
           <th>Ansprechpartner</th>
+          <th>Artikel</th>
           <th>Beschreibung</th>
           <th>Budget</th>
           <th>Status</th>
@@ -76,6 +77,13 @@
           <div class="form-group">
             <label for="edit_Ansprechpartner">Ansprechpartner:</label>
             <input type="text" id="edit_Ansprechpartner" name="Ansprechpartner" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Artikel">Artikel:</label>
+            <select id="edit_Artikel" name="Artikel">
+              <option value="">-- Artikel auswählen --</option>
+              <!-- Options will be populated dynamically from company's article list -->
+            </select>
           </div>
           <div class="form-group">
             <label for="edit_Beschreibung">Beschreibung:</label>

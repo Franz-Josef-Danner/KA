@@ -42,6 +42,35 @@ function getCompanyByName(firmaName) {
   return companies.find(company => company.Firma === firmaName);
 }
 
+// Function to get articles from a company's price list (preisliste)
+function getArticlesForCompany(firmaName) {
+  try {
+    const company = getCompanyByName(firmaName);
+    if (!company || !company.Firmen_ID) return [];
+    
+    const preislistenData = localStorage.getItem("preislisten_v1");
+    if (!preislistenData) return [];
+    
+    const preislisten = JSON.parse(preislistenData);
+    if (typeof preislisten !== 'object' || preislisten === null) return [];
+    
+    const preisliste = preislisten[company.Firmen_ID];
+    if (!preisliste || !Array.isArray(preisliste.items)) return [];
+    
+    // Extract unique article names from the price list
+    const articles = preisliste.items
+      .filter(item => item.Artikel && item.Artikel.trim())
+      .map(item => item.Artikel.trim());
+    
+    // Remove duplicates and sort
+    return [...new Set(articles)].sort();
+  } catch (error) {
+    console.error('Error loading articles for company:', error);
+    return [];
+  }
+}
+
+
 // Function to generate order ID based on company selection
 function generateOrderId(firmaName) {
   if (!firmaName) {
@@ -180,8 +209,48 @@ function populateForm(rowData) {
         // Trigger initial update if a company is already selected
         if (currentFirma) {
           updateCompanyInfo(currentFirma);
+          // Also update article dropdown
+          updateArticleDropdown(currentFirma, rowData["Artikel"] || "");
         } else {
           hideCompanyInfo();
+        }
+      } else if (col === "Artikel" && input.tagName === "SELECT") {
+        // Populate article dropdown based on selected company
+        // This will be updated when company is selected
+        input.innerHTML = "";
+        
+        // Add empty option first
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "-- Artikel auswählen --";
+        input.appendChild(emptyOption);
+        
+        // Get selected company
+        const firmaInput = document.getElementById("edit_Firma");
+        const selectedFirma = firmaInput ? firmaInput.value : "";
+        
+        if (selectedFirma) {
+          const articles = getArticlesForCompany(selectedFirma);
+          articles.forEach(article => {
+            const optionElement = document.createElement("option");
+            optionElement.value = article;
+            optionElement.textContent = article;
+            input.appendChild(optionElement);
+          });
+        }
+        
+        // Set the current value
+        const currentArtikel = rowData[col] || "";
+        if (currentArtikel) {
+          // If the current value is not in the list, add it as an option
+          const hasOption = Array.from(input.options).some(opt => opt.value === currentArtikel);
+          if (!hasOption && currentArtikel) {
+            const customOption = document.createElement("option");
+            customOption.value = currentArtikel;
+            customOption.textContent = currentArtikel;
+            input.appendChild(customOption);
+          }
+          input.value = currentArtikel;
         }
       } else {
         input.value = rowData[col] || "";
@@ -196,6 +265,7 @@ function onCompanySelectionChange(event) {
   
   if (selectedFirma) {
     updateCompanyInfo(selectedFirma);
+    updateArticleDropdown(selectedFirma);
     
     // Auto-generate order ID only for new orders (when currentEditingRowIndex is null)
     if (currentEditingRowIndex === null) {
@@ -206,8 +276,49 @@ function onCompanySelectionChange(event) {
     }
   } else {
     hideCompanyInfo();
+    updateArticleDropdown(""); // Clear article dropdown
   }
 }
+
+// Function to update article dropdown based on selected company
+function updateArticleDropdown(firmaName, currentArtikel = "") {
+  const artikelInput = document.getElementById("edit_Artikel");
+  if (!artikelInput) return;
+  
+  // Clear existing options
+  artikelInput.innerHTML = "";
+  
+  // Add empty option first
+  const emptyOption = document.createElement("option");
+  emptyOption.value = "";
+  emptyOption.textContent = "-- Artikel auswählen --";
+  artikelInput.appendChild(emptyOption);
+  
+  // If a company is selected, populate with articles
+  if (firmaName) {
+    const articles = getArticlesForCompany(firmaName);
+    articles.forEach(article => {
+      const optionElement = document.createElement("option");
+      optionElement.value = article;
+      optionElement.textContent = article;
+      artikelInput.appendChild(optionElement);
+    });
+    
+    // If there's a current article value, try to set it
+    if (currentArtikel) {
+      const hasOption = articles.includes(currentArtikel);
+      if (!hasOption && currentArtikel) {
+        // Add the current artikel as an option if it's not in the list
+        const customOption = document.createElement("option");
+        customOption.value = currentArtikel;
+        customOption.textContent = currentArtikel;
+        artikelInput.appendChild(customOption);
+      }
+      artikelInput.value = currentArtikel;
+    }
+  }
+}
+
 
 // Function to display company address and email
 function updateCompanyInfo(firmaName) {
