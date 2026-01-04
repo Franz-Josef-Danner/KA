@@ -14,8 +14,51 @@ export function getRows() {
   return rows;
 }
 
+/**
+ * Generate a unique Firmen_ID
+ * @param {Array} existingRows - All existing rows to check for ID uniqueness
+ * @returns {string} - A unique ID in format "F-XXXXX"
+ */
+function generateUniqueFirmenId(existingRows) {
+  // Find the highest existing ID number
+  let maxId = 0;
+  existingRows.forEach(row => {
+    if (row.Firmen_ID && row.Firmen_ID.startsWith('F-')) {
+      const idNum = parseInt(row.Firmen_ID.substring(2), 10);
+      if (!isNaN(idNum) && idNum > maxId) {
+        maxId = idNum;
+      }
+    }
+  });
+  
+  // Generate next ID
+  const nextId = maxId + 1;
+  return `F-${nextId.toString().padStart(5, '0')}`;
+}
+
+/**
+ * Sync Firmen_ID based on Status: assign ID if Status is "Kunde", remove otherwise
+ * @param {Array} rowsToSync - Rows to synchronize IDs for
+ * @returns {Array} - Rows with synchronized IDs
+ */
+function syncFirmenIds(rowsToSync) {
+  return rowsToSync.map(row => {
+    if (row.Status === 'Kunde') {
+      // If status is "Kunde" and no ID exists, generate one
+      if (!row.Firmen_ID || row.Firmen_ID.trim() === '') {
+        row.Firmen_ID = generateUniqueFirmenId(rowsToSync);
+      }
+    } else {
+      // If status is not "Kunde", remove any existing ID
+      row.Firmen_ID = '';
+    }
+    return row;
+  });
+}
+
 export function setRows(newRows, skipHistory = false) {
-  rows = newRows;
+  // Sync Firmen_IDs based on Status before setting rows
+  rows = syncFirmenIds(newRows);
   if (!skipHistory) {
     pushState(rows);
   }
@@ -50,7 +93,7 @@ export function load() {
     if (!Array.isArray(data)) return null;
 
     // Normalize: ensure all columns exist
-    return data.map(r => {
+    const normalizedRows = data.map(r => {
       const row = newEmptyRow();
       for (const c of COLUMNS) {
         row[c] = sanitizeText(r?.[c] ?? "");
@@ -65,6 +108,9 @@ export function load() {
       }
       return row;
     });
+    
+    // Sync Firmen_IDs based on Status after loading
+    return syncFirmenIds(normalizedRows);
   } catch {
     return null;
   }
