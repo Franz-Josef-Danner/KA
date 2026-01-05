@@ -344,9 +344,20 @@ function handleDrop(e) {
   const targetCell = e.currentTarget;
   const targetCellId = targetCell.dataset.cellId;
   
+  // Get the dragged element type from dataTransfer
+  const elementType = e.dataTransfer.getData('text/plain');
+  
+  if (!elementType) {
+    console.error('No element type found in dataTransfer');
+    return;
+  }
+  
   // Check if cell already has an element
   if (gridState.cells[targetCellId] && gridState.cells[targetCellId].element) {
     alert('Diese Zelle ist bereits belegt. Bitte wählen Sie eine leere Zelle.');
+    // Reset drag state
+    draggedElement = null;
+    draggedFromCell = null;
     return;
   }
   
@@ -356,7 +367,7 @@ function handleDrop(e) {
   }
   
   // Place element in target cell
-  gridState.cells[targetCellId].element = draggedElement;
+  gridState.cells[targetCellId].element = elementType;
   
   // Reset drag state
   draggedElement = null;
