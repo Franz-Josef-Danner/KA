@@ -43,17 +43,24 @@
         <h2>Kampagnen</h2>
         <p>Marketing-Kampagnen planen und verfolgen</p>
       </a>
+      
+      <a href="kundenbereiche.html" class="dashboard-card">
+        <div class="card-icon">👥</div>
+        <h2>Kundenbereiche</h2>
+        <p>Verwaltung der Kundenzugänge und Übersicht</p>
+      </a>
     </div>
   </div>
 
   <script type="module">
-    import { requireAuth } from './js/modules/auth.js';
+    import { requireAuth, requireAdmin } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
     
     (() => {
       try {
-        // Require authentication; if this fails or redirects, do not continue
+        // Require authentication and admin role
         requireAuth();
+        requireAdmin();
 
         // Initialize navigation only after successful authentication
         initNavigation('dashboard.html');

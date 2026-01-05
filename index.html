@@ -51,11 +51,16 @@
   </div>
 
   <script type="module">
-    import { login, isAuthenticated } from './js/modules/auth.js';
+    import { login, isAuthenticated, getCurrentUser } from './js/modules/auth.js';
     
-    // If already authenticated, redirect to dashboard
+    // If already authenticated, redirect to appropriate page
     if (isAuthenticated()) {
-      window.location.href = 'dashboard.html';
+      const user = getCurrentUser();
+      if (user && user.role === 'customer') {
+        window.location.href = 'kundenbereich.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
     }
     
     const form = document.getElementById('loginForm');
@@ -78,7 +83,13 @@
       
       try {
         if (await login(email, password)) {
-          window.location.href = 'dashboard.html';
+          // Get user to determine redirect
+          const user = getCurrentUser();
+          if (user && user.role === 'customer') {
+            window.location.href = 'kundenbereich.html';
+          } else {
+            window.location.href = 'dashboard.html';
+          }
         } else {
           errorMessage.textContent = 'Ungültige E-Mail-Adresse oder Passwort.';
           errorMessage.style.display = 'block';

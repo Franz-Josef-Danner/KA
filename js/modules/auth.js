@@ -4,6 +4,7 @@
 
 const AUTH_KEY = 'ka_auth_session';
 const USERS_KEY = 'ka_users';
+const CUSTOMER_ACCOUNTS_KEY = 'ka_customer_accounts';
 
 // Simple hash function for password storage
 // Note: This is NOT cryptographically secure, but better than plaintext
@@ -21,10 +22,11 @@ async function simpleHash(password) {
 async function initializeUsers() {
   const users = getUsers();
   if (users.length === 0) {
-    // Create a default demo user
+    // Create a default demo user (admin)
     const defaultUser = {
       email: 'demo@example.com',
-      password: await simpleHash('demo123') // Hash the password
+      password: await simpleHash('demo123'), // Hash the password
+      role: 'admin'
     };
     users.push(defaultUser);
     try {
@@ -49,13 +51,29 @@ function getUsers() {
 export async function login(email, password) {
   await initializeUsers();
   const users = getUsers();
+  const customerAccounts = getCustomerAccounts();
   const passwordHash = await simpleHash(password);
   
-  const user = users.find(u => u.email === email && u.password === passwordHash);
+  // Check admin users first
+  let user = users.find(u => u.email === email && u.password === passwordHash);
+  let role = 'admin';
+  let firmenId = null;
+  
+  // If not found in admin users, check customer accounts
+  if (!user) {
+    const customerAccount = customerAccounts.find(c => c.email === email && c.password === passwordHash);
+    if (customerAccount) {
+      user = customerAccount;
+      role = 'customer';
+      firmenId = customerAccount.firmenId;
+    }
+  }
   
   if (user) {
     const session = {
       email: user.email,
+      role: role,
+      firmenId: firmenId,
       timestamp: Date.now()
     };
     try {
@@ -139,5 +157,126 @@ export function getCurrentUser() {
     return JSON.parse(raw);
   } catch {
     return null;
+  }
+}
+
+// Customer Account Management Functions
+
+function getCustomerAccounts() {
+  try {
+    const raw = localStorage.getItem(CUSTOMER_ACCOUNTS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomerAccounts(accounts) {
+  try {
+    localStorage.setItem(CUSTOMER_ACCOUNTS_KEY, JSON.stringify(accounts));
+    return true;
+  } catch (error) {
+    console.error('Failed to save customer accounts:', error);
+    return false;
+  }
+}
+
+// Generate a random password
+function generatePassword() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
+// Create or update a customer account
+export async function createOrUpdateCustomerAccount(firmenId, email, firmenName) {
+  if (!email || !firmenId) {
+    console.error('Email and Firmen ID are required to create customer account');
+    return null;
+  }
+  
+  const accounts = getCustomerAccounts();
+  const existingIndex = accounts.findIndex(a => a.firmenId === firmenId);
+  
+  let password;
+  let isNewAccount = false;
+  
+  if (existingIndex >= 0) {
+    // Update existing account
+    const existingAccount = accounts[existingIndex];
+    // If email changed, generate new password
+    if (existingAccount.email !== email) {
+      password = generatePassword();
+      accounts[existingIndex] = {
+        firmenId,
+        email,
+        firmenName: firmenName || existingAccount.firmenName,
+        password: await simpleHash(password),
+        createdAt: existingAccount.createdAt,
+        updatedAt: new Date().toISOString()
+      };
+      isNewAccount = true; // Treat as new for notification purposes
+    } else {
+      // Just update the name if changed
+      accounts[existingIndex].firmenName = firmenName || existingAccount.firmenName;
+      accounts[existingIndex].updatedAt = new Date().toISOString();
+    }
+  } else {
+    // Create new account
+    password = generatePassword();
+    isNewAccount = true;
+    accounts.push({
+      firmenId,
+      email,
+      firmenName: firmenName || 'Unbekannt',
+      password: await simpleHash(password),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+  
+  if (saveCustomerAccounts(accounts)) {
+    // Return password only for new/updated accounts
+    return isNewAccount ? password : null;
+  }
+  
+  return null;
+}
+
+// Delete a customer account
+export function deleteCustomerAccount(firmenId) {
+  const accounts = getCustomerAccounts();
+  const filtered = accounts.filter(a => a.firmenId !== firmenId);
+  return saveCustomerAccounts(filtered);
+}
+
+// Get customer account by Firmen ID
+export function getCustomerAccountByFirmenId(firmenId) {
+  const accounts = getCustomerAccounts();
+  return accounts.find(a => a.firmenId === firmenId);
+}
+
+// Check if user is admin
+export function isAdmin() {
+  const user = getCurrentUser();
+  return user && user.role === 'admin';
+}
+
+// Check if user is customer
+export function isCustomer() {
+  const user = getCurrentUser();
+  return user && user.role === 'customer';
+}
+
+// Require admin role
+export function requireAdmin() {
+  requireAuth();
+  if (!isAdmin()) {
+    window.location.href = 'kundenbereich.html';
+    throw new Error('Admin access required');
   }
 }

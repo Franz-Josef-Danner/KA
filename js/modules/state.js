@@ -5,8 +5,9 @@ import { STORAGE_KEY, COLUMNS, STATUS_OPTIONS } from './config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
 import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
+import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js';
 
-let rows = load() ?? [];
+let rows = loadSync() ?? [];
 
 // Initialize history with the loaded state
 pushState(rows);
@@ -17,11 +18,11 @@ export function getRows() {
 
 /**
  * Sync Firmen_ID based on Status: assign ID if Status is "Kunde", remove otherwise
- * Also creates/deletes article lists accordingly
+ * Also creates/deletes article lists and customer accounts accordingly
  * @param {Array} rowsToSync - Rows to synchronize IDs for
  * @returns {Array} - Rows with synchronized IDs
  */
-function syncFirmenIds(rowsToSync) {
+async function syncFirmenIds(rowsToSync) {
   // First pass: find the highest existing ID to avoid duplicates
   let maxId = 0;
   rowsToSync.forEach(row => {
@@ -33,8 +34,9 @@ function syncFirmenIds(rowsToSync) {
     }
   });
   
-  // Second pass: assign or remove IDs and manage article lists
-  return rowsToSync.map(row => {
+  // Second pass: assign or remove IDs and manage article lists + customer accounts
+  const updatedRows = [];
+  for (const row of rowsToSync) {
     if (row.Status === 'Kunde') {
       // If status is "Kunde" and no ID exists, generate one
       const idStr = typeof row.Firmen_ID === 'string' ? row.Firmen_ID : '';
@@ -44,28 +46,40 @@ function syncFirmenIds(rowsToSync) {
         // Create empty article list for new customer
         const firmenName = row.Firma || 'Unbekannt';
         createEmptyArtikelliste(row.Firmen_ID, firmenName);
+        // Create customer account
+        const email = row['E-mail'] || '';
+        if (email) {
+          await createOrUpdateCustomerAccount(row.Firmen_ID, email, firmenName);
+        }
       } else {
-        // Customer already has ID - ensure article list exists
+        // Customer already has ID - ensure article list and account exist
         if (!artikellisteExists(idStr)) {
           const firmenName = row.Firma || 'Unbekannt';
           createEmptyArtikelliste(idStr, firmenName);
         }
+        // Update or create customer account
+        const email = row['E-mail'] || '';
+        if (email) {
+          await createOrUpdateCustomerAccount(idStr, email, row.Firma || 'Unbekannt');
+        }
       }
     } else {
-      // If status is not "Kunde", remove any existing ID and article list
+      // If status is not "Kunde", remove any existing ID, article list, and customer account
       const oldId = row.Firmen_ID;
       if (oldId && typeof oldId === 'string' && oldId.trim() !== '') {
         deleteArtikelliste(oldId);
+        deleteCustomerAccount(oldId);
       }
       row.Firmen_ID = '';
     }
-    return row;
-  });
+    updatedRows.push(row);
+  }
+  return updatedRows;
 }
 
-export function setRows(newRows, skipHistory = false) {
+export async function setRows(newRows, skipHistory = false) {
   // Sync Firmen_IDs based on Status before setting rows
-  rows = syncFirmenIds(newRows);
+  rows = await syncFirmenIds(newRows);
   if (!skipHistory) {
     pushState(rows);
   }
@@ -92,7 +106,8 @@ export function save() {
   }
 }
 
-export function load() {
+// Synchronous load (doesn't update customer accounts)
+function loadSync() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -116,11 +131,18 @@ export function load() {
       return row;
     });
     
-    // Sync Firmen_IDs based on Status after loading
-    return syncFirmenIds(normalizedRows);
+    return normalizedRows;
   } catch {
     return null;
   }
+}
+
+export async function load() {
+  const normalizedRows = loadSync();
+  if (!normalizedRows) return null;
+  
+  // Sync Firmen_IDs based on Status after loading
+  return await syncFirmenIds(normalizedRows);
 }
 
 // Undo/Redo functions
