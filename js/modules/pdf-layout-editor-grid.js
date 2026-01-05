@@ -437,7 +437,24 @@ function adjustCellSpan(rowIndex, cellIndex, spanType, delta) {
       return;
     }
     
+    if (delta > 0) {
+      // Expanding: remove the next cells to the right
+      const cellsToRemove = delta;
+      for (let i = 0; i < cellsToRemove; i++) {
+        if (cellIndex + currentSpan < row.cells.length) {
+          row.cells.splice(cellIndex + currentSpan, 1);
+        }
+      }
+    } else if (delta < 0 && newSpan < currentSpan) {
+      // Shrinking: add empty cells to the right
+      const cellsToAdd = Math.abs(delta);
+      for (let i = 0; i < cellsToAdd; i++) {
+        row.cells.splice(cellIndex + newSpan, 0, { element: 'empty', rowSpan: 1, colSpan: 1 });
+      }
+    }
+    
     cell.colSpan = newSpan;
+    
   } else if (spanType === 'row') {
     const currentSpan = cell.rowSpan || 1;
     const newSpan = Math.max(1, currentSpan + delta);
@@ -448,6 +465,30 @@ function adjustCellSpan(rowIndex, cellIndex, spanType, delta) {
     if (newSpan > maxPossibleSpan) {
       alert(`Maximale Zeilenhöhe: ${maxPossibleSpan}`);
       return;
+    }
+    
+    if (delta > 0) {
+      // Expanding: remove cells below in the same column position
+      const rowsToConsume = delta;
+      for (let i = 0; i < rowsToConsume; i++) {
+        const targetRowIndex = rowIndex + currentSpan + i;
+        if (targetRowIndex < currentLayout.grid.rows.length) {
+          const targetRow = currentLayout.grid.rows[targetRowIndex];
+          if (cellIndex < targetRow.cells.length) {
+            targetRow.cells.splice(cellIndex, 1);
+          }
+        }
+      }
+    } else if (delta < 0 && newSpan < currentSpan) {
+      // Shrinking: add empty cells below
+      const rowsToAdd = Math.abs(delta);
+      for (let i = 0; i < rowsToAdd; i++) {
+        const targetRowIndex = rowIndex + newSpan + i;
+        if (targetRowIndex < currentLayout.grid.rows.length) {
+          const targetRow = currentLayout.grid.rows[targetRowIndex];
+          targetRow.cells.splice(cellIndex, 0, { element: 'empty', rowSpan: 1, colSpan: 1 });
+        }
+      }
     }
     
     cell.rowSpan = newSpan;
