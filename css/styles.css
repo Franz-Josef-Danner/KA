@@ -1277,6 +1277,60 @@ td.readonly:hover {
   color: #333;
 }
 
+/* Element alignment controls */
+.element-align-controls {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  gap: 4px;
+  background: white;
+  border: 1px solid #667eea;
+  border-radius: 4px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.canvas-element:hover .element-align-controls {
+  display: flex;
+}
+
+.align-btn {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+}
+
+.align-btn:hover {
+  background: #f0f4ff;
+  border-color: #667eea;
+}
+
+.align-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* Snap guides */
+.snap-guide {
+  position: absolute;
+  background: #ff4444;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.7;
+}
+
 @media (max-width: 768px) {
   .settings-container {
     margin: 16px;

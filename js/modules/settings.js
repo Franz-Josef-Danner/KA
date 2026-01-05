@@ -61,15 +61,15 @@ export function getPdfLayoutTemplate() {
 export function getDefaultLayoutTemplate() {
   return {
     elements: [
-      { id: 'logo', type: 'logo', x: 20, y: 20, width: 120, height: 60 },
-      { id: 'company-name', type: 'company-name', x: 20, y: 90, width: 200, height: 20 },
-      { id: 'company-address', type: 'company-address', x: 20, y: 115, width: 180, height: 50 },
-      { id: 'company-contact', type: 'company-contact', x: 20, y: 170, width: 180, height: 35 },
-      { id: 'customer-info', type: 'customer-info', x: 400, y: 90, width: 180, height: 70 },
-      { id: 'document-header', type: 'document-header', x: 20, y: 230, width: 560, height: 40 },
-      { id: 'items-table', type: 'items-table', x: 20, y: 280, width: 560, height: 300 },
-      { id: 'totals', type: 'totals', x: 400, y: 590, width: 180, height: 70 },
-      { id: 'footer', type: 'footer', x: 20, y: 750, width: 560, height: 40 }
+      { id: 'logo', type: 'logo', x: 20, y: 20, width: 120, height: 60, textAlign: 'left' },
+      { id: 'company-name', type: 'company-name', x: 20, y: 90, width: 200, height: 20, textAlign: 'left' },
+      { id: 'company-address', type: 'company-address', x: 20, y: 115, width: 180, height: 50, textAlign: 'left' },
+      { id: 'company-contact', type: 'company-contact', x: 20, y: 170, width: 180, height: 35, textAlign: 'left' },
+      { id: 'customer-info', type: 'customer-info', x: 400, y: 90, width: 180, height: 70, textAlign: 'left' },
+      { id: 'document-header', type: 'document-header', x: 20, y: 230, width: 560, height: 40, textAlign: 'left' },
+      { id: 'items-table', type: 'items-table', x: 20, y: 280, width: 560, height: 300, textAlign: 'left' },
+      { id: 'totals', type: 'totals', x: 400, y: 590, width: 180, height: 70, textAlign: 'right' },
+      { id: 'footer', type: 'footer', x: 20, y: 750, width: 560, height: 40, textAlign: 'center' }
     ]
   };
 }
