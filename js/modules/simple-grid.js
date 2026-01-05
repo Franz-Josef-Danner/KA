@@ -390,7 +390,7 @@ function setupPaletteItems() {
       const elementType = item.dataset.element;
       draggedElement = elementType;
       draggedFromCell = null; // Not from a cell, from palette
-      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', elementType);
       item.style.opacity = '0.5';
     });
