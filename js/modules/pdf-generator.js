@@ -3,7 +3,10 @@
 // -----------------------------
 import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
 
-// Coordinate conversion factor: canvas uses 600px base width, A4 is 210mm wide
+// Coordinate conversion factor from canvas to PDF
+// Canvas uses 600px base width for layout coordinates
+// A4 PDF page is 210mm wide
+// Factor: 210mm / 600px = 0.35mm/px
 const PX_TO_MM_FACTOR = 210 / 600;
 
 // Generate PDF for an order or invoice
