@@ -96,7 +96,7 @@ function renderElementContent(contentDiv, element) {
     case 'company-name':
       if (companySettings.companyName) {
         contentDiv.textContent = companySettings.companyName;
-        contentDiv.style.fontSize = '14px';
+        contentDiv.style.fontSize = '16px'; // Match PDF font size (16pt)
         contentDiv.style.fontWeight = 'bold';
         contentDiv.style.overflow = 'hidden';
         contentDiv.style.textOverflow = 'ellipsis';
