@@ -26,7 +26,9 @@ function getDefaultSettings() {
     address: '',
     email: '',
     phone: '',
-    logo: '' // Base64-encoded image or URL
+    logo: '', // Base64-encoded image or URL
+    footerTextOrder: '',
+    footerTextInvoice: ''
   };
 }
 
@@ -60,14 +62,14 @@ export function getDefaultLayoutTemplate() {
   return {
     elements: [
       { id: 'logo', type: 'logo', x: 20, y: 20, width: 120, height: 60 },
-      { id: 'company-name', type: 'company-name', x: 20, y: 90, width: 200, height: 30 },
-      { id: 'company-address', type: 'company-address', x: 20, y: 125, width: 180, height: 60 },
-      { id: 'company-contact', type: 'company-contact', x: 20, y: 190, width: 180, height: 40 },
-      { id: 'customer-info', type: 'customer-info', x: 400, y: 90, width: 180, height: 80 },
-      { id: 'document-header', type: 'document-header', x: 20, y: 250, width: 560, height: 50 },
-      { id: 'items-table', type: 'items-table', x: 20, y: 310, width: 560, height: 300 },
-      { id: 'totals', type: 'totals', x: 400, y: 620, width: 180, height: 80 },
-      { id: 'footer', type: 'footer', x: 20, y: 750, width: 560, height: 50 }
+      { id: 'company-name', type: 'company-name', x: 20, y: 90, width: 200, height: 20 },
+      { id: 'company-address', type: 'company-address', x: 20, y: 115, width: 180, height: 50 },
+      { id: 'company-contact', type: 'company-contact', x: 20, y: 170, width: 180, height: 35 },
+      { id: 'customer-info', type: 'customer-info', x: 400, y: 90, width: 180, height: 70 },
+      { id: 'document-header', type: 'document-header', x: 20, y: 230, width: 560, height: 40 },
+      { id: 'items-table', type: 'items-table', x: 20, y: 280, width: 560, height: 300 },
+      { id: 'totals', type: 'totals', x: 400, y: 590, width: 180, height: 70 },
+      { id: 'footer', type: 'footer', x: 20, y: 750, width: 560, height: 40 }
     ]
   };
 }
