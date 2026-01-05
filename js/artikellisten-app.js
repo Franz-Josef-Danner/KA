@@ -156,18 +156,27 @@ function render() {
     tdModified.textContent = new Date(artikelliste.modified).toLocaleDateString('de-DE');
     tr.appendChild(tdModified);
     
-    // Add click handler to show preview
+    // Add click handler to show preview with delay to avoid race condition with double-click
+    let clickTimer = null;
     tr.addEventListener("click", (e) => {
-      // If this is not a double-click, show preview
-      if (e.detail === 1) {
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        // Remove 'selected' class from all rows
+        document.querySelectorAll('.artikellisten-row').forEach(row => {
+          row.classList.remove('selected');
+        });
+        
+        // Add 'selected' class to clicked row
+        tr.classList.add('selected');
+        
         selectedFirmenId = artikelliste.firmenId;
-        render(); // Re-render to update selection
         renderPreview(artikelliste.firmenId);
-      }
+      }, 250); // Wait 250ms to see if it's a double-click
     });
     
     // Add double-click handler to open detail view
     tr.addEventListener("dblclick", () => {
+      clearTimeout(clickTimer); // Cancel the single-click timer
       window.location.href = `artikelliste-detail.html?firmenId=${encodeURIComponent(artikelliste.firmenId)}`;
     });
     
