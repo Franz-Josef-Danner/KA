@@ -77,6 +77,49 @@ function loadJsPDF() {
   });
 }
 
+// Calculate appropriate height for a row based on its content
+function calculateRowHeight(row, documentData) {
+  // Define typical heights for different element types (in mm)
+  const elementHeights = {
+    'logo': 25,
+    'company-name': 10,
+    'company-address': 20,
+    'company-contact': 15,
+    'customer-info': 25,
+    'document-header': 15,
+    'items-table': 80, // Large for table
+    'totals': 25,
+    'footer': 12,
+    'empty': 8 // Small height for empty cells
+  };
+  
+  // Find the tallest element in the row
+  let maxHeight = 8; // Minimum row height
+  
+  row.cells.forEach(cell => {
+    const elementType = cell.element;
+    const baseHeight = elementHeights[elementType] || 15;
+    const cellHeight = baseHeight * (cell.rowSpan || 1);
+    
+    // Special case: items-table height depends on number of items
+    if (elementType === 'items-table' && documentData) {
+      let itemCount = 0;
+      if (documentData.items && Array.isArray(documentData.items)) {
+        itemCount = documentData.items.length;
+      } else if (documentData.Artikel) {
+        itemCount = 1;
+      }
+      // Allocate more space for more items (header + items)
+      const tableHeight = 15 + Math.max(itemCount * 7, 30);
+      maxHeight = Math.max(maxHeight, tableHeight);
+    } else {
+      maxHeight = Math.max(maxHeight, cellHeight);
+    }
+  });
+  
+  return maxHeight;
+}
+
 // Render PDF document based on grid layout template
 function renderPDFDocumentGrid(doc, documentType, documentData, companySettings, layoutTemplate) {
   doc.setFont('helvetica');
@@ -86,7 +129,6 @@ function renderPDFDocumentGrid(doc, documentType, documentData, companySettings,
   const pageHeight = 297; // A4 height in mm
   const margin = 10; // Margin in mm
   const usableWidth = pageWidth - (2 * margin);
-  const usableHeight = pageHeight - (2 * margin);
   
   const numRows = layoutTemplate.grid.rows.length;
   
@@ -96,7 +138,10 @@ function renderPDFDocumentGrid(doc, documentType, documentData, companySettings,
     return;
   }
   
-  const rowHeight = usableHeight / numRows;
+  // Calculate row heights based on content
+  const rowHeights = layoutTemplate.grid.rows.map(row => 
+    calculateRowHeight(row, documentData)
+  );
   
   let currentY = margin;
   
@@ -104,6 +149,7 @@ function renderPDFDocumentGrid(doc, documentType, documentData, companySettings,
   layoutTemplate.grid.rows.forEach((row, rowIndex) => {
     const numCols = row.cells.length;
     const colWidth = usableWidth / numCols;
+    const rowHeight = rowHeights[rowIndex];
     
     let currentX = margin;
     

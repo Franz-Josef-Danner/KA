@@ -1369,7 +1369,6 @@ td.readonly:hover {
   display: grid;
   grid-template-columns: 40px repeat(auto-fit, minmax(100px, 1fr));
   gap: 4px;
-  min-height: 80px;
   position: relative;
 }
 
@@ -1407,7 +1406,7 @@ td.readonly:hover {
   border: 2px solid #ddd;
   border-radius: 6px;
   padding: 8px;
-  min-height: 80px;
+  min-height: 40px;
   display: flex;
   flex-direction: column;
   transition: all 0.2s;
