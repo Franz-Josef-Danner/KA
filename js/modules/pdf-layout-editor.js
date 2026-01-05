@@ -413,8 +413,26 @@ function setupResetButton() {
 function setupPreviewButton() {
   const previewBtn = document.getElementById('previewPdfBtn');
   if (previewBtn) {
-    previewBtn.addEventListener('click', () => {
-      alert('Die Vorschau-Funktion wird in einer zukünftigen Version implementiert. Das Layout wird automatisch bei der PDF-Generierung verwendet.');
+    previewBtn.addEventListener('click', async () => {
+      try {
+        // Dynamically import the PDF generator module
+        const { generatePDF } = await import('./pdf-generator.js');
+        const { getSampleDocumentData } = await import('./settings.js');
+        
+        // Get sample data for preview
+        const sampleData = getSampleDocumentData('invoice');
+        
+        // Generate PDF with sample data (useSampleCompanyData = true)
+        const pdf = await generatePDF('invoice', sampleData, true);
+        
+        if (pdf) {
+          // Open the PDF in a new window
+          window.open(pdf.output('bloburl'), '_blank');
+        }
+      } catch (error) {
+        console.error('Error generating preview:', error);
+        alert('Fehler beim Erstellen der Vorschau. Bitte stellen Sie sicher, dass alle Elemente korrekt positioniert sind.');
+      }
     });
   }
 }

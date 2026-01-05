@@ -87,53 +87,10 @@
           </p>
           
           <div class="layout-editor-container">
-            <div class="layout-editor-top">
-              <!-- Element Palette -->
-              <div class="element-palette">
-                <h3>Verfügbare Elemente</h3>
-                <div class="palette-items">
-                  <div class="palette-item" data-element="logo">
-                    <span class="element-icon">🖼️</span>
-                    <span class="element-label">Firmenlogo</span>
-                  </div>
-                  <div class="palette-item" data-element="company-name">
-                    <span class="element-icon">🏢</span>
-                    <span class="element-label">Firmenname</span>
-                  </div>
-                  <div class="palette-item" data-element="company-address">
-                    <span class="element-icon">📍</span>
-                    <span class="element-label">Firmenadresse</span>
-                  </div>
-                  <div class="palette-item" data-element="company-contact">
-                    <span class="element-icon">📧</span>
-                    <span class="element-label">Kontaktdaten</span>
-                  </div>
-                  <div class="palette-item" data-element="customer-info">
-                    <span class="element-icon">👤</span>
-                    <span class="element-label">Kundeninformationen</span>
-                  </div>
-                  <div class="palette-item" data-element="document-header">
-                    <span class="element-icon">📄</span>
-                    <span class="element-label">Dokumentkopf</span>
-                  </div>
-                  <div class="palette-item" data-element="items-table">
-                    <span class="element-icon">📊</span>
-                    <span class="element-label">Artikeltabelle</span>
-                  </div>
-                  <div class="palette-item" data-element="totals">
-                    <span class="element-icon">💰</span>
-                    <span class="element-label">Summen</span>
-                  </div>
-                  <div class="palette-item" data-element="footer">
-                    <span class="element-icon">📝</span>
-                    <span class="element-label">Fußzeile</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Alignment Tools -->
-              <div class="alignment-tools">
-                <h3>Ausrichtung</h3>
+            <!-- Alignment Tools - Full Width Above Canvas -->
+            <div class="alignment-tools">
+              <h3>Ausrichtung</h3>
+              <div class="alignment-sections-container">
                 <div class="alignment-section">
                   <div class="alignment-label">Vertikal aneinander:</div>
                   <div class="alignment-buttons">
@@ -186,8 +143,6 @@
                   </div>
                 </div>
               </div>
-              
-              <!-- Layout Controls -->
               <div class="layout-controls">
                 <button type="button" id="resetLayoutBtn" class="btn-secondary">Layout zurücksetzen</button>
                 <button type="button" id="previewPdfBtn" class="btn-secondary">Vorschau anzeigen</button>
@@ -198,6 +153,49 @@
             <div id="layoutCanvas" class="layout-canvas">
               <div class="canvas-label">A4 Vorlage (210mm × 297mm)</div>
               <!-- Elements will be positioned here -->
+            </div>
+            
+            <!-- Element Palette - Full Width Below Canvas with 3 Columns -->
+            <div class="element-palette">
+              <h3>Verfügbare Elemente</h3>
+              <div class="palette-items">
+                <div class="palette-item" data-element="logo">
+                  <span class="element-icon">🖼️</span>
+                  <span class="element-label">Firmenlogo</span>
+                </div>
+                <div class="palette-item" data-element="company-name">
+                  <span class="element-icon">🏢</span>
+                  <span class="element-label">Firmenname</span>
+                </div>
+                <div class="palette-item" data-element="company-address">
+                  <span class="element-icon">📍</span>
+                  <span class="element-label">Firmenadresse</span>
+                </div>
+                <div class="palette-item" data-element="company-contact">
+                  <span class="element-icon">📧</span>
+                  <span class="element-label">Kontaktdaten</span>
+                </div>
+                <div class="palette-item" data-element="customer-info">
+                  <span class="element-icon">👤</span>
+                  <span class="element-label">Kundeninformationen</span>
+                </div>
+                <div class="palette-item" data-element="document-header">
+                  <span class="element-icon">📄</span>
+                  <span class="element-label">Dokumentkopf</span>
+                </div>
+                <div class="palette-item" data-element="items-table">
+                  <span class="element-icon">📊</span>
+                  <span class="element-label">Artikeltabelle</span>
+                </div>
+                <div class="palette-item" data-element="totals">
+                  <span class="element-icon">💰</span>
+                  <span class="element-label">Summen</span>
+                </div>
+                <div class="palette-item" data-element="footer">
+                  <span class="element-icon">📝</span>
+                  <span class="element-label">Fußzeile</span>
+                </div>
+              </div>
             </div>
           </div>
           
