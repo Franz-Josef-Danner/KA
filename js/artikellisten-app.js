@@ -4,6 +4,83 @@
 import { getArtikellisten } from './modules/artikellisten-state.js';
 import { getRows } from './modules/state.js';
 
+let selectedFirmenId = null;
+let clickTimer = null;
+
+function renderPreview(firmenId) {
+  const previewContainer = document.getElementById("artikellisten-preview");
+  if (!previewContainer) return;
+  
+  const artikellisten = getArtikellisten();
+  const artikelliste = artikellisten[firmenId];
+  
+  if (!artikelliste) {
+    previewContainer.innerHTML = `
+      <div class="preview-placeholder">
+        <p>Wählen Sie eine Artikelliste aus, um die Vorschau anzuzeigen</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Build preview HTML
+  let previewHTML = `
+    <div class="preview-content">
+      <div class="preview-header">
+        <h3>${artikelliste.firmenName || artikelliste.firmenId}</h3>
+        <p><strong>Firmen-ID:</strong> ${artikelliste.firmenId}</p>
+        <p><strong>Erstellt:</strong> ${new Date(artikelliste.created).toLocaleDateString('de-DE')}</p>
+        <p><strong>Geändert:</strong> ${new Date(artikelliste.modified).toLocaleDateString('de-DE')}</p>
+        <p><strong>Positionen:</strong> ${artikelliste.items.length}</p>
+      </div>
+      
+      <div class="preview-items">
+        <h4>Artikel</h4>
+  `;
+  
+  if (artikelliste.items.length === 0) {
+    previewHTML += `
+      <div class="preview-no-items">
+        Keine Artikel in dieser Liste
+      </div>
+    `;
+  } else {
+    artikelliste.items.forEach((item, index) => {
+      previewHTML += `
+        <div class="preview-item">
+          <div class="preview-item-row">
+            <span class="preview-item-label">Artikel:</span>
+            <span class="preview-item-value">${item.Artikel || '-'}</span>
+          </div>
+          <div class="preview-item-row">
+            <span class="preview-item-label">Beschreibung:</span>
+            <span class="preview-item-value">${item.Beschreibung || '-'}</span>
+          </div>
+          <div class="preview-item-row">
+            <span class="preview-item-label">Menge:</span>
+            <span class="preview-item-value">${item.Menge || '-'} ${item.Einheit || ''}</span>
+          </div>
+          <div class="preview-item-row">
+            <span class="preview-item-label">Einzelpreis:</span>
+            <span class="preview-item-value">${item.Einzelpreis ? item.Einzelpreis + ' €' : '-'}</span>
+          </div>
+          <div class="preview-item-row">
+            <span class="preview-item-label">Gesamtpreis:</span>
+            <span class="preview-item-value">${item.Gesamtpreis ? item.Gesamtpreis + ' €' : '-'}</span>
+          </div>
+        </div>
+      `;
+    });
+  }
+  
+  previewHTML += `
+      </div>
+    </div>
+  `;
+  
+  previewContainer.innerHTML = previewHTML;
+}
+
 function render() {
   const tbody = document.getElementById("artikellisten-tbody");
   if (!tbody) return;
@@ -49,6 +126,11 @@ function render() {
     tr.classList.add("artikellisten-row");
     tr.dataset.firmenId = artikelliste.firmenId;
     
+    // Highlight if selected
+    if (selectedFirmenId === artikelliste.firmenId) {
+      tr.classList.add("selected");
+    }
+    
     // Firmen_ID
     const tdId = document.createElement("td");
     tdId.textContent = artikelliste.firmenId;
@@ -75,8 +157,26 @@ function render() {
     tdModified.textContent = new Date(artikelliste.modified).toLocaleDateString('de-DE');
     tr.appendChild(tdModified);
     
+    // Add click handler to show preview with delay to avoid race condition with double-click
+    tr.addEventListener("click", (e) => {
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        // Remove 'selected' class from all rows
+        document.querySelectorAll('.artikellisten-row').forEach(row => {
+          row.classList.remove('selected');
+        });
+        
+        // Add 'selected' class to clicked row
+        tr.classList.add('selected');
+        
+        selectedFirmenId = artikelliste.firmenId;
+        renderPreview(artikelliste.firmenId);
+      }, 250); // Wait 250ms to see if it's a double-click
+    });
+    
     // Add double-click handler to open detail view
     tr.addEventListener("dblclick", () => {
+      clearTimeout(clickTimer); // Cancel the single-click timer
       window.location.href = `artikelliste-detail.html?firmenId=${encodeURIComponent(artikelliste.firmenId)}`;
     });
     
