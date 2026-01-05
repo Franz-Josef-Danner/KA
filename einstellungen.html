@@ -242,7 +242,7 @@
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
-    import { initLayoutEditor } from './js/modules/pdf-layout-editor.js';
+    import { initLayoutEditor, refreshCanvas } from './js/modules/pdf-layout-editor.js';
     
     (() => {
       try {
@@ -344,6 +344,8 @@
         // Save settings
         if (saveCompanySettings(settings)) {
           showSuccess(MESSAGES.saveSuccess);
+          // Refresh the canvas to show updated company information
+          refreshCanvas();
         } else {
           showError(MESSAGES.saveError);
         }

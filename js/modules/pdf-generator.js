@@ -128,7 +128,29 @@ function renderElement(doc, element, documentType, documentData, companySettings
 function renderLogo(doc, x, y, width, height, companySettings) {
   if (companySettings.logo) {
     try {
-      doc.addImage(companySettings.logo, 'PNG', x, y, width, height);
+      // Get image properties to calculate aspect ratio
+      const imgProps = doc.getImageProperties(companySettings.logo);
+      const imgAspectRatio = imgProps.width / imgProps.height;
+      const boxAspectRatio = width / height;
+      
+      // Calculate dimensions that fit within the box while preserving aspect ratio
+      let renderWidth = width;
+      let renderHeight = height;
+      let offsetX = 0;
+      let offsetY = 0;
+      
+      if (imgAspectRatio > boxAspectRatio) {
+        // Image is wider - fit to width
+        renderHeight = width / imgAspectRatio;
+        offsetY = (height - renderHeight) / 2;
+      } else {
+        // Image is taller - fit to height
+        renderWidth = height * imgAspectRatio;
+        offsetX = (width - renderWidth) / 2;
+      }
+      
+      // Add image with preserved aspect ratio, centered in the box
+      doc.addImage(companySettings.logo, 'PNG', x + offsetX, y + offsetY, renderWidth, renderHeight);
     } catch (error) {
       console.error('Error adding logo to PDF:', error);
       // Fallback: draw a placeholder rectangle
