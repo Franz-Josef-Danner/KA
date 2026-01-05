@@ -111,11 +111,18 @@ function renderOrders(firmenId) {
         <td>${status}</td>
         <td>${budget}</td>
         <td class="actions">
-          <button class="btn-secondary" onclick="alert('PDF-Export wird in einer zukünftigen Version implementiert')">PDF anzeigen</button>
+          <button class="btn-secondary view-order-pdf" data-order-id="${auftragId}">PDF anzeigen</button>
         </td>
       </tr>
     `;
   }).join('');
+
+  // Attach event listeners to PDF buttons
+  document.querySelectorAll('.view-order-pdf').forEach(btn => {
+    btn.addEventListener('click', () => {
+      alert('PDF-Export wird in einer zukünftigen Version implementiert');
+    });
+  });
 }
 
 function renderInvoices(firmenId) {
@@ -153,11 +160,18 @@ function renderInvoices(firmenId) {
         <td>${budget}</td>
         <td>${auftragId}</td>
         <td class="actions">
-          <button class="btn-secondary" onclick="alert('PDF-Export wird in einer zukünftigen Version implementiert')">PDF anzeigen</button>
+          <button class="btn-secondary view-invoice-pdf" data-invoice-id="${rechnungId}">PDF anzeigen</button>
         </td>
       </tr>
     `;
   }).join('');
+
+  // Attach event listeners to PDF buttons
+  document.querySelectorAll('.view-invoice-pdf').forEach(btn => {
+    btn.addEventListener('click', () => {
+      alert('PDF-Export wird in einer zukünftigen Version implementiert');
+    });
+  });
 }
 
 function getCompanyNameByFirmenId(firmenId) {
