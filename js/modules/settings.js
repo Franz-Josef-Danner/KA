@@ -65,9 +65,13 @@ function isValidEmail(email) {
 
 // Simple phone validation (allows various formats)
 function isValidPhone(phone) {
-  // Allow numbers, spaces, +, -, (, )
-  const phoneRegex = /^[\d\s\+\-\(\)]+$/;
-  return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 5;
+  // Allow numbers, spaces, +, -, (, ) - ensure proper structure
+  const phoneRegex = /^[\+]?[\d\s\-\(\)]+$/;
+  if (!phoneRegex.test(phone)) return false;
+  
+  // Must have at least 5 digits
+  const digitCount = phone.replace(/\D/g, '').length;
+  return digitCount >= 5;
 }
 
 // Convert image file to base64
@@ -75,6 +79,13 @@ export function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     if (!file) {
       resolve(null);
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      reject(new Error('Ungültiges Dateiformat. Nur PNG, JPG und SVG sind erlaubt.'));
       return;
     }
     

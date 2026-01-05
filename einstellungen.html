@@ -80,8 +80,8 @@
           </div>
         </div>
         
-        <div id="errorMessage" class="error-message" style="display: none;"></div>
-        <div id="successMessage" class="success-message" style="display: none;"></div>
+        <div id="errorMessage" class="message error-message" style="display: none;"></div>
+        <div id="successMessage" class="message success-message" style="display: none;"></div>
         
         <div class="form-actions">
           <button type="submit" class="btn-primary">Speichern</button>
@@ -118,6 +118,16 @@
       }
     })();
     
+    // Constants
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+    const MESSAGES = {
+      fileTooLarge: 'Die Datei ist zu groß. Maximale Größe: 2 MB',
+      fileLoadError: 'Fehler beim Laden der Datei',
+      saveSuccess: 'Einstellungen wurden erfolgreich gespeichert.',
+      saveError: 'Fehler beim Speichern der Einstellungen.',
+      confirmReset: 'Möchten Sie alle Änderungen verwerfen und die gespeicherten Einstellungen neu laden?'
+    };
+    
     function initSettingsForm() {
       const form = document.getElementById('settingsForm');
       const errorMessage = document.getElementById('errorMessage');
@@ -135,9 +145,9 @@
       logoUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
-          // Check file size (max 2MB)
-          if (file.size > 2 * 1024 * 1024) {
-            showError('Die Datei ist zu groß. Maximale Größe: 2 MB');
+          // Check file size
+          if (file.size > MAX_FILE_SIZE) {
+            showError(MESSAGES.fileTooLarge);
             logoUpload.value = '';
             return;
           }
@@ -147,7 +157,7 @@
             logoImage.src = base64;
             logoPreview.style.display = 'block';
           } catch (error) {
-            showError('Fehler beim Laden der Datei');
+            showError(error.message || MESSAGES.fileLoadError);
             console.error(error);
           }
         }
@@ -184,15 +194,15 @@
         
         // Save settings
         if (saveCompanySettings(settings)) {
-          showSuccess('Einstellungen wurden erfolgreich gespeichert.');
+          showSuccess(MESSAGES.saveSuccess);
         } else {
-          showError('Fehler beim Speichern der Einstellungen.');
+          showError(MESSAGES.saveError);
         }
       });
       
       // Handle reset button
       resetBtn.addEventListener('click', () => {
-        if (confirm('Möchten Sie alle Änderungen verwerfen und die gespeicherten Einstellungen neu laden?')) {
+        if (confirm(MESSAGES.confirmReset)) {
           loadSettings();
           hideMessages();
         }
