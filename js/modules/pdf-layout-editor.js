@@ -99,11 +99,13 @@ function renderElementContent(contentDiv, element) {
         img.style.pointerEvents = 'none';
         contentDiv.appendChild(img);
       } else {
-        // Show placeholder if no logo
+        // Show placeholder if no logo - always center placeholders
         contentDiv.textContent = ELEMENT_LABELS[element.type];
         contentDiv.style.display = 'flex';
         contentDiv.style.alignItems = 'center';
         contentDiv.style.justifyContent = 'center';
+        contentDiv.style.paddingLeft = '4px';
+        contentDiv.style.paddingRight = '4px';
         contentDiv.style.fontSize = '12px';
         contentDiv.style.color = '#999';
       }

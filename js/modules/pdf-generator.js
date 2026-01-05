@@ -168,20 +168,23 @@ function renderLogo(doc, x, y, width, height, companySettings) {
   }
 }
 
+// Helper function to calculate text x position based on alignment
+function calculateTextX(x, width, textAlign) {
+  if (textAlign === 'center') {
+    return x + width / 2;
+  } else if (textAlign === 'right') {
+    return x + width;
+  }
+  return x; // left align
+}
+
 function renderCompanyName(doc, x, y, width, companySettings, textAlign = 'left') {
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   
-  // Calculate x position based on alignment
-  let textX = x;
+  const textX = calculateTextX(x, width, textAlign);
   const alignOptions = { align: textAlign };
-  
-  if (textAlign === 'center') {
-    textX = x + width / 2;
-  } else if (textAlign === 'right') {
-    textX = x + width;
-  }
   
   doc.text(companySettings.companyName || 'Firma', textX, y + 6, alignOptions);
 }
@@ -196,12 +199,7 @@ function renderCompanyAddress(doc, x, y, width, companySettings, textAlign = 'le
     const alignOptions = { align: textAlign };
     
     lines.forEach((line, index) => {
-      let textX = x;
-      if (textAlign === 'center') {
-        textX = x + width / 2;
-      } else if (textAlign === 'right') {
-        textX = x + width;
-      }
+      const textX = calculateTextX(x, width, textAlign);
       doc.text(line, textX, y + 5 + (index * 5), alignOptions);
     });
   }
@@ -216,22 +214,12 @@ function renderCompanyContact(doc, x, y, width, companySettings, textAlign = 'le
   let offsetY = y + 5;
   
   if (companySettings.email) {
-    let textX = x;
-    if (textAlign === 'center') {
-      textX = x + width / 2;
-    } else if (textAlign === 'right') {
-      textX = x + width;
-    }
+    const textX = calculateTextX(x, width, textAlign);
     doc.text(`E-Mail: ${companySettings.email}`, textX, offsetY, alignOptions);
     offsetY += 5;
   }
   if (companySettings.phone) {
-    let textX = x;
-    if (textAlign === 'center') {
-      textX = x + width / 2;
-    } else if (textAlign === 'right') {
-      textX = x + width;
-    }
+    const textX = calculateTextX(x, width, textAlign);
     doc.text(`Tel: ${companySettings.phone}`, textX, offsetY, alignOptions);
   }
 }
@@ -245,12 +233,7 @@ function renderCustomerInfo(doc, x, y, width, documentData, textAlign = 'left') 
   let offsetY = y + 5;
   
   doc.setFont('helvetica', 'bold');
-  let textX = x;
-  if (textAlign === 'center') {
-    textX = x + width / 2;
-  } else if (textAlign === 'right') {
-    textX = x + width;
-  }
+  let textX = calculateTextX(x, width, textAlign);
   doc.text('Kunde:', textX, offsetY, alignOptions);
   offsetY += 6;
   
@@ -260,34 +243,19 @@ function renderCustomerInfo(doc, x, y, width, documentData, textAlign = 'left') 
   const customer = documentData.customer || documentData;
   
   if (customer.company || customer.Firma) {
-    textX = x;
-    if (textAlign === 'center') {
-      textX = x + width / 2;
-    } else if (textAlign === 'right') {
-      textX = x + width;
-    }
+    textX = calculateTextX(x, width, textAlign);
     doc.text(customer.company || customer.Firma, textX, offsetY, alignOptions);
     offsetY += 5;
   }
   if (customer.contactPerson || customer.Ansprechpartner) {
-    textX = x;
-    if (textAlign === 'center') {
-      textX = x + width / 2;
-    } else if (textAlign === 'right') {
-      textX = x + width;
-    }
+    textX = calculateTextX(x, width, textAlign);
     doc.text(customer.contactPerson || customer.Ansprechpartner, textX, offsetY, alignOptions);
     offsetY += 5;
   }
   if (customer.address) {
     const lines = customer.address.split('\n');
     lines.forEach(line => {
-      textX = x;
-      if (textAlign === 'center') {
-        textX = x + width / 2;
-      } else if (textAlign === 'right') {
-        textX = x + width;
-      }
+      textX = calculateTextX(x, width, textAlign);
       doc.text(line, textX, offsetY, alignOptions);
       offsetY += 4;
     });
@@ -302,12 +270,7 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData, text
   const title = (documentType === 'order' || documentType === 'auftrag') ? 'Auftrag' : 'Rechnung';
   const alignOptions = { align: textAlign };
   
-  let textX = x;
-  if (textAlign === 'center') {
-    textX = x + width / 2;
-  } else if (textAlign === 'right') {
-    textX = x + width;
-  }
+  let textX = calculateTextX(x, width, textAlign);
   doc.text(title, textX, y + 8, alignOptions);
   
   doc.setFontSize(11);
@@ -324,21 +287,11 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData, text
   }
   
   if (docId) {
-    textX = x;
-    if (textAlign === 'center') {
-      textX = x + width / 2;
-    } else if (textAlign === 'right') {
-      textX = x + width;
-    }
+    textX = calculateTextX(x, width, textAlign);
     doc.text(`Nr: ${docId}`, textX, y + 14, alignOptions);
   }
   if (docDate) {
-    textX = x;
-    if (textAlign === 'center') {
-      textX = x + width / 2;
-    } else if (textAlign === 'right') {
-      textX = x + width;
-    }
+    textX = calculateTextX(x, width, textAlign);
     doc.text(`Datum: ${docDate}`, textX, y + 20, alignOptions);
   }
 }
@@ -537,12 +490,7 @@ function renderFooter(doc, x, y, width, companySettings, documentType, textAlign
   let offsetY = y + 5;
   
   lines.forEach(line => {
-    let textX = x;
-    if (textAlign === 'center') {
-      textX = x + width / 2;
-    } else if (textAlign === 'right') {
-      textX = x + width;
-    }
+    const textX = calculateTextX(x, width, textAlign);
     doc.text(line, textX, offsetY, alignOptions);
     offsetY += 4;
   });
