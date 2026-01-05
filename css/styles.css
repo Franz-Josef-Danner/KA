@@ -1494,6 +1494,63 @@ td.readonly:hover {
   background: #cc0000;
 }
 
+.span-controls {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.grid-cell:hover .span-controls {
+  opacity: 1;
+}
+
+.span-control-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.span-control-group label {
+  font-weight: 600;
+  color: #666;
+  font-size: 9px;
+}
+
+.span-btn {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  padding: 1px 5px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.span-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.span-value {
+  min-width: 12px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+}
+
 .grid-controls-info {
   background: #f9f9f9;
   border: 1px solid #e5e5e5;

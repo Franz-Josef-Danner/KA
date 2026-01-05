@@ -188,6 +188,45 @@ function createGridCell(cell, rowIndex, cellIndex) {
   
   cellDiv.appendChild(cellControls);
   
+  // Span controls (only for non-empty cells)
+  if (cell.element !== 'empty') {
+    const spanControls = document.createElement('div');
+    spanControls.className = 'span-controls';
+    spanControls.innerHTML = `
+      <div class="span-control-group">
+        <label>Spalten:</label>
+        <button class="span-btn decrease-colspan" title="Spaltenbreite verringern">-</button>
+        <span class="span-value">${cell.colSpan || 1}</span>
+        <button class="span-btn increase-colspan" title="Spaltenbreite erhöhen">+</button>
+      </div>
+      <div class="span-control-group">
+        <label>Zeilen:</label>
+        <button class="span-btn decrease-rowspan" title="Zeilenhöhe verringern">-</button>
+        <span class="span-value">${cell.rowSpan || 1}</span>
+        <button class="span-btn increase-rowspan" title="Zeilenhöhe erhöhen">+</button>
+      </div>
+    `;
+    
+    spanControls.querySelector('.decrease-colspan').addEventListener('click', (e) => {
+      e.stopPropagation();
+      adjustCellSpan(rowIndex, cellIndex, 'col', -1);
+    });
+    spanControls.querySelector('.increase-colspan').addEventListener('click', (e) => {
+      e.stopPropagation();
+      adjustCellSpan(rowIndex, cellIndex, 'col', 1);
+    });
+    spanControls.querySelector('.decrease-rowspan').addEventListener('click', (e) => {
+      e.stopPropagation();
+      adjustCellSpan(rowIndex, cellIndex, 'row', -1);
+    });
+    spanControls.querySelector('.increase-rowspan').addEventListener('click', (e) => {
+      e.stopPropagation();
+      adjustCellSpan(rowIndex, cellIndex, 'row', 1);
+    });
+    
+    cellDiv.appendChild(spanControls);
+  }
+  
   // Cell content
   const contentDiv = document.createElement('div');
   contentDiv.className = 'cell-content';
@@ -374,6 +413,48 @@ function deleteColumn(cellIndex) {
     savePdfLayoutTemplate(currentLayout);
     renderGrid();
   }
+}
+
+function adjustCellSpan(rowIndex, cellIndex, spanType, delta) {
+  // Validate indices
+  if (!currentLayout.grid.rows[rowIndex] || !currentLayout.grid.rows[rowIndex].cells[cellIndex]) {
+    console.error('Invalid row or cell index');
+    return;
+  }
+  
+  const cell = currentLayout.grid.rows[rowIndex].cells[cellIndex];
+  
+  if (spanType === 'col') {
+    const currentSpan = cell.colSpan || 1;
+    const newSpan = Math.max(1, currentSpan + delta);
+    
+    // Check if we have enough columns available
+    const row = currentLayout.grid.rows[rowIndex];
+    const maxPossibleSpan = row.cells.length - cellIndex;
+    
+    if (newSpan > maxPossibleSpan) {
+      alert(`Maximale Spaltenbreite: ${maxPossibleSpan}`);
+      return;
+    }
+    
+    cell.colSpan = newSpan;
+  } else if (spanType === 'row') {
+    const currentSpan = cell.rowSpan || 1;
+    const newSpan = Math.max(1, currentSpan + delta);
+    
+    // Check if we have enough rows available
+    const maxPossibleSpan = currentLayout.grid.rows.length - rowIndex;
+    
+    if (newSpan > maxPossibleSpan) {
+      alert(`Maximale Zeilenhöhe: ${maxPossibleSpan}`);
+      return;
+    }
+    
+    cell.rowSpan = newSpan;
+  }
+  
+  savePdfLayoutTemplate(currentLayout);
+  renderGrid();
 }
 
 function assignElementToCell(rowIndex, cellIndex, elementType) {
