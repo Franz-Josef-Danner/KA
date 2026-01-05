@@ -89,10 +89,11 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
 
 // Render individual element
 function renderElement(doc, element, documentType, documentData, companySettings) {
-  const x = element.x * 0.352778; // Convert px to mm (600px = 210mm)
-  const y = element.y * 0.352778;
-  const width = element.width * 0.352778;
-  const height = element.height * 0.352778;
+  // Convert from canvas coordinates (600px base width) to PDF coordinates (210mm A4 width)
+  const x = element.x * (210 / 600); // Convert px to mm
+  const y = element.y * (210 / 600);
+  const width = element.width * (210 / 600);
+  const height = element.height * (210 / 600);
 
   switch (element.type) {
     case 'logo':
