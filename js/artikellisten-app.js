@@ -5,6 +5,7 @@ import { getArtikellisten } from './modules/artikellisten-state.js';
 import { getRows } from './modules/state.js';
 
 let selectedFirmenId = null;
+let clickTimer = null;
 
 function renderPreview(firmenId) {
   const previewContainer = document.getElementById("artikellisten-preview");
@@ -157,7 +158,6 @@ function render() {
     tr.appendChild(tdModified);
     
     // Add click handler to show preview with delay to avoid race condition with double-click
-    let clickTimer = null;
     tr.addEventListener("click", (e) => {
       clearTimeout(clickTimer);
       clickTimer = setTimeout(() => {
