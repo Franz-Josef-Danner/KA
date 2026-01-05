@@ -337,6 +337,11 @@ function handleDragLeave(e) {
   e.currentTarget.classList.remove('drag-over');
 }
 
+function resetDragState() {
+  draggedElement = null;
+  draggedFromCell = null;
+}
+
 function handleDrop(e) {
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
@@ -349,15 +354,14 @@ function handleDrop(e) {
   
   if (!elementType) {
     console.error('No element type found in dataTransfer');
+    resetDragState();
     return;
   }
   
   // Check if cell already has an element
   if (gridState.cells[targetCellId] && gridState.cells[targetCellId].element) {
     alert('Diese Zelle ist bereits belegt. Bitte wählen Sie eine leere Zelle.');
-    // Reset drag state
-    draggedElement = null;
-    draggedFromCell = null;
+    resetDragState();
     return;
   }
   
@@ -370,8 +374,7 @@ function handleDrop(e) {
   gridState.cells[targetCellId].element = elementType;
   
   // Reset drag state
-  draggedElement = null;
-  draggedFromCell = null;
+  resetDragState();
   
   // Re-render grid
   renderGrid();
