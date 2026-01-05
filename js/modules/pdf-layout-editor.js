@@ -804,10 +804,18 @@ function applySnapping(movingElement, left, top) {
     centerY: top + height / 2
   };
   
+  // Track global minimum differences for snapping
+  let globalMinXDiff = Infinity;
+  let globalMinYDiff = Infinity;
+  let bestSnapX = null;
+  let bestSnapY = null;
+  let bestGuideX = null;
+  let bestGuideY = null;
+  
   // Check snapping against each other element
   otherElements.forEach(el => {
-    const elLeft = parseInt(el.style.left);
-    const elTop = parseInt(el.style.top);
+    const elLeft = parseFloat(el.style.left);
+    const elTop = parseFloat(el.style.top);
     const elWidth = el.offsetWidth;
     const elHeight = el.offsetHeight;
     
@@ -820,126 +828,119 @@ function applySnapping(movingElement, left, top) {
       centerY: elTop + elHeight / 2
     };
     
-    // Check horizontal snapping
-    let minXDiff = Infinity;
-    let snapX = null;
-    let guideX = null;
-    
+    // Check horizontal snapping - find closest snap point
     // Left edge to left edge
     if (Math.abs(movingPoints.left - targetPoints.left) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.left - targetPoints.left);
-      if (diff < minXDiff) {
-        minXDiff = diff;
-        snapX = targetPoints.left;
-        guideX = { x: targetPoints.left, type: 'vertical' };
+      if (diff < globalMinXDiff) {
+        globalMinXDiff = diff;
+        bestSnapX = targetPoints.left;
+        bestGuideX = { x: targetPoints.left, type: 'vertical' };
       }
     }
     
     // Left edge to right edge
     if (Math.abs(movingPoints.left - targetPoints.right) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.left - targetPoints.right);
-      if (diff < minXDiff) {
-        minXDiff = diff;
-        snapX = targetPoints.right;
-        guideX = { x: targetPoints.right, type: 'vertical' };
+      if (diff < globalMinXDiff) {
+        globalMinXDiff = diff;
+        bestSnapX = targetPoints.right;
+        bestGuideX = { x: targetPoints.right, type: 'vertical' };
       }
     }
     
     // Right edge to left edge
     if (Math.abs(movingPoints.right - targetPoints.left) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.right - targetPoints.left);
-      if (diff < minXDiff) {
-        minXDiff = diff;
-        snapX = targetPoints.left - width;
-        guideX = { x: targetPoints.left, type: 'vertical' };
+      if (diff < globalMinXDiff) {
+        globalMinXDiff = diff;
+        bestSnapX = targetPoints.left - width;
+        bestGuideX = { x: targetPoints.left, type: 'vertical' };
       }
     }
     
     // Right edge to right edge
     if (Math.abs(movingPoints.right - targetPoints.right) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.right - targetPoints.right);
-      if (diff < minXDiff) {
-        minXDiff = diff;
-        snapX = targetPoints.right - width;
-        guideX = { x: targetPoints.right, type: 'vertical' };
+      if (diff < globalMinXDiff) {
+        globalMinXDiff = diff;
+        bestSnapX = targetPoints.right - width;
+        bestGuideX = { x: targetPoints.right, type: 'vertical' };
       }
     }
     
     // Center to center (vertical)
     if (Math.abs(movingPoints.centerX - targetPoints.centerX) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.centerX - targetPoints.centerX);
-      if (diff < minXDiff) {
-        minXDiff = diff;
-        snapX = targetPoints.centerX - width / 2;
-        guideX = { x: targetPoints.centerX, type: 'vertical' };
+      if (diff < globalMinXDiff) {
+        globalMinXDiff = diff;
+        bestSnapX = targetPoints.centerX - width / 2;
+        bestGuideX = { x: targetPoints.centerX, type: 'vertical' };
       }
     }
     
-    if (snapX !== null) {
-      snappedLeft = snapX;
-      if (guideX) snapGuides.push(guideX);
-    }
-    
-    // Check vertical snapping
-    let minYDiff = Infinity;
-    let snapY = null;
-    let guideY = null;
-    
+    // Check vertical snapping - find closest snap point
     // Top edge to top edge
     if (Math.abs(movingPoints.top - targetPoints.top) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.top - targetPoints.top);
-      if (diff < minYDiff) {
-        minYDiff = diff;
-        snapY = targetPoints.top;
-        guideY = { y: targetPoints.top, type: 'horizontal' };
+      if (diff < globalMinYDiff) {
+        globalMinYDiff = diff;
+        bestSnapY = targetPoints.top;
+        bestGuideY = { y: targetPoints.top, type: 'horizontal' };
       }
     }
     
     // Top edge to bottom edge
     if (Math.abs(movingPoints.top - targetPoints.bottom) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.top - targetPoints.bottom);
-      if (diff < minYDiff) {
-        minYDiff = diff;
-        snapY = targetPoints.bottom;
-        guideY = { y: targetPoints.bottom, type: 'horizontal' };
+      if (diff < globalMinYDiff) {
+        globalMinYDiff = diff;
+        bestSnapY = targetPoints.bottom;
+        bestGuideY = { y: targetPoints.bottom, type: 'horizontal' };
       }
     }
     
     // Bottom edge to top edge
     if (Math.abs(movingPoints.bottom - targetPoints.top) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.bottom - targetPoints.top);
-      if (diff < minYDiff) {
-        minYDiff = diff;
-        snapY = targetPoints.top - height;
-        guideY = { y: targetPoints.top, type: 'horizontal' };
+      if (diff < globalMinYDiff) {
+        globalMinYDiff = diff;
+        bestSnapY = targetPoints.top - height;
+        bestGuideY = { y: targetPoints.top, type: 'horizontal' };
       }
     }
     
     // Bottom edge to bottom edge
     if (Math.abs(movingPoints.bottom - targetPoints.bottom) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.bottom - targetPoints.bottom);
-      if (diff < minYDiff) {
-        minYDiff = diff;
-        snapY = targetPoints.bottom - height;
-        guideY = { y: targetPoints.bottom, type: 'horizontal' };
+      if (diff < globalMinYDiff) {
+        globalMinYDiff = diff;
+        bestSnapY = targetPoints.bottom - height;
+        bestGuideY = { y: targetPoints.bottom, type: 'horizontal' };
       }
     }
     
     // Center to center (horizontal)
     if (Math.abs(movingPoints.centerY - targetPoints.centerY) < SNAP_THRESHOLD) {
       const diff = Math.abs(movingPoints.centerY - targetPoints.centerY);
-      if (diff < minYDiff) {
-        minYDiff = diff;
-        snapY = targetPoints.centerY - height / 2;
-        guideY = { y: targetPoints.centerY, type: 'horizontal' };
+      if (diff < globalMinYDiff) {
+        globalMinYDiff = diff;
+        bestSnapY = targetPoints.centerY - height / 2;
+        bestGuideY = { y: targetPoints.centerY, type: 'horizontal' };
       }
     }
-    
-    if (snapY !== null) {
-      snappedTop = snapY;
-      if (guideY) snapGuides.push(guideY);
-    }
   });
+  
+  // Apply best snap positions and guides
+  if (bestSnapX !== null) {
+    snappedLeft = bestSnapX;
+    if (bestGuideX) snapGuides.push(bestGuideX);
+  }
+  
+  if (bestSnapY !== null) {
+    snappedTop = bestSnapY;
+    if (bestGuideY) snapGuides.push(bestGuideY);
+  }
   
   return { left: snappedLeft, top: snappedTop };
 }
