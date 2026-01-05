@@ -120,6 +120,7 @@
     
     // Constants
     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+    const SUCCESS_MESSAGE_TIMEOUT = 3000; // 3 seconds
     const MESSAGES = {
       fileTooLarge: 'Die Datei ist zu groß. Maximale Größe: 2 MB',
       fileLoadError: 'Fehler beim Laden der Datei',
@@ -236,10 +237,10 @@
         successMessage.style.display = 'block';
         errorMessage.style.display = 'none';
         
-        // Hide success message after 3 seconds
+        // Hide success message after timeout
         setTimeout(() => {
           successMessage.style.display = 'none';
-        }, 3000);
+        }, SUCCESS_MESSAGE_TIMEOUT);
       }
       
       function hideMessages() {

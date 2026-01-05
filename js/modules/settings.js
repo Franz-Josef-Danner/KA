@@ -65,12 +65,16 @@ function isValidEmail(email) {
 
 // Simple phone validation (allows various formats)
 function isValidPhone(phone) {
-  // Allow numbers, spaces, +, -, (, ) - ensure proper structure
-  const phoneRegex = /^[\+]?[\d\s\-\(\)]+$/;
-  if (!phoneRegex.test(phone)) return false;
+  // Remove all whitespace for validation
+  const cleanPhone = phone.replace(/\s/g, '');
+  
+  // Allow formats: +49123456789, 0123456789, +49(0)123456789, etc.
+  // Must start with optional +, followed by digits, and optional () pairs
+  const phoneRegex = /^[\+]?[\d]+([\(\d\)]*[\d\-]*)+$/;
+  if (!phoneRegex.test(cleanPhone)) return false;
   
   // Must have at least 5 digits
-  const digitCount = phone.replace(/\D/g, '').length;
+  const digitCount = cleanPhone.replace(/\D/g, '').length;
   return digitCount >= 5;
 }
 
