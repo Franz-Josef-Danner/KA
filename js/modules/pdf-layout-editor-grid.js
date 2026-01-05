@@ -170,6 +170,7 @@ function createGridCell(cell, rowIndex, cellIndex) {
   cellControls.innerHTML = `
     <button class="cell-btn add-col-left" title="Spalte links einfügen">←</button>
     <button class="cell-btn add-col-right" title="Spalte rechts einfügen">→</button>
+    <button class="cell-btn delete-col" title="Spalte löschen">✕</button>
   `;
   
   cellControls.querySelector('.add-col-left').addEventListener('click', (e) => {
@@ -179,6 +180,10 @@ function createGridCell(cell, rowIndex, cellIndex) {
   cellControls.querySelector('.add-col-right').addEventListener('click', (e) => {
     e.stopPropagation();
     addColumnRight(rowIndex, cellIndex);
+  });
+  cellControls.querySelector('.delete-col').addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteColumn(cellIndex);
   });
   
   cellDiv.appendChild(cellControls);
@@ -347,6 +352,28 @@ function addColumnRight(rowIndex, cellIndex) {
   
   savePdfLayoutTemplate(currentLayout);
   renderGrid();
+}
+
+function deleteColumn(cellIndex) {
+  // Check if we have more than one column in any row
+  const minColumns = Math.min(...currentLayout.grid.rows.map(row => row.cells.length));
+  
+  if (minColumns <= 1) {
+    alert('Das Grid muss mindestens eine Spalte haben.');
+    return;
+  }
+  
+  if (confirm('Möchten Sie diese Spalte wirklich löschen?')) {
+    // Remove the column at cellIndex from all rows
+    currentLayout.grid.rows.forEach(row => {
+      if (row.cells.length > cellIndex) {
+        row.cells.splice(cellIndex, 1);
+      }
+    });
+    
+    savePdfLayoutTemplate(currentLayout);
+    renderGrid();
+  }
 }
 
 function assignElementToCell(rowIndex, cellIndex, elementType) {
