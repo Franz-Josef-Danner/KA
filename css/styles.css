@@ -1322,15 +1322,6 @@ td.readonly:hover {
   border-color: #667eea;
 }
 
-/* Snap guides */
-.snap-guide {
-  position: absolute;
-  background: #ff4444;
-  pointer-events: none;
-  z-index: 100;
-  opacity: 0.7;
-}
-
 @media (max-width: 768px) {
   .settings-container {
     margin: 16px;
