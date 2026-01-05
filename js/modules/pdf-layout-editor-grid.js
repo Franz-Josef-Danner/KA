@@ -328,9 +328,9 @@ function deleteRow(rowIndex) {
 function addColumnLeft(rowIndex, cellIndex) {
   // Add a column to all rows at this position
   currentLayout.grid.rows.forEach(row => {
-    if (row.cells.length > cellIndex) {
-      row.cells.splice(cellIndex, 0, { element: 'empty', rowSpan: 1, colSpan: 1 });
-    }
+    // Ensure cellIndex is valid for this row
+    const insertIndex = Math.min(cellIndex, row.cells.length);
+    row.cells.splice(insertIndex, 0, { element: 'empty', rowSpan: 1, colSpan: 1 });
   });
   
   savePdfLayoutTemplate(currentLayout);
@@ -340,9 +340,9 @@ function addColumnLeft(rowIndex, cellIndex) {
 function addColumnRight(rowIndex, cellIndex) {
   // Add a column to all rows after this position
   currentLayout.grid.rows.forEach(row => {
-    if (row.cells.length > cellIndex) {
-      row.cells.splice(cellIndex + 1, 0, { element: 'empty', rowSpan: 1, colSpan: 1 });
-    }
+    // Ensure cellIndex is valid for this row
+    const insertIndex = Math.min(cellIndex + 1, row.cells.length);
+    row.cells.splice(insertIndex, 0, { element: 'empty', rowSpan: 1, colSpan: 1 });
   });
   
   savePdfLayoutTemplate(currentLayout);
@@ -350,6 +350,12 @@ function addColumnRight(rowIndex, cellIndex) {
 }
 
 function assignElementToCell(rowIndex, cellIndex, elementType) {
+  // Validate indices
+  if (!currentLayout.grid.rows[rowIndex] || !currentLayout.grid.rows[rowIndex].cells[cellIndex]) {
+    console.error('Invalid row or cell index');
+    return;
+  }
+  
   // Check if element already exists
   const exists = currentLayout.grid.rows.some(row =>
     row.cells.some(cell => cell.element === elementType)
@@ -366,6 +372,12 @@ function assignElementToCell(rowIndex, cellIndex, elementType) {
 }
 
 function removeElementFromCell(rowIndex, cellIndex) {
+  // Validate indices
+  if (!currentLayout.grid.rows[rowIndex] || !currentLayout.grid.rows[rowIndex].cells[cellIndex]) {
+    console.error('Invalid row or cell index');
+    return;
+  }
+  
   currentLayout.grid.rows[rowIndex].cells[cellIndex].element = 'empty';
   savePdfLayoutTemplate(currentLayout);
   renderGrid();

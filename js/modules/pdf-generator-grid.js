@@ -89,6 +89,13 @@ function renderPDFDocumentGrid(doc, documentType, documentData, companySettings,
   const usableHeight = pageHeight - (2 * margin);
   
   const numRows = layoutTemplate.grid.rows.length;
+  
+  // Validate grid has rows
+  if (numRows === 0) {
+    console.warn('Grid layout has no rows');
+    return;
+  }
+  
   const rowHeight = usableHeight / numRows;
   
   let currentY = margin;
