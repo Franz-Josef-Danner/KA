@@ -14,22 +14,32 @@
     <p class="page-subtitle">Verwalten Sie Ihre Artikellisten</p>
     
     <div class="hint">
-      Doppelklick auf eine Zeile, um die Artikelliste zu öffnen und zu bearbeiten.
+      Klicken Sie auf eine Zeile, um eine Vorschau anzuzeigen. Doppelklick öffnet die Artikelliste zur Bearbeitung.
     </div>
     
-    <div class="wrap">
-      <table id="artikellisten-grid">
-        <thead>
-          <tr>
-            <th>Firmen_ID</th>
-            <th>Firma</th>
-            <th style="text-align: center;">Positionen</th>
-            <th>Erstellt</th>
-            <th>Geändert</th>
-          </tr>
-        </thead>
-        <tbody id="artikellisten-tbody"></tbody>
-      </table>
+    <div class="artikellisten-layout">
+      <div class="artikellisten-list">
+        <div class="wrap">
+          <table id="artikellisten-grid">
+            <thead>
+              <tr>
+                <th>Firmen_ID</th>
+                <th>Firma</th>
+                <th style="text-align: center;">Positionen</th>
+                <th>Erstellt</th>
+                <th>Geändert</th>
+              </tr>
+            </thead>
+            <tbody id="artikellisten-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="artikellisten-preview" id="artikellisten-preview">
+        <div class="preview-placeholder">
+          <p>Wählen Sie eine Artikelliste aus, um die Vorschau anzuzeigen</p>
+        </div>
+      </div>
     </div>
   </div>
 
