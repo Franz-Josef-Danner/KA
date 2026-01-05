@@ -6,6 +6,7 @@ import { getRows as getOrders } from './auftraege-state.js';
 import { getRows as getInvoices } from './rechnungen-state.js';
 import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
+import { generatePDF, viewPDF } from './pdf-generator.js';
 
 export function render() {
   const user = getCurrentUser();
@@ -119,8 +120,25 @@ function renderOrders(firmenId) {
 
   // Attach event listeners to PDF buttons
   document.querySelectorAll('.view-order-pdf').forEach(btn => {
-    btn.addEventListener('click', () => {
-      alert('PDF-Export wird in einer zukünftigen Version implementiert');
+    btn.addEventListener('click', async () => {
+      const orderId = btn.dataset.orderId;
+      const order = customerOrders.find(o => o.Auftrags_ID === orderId);
+      if (order) {
+        btn.disabled = true;
+        btn.textContent = 'PDF wird erstellt...';
+        try {
+          const pdf = await generatePDF('order', order);
+          if (pdf) {
+            viewPDF(pdf);
+          }
+        } catch (error) {
+          console.error('Error generating PDF:', error);
+          alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'PDF anzeigen';
+        }
+      }
     });
   });
 }
@@ -168,8 +186,25 @@ function renderInvoices(firmenId) {
 
   // Attach event listeners to PDF buttons
   document.querySelectorAll('.view-invoice-pdf').forEach(btn => {
-    btn.addEventListener('click', () => {
-      alert('PDF-Export wird in einer zukünftigen Version implementiert');
+    btn.addEventListener('click', async () => {
+      const invoiceId = btn.dataset.invoiceId;
+      const invoice = customerInvoices.find(i => i.Rechnungs_ID === invoiceId);
+      if (invoice) {
+        btn.disabled = true;
+        btn.textContent = 'PDF wird erstellt...';
+        try {
+          const pdf = await generatePDF('invoice', invoice);
+          if (pdf) {
+            viewPDF(pdf);
+          }
+        } catch (error) {
+          console.error('Error generating PDF:', error);
+          alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'PDF anzeigen';
+        }
+      }
     });
   });
 }
