@@ -19,6 +19,32 @@ export function render() {
   tbody.innerHTML = "";
 
   const rows = getRows();
+  
+  // If no rows exist, show a button to add the first row
+  if (rows.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = COLUMNS.length + 1; // Span all columns including actions
+    td.style.textAlign = "center";
+    td.style.padding = "20px";
+    
+    const addButton = document.createElement("button");
+    addButton.textContent = "+ Erste Zeile hinzufügen";
+    addButton.title = "Erste Zeile zur Tabelle hinzufügen";
+    addButton.addEventListener("click", async () => {
+      await setRows([newEmptyRow()]);
+      save();
+      render();
+    });
+    
+    td.appendChild(addButton);
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    
+    // Update undo/redo button states after render
+    updateUndoRedoButtons();
+    return;
+  }
 
   // Find duplicates in all rows (before filtering by search)
   const duplicateMap = findDuplicates(rows);
@@ -71,7 +97,7 @@ export function render() {
         });
         
         // Handle change event
-        select.addEventListener("change", (e) => {
+        select.addEventListener("change", async (e) => {
           const currentRows = getRows();
           const oldStatus = currentRows[idx][col];
           const newStatus = e.target.value;
@@ -101,7 +127,7 @@ export function render() {
           
           // If validation passed (and confirmation given if required), proceed with the change
           currentRows[idx][col] = newStatus;
-          setRows(currentRows);
+          await setRows(currentRows);
           save();
           // Re-render to update Firmen_ID based on new status
           render();
@@ -135,7 +161,7 @@ export function render() {
         });
 
         // Beim Blur: speichern + hübsch darstellen
-        td.addEventListener("blur", () => {
+        td.addEventListener("blur", async () => {
           const newVal = td.textContent ?? "";
           const originalValue = td.dataset.originalValue ?? "";
           const currentRows = getRows();
@@ -144,7 +170,7 @@ export function render() {
           // Only update and save to history if the value actually changed
           if (sanitizedNewVal !== originalValue) {
             currentRows[idx][col] = sanitizedNewVal;
-            setRows(currentRows);
+            await setRows(currentRows);
           }
           
           td.innerHTML = toCellDisplay(col, currentRows[idx][col]);
@@ -163,9 +189,9 @@ export function render() {
     const plus = document.createElement("button");
     plus.textContent = "+";
     plus.title = "Zeile darunter einfügen";
-    plus.addEventListener("click", () => {
+    plus.addEventListener("click", async () => {
       rows.splice(idx + 1, 0, newEmptyRow());
-      setRows(rows);
+      await setRows(rows);
       save();
       render();
     });
@@ -176,11 +202,11 @@ export function render() {
     minus.textContent = "−";
     minus.title = "Zeile löschen";
     minus.className = "danger";
-    minus.addEventListener("click", () => {
+    minus.addEventListener("click", async () => {
       const ok = confirm("Sind Sie sicher, dass Sie diese Zeile löschen möchten?");
       if (!ok) return;
       rows.splice(idx, 1);
-      setRows(rows);
+      await setRows(rows);
       save();
       render();
     });
