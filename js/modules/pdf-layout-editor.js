@@ -1,7 +1,7 @@
 // -----------------------------
 // PDF Layout Editor Module
 // -----------------------------
-import { getPdfLayoutTemplate, savePdfLayoutTemplate, getDefaultLayoutTemplate } from './settings.js';
+import { getPdfLayoutTemplate, savePdfLayoutTemplate, getDefaultLayoutTemplate, getCompanySettings } from './settings.js';
 
 const ELEMENT_LABELS = {
   'logo': 'Logo',
@@ -63,6 +63,86 @@ function renderCanvas() {
   updatePaletteAvailability();
 }
 
+// Render content for different element types with actual data
+function renderElementContent(contentDiv, element) {
+  const companySettings = getCompanySettings();
+  
+  switch (element.type) {
+    case 'logo':
+      if (companySettings.logo) {
+        // Create image element for logo
+        const img = document.createElement('img');
+        img.src = companySettings.logo;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        img.style.pointerEvents = 'none';
+        contentDiv.appendChild(img);
+      } else {
+        // Show placeholder if no logo
+        contentDiv.textContent = ELEMENT_LABELS[element.type];
+        contentDiv.style.display = 'flex';
+        contentDiv.style.alignItems = 'center';
+        contentDiv.style.justifyContent = 'center';
+        contentDiv.style.fontSize = '12px';
+        contentDiv.style.color = '#999';
+      }
+      break;
+      
+    case 'company-name':
+      if (companySettings.companyName) {
+        contentDiv.textContent = companySettings.companyName;
+        contentDiv.style.fontSize = '14px';
+        contentDiv.style.fontWeight = 'bold';
+        contentDiv.style.overflow = 'hidden';
+        contentDiv.style.textOverflow = 'ellipsis';
+        contentDiv.style.whiteSpace = 'nowrap';
+      } else {
+        contentDiv.textContent = ELEMENT_LABELS[element.type];
+        contentDiv.style.fontSize = '12px';
+        contentDiv.style.color = '#999';
+      }
+      break;
+      
+    case 'company-address':
+      if (companySettings.address) {
+        contentDiv.textContent = companySettings.address;
+        contentDiv.style.fontSize = '10px';
+        contentDiv.style.whiteSpace = 'pre-wrap';
+        contentDiv.style.overflow = 'hidden';
+        contentDiv.style.lineHeight = '1.4';
+      } else {
+        contentDiv.textContent = ELEMENT_LABELS[element.type];
+        contentDiv.style.fontSize = '12px';
+        contentDiv.style.color = '#999';
+      }
+      break;
+      
+    case 'company-contact':
+      const contactInfo = [];
+      if (companySettings.email) contactInfo.push(`E-Mail: ${companySettings.email}`);
+      if (companySettings.phone) contactInfo.push(`Tel: ${companySettings.phone}`);
+      
+      if (contactInfo.length > 0) {
+        contentDiv.textContent = contactInfo.join('\n');
+        contentDiv.style.fontSize = '9px';
+        contentDiv.style.whiteSpace = 'pre-wrap';
+        contentDiv.style.overflow = 'hidden';
+        contentDiv.style.lineHeight = '1.4';
+      } else {
+        contentDiv.textContent = ELEMENT_LABELS[element.type];
+        contentDiv.style.fontSize = '12px';
+        contentDiv.style.color = '#999';
+      }
+      break;
+      
+    default:
+      // For other elements, show label
+      contentDiv.textContent = ELEMENT_LABELS[element.type] || element.type;
+      break;
+  }
+}
+
 function createCanvasElement(element) {
   const div = document.createElement('div');
   div.className = 'canvas-element';
@@ -76,10 +156,10 @@ function createCanvasElement(element) {
   div.style.width = `${element.width * scale}px`;
   div.style.height = `${element.height * scale}px`;
   
-  // Content
+  // Content - render differently based on element type
   const content = document.createElement('div');
   content.className = 'element-content';
-  content.textContent = ELEMENT_LABELS[element.type] || element.type;
+  renderElementContent(content, element);
   div.appendChild(content);
   
   // Remove button
@@ -439,6 +519,13 @@ function setupPreviewButton() {
 
 export function getLayoutTemplate() {
   return currentLayout || getPdfLayoutTemplate();
+}
+
+// Refresh canvas to show updated company settings (logo, name, address, contact)
+export function refreshCanvas() {
+  if (canvas) {
+    renderCanvas();
+  }
 }
 
 // Selection management functions
