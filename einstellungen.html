@@ -87,62 +87,12 @@
           </p>
           
           <div class="layout-editor-container">
-            <!-- Alignment Tools - Full Width Above Canvas -->
-            <div class="alignment-tools">
-              <h3>Ausrichtung</h3>
-              <div class="alignment-sections-container">
-                <div class="alignment-section">
-                  <div class="alignment-label">Vertikal aneinander:</div>
-                  <div class="alignment-buttons">
-                    <button type="button" id="alignLeftBtn" class="btn-align" title="Linksbündig">
-                      <span class="align-icon">⬅️</span>
-                    </button>
-                    <button type="button" id="alignCenterVBtn" class="btn-align" title="Mittig">
-                      <span class="align-icon">↕️</span>
-                    </button>
-                    <button type="button" id="alignRightBtn" class="btn-align" title="Rechtsbündig">
-                      <span class="align-icon">➡️</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="alignment-section">
-                  <div class="alignment-label">Horizontal aneinander:</div>
-                  <div class="alignment-buttons">
-                    <button type="button" id="alignTopBtn" class="btn-align" title="Oberkante bündig">
-                      <span class="align-icon">⬆️</span>
-                    </button>
-                    <button type="button" id="alignCenterHBtn" class="btn-align" title="Mittig">
-                      <span class="align-icon">↔️</span>
-                    </button>
-                    <button type="button" id="alignBottomBtn" class="btn-align" title="Unterkante bündig">
-                      <span class="align-icon">⬇️</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="alignment-section">
-                  <div class="alignment-label">An Dokument:</div>
-                  <div class="alignment-buttons">
-                    <button type="button" id="alignDocLeftBtn" class="btn-align" title="Dokument linksbündig">
-                      <span class="align-icon">◀️</span>
-                    </button>
-                    <button type="button" id="alignDocCenterVBtn" class="btn-align" title="Dokument mittig vertikal">
-                      <span class="align-icon">⏸️</span>
-                    </button>
-                    <button type="button" id="alignDocRightBtn" class="btn-align" title="Dokument rechtsbündig">
-                      <span class="align-icon">▶️</span>
-                    </button>
-                    <button type="button" id="alignDocTopBtn" class="btn-align" title="Dokument oberkante">
-                      <span class="align-icon">🔼</span>
-                    </button>
-                    <button type="button" id="alignDocCenterHBtn" class="btn-align" title="Dokument mittig horizontal">
-                      <span class="align-icon">⏯️</span>
-                    </button>
-                    <button type="button" id="alignDocBottomBtn" class="btn-align" title="Dokument unterkante">
-                      <span class="align-icon">🔽</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <!-- Grid Controls -->
+            <div class="grid-controls-info">
+              <h3>Grid-basiertes Layout System</h3>
+              <p class="form-hint">
+                Ziehen Sie Elemente aus der Palette in die Zellen. Verwenden Sie die Buttons, um Zeilen und Spalten hinzuzufügen oder zu löschen.
+              </p>
               <div class="layout-controls">
                 <button type="button" id="resetLayoutBtn" class="btn-secondary">Layout zurücksetzen</button>
                 <button type="button" id="previewPdfBtn" class="btn-secondary">Vorschau anzeigen</button>
@@ -242,7 +192,7 @@
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
-    import { initLayoutEditor, refreshCanvas } from './js/modules/pdf-layout-editor.js';
+    import { initLayoutEditor, refreshCanvas } from './js/modules/pdf-layout-editor-grid.js';
     
     (() => {
       try {

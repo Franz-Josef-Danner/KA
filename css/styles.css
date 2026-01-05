@@ -1354,3 +1354,167 @@ td.readonly:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Grid-based Layout System */
+.grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 40px 20px 20px 20px;
+  width: 100%;
+  height: 100%;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: 40px repeat(auto-fit, minmax(100px, 1fr));
+  gap: 4px;
+  min-height: 80px;
+  position: relative;
+}
+
+.row-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.grid-btn {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.grid-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.grid-cell {
+  position: relative;
+  background: #fafafa;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+}
+
+.grid-cell.drag-over {
+  background: #e8f0fe;
+  border-color: #667eea;
+  border-style: dashed;
+}
+
+.grid-cell:hover {
+  border-color: #999;
+}
+
+.cell-controls {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.grid-cell:hover .cell-controls {
+  opacity: 1;
+}
+
+.cell-btn {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+}
+
+.cell-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.cell-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.cell-content.empty-cell {
+  color: #999;
+  font-style: italic;
+}
+
+.remove-element-btn {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.grid-cell:hover .remove-element-btn {
+  opacity: 1;
+}
+
+.remove-element-btn:hover {
+  background: #cc0000;
+}
+
+.grid-controls-info {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.grid-controls-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.grid-controls-info .form-hint {
+  margin: 0 0 12px 0;
+}
+
+.layout-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
