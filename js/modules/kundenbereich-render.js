@@ -6,7 +6,7 @@ import { getRows as getOrders } from './auftraege-state.js';
 import { getRows as getInvoices } from './rechnungen-state.js';
 import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
-import { generatePDF, viewPDF } from './pdf-generator.js';
+import { generatePDF, viewPDF } from './pdf-generator-grid.js';
 
 export function render() {
   const user = getCurrentUser();
