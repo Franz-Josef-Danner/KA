@@ -123,17 +123,33 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 
 1. Öffnen Sie `index.html` in einem modernen Webbrowser
 2. Melden Sie sich mit den Demo-Zugangsdaten an:
-   - E-Mail: `demo@example.com`
-   - Passwort: `demo123`
+   - **Admin-Zugang:**
+     - E-Mail: `demo@example.com`
+     - Passwort: `demo123`
 3. Nach dem Login gelangen Sie zum Dashboard mit folgenden Bereichen:
    - **Firmenliste**: Verwaltung von Firmenkontakten (vollständig implementiert)
    - **Artikellisten**: Artikellisten-Verwaltung (Platzhalter)
    - **Aufträge**: Auftrags-Verwaltung (Platzhalter)
    - **Rechnungen**: Rechnungs-Verwaltung (Platzhalter)
    - **Kampagnen**: Kampagnen-Verwaltung (Platzhalter)
+   - **Kundenbereiche**: Verwaltung von Kundenzugängen (NEU)
 4. Die Anwendung verwendet ES6-Module (type="module")
 5. Alle Daten werden im LocalStorage des Browsers gespeichert
 6. Sessions sind 24 Stunden gültig
+
+### Kundenbereiche einrichten
+
+1. Öffnen Sie die **Firmenliste**
+2. Ändern Sie den Status einer Firma zu "Kunde"
+3. Die Firma erhält automatisch:
+   - Eine Firmen-ID (Format: F-00001)
+   - Ein Kundenkonto mit der hinterlegten E-Mail
+   - Ein generiertes Passwort (in Produktion per E-Mail versenden)
+4. Der Kunde kann sich nun mit seiner E-Mail und dem Passwort anmelden
+5. Im **Kundenbereich** sieht der Kunde:
+   - Alle seine Aufträge (schreibgeschützt)
+   - Alle seine Rechnungen (schreibgeschützt)
+6. Admins können in **Kundenbereiche** alle Kunden verwalten und deren Portale einsehen
 
 ## Funktionen
 
@@ -143,6 +159,8 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Automatische Weiterleitung zu Login bei unautorisierten Zugriffen
 - ✅ Einheitliches Navigationsmenü auf allen Seiten
 - ✅ Logout-Funktionalität mit Bestätigung
+- ✅ Rollenbasierte Authentifizierung (Admin / Kunde)
+- ✅ Separate Kundenbereiche mit eingeschränktem Zugriff
 
 ### Firmenliste (vollständig implementiert)
 - ✅ Zeilen hinzufügen/löschen
@@ -159,6 +177,14 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - 🚧 Aufträge
 - 🚧 Rechnungen
 - 🚧 Kampagnen
+
+### Kundenbereiche (NEU)
+- ✅ Automatische Erstellung von Kundenkonten beim Statuswechsel zu "Kunde"
+- ✅ Generierung sicherer Passwörter für Kundenzugänge
+- ✅ Kundenportal mit schreibgeschützter Ansicht von Aufträgen und Rechnungen
+- ✅ Admin-Übersicht aller Kunden mit Statistiken (Aufträge in Arbeit, unbezahlte Rechnungen, Gesamtsumme)
+- ✅ Suchfunktion für Kunden
+- 🚧 PDF-Export für Aufträge und Rechnungen (vorbereitet)
 
 ## Technologie
 
