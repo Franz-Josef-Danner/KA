@@ -1358,8 +1358,140 @@ td.readonly:hover {
   }
 }
 
+/* Simple Grid Layout Styles */
+.simple-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 40px 20px 20px 20px;
+}
+
+.column-controls-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.empty-control-cell {
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.column-control {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  min-height: 40px;
+}
+
+.grid-row {
+  display: flex;
+  gap: 4px;
+}
+
+.row-control {
+  width: 50px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+}
+
+.grid-cell {
+  flex: 1;
+  min-height: 100px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.grid-cell.drag-over {
+  background: #e8f4ff;
+  border-color: #667eea;
+  border-style: dashed;
+}
+
+.cell-element {
+  padding: 8px 12px;
+  background: #f0f4ff;
+  border: 1px solid #667eea;
+  border-radius: 4px;
+  cursor: grab;
+  font-size: 12px;
+  color: #333;
+  max-width: 90%;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+.cell-element:active {
+  cursor: grabbing;
+}
+
+.grid-control-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.grid-control-btn:hover {
+  background: #5568d3;
+  transform: scale(1.1);
+}
+
+.grid-control-btn.delete-btn {
+  background: #ef4444;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.grid-control-btn.delete-btn:hover {
+  background: #dc2626;
+}
+
 @media (max-width: 480px) {
   .palette-items {
     grid-template-columns: 1fr;
+  }
+  
+  .simple-grid-container {
+    padding: 30px 10px 10px 10px;
+  }
+  
+  .empty-control-cell,
+  .row-control {
+    width: 40px;
+  }
+  
+  .grid-control-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+  
+  .grid-cell {
+    min-height: 80px;
   }
 }
