@@ -992,6 +992,194 @@ td.readonly:hover {
   margin-bottom: 16px;
 }
 
+/* ===========================
+   PDF Layout Editor Styles
+   =========================== */
+.layout-editor-container {
+  margin-top: 16px;
+}
+
+.layout-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.layout-workspace {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.layout-canvas {
+  position: relative;
+  width: 100%;
+  /* A4 aspect ratio: 210mm × 297mm = 1:1.414 */
+  aspect-ratio: 210 / 297;
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: 600px;
+}
+
+.canvas-label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 11px;
+  color: #999;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.element-palette {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.element-palette h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: #333;
+}
+
+.palette-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.palette-item:hover {
+  background: #f0f4ff;
+  border-color: #667eea;
+  transform: translateX(4px);
+}
+
+.palette-item:active {
+  cursor: grabbing;
+}
+
+.palette-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.palette-item.disabled:hover {
+  transform: none;
+  border-color: #ddd;
+  background: #f5f5f5;
+}
+
+.element-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.element-label {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Draggable elements on canvas */
+.canvas-element {
+  position: absolute;
+  border: 2px solid #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 4px;
+  padding: 8px;
+  cursor: move;
+  min-width: 80px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #667eea;
+  transition: box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.canvas-element:hover {
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  z-index: 5;
+}
+
+.canvas-element.active {
+  border-color: #5568d3;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  z-index: 6;
+}
+
+.canvas-element .element-content {
+  pointer-events: none;
+}
+
+.canvas-element .remove-element {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ff4444;
+  color: white;
+  border: 2px solid white;
+  font-size: 14px;
+  line-height: 16px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.canvas-element:hover .remove-element {
+  display: flex;
+}
+
+.canvas-element .resize-handle {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  background: #667eea;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: nwse-resize;
+  display: none;
+}
+
+.canvas-element:hover .resize-handle {
+  display: block;
+}
+
 @media (max-width: 768px) {
   .settings-container {
     margin: 16px;
@@ -1007,5 +1195,14 @@ td.readonly:hover {
   
   .form-actions button {
     width: 100%;
+  }
+  
+  .layout-workspace {
+    grid-template-columns: 1fr;
+  }
+  
+  .element-palette {
+    order: -1;
+    max-height: 200px;
   }
 }

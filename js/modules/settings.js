@@ -3,6 +3,7 @@
 // -----------------------------
 
 const SETTINGS_KEY = 'ka_company_settings';
+const LAYOUT_KEY = 'ka_pdf_layout_template';
 
 // Get company settings from localStorage
 export function getCompanySettings() {
@@ -36,6 +37,48 @@ export function saveCompanySettings(settings) {
     return true;
   } catch (error) {
     console.error('Failed to save company settings:', error);
+    return false;
+  }
+}
+
+// Get PDF layout template from localStorage
+export function getPdfLayoutTemplate() {
+  try {
+    const raw = localStorage.getItem(LAYOUT_KEY);
+    if (!raw) {
+      return getDefaultLayoutTemplate();
+    }
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error('Failed to load PDF layout template:', error);
+    return getDefaultLayoutTemplate();
+  }
+}
+
+// Get default layout template structure
+export function getDefaultLayoutTemplate() {
+  return {
+    elements: [
+      { id: 'logo', type: 'logo', x: 20, y: 20, width: 120, height: 60 },
+      { id: 'company-name', type: 'company-name', x: 20, y: 90, width: 200, height: 30 },
+      { id: 'company-address', type: 'company-address', x: 20, y: 125, width: 180, height: 60 },
+      { id: 'company-contact', type: 'company-contact', x: 20, y: 190, width: 180, height: 40 },
+      { id: 'customer-info', type: 'customer-info', x: 400, y: 90, width: 180, height: 80 },
+      { id: 'document-header', type: 'document-header', x: 20, y: 250, width: 560, height: 50 },
+      { id: 'items-table', type: 'items-table', x: 20, y: 310, width: 560, height: 300 },
+      { id: 'totals', type: 'totals', x: 400, y: 620, width: 180, height: 80 },
+      { id: 'footer', type: 'footer', x: 20, y: 750, width: 560, height: 50 }
+    ]
+  };
+}
+
+// Save PDF layout template to localStorage
+export function savePdfLayoutTemplate(layout) {
+  try {
+    localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
+    return true;
+  } catch (error) {
+    console.error('Failed to save PDF layout template:', error);
     return false;
   }
 }
