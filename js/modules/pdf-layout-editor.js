@@ -67,6 +67,10 @@ function renderCanvas() {
 function renderElementContent(contentDiv, element) {
   const companySettings = getCompanySettings();
   
+  // Apply text alignment
+  const textAlign = element.textAlign || 'left';
+  contentDiv.style.textAlign = textAlign;
+  
   switch (element.type) {
     case 'logo':
       if (companySettings.logo) {
@@ -162,6 +166,30 @@ function createCanvasElement(element) {
   renderElementContent(content, element);
   div.appendChild(content);
   
+  // Text alignment controls
+  const alignControls = document.createElement('div');
+  alignControls.className = 'element-align-controls';
+  alignControls.innerHTML = `
+    <button class="align-btn align-left" data-align="left" title="Linksbündig">⬅</button>
+    <button class="align-btn align-center" data-align="center" title="Zentriert">⬌</button>
+    <button class="align-btn align-right" data-align="right" title="Rechtsbündig">➡</button>
+  `;
+  
+  // Add click handlers for alignment buttons
+  alignControls.querySelectorAll('.align-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const align = btn.dataset.align;
+      setElementTextAlign(element, div, align);
+    });
+    // Set initial active state
+    if (btn.dataset.align === (element.textAlign || 'left')) {
+      btn.classList.add('active');
+    }
+  });
+  
+  div.appendChild(alignControls);
+  
   // Remove button
   const removeBtn = document.createElement('div');
   removeBtn.className = 'remove-element';
@@ -191,7 +219,9 @@ function makeElementDraggable(div, element) {
   let startX, startY, startPositions;
   
   div.addEventListener('mousedown', (e) => {
-    if (e.target.className === 'resize-handle' || e.target.className === 'remove-element') {
+    if (e.target.className === 'resize-handle' || 
+        e.target.className === 'remove-element' || 
+        e.target.classList.contains('align-btn')) {
       return;
     }
     
@@ -237,12 +267,20 @@ function makeElementDraggable(div, element) {
       const startPos = startPositions.get(el);
       if (!startPos) return;
       
-      const newLeft = Math.max(0, Math.min(canvas.offsetWidth - el.offsetWidth, startPos.left + deltaX));
-      const newTop = Math.max(0, Math.min(canvas.offsetHeight - el.offsetHeight, startPos.top + deltaY));
+      let newLeft = Math.max(0, Math.min(canvas.offsetWidth - el.offsetWidth, startPos.left + deltaX));
+      let newTop = Math.max(0, Math.min(canvas.offsetHeight - el.offsetHeight, startPos.top + deltaY));
+      
+      // Apply snapping
+      const snapped = applySnapping(el, newLeft, newTop);
+      newLeft = snapped.left;
+      newTop = snapped.top;
       
       el.style.left = `${newLeft}px`;
       el.style.top = `${newTop}px`;
     });
+    
+    // Show snap guides if snapping occurred
+    updateSnapGuides();
   });
   
   document.addEventListener('mouseup', () => {
@@ -259,6 +297,8 @@ function makeElementDraggable(div, element) {
         });
         activeElement = null;
       }
+      // Clear snap guides
+      clearSnapGuides();
     }
   });
 }
@@ -320,6 +360,36 @@ function updateElementPosition(element, div) {
     layoutElement.y = y;
     layoutElement.width = width;
     layoutElement.height = height;
+  }
+  
+  // Save layout
+  savePdfLayoutTemplate(currentLayout);
+}
+
+function setElementTextAlign(element, div, align) {
+  // Update element in layout
+  const layoutElement = currentLayout.elements.find(e => e.id === element.id);
+  if (layoutElement) {
+    layoutElement.textAlign = align;
+    element.textAlign = align;
+  }
+  
+  // Update visual representation
+  const contentDiv = div.querySelector('.element-content');
+  if (contentDiv) {
+    contentDiv.style.textAlign = align;
+  }
+  
+  // Update active state of alignment buttons
+  const alignControls = div.querySelector('.element-align-controls');
+  if (alignControls) {
+    alignControls.querySelectorAll('.align-btn').forEach(btn => {
+      if (btn.dataset.align === align) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
   }
   
   // Save layout
@@ -436,7 +506,8 @@ function addElementToCanvas(elementType, x = null, y = null) {
     x: posX,
     y: posY,
     width: width,
-    height: height
+    height: height,
+    textAlign: 'left' // Default text alignment
   };
   
   // Add to layout
@@ -705,4 +776,201 @@ function alignToDocument(type) {
       updateElementPosition(layoutElement, el);
     }
   });
+}
+
+// Snapping functionality
+const SNAP_THRESHOLD = 10; // pixels
+let snapGuides = [];
+
+function applySnapping(movingElement, left, top) {
+  const width = movingElement.offsetWidth;
+  const height = movingElement.offsetHeight;
+  
+  // Get all other elements on canvas (not selected)
+  const otherElements = Array.from(canvas.querySelectorAll('.canvas-element'))
+    .filter(el => !selectedElements.has(el));
+  
+  let snappedLeft = left;
+  let snappedTop = top;
+  snapGuides = [];
+  
+  // Calculate important points for the moving element
+  const movingPoints = {
+    left: left,
+    right: left + width,
+    centerX: left + width / 2,
+    top: top,
+    bottom: top + height,
+    centerY: top + height / 2
+  };
+  
+  // Check snapping against each other element
+  otherElements.forEach(el => {
+    const elLeft = parseInt(el.style.left);
+    const elTop = parseInt(el.style.top);
+    const elWidth = el.offsetWidth;
+    const elHeight = el.offsetHeight;
+    
+    const targetPoints = {
+      left: elLeft,
+      right: elLeft + elWidth,
+      centerX: elLeft + elWidth / 2,
+      top: elTop,
+      bottom: elTop + elHeight,
+      centerY: elTop + elHeight / 2
+    };
+    
+    // Check horizontal snapping
+    let minXDiff = Infinity;
+    let snapX = null;
+    let guideX = null;
+    
+    // Left edge to left edge
+    if (Math.abs(movingPoints.left - targetPoints.left) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.left - targetPoints.left);
+      if (diff < minXDiff) {
+        minXDiff = diff;
+        snapX = targetPoints.left;
+        guideX = { x: targetPoints.left, type: 'vertical' };
+      }
+    }
+    
+    // Left edge to right edge
+    if (Math.abs(movingPoints.left - targetPoints.right) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.left - targetPoints.right);
+      if (diff < minXDiff) {
+        minXDiff = diff;
+        snapX = targetPoints.right;
+        guideX = { x: targetPoints.right, type: 'vertical' };
+      }
+    }
+    
+    // Right edge to left edge
+    if (Math.abs(movingPoints.right - targetPoints.left) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.right - targetPoints.left);
+      if (diff < minXDiff) {
+        minXDiff = diff;
+        snapX = targetPoints.left - width;
+        guideX = { x: targetPoints.left, type: 'vertical' };
+      }
+    }
+    
+    // Right edge to right edge
+    if (Math.abs(movingPoints.right - targetPoints.right) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.right - targetPoints.right);
+      if (diff < minXDiff) {
+        minXDiff = diff;
+        snapX = targetPoints.right - width;
+        guideX = { x: targetPoints.right, type: 'vertical' };
+      }
+    }
+    
+    // Center to center (vertical)
+    if (Math.abs(movingPoints.centerX - targetPoints.centerX) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.centerX - targetPoints.centerX);
+      if (diff < minXDiff) {
+        minXDiff = diff;
+        snapX = targetPoints.centerX - width / 2;
+        guideX = { x: targetPoints.centerX, type: 'vertical' };
+      }
+    }
+    
+    if (snapX !== null) {
+      snappedLeft = snapX;
+      if (guideX) snapGuides.push(guideX);
+    }
+    
+    // Check vertical snapping
+    let minYDiff = Infinity;
+    let snapY = null;
+    let guideY = null;
+    
+    // Top edge to top edge
+    if (Math.abs(movingPoints.top - targetPoints.top) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.top - targetPoints.top);
+      if (diff < minYDiff) {
+        minYDiff = diff;
+        snapY = targetPoints.top;
+        guideY = { y: targetPoints.top, type: 'horizontal' };
+      }
+    }
+    
+    // Top edge to bottom edge
+    if (Math.abs(movingPoints.top - targetPoints.bottom) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.top - targetPoints.bottom);
+      if (diff < minYDiff) {
+        minYDiff = diff;
+        snapY = targetPoints.bottom;
+        guideY = { y: targetPoints.bottom, type: 'horizontal' };
+      }
+    }
+    
+    // Bottom edge to top edge
+    if (Math.abs(movingPoints.bottom - targetPoints.top) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.bottom - targetPoints.top);
+      if (diff < minYDiff) {
+        minYDiff = diff;
+        snapY = targetPoints.top - height;
+        guideY = { y: targetPoints.top, type: 'horizontal' };
+      }
+    }
+    
+    // Bottom edge to bottom edge
+    if (Math.abs(movingPoints.bottom - targetPoints.bottom) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.bottom - targetPoints.bottom);
+      if (diff < minYDiff) {
+        minYDiff = diff;
+        snapY = targetPoints.bottom - height;
+        guideY = { y: targetPoints.bottom, type: 'horizontal' };
+      }
+    }
+    
+    // Center to center (horizontal)
+    if (Math.abs(movingPoints.centerY - targetPoints.centerY) < SNAP_THRESHOLD) {
+      const diff = Math.abs(movingPoints.centerY - targetPoints.centerY);
+      if (diff < minYDiff) {
+        minYDiff = diff;
+        snapY = targetPoints.centerY - height / 2;
+        guideY = { y: targetPoints.centerY, type: 'horizontal' };
+      }
+    }
+    
+    if (snapY !== null) {
+      snappedTop = snapY;
+      if (guideY) snapGuides.push(guideY);
+    }
+  });
+  
+  return { left: snappedLeft, top: snappedTop };
+}
+
+function updateSnapGuides() {
+  // Remove existing guides
+  clearSnapGuides();
+  
+  // Create new guides
+  snapGuides.forEach(guide => {
+    const guideDiv = document.createElement('div');
+    guideDiv.className = 'snap-guide';
+    
+    if (guide.type === 'vertical') {
+      guideDiv.style.left = `${guide.x}px`;
+      guideDiv.style.top = '0';
+      guideDiv.style.width = '1px';
+      guideDiv.style.height = '100%';
+    } else {
+      guideDiv.style.left = '0';
+      guideDiv.style.top = `${guide.y}px`;
+      guideDiv.style.width = '100%';
+      guideDiv.style.height = '1px';
+    }
+    
+    canvas.appendChild(guideDiv);
+  });
+}
+
+function clearSnapGuides() {
+  const guides = canvas.querySelectorAll('.snap-guide');
+  guides.forEach(guide => guide.remove());
+  snapGuides = [];
 }
