@@ -3,6 +3,9 @@
 // -----------------------------
 import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
 
+// Coordinate conversion factor: canvas uses 600px base width, A4 is 210mm wide
+const PX_TO_MM_FACTOR = 210 / 600;
+
 // Generate PDF for an order or invoice
 export async function generatePDF(documentType, documentData, useSampleCompanyData = false) {
   // Load jsPDF library from CDN if not already loaded
@@ -90,10 +93,10 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
 // Render individual element
 function renderElement(doc, element, documentType, documentData, companySettings) {
   // Convert from canvas coordinates (600px base width) to PDF coordinates (210mm A4 width)
-  const x = element.x * (210 / 600); // Convert px to mm
-  const y = element.y * (210 / 600);
-  const width = element.width * (210 / 600);
-  const height = element.height * (210 / 600);
+  const x = element.x * PX_TO_MM_FACTOR;
+  const y = element.y * PX_TO_MM_FACTOR;
+  const width = element.width * PX_TO_MM_FACTOR;
+  const height = element.height * PX_TO_MM_FACTOR;
 
   switch (element.type) {
     case 'logo':
