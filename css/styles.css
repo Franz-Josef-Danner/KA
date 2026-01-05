@@ -997,20 +997,17 @@ td.readonly:hover {
    =========================== */
 .layout-editor-container {
   margin-top: 16px;
-}
-
-.layout-editor-top {
   display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .layout-controls {
   display: flex;
   gap: 12px;
-  flex-direction: column;
-  align-items: flex-start;
+  margin-top: 12px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 .layout-canvas {
@@ -1045,8 +1042,7 @@ td.readonly:hover {
   border: 1px solid #e5e5e5;
   border-radius: 8px;
   padding: 16px;
-  flex: 1;
-  min-width: 250px;
+  width: 100%;
 }
 
 .element-palette h3 {
@@ -1057,9 +1053,9 @@ td.readonly:hover {
 }
 
 .palette-items {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 .palette-item {
@@ -1196,8 +1192,7 @@ td.readonly:hover {
   border: 1px solid #e5e5e5;
   border-radius: 8px;
   padding: 16px;
-  flex: 1;
-  min-width: 280px;
+  width: 100%;
 }
 
 .alignment-tools h3 {
@@ -1207,8 +1202,16 @@ td.readonly:hover {
   color: #333;
 }
 
+.alignment-sections-container {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 .alignment-section {
-  margin-bottom: 12px;
+  flex: 1;
+  min-width: 200px;
 }
 
 .alignment-label {
@@ -1283,11 +1286,18 @@ td.readonly:hover {
     width: 100%;
   }
   
-  .layout-editor-top {
-    flex-direction: column;
+  .palette-items {
+    grid-template-columns: repeat(2, 1fr);
   }
   
-  .element-palette {
-    order: -1;
+  .alignment-sections-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .palette-items {
+    grid-template-columns: 1fr;
   }
 }

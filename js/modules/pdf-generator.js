@@ -4,7 +4,7 @@
 import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
 
 // Generate PDF for an order or invoice
-export async function generatePDF(documentType, documentData) {
+export async function generatePDF(documentType, documentData, useSampleCompanyData = false) {
   // Load jsPDF library from CDN if not already loaded
   if (typeof window.jspdf === 'undefined') {
     try {
@@ -23,7 +23,15 @@ export async function generatePDF(documentType, documentData) {
     format: 'a4'
   });
 
-  const companySettings = getCompanySettings();
+  // Choose between actual and sample company data
+  let companySettings;
+  if (useSampleCompanyData) {
+    const { getSampleCompanyData } = await import('./settings.js');
+    companySettings = getSampleCompanyData();
+  } else {
+    companySettings = getCompanySettings();
+  }
+  
   const layoutTemplate = getPdfLayoutTemplate();
 
   // Render document based on layout template
@@ -112,7 +120,7 @@ function renderElement(doc, element, documentType, documentData, companySettings
       renderTotals(doc, x, y, width, documentData);
       break;
     case 'footer':
-      renderFooter(doc, x, y, width, companySettings);
+      renderFooter(doc, x, y, width, companySettings, documentType);
       break;
   }
 }
@@ -183,13 +191,24 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   offsetY += 6;
   
   doc.setFont('helvetica', 'normal');
-  if (documentData.Firma) {
-    doc.text(documentData.Firma, x, offsetY);
+  
+  // Support both old format (Firma, Ansprechpartner) and new format (customer object)
+  const customer = documentData.customer || documentData;
+  
+  if (customer.company || customer.Firma) {
+    doc.text(customer.company || customer.Firma, x, offsetY);
     offsetY += 5;
   }
-  if (documentData.Ansprechpartner) {
-    doc.text(documentData.Ansprechpartner, x, offsetY);
+  if (customer.contactPerson || customer.Ansprechpartner) {
+    doc.text(customer.contactPerson || customer.Ansprechpartner, x, offsetY);
     offsetY += 5;
+  }
+  if (customer.address) {
+    const lines = customer.address.split('\n');
+    lines.forEach(line => {
+      doc.text(line, x, offsetY);
+      offsetY += 4;
+    });
   }
 }
 
@@ -198,19 +217,27 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   
-  const title = documentType === 'order' ? 'Auftrag' : 'Rechnung';
+  const title = (documentType === 'order' || documentType === 'auftrag') ? 'Auftrag' : 'Rechnung';
   doc.text(title, x, y + 8);
   
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  const idField = documentType === 'order' ? 'Auftrags_ID' : 'Rechnungs_ID';
-  const dateField = documentType === 'order' ? 'Auftragsdatum' : 'Rechnungsdatum';
   
-  if (documentData[idField]) {
-    doc.text(`Nr: ${documentData[idField]}`, x + width - 60, y + 8, { align: 'left' });
+  // Support both old format and new sample format
+  let docId, docDate;
+  if (documentType === 'order' || documentType === 'auftrag') {
+    docId = documentData.orderId || documentData.Auftrags_ID;
+    docDate = documentData.orderDate || documentData.Auftragsdatum;
+  } else {
+    docId = documentData.invoiceId || documentData.Rechnungs_ID;
+    docDate = documentData.invoiceDate || documentData.Rechnungsdatum;
   }
-  if (documentData[dateField]) {
-    doc.text(`Datum: ${documentData[dateField]}`, x + width - 60, y + 14, { align: 'left' });
+  
+  if (docId) {
+    doc.text(`Nr: ${docId}`, x + width - 60, y + 8, { align: 'left' });
+  }
+  if (docDate) {
+    doc.text(`Datum: ${docDate}`, x + width - 60, y + 14, { align: 'left' });
   }
 }
 
@@ -219,7 +246,15 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   let items = [];
   
   if (documentData.items && Array.isArray(documentData.items)) {
-    items = documentData.items;
+    // New format with items array
+    items = documentData.items.map(item => ({
+      artikel: item.description || item.artikel || '',
+      beschreibung: item.description || item.beschreibung || '',
+      menge: item.quantity || item.menge || '1',
+      einheit: item.unit || item.einheit || 'Stk',
+      einzelpreis: item.pricePerUnit || item.einzelpreis || '0',
+      gesamtpreis: item.total || item.gesamtpreis || '0'
+    }));
   } else if (documentData.Artikel) {
     // Try to parse from single field (legacy format)
     try {
@@ -246,17 +281,17 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.setTextColor(0, 0, 0);
   
   const colWidths = {
-    artikel: width * 0.15,
-    beschreibung: width * 0.25,
+    pos: width * 0.08,
+    beschreibung: width * 0.35,
     menge: width * 0.12,
     einheit: width * 0.12,
-    einzelpreis: width * 0.18,
-    gesamtpreis: width * 0.18
+    einzelpreis: width * 0.165,
+    gesamtpreis: width * 0.165
   };
   
   let colX = x;
-  doc.text('Artikel', colX + 2, y + 5);
-  colX += colWidths.artikel;
+  doc.text('Pos.', colX + 2, y + 5);
+  colX += colWidths.pos;
   doc.text('Beschreibung', colX + 2, y + 5);
   colX += colWidths.beschreibung;
   doc.text('Menge', colX + 2, y + 5);
@@ -286,9 +321,9 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     }
     
     colX = x;
-    doc.text(item.artikel || '', colX + 2, rowY + 5);
-    colX += colWidths.artikel;
-    doc.text(item.beschreibung || '', colX + 2, rowY + 5);
+    doc.text(String(item.position || index + 1), colX + 2, rowY + 5);
+    colX += colWidths.pos;
+    doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5);
     colX += colWidths.beschreibung;
     doc.text(String(item.menge || '1'), colX + 2, rowY + 5);
     colX += colWidths.menge;
@@ -307,43 +342,86 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
 }
 
 function renderTotals(doc, x, y, width, documentData) {
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
   
-  // Calculate total
+  // Calculate total and subtotal
+  let subtotal = 0;
+  let vat = 0;
   let total = 0;
-  if (documentData.items && Array.isArray(documentData.items)) {
-    total = documentData.items.reduce((sum, item) => {
-      const price = parseFloat(String(item.gesamtpreis).replace(',', '.')) || 0;
+  
+  // Check if we have new format with pre-calculated values
+  if (documentData.subtotal !== undefined && documentData.total !== undefined) {
+    subtotal = documentData.subtotal;
+    vat = documentData.vat || 0;
+    total = documentData.total;
+  } else if (documentData.items && Array.isArray(documentData.items)) {
+    subtotal = documentData.items.reduce((sum, item) => {
+      const price = parseFloat(String(item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
       return sum + price;
     }, 0);
+    vat = subtotal * 0.19; // Default 19% VAT
+    total = subtotal + vat;
   } else if (documentData.Budget) {
     total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+    subtotal = total / 1.19;
+    vat = total - subtotal;
+  } else {
+    return; // No data to display
   }
   
   // Draw box
   doc.setFillColor(245, 245, 245);
-  doc.rect(x, y, width, 20, 'F');
-  doc.setDrawColor(102, 126, 234);
-  doc.rect(x, y, width, 20);
+  doc.rect(x, y, width, 30, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(x, y, width, 30);
   
-  // Total text
-  doc.text('Gesamtsumme:', x + 5, y + 8);
+  // Subtotal
+  doc.setFont('helvetica', 'normal');
+  doc.text('Netto:', x + 5, y + 8);
+  doc.text(formatCurrency(subtotal), x + width - 5, y + 8, { align: 'right' });
+  
+  // VAT
+  const vatRate = documentData.vatRate || 0.19;
+  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x + 5, y + 15);
+  doc.text(formatCurrency(vat), x + width - 5, y + 15, { align: 'right' });
+  
+  // Total
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Gesamtsumme:', x + 5, y + 24);
   doc.setFontSize(14);
-  doc.text(formatCurrency(total), x + width - 5, y + 13, { align: 'right' });
+  doc.text(formatCurrency(total), x + width - 5, y + 24, { align: 'right' });
 }
 
-function renderFooter(doc, x, y, width, companySettings) {
+function renderFooter(doc, x, y, width, companySettings, documentType) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120, 120, 120);
   
-  const footerText = companySettings.companyName ? 
-    `${companySettings.companyName} | ${companySettings.email || ''} | ${companySettings.phone || ''}` :
-    'Vielen Dank für Ihr Vertrauen!';
+  // Use appropriate footer text based on document type
+  let footerText = '';
+  if (documentType === 'invoice' || documentType === 'rechnung') {
+    footerText = companySettings.footerTextInvoice || '';
+  } else if (documentType === 'order' || documentType === 'auftrag') {
+    footerText = companySettings.footerTextOrder || '';
+  }
   
-  doc.text(footerText, x + width / 2, y + 5, { align: 'center' });
+  // Fallback to default if no footer text is configured
+  if (!footerText) {
+    footerText = companySettings.companyName ? 
+      `${companySettings.companyName} | ${companySettings.email || ''} | ${companySettings.phone || ''}` :
+      'Vielen Dank für Ihr Vertrauen!';
+  }
+  
+  // Split long text into multiple lines if needed
+  const lines = doc.splitTextToSize(footerText, width - 10);
+  let offsetY = y + 5;
+  lines.forEach(line => {
+    doc.text(line, x + width / 2, offsetY, { align: 'center' });
+    offsetY += 4;
+  });
 }
 
 function formatCurrency(value) {
