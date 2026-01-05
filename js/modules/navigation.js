@@ -1,14 +1,19 @@
 // -----------------------------
 // Navigation Module
 // -----------------------------
-import { logout } from './auth.js';
+import { logout, isAdmin } from './auth.js';
 
-const NAV_ITEMS = [
+const ADMIN_NAV_ITEMS = [
   { label: 'Firmenliste', href: 'firmenliste.html' },
   { label: 'Artikellisten', href: 'artikellisten.html' },
   { label: 'Aufträge', href: 'auftraege.html' },
   { label: 'Rechnungen', href: 'rechnungen.html' },
-  { label: 'Kampagnen', href: 'kampagnen.html' }
+  { label: 'Kampagnen', href: 'kampagnen.html' },
+  { label: 'Kundenbereiche', href: 'kundenbereiche.html' }
+];
+
+const CUSTOMER_NAV_ITEMS = [
+  { label: 'Mein Kundenbereich', href: 'kundenbereich.html' }
 ];
 
 // Create an accessible logout confirmation modal
@@ -113,8 +118,11 @@ export function renderNavigation(currentPage = '') {
   const navList = document.createElement('ul');
   navList.className = 'nav-list';
   
+  // Select appropriate menu items based on user role
+  const navItems = isAdmin() ? ADMIN_NAV_ITEMS : CUSTOMER_NAV_ITEMS;
+  
   // Add menu items
-  NAV_ITEMS.forEach(item => {
+  navItems.forEach(item => {
     const li = document.createElement('li');
     li.className = 'nav-item';
     

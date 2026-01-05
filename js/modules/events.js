@@ -94,17 +94,17 @@ export function initEventHandlers() {
   updateUndoRedoButtons();
 }
 
-function importCSV(file, fileInput) {
+async function importCSV(file, fileInput) {
   const reader = new FileReader();
   
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const text = e.target.result;
       const importedRows = parseCSV(text);
       
       // Add imported rows to the beginning of the table
       const rows = getRows();
-      setRows([...importedRows, ...rows]);
+      await setRows([...importedRows, ...rows]);
       const saved = save();
       render();
       

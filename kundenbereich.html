@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kundenbereich - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <h1>Kundenbereich</h1>
+  <p class="subtitle">Willkommen in Ihrem persönlichen Kundenbereich. Hier können Sie Ihre Aufträge und Rechnungen einsehen.</p>
+
+  <div class="customer-portal-container">
+    <!-- Orders Section -->
+    <div class="portal-section">
+      <h2>Ihre Aufträge</h2>
+      <div class="wrap">
+        <table id="ordersGrid">
+          <thead>
+            <tr>
+              <th>Auftrags-ID</th>
+              <th>Datum</th>
+              <th>Ansprechpartner</th>
+              <th>Projekt</th>
+              <th>Status</th>
+              <th>Budget</th>
+              <th class="actions">Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+                Keine Aufträge vorhanden.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Invoices Section -->
+    <div class="portal-section">
+      <h2>Ihre Rechnungen</h2>
+      <div class="wrap">
+        <table id="invoicesGrid">
+          <thead>
+            <tr>
+              <th>Rechnungs-ID</th>
+              <th>Datum</th>
+              <th>Ansprechpartner</th>
+              <th>Projekt</th>
+              <th>Budget</th>
+              <th>Auftrags-ID</th>
+              <th class="actions">Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="invoicesTableBody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+                Keine Rechnungen vorhanden.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, isCustomer, getCurrentUser } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    (() => {
+      try {
+        // Require authentication
+        requireAuth();
+        
+        // Customers should see customer portal, admins can view it too
+        const user = getCurrentUser();
+        if (!user) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // Initialize navigation
+        initNavigation('kundenbereich.html');
+      } catch (error) {
+        console.error('Authentication error on kundenbereich page:', error);
+      }
+    })();
+  </script>
+  <script type="module" src="js/kundenbereich-app.js"></script>
+</body>
+</html>

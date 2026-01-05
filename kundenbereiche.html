@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kundenbereiche - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <h1>Kundenbereiche – Verwaltung</h1>
+
+  <div class="bar">
+    <input id="search" class="search" type="search" placeholder="Suchen (Firmenname, Firmen-ID …)" />
+  </div>
+
+  <div class="hint">
+    Übersicht aller Kunden mit ihren Aufträgen und Rechnungen. Klicken Sie auf einen Eintrag, um den Kundenbereich einzusehen.
+  </div>
+
+  <div class="wrap">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th>Firmenname</th>
+          <th>Firmen-ID</th>
+          <th>E-Mail</th>
+          <th>Aufträge in Arbeit</th>
+          <th>Unbezahlte Rechnungen</th>
+          <th>Ausstehende Summe</th>
+          <th class="actions">Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { requireAuth, requireAdmin } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    (() => {
+      try {
+        // Require authentication and admin role
+        requireAuth();
+        requireAdmin();
+
+        // Initialize navigation
+        initNavigation('kundenbereiche.html');
+      } catch (error) {
+        console.error('Authentication error on kundenbereiche page:', error);
+      }
+    })();
+  </script>
+  <script type="module" src="js/kundenbereiche-app.js"></script>
+</body>
+</html>
