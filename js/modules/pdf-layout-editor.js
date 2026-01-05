@@ -71,6 +71,22 @@ function renderElementContent(contentDiv, element) {
   const textAlign = element.textAlign || 'left';
   contentDiv.style.textAlign = textAlign;
   
+  // Apply alignment-specific padding and justification
+  // Remove default padding and add based on alignment to position text at edges
+  if (textAlign === 'left') {
+    contentDiv.style.justifyContent = 'flex-start';
+    contentDiv.style.paddingLeft = '0';
+    contentDiv.style.paddingRight = '4px';
+  } else if (textAlign === 'right') {
+    contentDiv.style.justifyContent = 'flex-end';
+    contentDiv.style.paddingLeft = '4px';
+    contentDiv.style.paddingRight = '0';
+  } else { // center
+    contentDiv.style.justifyContent = 'center';
+    contentDiv.style.paddingLeft = '4px';
+    contentDiv.style.paddingRight = '4px';
+  }
+  
   switch (element.type) {
     case 'logo':
       if (companySettings.logo) {
@@ -378,6 +394,21 @@ function setElementTextAlign(element, div, align) {
   const contentDiv = div.querySelector('.element-content');
   if (contentDiv) {
     contentDiv.style.textAlign = align;
+    
+    // Apply alignment-specific padding and justification
+    if (align === 'left') {
+      contentDiv.style.justifyContent = 'flex-start';
+      contentDiv.style.paddingLeft = '0';
+      contentDiv.style.paddingRight = '4px';
+    } else if (align === 'right') {
+      contentDiv.style.justifyContent = 'flex-end';
+      contentDiv.style.paddingLeft = '4px';
+      contentDiv.style.paddingRight = '0';
+    } else { // center
+      contentDiv.style.justifyContent = 'center';
+      contentDiv.style.paddingLeft = '4px';
+      contentDiv.style.paddingRight = '4px';
+    }
   }
   
   // Update active state of alignment buttons

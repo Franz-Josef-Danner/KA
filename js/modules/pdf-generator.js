@@ -93,34 +93,35 @@ function renderElement(doc, element, documentType, documentData, companySettings
   const y = element.y * 0.352778;
   const width = element.width * 0.352778;
   const height = element.height * 0.352778;
+  const textAlign = element.textAlign || 'left';
 
   switch (element.type) {
     case 'logo':
       renderLogo(doc, x, y, width, height, companySettings);
       break;
     case 'company-name':
-      renderCompanyName(doc, x, y, width, companySettings);
+      renderCompanyName(doc, x, y, width, companySettings, textAlign);
       break;
     case 'company-address':
-      renderCompanyAddress(doc, x, y, width, companySettings);
+      renderCompanyAddress(doc, x, y, width, companySettings, textAlign);
       break;
     case 'company-contact':
-      renderCompanyContact(doc, x, y, width, companySettings);
+      renderCompanyContact(doc, x, y, width, companySettings, textAlign);
       break;
     case 'customer-info':
-      renderCustomerInfo(doc, x, y, width, documentData);
+      renderCustomerInfo(doc, x, y, width, documentData, textAlign);
       break;
     case 'document-header':
-      renderDocumentHeader(doc, x, y, width, documentType, documentData);
+      renderDocumentHeader(doc, x, y, width, documentType, documentData, textAlign);
       break;
     case 'items-table':
       renderItemsTable(doc, x, y, width, height, documentData);
       break;
     case 'totals':
-      renderTotals(doc, x, y, width, documentData);
+      renderTotals(doc, x, y, width, documentData, textAlign);
       break;
     case 'footer':
-      renderFooter(doc, x, y, width, companySettings, documentType);
+      renderFooter(doc, x, y, width, companySettings, documentType, textAlign);
       break;
   }
 }
@@ -167,49 +168,90 @@ function renderLogo(doc, x, y, width, height, companySettings) {
   }
 }
 
-function renderCompanyName(doc, x, y, width, companySettings) {
+function renderCompanyName(doc, x, y, width, companySettings, textAlign = 'left') {
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(companySettings.companyName || 'Firma', x, y + 6);
+  
+  // Calculate x position based on alignment
+  let textX = x;
+  const alignOptions = { align: textAlign };
+  
+  if (textAlign === 'center') {
+    textX = x + width / 2;
+  } else if (textAlign === 'right') {
+    textX = x + width;
+  }
+  
+  doc.text(companySettings.companyName || 'Firma', textX, y + 6, alignOptions);
 }
 
-function renderCompanyAddress(doc, x, y, width, companySettings) {
+function renderCompanyAddress(doc, x, y, width, companySettings, textAlign = 'left') {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
   
   if (companySettings.address) {
     const lines = companySettings.address.split('\n');
+    const alignOptions = { align: textAlign };
+    
     lines.forEach((line, index) => {
-      doc.text(line, x, y + 5 + (index * 5));
+      let textX = x;
+      if (textAlign === 'center') {
+        textX = x + width / 2;
+      } else if (textAlign === 'right') {
+        textX = x + width;
+      }
+      doc.text(line, textX, y + 5 + (index * 5), alignOptions);
     });
   }
 }
 
-function renderCompanyContact(doc, x, y, width, companySettings) {
+function renderCompanyContact(doc, x, y, width, companySettings, textAlign = 'left') {
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
   
+  const alignOptions = { align: textAlign };
   let offsetY = y + 5;
+  
   if (companySettings.email) {
-    doc.text(`E-Mail: ${companySettings.email}`, x, offsetY);
+    let textX = x;
+    if (textAlign === 'center') {
+      textX = x + width / 2;
+    } else if (textAlign === 'right') {
+      textX = x + width;
+    }
+    doc.text(`E-Mail: ${companySettings.email}`, textX, offsetY, alignOptions);
     offsetY += 5;
   }
   if (companySettings.phone) {
-    doc.text(`Tel: ${companySettings.phone}`, x, offsetY);
+    let textX = x;
+    if (textAlign === 'center') {
+      textX = x + width / 2;
+    } else if (textAlign === 'right') {
+      textX = x + width;
+    }
+    doc.text(`Tel: ${companySettings.phone}`, textX, offsetY, alignOptions);
   }
 }
 
-function renderCustomerInfo(doc, x, y, width, documentData) {
+function renderCustomerInfo(doc, x, y, width, documentData, textAlign = 'left') {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
   
+  const alignOptions = { align: textAlign };
   let offsetY = y + 5;
+  
   doc.setFont('helvetica', 'bold');
-  doc.text('Kunde:', x, offsetY);
+  let textX = x;
+  if (textAlign === 'center') {
+    textX = x + width / 2;
+  } else if (textAlign === 'right') {
+    textX = x + width;
+  }
+  doc.text('Kunde:', textX, offsetY, alignOptions);
   offsetY += 6;
   
   doc.setFont('helvetica', 'normal');
@@ -218,29 +260,55 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   const customer = documentData.customer || documentData;
   
   if (customer.company || customer.Firma) {
-    doc.text(customer.company || customer.Firma, x, offsetY);
+    textX = x;
+    if (textAlign === 'center') {
+      textX = x + width / 2;
+    } else if (textAlign === 'right') {
+      textX = x + width;
+    }
+    doc.text(customer.company || customer.Firma, textX, offsetY, alignOptions);
     offsetY += 5;
   }
   if (customer.contactPerson || customer.Ansprechpartner) {
-    doc.text(customer.contactPerson || customer.Ansprechpartner, x, offsetY);
+    textX = x;
+    if (textAlign === 'center') {
+      textX = x + width / 2;
+    } else if (textAlign === 'right') {
+      textX = x + width;
+    }
+    doc.text(customer.contactPerson || customer.Ansprechpartner, textX, offsetY, alignOptions);
     offsetY += 5;
   }
   if (customer.address) {
     const lines = customer.address.split('\n');
     lines.forEach(line => {
-      doc.text(line, x, offsetY);
+      textX = x;
+      if (textAlign === 'center') {
+        textX = x + width / 2;
+      } else if (textAlign === 'right') {
+        textX = x + width;
+      }
+      doc.text(line, textX, offsetY, alignOptions);
       offsetY += 4;
     });
   }
 }
 
-function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
+function renderDocumentHeader(doc, x, y, width, documentType, documentData, textAlign = 'left') {
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   
   const title = (documentType === 'order' || documentType === 'auftrag') ? 'Auftrag' : 'Rechnung';
-  doc.text(title, x, y + 8);
+  const alignOptions = { align: textAlign };
+  
+  let textX = x;
+  if (textAlign === 'center') {
+    textX = x + width / 2;
+  } else if (textAlign === 'right') {
+    textX = x + width;
+  }
+  doc.text(title, textX, y + 8, alignOptions);
   
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
@@ -256,10 +324,22 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
   }
   
   if (docId) {
-    doc.text(`Nr: ${docId}`, x + width - 60, y + 8, { align: 'left' });
+    textX = x;
+    if (textAlign === 'center') {
+      textX = x + width / 2;
+    } else if (textAlign === 'right') {
+      textX = x + width;
+    }
+    doc.text(`Nr: ${docId}`, textX, y + 14, alignOptions);
   }
   if (docDate) {
-    doc.text(`Datum: ${docDate}`, x + width - 60, y + 14, { align: 'left' });
+    textX = x;
+    if (textAlign === 'center') {
+      textX = x + width / 2;
+    } else if (textAlign === 'right') {
+      textX = x + width;
+    }
+    doc.text(`Datum: ${docDate}`, textX, y + 20, alignOptions);
   }
 }
 
@@ -363,7 +443,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.rect(x, y, width, rowY - y);
 }
 
-function renderTotals(doc, x, y, width, documentData) {
+function renderTotals(doc, x, y, width, documentData, textAlign = 'left') {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
@@ -399,25 +479,39 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.setDrawColor(200, 200, 200);
   doc.rect(x, y, width, 30);
   
+  // Calculate text positions based on alignment
+  const leftAlign = { align: 'left' };
+  const rightAlign = { align: 'right' };
+  let labelX = x + 5;
+  let valueX = x + width - 5;
+  
+  if (textAlign === 'center') {
+    labelX = x + width / 4;
+    valueX = x + (3 * width) / 4;
+  } else if (textAlign === 'right') {
+    labelX = x + width / 2;
+    valueX = x + width - 5;
+  }
+  
   // Subtotal
   doc.setFont('helvetica', 'normal');
-  doc.text('Netto:', x + 5, y + 8);
-  doc.text(formatCurrency(subtotal), x + width - 5, y + 8, { align: 'right' });
+  doc.text('Netto:', labelX, y + 8, leftAlign);
+  doc.text(formatCurrency(subtotal), valueX, y + 8, rightAlign);
   
   // VAT
   const vatRate = documentData.vatRate || 0.19;
-  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x + 5, y + 15);
-  doc.text(formatCurrency(vat), x + width - 5, y + 15, { align: 'right' });
+  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, labelX, y + 15, leftAlign);
+  doc.text(formatCurrency(vat), valueX, y + 15, rightAlign);
   
   // Total
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Gesamtsumme:', x + 5, y + 24);
+  doc.text('Gesamtsumme:', labelX, y + 24, leftAlign);
   doc.setFontSize(14);
-  doc.text(formatCurrency(total), x + width - 5, y + 24, { align: 'right' });
+  doc.text(formatCurrency(total), valueX, y + 24, rightAlign);
 }
 
-function renderFooter(doc, x, y, width, companySettings, documentType) {
+function renderFooter(doc, x, y, width, companySettings, documentType, textAlign = 'left') {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120, 120, 120);
@@ -439,9 +533,17 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
   
   // Split long text into multiple lines if needed
   const lines = doc.splitTextToSize(footerText, width - 10);
+  const alignOptions = { align: textAlign };
   let offsetY = y + 5;
+  
   lines.forEach(line => {
-    doc.text(line, x + width / 2, offsetY, { align: 'center' });
+    let textX = x;
+    if (textAlign === 'center') {
+      textX = x + width / 2;
+    } else if (textAlign === 'right') {
+      textX = x + width;
+    }
+    doc.text(line, textX, offsetY, alignOptions);
     offsetY += 4;
   });
 }
