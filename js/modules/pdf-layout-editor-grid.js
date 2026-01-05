@@ -467,30 +467,8 @@ function adjustCellSpan(rowIndex, cellIndex, spanType, delta) {
       return;
     }
     
-    if (delta > 0) {
-      // Expanding: remove cells below in the same column position
-      const rowsToConsume = delta;
-      for (let i = 0; i < rowsToConsume; i++) {
-        const targetRowIndex = rowIndex + currentSpan + i;
-        if (targetRowIndex < currentLayout.grid.rows.length) {
-          const targetRow = currentLayout.grid.rows[targetRowIndex];
-          if (cellIndex < targetRow.cells.length) {
-            targetRow.cells.splice(cellIndex, 1);
-          }
-        }
-      }
-    } else if (delta < 0 && newSpan < currentSpan) {
-      // Shrinking: add empty cells below
-      const rowsToAdd = Math.abs(delta);
-      for (let i = 0; i < rowsToAdd; i++) {
-        const targetRowIndex = rowIndex + newSpan + i;
-        if (targetRowIndex < currentLayout.grid.rows.length) {
-          const targetRow = currentLayout.grid.rows[targetRowIndex];
-          targetRow.cells.splice(cellIndex, 0, { element: 'empty', rowSpan: 1, colSpan: 1 });
-        }
-      }
-    }
-    
+    // For rowspan, we don't remove cells from other rows
+    // The CSS grid-row: span property will handle the visual spanning
     cell.rowSpan = newSpan;
   }
   
