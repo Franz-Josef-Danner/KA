@@ -48,6 +48,28 @@ function getUsers() {
   }
 }
 
+// Customer Account Management Functions
+
+function getCustomerAccounts() {
+  try {
+    const raw = localStorage.getItem(CUSTOMER_ACCOUNTS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomerAccounts(accounts) {
+  try {
+    localStorage.setItem(CUSTOMER_ACCOUNTS_KEY, JSON.stringify(accounts));
+    return true;
+  } catch (error) {
+    console.error('Failed to save customer accounts:', error);
+    return false;
+  }
+}
+
 export async function login(email, password) {
   await initializeUsers();
   const users = getUsers();
@@ -157,28 +179,6 @@ export function getCurrentUser() {
     return JSON.parse(raw);
   } catch {
     return null;
-  }
-}
-
-// Customer Account Management Functions
-
-function getCustomerAccounts() {
-  try {
-    const raw = localStorage.getItem(CUSTOMER_ACCOUNTS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function saveCustomerAccounts(accounts) {
-  try {
-    localStorage.setItem(CUSTOMER_ACCOUNTS_KEY, JSON.stringify(accounts));
-    return true;
-  } catch (error) {
-    console.error('Failed to save customer accounts:', error);
-    return false;
   }
 }
 
