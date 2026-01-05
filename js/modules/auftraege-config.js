@@ -17,11 +17,11 @@ export const COLUMNS = [
 ];
 
 // Status column dropdown options
-export const STATUS_OPTIONS = ["offen", "in Bearbeitung", "abgeschlossen", "storniert"];
+export const STATUS_OPTIONS = ["in Arbeit", "abgeschlossen"];
 
 // Active order statuses - used for validation (orders with these statuses are considered "active")
 // Empty string included for backward compatibility with orders that don't have a status yet
-export const ACTIVE_ORDER_STATUSES = ["offen", "in Bearbeitung", ""];
+export const ACTIVE_ORDER_STATUSES = ["in Arbeit", ""];
 
 // Completed status constant
 export const COMPLETED_STATUS = "abgeschlossen";
