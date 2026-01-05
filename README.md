@@ -133,6 +133,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - **Rechnungen**: Rechnungs-Verwaltung (Platzhalter)
    - **Kampagnen**: Kampagnen-Verwaltung (Platzhalter)
    - **Kundenbereiche**: Verwaltung von Kundenzugängen (NEU)
+   - **Einstellungen**: Verwaltung der Firmendaten und Logo (NEU)
 4. Die Anwendung verwendet ES6-Module (type="module")
 5. Alle Daten werden im LocalStorage des Browsers gespeichert
 6. Sessions sind 24 Stunden gültig
@@ -150,6 +151,18 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - Alle seine Aufträge (schreibgeschützt)
    - Alle seine Rechnungen (schreibgeschützt)
 6. Admins können in **Kundenbereiche** alle Kunden verwalten und deren Portale einsehen
+
+### Firmendaten einrichten
+
+1. Öffnen Sie die **Einstellungen** über das Navigationsmenü
+2. Geben Sie Ihre Firmendaten ein:
+   - Firmenname (Pflichtfeld)
+   - Adresse
+   - E-Mail-Adresse
+   - Telefonnummer
+3. Optional: Laden Sie ein Firmenlogo hoch (max. 2 MB, unterstützte Formate: PNG, JPG, SVG)
+4. Klicken Sie auf **Speichern**, um die Änderungen zu übernehmen
+5. Mit **Zurücksetzen** können Sie alle Änderungen verwerfen und die zuletzt gespeicherten Daten wiederherstellen
 
 ## Funktionen
 
@@ -185,6 +198,15 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Admin-Übersicht aller Kunden mit Statistiken (Aufträge in Arbeit, unbezahlte Rechnungen, Gesamtsumme)
 - ✅ Suchfunktion für Kunden
 - 🚧 PDF-Export für Aufträge und Rechnungen (vorbereitet)
+
+### Einstellungen (NEU)
+- ✅ Verwaltung der Firmendaten (Firmenname, Adresse, E-Mail, Telefon)
+- ✅ Upload und Verwaltung des Firmenlogos
+- ✅ Logo-Vorschau mit Entfernen-Funktion
+- ✅ Formularvalidierung für E-Mail und Telefonnummer
+- ✅ Datenpersistenz in LocalStorage
+- ✅ Zurücksetzen-Funktion zum Verwerfen von Änderungen
+- ✅ Erfolgs- und Fehlermeldungen
 
 ## Technologie
 

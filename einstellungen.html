@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Einstellungen - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <h1>Firmen-Einstellungen</h1>
+
+  <div class="settings-container">
+    <div class="settings-card">
+      <form id="settingsForm" class="settings-form">
+        <div class="form-section">
+          <h2>Firmendaten</h2>
+          
+          <div class="form-group">
+            <label for="companyName">Firmenname *</label>
+            <input 
+              type="text" 
+              id="companyName" 
+              name="companyName" 
+              placeholder="Ihre Firma GmbH"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="address">Adresse</label>
+            <textarea 
+              id="address" 
+              name="address" 
+              rows="3"
+              placeholder="Musterstraße 123&#10;12345 Musterstadt"
+            ></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">E-Mail-Adresse</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="kontakt@ihre-firma.de"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="phone">Telefonnummer</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              placeholder="+49 123 456789"
+            />
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <h2>Firmenlogo</h2>
+          
+          <div class="form-group">
+            <label for="logoUpload">Logo hochladen</label>
+            <input 
+              type="file" 
+              id="logoUpload" 
+              name="logoUpload" 
+              accept="image/*"
+            />
+            <div class="form-hint">Unterstützte Formate: PNG, JPG, SVG (max. 2 MB)</div>
+          </div>
+          
+          <div id="logoPreview" class="logo-preview" style="display: none;">
+            <label>Vorschau:</label>
+            <img id="logoImage" src="" alt="Firmenlogo" />
+            <button type="button" id="removeLogo" class="btn-secondary">Logo entfernen</button>
+          </div>
+        </div>
+        
+        <div id="errorMessage" class="message error-message" style="display: none;"></div>
+        <div id="successMessage" class="message success-message" style="display: none;"></div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Speichern</button>
+          <button type="button" id="resetBtn" class="btn-secondary">Zurücksetzen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, requireAdmin } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    import { 
+      getCompanySettings, 
+      saveCompanySettings, 
+      validateSettings,
+      fileToBase64 
+    } from './js/modules/settings.js';
+    
+    (() => {
+      try {
+        // Require authentication and admin role
+        requireAuth();
+        requireAdmin();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('einstellungen.html');
+        
+        // Initialize settings form
+        initSettingsForm();
+      } catch (error) {
+        // Authentication failed or a redirect is in progress
+        console.error('Authentication error on settings page:', error);
+      }
+    })();
+    
+    // Constants
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+    const SUCCESS_MESSAGE_TIMEOUT = 3000; // 3 seconds
+    const MESSAGES = {
+      fileTooLarge: 'Die Datei ist zu groß. Maximale Größe: 2 MB',
+      fileLoadError: 'Fehler beim Laden der Datei',
+      saveSuccess: 'Einstellungen wurden erfolgreich gespeichert.',
+      saveError: 'Fehler beim Speichern der Einstellungen.',
+      confirmReset: 'Möchten Sie alle Änderungen verwerfen und die gespeicherten Einstellungen neu laden?'
+    };
+    
+    function initSettingsForm() {
+      const form = document.getElementById('settingsForm');
+      const errorMessage = document.getElementById('errorMessage');
+      const successMessage = document.getElementById('successMessage');
+      const logoUpload = document.getElementById('logoUpload');
+      const logoPreview = document.getElementById('logoPreview');
+      const logoImage = document.getElementById('logoImage');
+      const removeLogo = document.getElementById('removeLogo');
+      const resetBtn = document.getElementById('resetBtn');
+      
+      // Load current settings
+      loadSettings();
+      
+      // Handle logo upload preview
+      logoUpload.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          // Check file size
+          if (file.size > MAX_FILE_SIZE) {
+            showError(MESSAGES.fileTooLarge);
+            logoUpload.value = '';
+            return;
+          }
+          
+          try {
+            const base64 = await fileToBase64(file);
+            logoImage.src = base64;
+            logoPreview.style.display = 'block';
+          } catch (error) {
+            showError(error.message || MESSAGES.fileLoadError);
+            console.error(error);
+          }
+        }
+      });
+      
+      // Handle logo removal
+      removeLogo.addEventListener('click', () => {
+        logoUpload.value = '';
+        logoImage.src = '';
+        logoPreview.style.display = 'none';
+      });
+      
+      // Handle form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        hideMessages();
+        
+        // Get form data
+        const settings = {
+          companyName: document.getElementById('companyName').value.trim(),
+          address: document.getElementById('address').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          logo: logoImage.src || ''
+        };
+        
+        // Validate settings
+        const errors = validateSettings(settings);
+        if (errors.length > 0) {
+          showError(errors.join(' '));
+          return;
+        }
+        
+        // Save settings
+        if (saveCompanySettings(settings)) {
+          showSuccess(MESSAGES.saveSuccess);
+        } else {
+          showError(MESSAGES.saveError);
+        }
+      });
+      
+      // Handle reset button
+      resetBtn.addEventListener('click', () => {
+        if (confirm(MESSAGES.confirmReset)) {
+          loadSettings();
+          hideMessages();
+        }
+      });
+      
+      function loadSettings() {
+        const settings = getCompanySettings();
+        
+        document.getElementById('companyName').value = settings.companyName || '';
+        document.getElementById('address').value = settings.address || '';
+        document.getElementById('email').value = settings.email || '';
+        document.getElementById('phone').value = settings.phone || '';
+        
+        if (settings.logo) {
+          logoImage.src = settings.logo;
+          logoPreview.style.display = 'block';
+        } else {
+          logoImage.src = '';
+          logoPreview.style.display = 'none';
+        }
+      }
+      
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        successMessage.style.display = 'none';
+      }
+      
+      function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.style.display = 'block';
+        errorMessage.style.display = 'none';
+        
+        // Hide success message after timeout
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+        }, SUCCESS_MESSAGE_TIMEOUT);
+      }
+      
+      function hideMessages() {
+        errorMessage.style.display = 'none';
+        successMessage.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
