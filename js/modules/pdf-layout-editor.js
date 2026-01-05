@@ -18,6 +18,7 @@ const ELEMENT_LABELS = {
 let currentLayout = null;
 let canvas = null;
 let activeElement = null;
+let selectedElements = new Set();
 let dragData = null;
 
 export function initLayoutEditor() {
@@ -37,9 +38,13 @@ export function initLayoutEditor() {
   setupPaletteItems();
   setupResetButton();
   setupPreviewButton();
+  setupAlignmentButtons();
   
   // Setup canvas drag and drop
   setupCanvasDragDrop();
+  
+  // Setup canvas click for deselection
+  setupCanvasClick();
 }
 
 function renderCanvas() {
@@ -103,44 +108,75 @@ function createCanvasElement(element) {
 
 function makeElementDraggable(div, element) {
   let isDragging = false;
-  let startX, startY, startLeft, startTop;
+  let startX, startY, startPositions;
   
   div.addEventListener('mousedown', (e) => {
     if (e.target.className === 'resize-handle' || e.target.className === 'remove-element') {
       return;
     }
     
+    // Handle multi-select with Ctrl/Cmd key
+    if (e.ctrlKey || e.metaKey) {
+      toggleElementSelection(div);
+      e.preventDefault();
+      return;
+    }
+    
+    // If clicking on unselected element, clear selection and select this one
+    if (!selectedElements.has(div)) {
+      clearSelection();
+      selectElement(div);
+    }
+    
     isDragging = true;
     activeElement = div;
-    div.classList.add('active');
     
     startX = e.clientX;
     startY = e.clientY;
-    startLeft = parseInt(div.style.left) || 0;
-    startTop = parseInt(div.style.top) || 0;
+    
+    // Store start positions for all selected elements
+    startPositions = new Map();
+    selectedElements.forEach(el => {
+      startPositions.set(el, {
+        left: parseInt(el.style.left) || 0,
+        top: parseInt(el.style.top) || 0
+      });
+    });
     
     e.preventDefault();
   });
   
   document.addEventListener('mousemove', (e) => {
-    if (!isDragging || activeElement !== div) return;
+    if (!isDragging || !activeElement) return;
     
     const deltaX = e.clientX - startX;
     const deltaY = e.clientY - startY;
     
-    const newLeft = Math.max(0, Math.min(canvas.offsetWidth - div.offsetWidth, startLeft + deltaX));
-    const newTop = Math.max(0, Math.min(canvas.offsetHeight - div.offsetHeight, startTop + deltaY));
-    
-    div.style.left = `${newLeft}px`;
-    div.style.top = `${newTop}px`;
+    // Move all selected elements
+    selectedElements.forEach(el => {
+      const startPos = startPositions.get(el);
+      if (!startPos) return;
+      
+      const newLeft = Math.max(0, Math.min(canvas.offsetWidth - el.offsetWidth, startPos.left + deltaX));
+      const newTop = Math.max(0, Math.min(canvas.offsetHeight - el.offsetHeight, startPos.top + deltaY));
+      
+      el.style.left = `${newLeft}px`;
+      el.style.top = `${newTop}px`;
+    });
   });
   
   document.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false;
-      if (activeElement === div) {
-        div.classList.remove('active');
-        updateElementPosition(element, div);
+      if (activeElement) {
+        // Update positions for all selected elements
+        selectedElements.forEach(el => {
+          const elementId = el.dataset.elementId;
+          const layoutElement = currentLayout.elements.find(e => e.id === elementId);
+          if (layoutElement) {
+            updateElementPosition(layoutElement, el);
+          }
+        });
         activeElement = null;
       }
     }
@@ -290,12 +326,27 @@ function addElementToCanvas(elementType, x = null, y = null) {
   if (elementType === 'logo') {
     width = 120;
     height = 60;
+  } else if (elementType === 'company-name') {
+    width = 200;
+    height = 20;
+  } else if (elementType === 'company-address') {
+    width = 180;
+    height = 50;
+  } else if (elementType === 'company-contact') {
+    width = 180;
+    height = 35;
+  } else if (elementType === 'customer-info') {
+    width = 180;
+    height = 70;
   } else if (elementType === 'items-table') {
     width = 560;
     height = 300;
+  } else if (elementType === 'totals') {
+    width = 180;
+    height = 70;
   } else if (elementType === 'document-header' || elementType === 'footer') {
     width = 560;
-    height = 50;
+    height = 40;
   }
   
   // Create new element
@@ -370,4 +421,183 @@ function setupPreviewButton() {
 
 export function getLayoutTemplate() {
   return currentLayout || getPdfLayoutTemplate();
+}
+
+// Selection management functions
+function selectElement(div) {
+  selectedElements.add(div);
+  div.classList.add('selected');
+}
+
+function deselectElement(div) {
+  selectedElements.delete(div);
+  div.classList.remove('selected');
+}
+
+function toggleElementSelection(div) {
+  if (selectedElements.has(div)) {
+    deselectElement(div);
+  } else {
+    selectElement(div);
+  }
+}
+
+function clearSelection() {
+  selectedElements.forEach(el => {
+    el.classList.remove('selected');
+  });
+  selectedElements.clear();
+}
+
+function setupCanvasClick() {
+  canvas.addEventListener('mousedown', (e) => {
+    // Only clear selection if clicking on canvas itself
+    if (e.target === canvas || e.target.classList.contains('canvas-label')) {
+      if (!e.ctrlKey && !e.metaKey) {
+        clearSelection();
+      }
+    }
+  });
+}
+
+// Alignment functions
+function setupAlignmentButtons() {
+  // Vertical alignment (to each other)
+  document.getElementById('alignLeftBtn')?.addEventListener('click', () => alignElements('left'));
+  document.getElementById('alignCenterVBtn')?.addEventListener('click', () => alignElements('centerV'));
+  document.getElementById('alignRightBtn')?.addEventListener('click', () => alignElements('right'));
+  
+  // Horizontal alignment (to each other)
+  document.getElementById('alignTopBtn')?.addEventListener('click', () => alignElements('top'));
+  document.getElementById('alignCenterHBtn')?.addEventListener('click', () => alignElements('centerH'));
+  document.getElementById('alignBottomBtn')?.addEventListener('click', () => alignElements('bottom'));
+  
+  // Document alignment
+  document.getElementById('alignDocLeftBtn')?.addEventListener('click', () => alignToDocument('left'));
+  document.getElementById('alignDocCenterVBtn')?.addEventListener('click', () => alignToDocument('centerV'));
+  document.getElementById('alignDocRightBtn')?.addEventListener('click', () => alignToDocument('right'));
+  document.getElementById('alignDocTopBtn')?.addEventListener('click', () => alignToDocument('top'));
+  document.getElementById('alignDocCenterHBtn')?.addEventListener('click', () => alignToDocument('centerH'));
+  document.getElementById('alignDocBottomBtn')?.addEventListener('click', () => alignToDocument('bottom'));
+}
+
+function alignElements(type) {
+  if (selectedElements.size < 2) {
+    alert('Bitte wählen Sie mindestens zwei Elemente aus (Strg+Klick).');
+    return;
+  }
+  
+  const elements = Array.from(selectedElements);
+  
+  switch(type) {
+    case 'left':
+      // Align all to leftmost element
+      const leftmost = Math.min(...elements.map(el => parseInt(el.style.left)));
+      elements.forEach(el => el.style.left = `${leftmost}px`);
+      break;
+      
+    case 'centerV':
+      // Align all to average vertical center
+      const avgCenterX = elements.reduce((sum, el) => 
+        sum + parseInt(el.style.left) + el.offsetWidth / 2, 0) / elements.length;
+      elements.forEach(el => {
+        el.style.left = `${avgCenterX - el.offsetWidth / 2}px`;
+      });
+      break;
+      
+    case 'right':
+      // Align all to rightmost element
+      const rightmost = Math.max(...elements.map(el => parseInt(el.style.left) + el.offsetWidth));
+      elements.forEach(el => {
+        el.style.left = `${rightmost - el.offsetWidth}px`;
+      });
+      break;
+      
+    case 'top':
+      // Align all to topmost element
+      const topmost = Math.min(...elements.map(el => parseInt(el.style.top)));
+      elements.forEach(el => el.style.top = `${topmost}px`);
+      break;
+      
+    case 'centerH':
+      // Align all to average horizontal center
+      const avgCenterY = elements.reduce((sum, el) => 
+        sum + parseInt(el.style.top) + el.offsetHeight / 2, 0) / elements.length;
+      elements.forEach(el => {
+        el.style.top = `${avgCenterY - el.offsetHeight / 2}px`;
+      });
+      break;
+      
+    case 'bottom':
+      // Align all to bottommost element
+      const bottommost = Math.max(...elements.map(el => parseInt(el.style.top) + el.offsetHeight));
+      elements.forEach(el => {
+        el.style.top = `${bottommost - el.offsetHeight}px`;
+      });
+      break;
+  }
+  
+  // Update all element positions in the layout
+  elements.forEach(el => {
+    const elementId = el.dataset.elementId;
+    const layoutElement = currentLayout.elements.find(e => e.id === elementId);
+    if (layoutElement) {
+      updateElementPosition(layoutElement, el);
+    }
+  });
+}
+
+function alignToDocument(type) {
+  if (selectedElements.size === 0) {
+    alert('Bitte wählen Sie mindestens ein Element aus (Strg+Klick).');
+    return;
+  }
+  
+  const elements = Array.from(selectedElements);
+  const canvasWidth = canvas.offsetWidth;
+  const canvasHeight = canvas.offsetHeight;
+  const margin = 20; // 20px margin from edges
+  
+  switch(type) {
+    case 'left':
+      elements.forEach(el => el.style.left = `${margin}px`);
+      break;
+      
+    case 'centerV':
+      elements.forEach(el => {
+        el.style.left = `${(canvasWidth - el.offsetWidth) / 2}px`;
+      });
+      break;
+      
+    case 'right':
+      elements.forEach(el => {
+        el.style.left = `${canvasWidth - el.offsetWidth - margin}px`;
+      });
+      break;
+      
+    case 'top':
+      elements.forEach(el => el.style.top = `${margin}px`);
+      break;
+      
+    case 'centerH':
+      elements.forEach(el => {
+        el.style.top = `${(canvasHeight - el.offsetHeight) / 2}px`;
+      });
+      break;
+      
+    case 'bottom':
+      elements.forEach(el => {
+        el.style.top = `${canvasHeight - el.offsetHeight - margin}px`;
+      });
+      break;
+  }
+  
+  // Update all element positions in the layout
+  elements.forEach(el => {
+    const elementId = el.dataset.elementId;
+    const layoutElement = currentLayout.elements.find(e => e.id === elementId);
+    if (layoutElement) {
+      updateElementPosition(layoutElement, el);
+    }
+  });
 }
