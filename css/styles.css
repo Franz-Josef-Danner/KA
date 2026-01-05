@@ -1109,7 +1109,7 @@ td.readonly:hover {
   border: 2px solid #667eea;
   background: rgba(102, 126, 234, 0.1);
   border-radius: 4px;
-  padding: 8px;
+  padding: 0;
   cursor: move;
   min-width: 80px;
   min-height: 40px;
@@ -1121,6 +1121,7 @@ td.readonly:hover {
   color: #667eea;
   transition: box-shadow 0.2s ease;
   user-select: none;
+  box-sizing: border-box;
 }
 
 .canvas-element:hover {
@@ -1139,8 +1140,8 @@ td.readonly:hover {
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 4px;
   box-sizing: border-box;
   overflow: hidden;
