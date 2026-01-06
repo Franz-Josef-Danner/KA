@@ -173,6 +173,8 @@ function renderElement(doc, element, documentType, documentData, companySettings
       return renderCompanyContact(doc, x, y, width, companySettings);
     case 'customer-info':
       return renderCustomerInfo(doc, x, y, width, documentData);
+    case 'document-number':
+      return renderDocumentNumber(doc, x, y, width, documentType, documentData);
     case 'document-header':
       return renderDocumentHeader(doc, x, y, width, documentType, documentData);
     case 'items-table':
@@ -308,6 +310,52 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
       doc.text(line, x, offsetY);
       offsetY += 4;
     });
+  }
+  
+  // Return actual height consumed
+  return offsetY - y + 2; // Add small bottom padding
+}
+
+function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  
+  // Support both old format and new sample format
+  let docId, docDate;
+  let label;
+  if (documentType === 'order' || documentType === 'auftrag') {
+    docId = documentData.orderId || documentData.Auftrags_ID;
+    docDate = documentData.orderDate || documentData.Auftragsdatum;
+    label = 'Auftragsnummer:';
+  } else {
+    docId = documentData.invoiceId || documentData.Rechnungs_ID;
+    docDate = documentData.invoiceDate || documentData.Rechnungsdatum;
+    label = 'Rechnungsnummer:';
+  }
+  
+  let offsetY = y + 5;
+  const startY = offsetY;
+  
+  // Render document number
+  if (docId) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(label, x, offsetY);
+    offsetY += 6;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text(docId, x, offsetY);
+    offsetY += 6;
+  }
+  
+  // Render date
+  if (docDate) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Datum: ${docDate}`, x, offsetY);
+    offsetY += 5;
   }
   
   // Return actual height consumed
