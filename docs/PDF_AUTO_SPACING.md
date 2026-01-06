@@ -80,6 +80,8 @@ const padding = 4;                  // Padding on each side (mm)
 const lineHeight = 4;               // Height per text line (mm)
 const rowPaddingTop = 2;            // Top padding per row (mm)
 const rowPaddingBottom = 2;         // Bottom padding per row (mm)
+const minRowHeight = 10;            // Minimum height for empty rows - 1cm (mm)
+const emptyColumnWidth = 10;        // Width for empty columns - 1cm (mm)
 const headerHeight = 8;             // Fixed header height (mm)
 const textBaselineOffset = 1;       // Text baseline alignment adjustment (mm)
 const verticalCenterOffset = 1.5;   // Vertical centering offset for single-line text (mm)
@@ -88,13 +90,21 @@ const verticalCenterOffset = 1.5;   // Vertical centering offset for single-line
 ### Minimum Column Widths
 ```javascript
 const minColWidths = {
-  pos: 10,               // Position number
-  beschreibung: 40,      // Description (main content)
-  menge: 15,             // Quantity
-  einheit: 15,           // Unit
-  einzelpreis: 25,       // Unit price
-  gesamtpreis: 25        // Total price
+  pos: emptyColumnWidth,      // Position number - 1cm for empty
+  beschreibung: 40,           // Description (main content)
+  menge: emptyColumnWidth,    // Quantity - 1cm for empty
+  einheit: emptyColumnWidth,  // Unit - 1cm for empty
+  einzelpreis: emptyColumnWidth,  // Unit price - 1cm for empty
+  gesamtpreis: emptyColumnWidth   // Total price - 1cm for empty
 };
+```
+
+### Row Height Calculation
+```javascript
+// Empty rows get minimum 1cm (10mm) height
+const contentHeight = beschreibungLines.length * lineHeight;
+const calculatedHeight = contentHeight + rowPaddingTop + rowPaddingBottom;
+const rowHeight = Math.max(minRowHeight, calculatedHeight);
 ```
 
 ## Example Output
