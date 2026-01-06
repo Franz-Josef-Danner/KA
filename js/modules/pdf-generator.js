@@ -491,10 +491,6 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     rowY += 7;
   });
   
-  // Border
-  doc.setDrawColor(200, 200, 200);
-  doc.rect(x, y, width, rowY - y);
-  
   // Return actual height of rendered table content
   return rowY - y;
 }
