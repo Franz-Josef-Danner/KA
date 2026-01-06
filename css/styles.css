@@ -1196,11 +1196,18 @@ td.readonly:hover {
   cursor: move;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
 .box:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
+  z-index: 100;
+}
+
+.box:active,
+.box:focus-within {
+  z-index: 100;
 }
 
 .box-title {
