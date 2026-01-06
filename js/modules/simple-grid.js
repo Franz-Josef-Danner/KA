@@ -792,12 +792,12 @@ function convertGridToLayoutTemplate() {
   const elements = [];
   
   // Use CANVAS_WIDTH_PX as the reference width for A4 (210mm in PDF)
-  // Height is calculated based on grid proportions, not fixed to A4 height
+  // Height is dynamic and grows based on grid content
   const cellWidth = CANVAS_WIDTH_PX / gridState.cols;
   
-  // Calculate cell height based on actual grid aspect ratio
+  // Use square cells for consistent proportions
   // This allows the PDF to grow vertically as needed
-  const cellHeight = cellWidth; // Square cells for now, can be adjusted based on content
+  const cellHeight = cellWidth;
   
   // Process each box in the grid
   for (const elementType in gridState.boxes) {
