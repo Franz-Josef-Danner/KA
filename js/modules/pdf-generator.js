@@ -397,6 +397,10 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
 }
 
 function renderItemsTable(doc, x, y, width, height, documentData) {
+  // Note: The 'height' parameter is used for reference but the table will grow
+  // dynamically to fit all items, checking against page boundaries instead.
+  // The actual rendered height is returned to allow proper positioning of subsequent elements.
+  
   // Parse items from documentData
   let items = [];
   
