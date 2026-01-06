@@ -427,14 +427,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     }
   }
 
-  // Table header
-  doc.setFillColor(240, 240, 240);
-  doc.rect(x, y, width, 8, 'F');
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
-  
+  // Column widths configuration
   const colWidths = {
     pos: width * 0.08,
     beschreibung: width * 0.35,
@@ -444,18 +437,31 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     gesamtpreis: width * 0.165
   };
   
-  let colX = x;
-  doc.text('Pos.', colX + 2, y + 5);
-  colX += colWidths.pos;
-  doc.text('Beschreibung', colX + 2, y + 5);
-  colX += colWidths.beschreibung;
-  doc.text('Menge', colX + 2, y + 5);
-  colX += colWidths.menge;
-  doc.text('Einheit', colX + 2, y + 5);
-  colX += colWidths.einheit;
-  doc.text('Einzelpreis', colX + 2, y + 5);
-  colX += colWidths.einzelpreis;
-  doc.text('Gesamtpreis', colX + 2, y + 5);
+  // Helper function to render table header
+  const renderTableHeader = (headerY) => {
+    doc.setFillColor(240, 240, 240);
+    doc.rect(x, headerY, width, 8, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    
+    let colX = x;
+    doc.text('Pos.', colX + 2, headerY + 5);
+    colX += colWidths.pos;
+    doc.text('Beschreibung', colX + 2, headerY + 5);
+    colX += colWidths.beschreibung;
+    doc.text('Menge', colX + 2, headerY + 5);
+    colX += colWidths.menge;
+    doc.text('Einheit', colX + 2, headerY + 5);
+    colX += colWidths.einheit;
+    doc.text('Einzelpreis', colX + 2, headerY + 5);
+    colX += colWidths.einzelpreis;
+    doc.text('Gesamtpreis', colX + 2, headerY + 5);
+  };
+  
+  // Render initial table header
+  renderTableHeader(y);
   
   // Table rows
   doc.setFont('helvetica', 'normal');
@@ -463,12 +469,16 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   let rowY = y + 8;
   const rowHeight = 7; // Height of each table row in mm
+  const headerHeight = 8; // Height of table header in mm
   items.forEach((item, index) => {
     // Check if there's enough space for this row (7mm) in the current page
     if (rowY + rowHeight > y + height) {
       // Create new page if needed
       doc.addPage();
-      rowY = 20;
+      // Render header on new page
+      renderTableHeader(20);
+      // Position first row after header on new page
+      rowY = 20 + headerHeight;
     }
     
     // Alternate row background
