@@ -304,13 +304,14 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   // Calculate dynamic column widths based on content
   const padding = 4; // Padding on each side
+  const emptyColumnWidth = 10; // mm - 1cm width for empty columns
   const minColWidths = {
-    pos: 10,
+    pos: emptyColumnWidth,
     beschreibung: 40,
-    menge: 15,
-    einheit: 15,
-    einzelpreis: 25,
-    gesamtpreis: 25
+    menge: emptyColumnWidth,
+    einheit: emptyColumnWidth,
+    einzelpreis: emptyColumnWidth,
+    gesamtpreis: emptyColumnWidth
   };
   
   // Measure header widths
@@ -343,6 +344,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   const lineHeight = 4; // mm per line of text
   const rowPaddingTop = 2; // mm padding at top of row
   const rowPaddingBottom = 2; // mm padding at bottom of row
+  const minRowHeight = 10; // mm - 1cm height for empty rows
   const textBaselineOffset = 1; // mm adjustment for text baseline alignment with jsPDF
   // verticalCenterOffset: For single-line text, this positions text at ~50% of row height
   // The value 1.5 works well with font size 9 and current row padding to achieve visual centering
@@ -389,8 +391,10 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     // Row height = (number of lines × line height) + top padding + bottom padding
     // For single line: (1 × 4mm) + 2mm + 2mm = 8mm
     // For three lines: (3 × 4mm) + 2mm + 2mm = 16mm
+    // Empty rows: minimum 10mm (1cm)
     const contentHeight = beschreibungLines.length * lineHeight;
-    const rowHeight = contentHeight + rowPaddingTop + rowPaddingBottom;
+    const calculatedHeight = contentHeight + rowPaddingTop + rowPaddingBottom;
+    const rowHeight = Math.max(minRowHeight, calculatedHeight);
     
     if (rowY + rowHeight > y + height - 10) {
       // Create new page and render header
