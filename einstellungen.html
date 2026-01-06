@@ -116,6 +116,38 @@
     </div>
   </div>
 
+  <!-- Layout Grid Designer Section -->
+  <div class="layout-designer-container">
+    <h2>Dokument-Layout Designer</h2>
+    <p class="page-subtitle">Gestalten Sie das Layout für Aufträge und Rechnungen durch Drag & Drop</p>
+    
+    <!-- Layout Grid -->
+    <div class="layout-grid-wrapper">
+      <div id="layoutGrid" class="layout-grid"></div>
+    </div>
+
+    <!-- Available Boxes Palette -->
+    <div class="boxes-palette-section">
+      <h3>Verfügbare Elemente</h3>
+      <p class="hint">Ziehen Sie Elemente in das Grid, um Ihr Layout zu gestalten</p>
+      <div id="boxesPalette" class="boxes-palette"></div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="preview-section">
+      <h3>Vorschau</h3>
+      <div id="layoutPreview" class="layout-preview">
+        <p class="hint">Das Layout wird hier angezeigt, sobald Sie Elemente platziert haben</p>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="layout-actions">
+      <button type="button" id="saveLayoutBtn" class="btn-primary">Layout Speichern</button>
+      <button type="button" id="resetLayoutBtn" class="btn-secondary">Layout Zurücksetzen</button>
+    </div>
+  </div>
+
   <script type="module">
     import { requireAuth, requireAdmin } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
@@ -125,6 +157,7 @@
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
+    import { LayoutGridUI } from './js/modules/layout-grid-ui.js';
     
     (() => {
       try {
@@ -137,6 +170,9 @@
         
         // Initialize settings form
         initSettingsForm();
+        
+        // Initialize layout grid
+        initLayoutGrid();
       } catch (error) {
         // Authentication failed or a redirect is in progress
         console.error('Authentication error on settings page:', error);
@@ -276,6 +312,23 @@
         errorMessage.style.display = 'none';
         successMessage.style.display = 'none';
       }
+    }
+    
+    // Initialize Layout Grid
+    function initLayoutGrid() {
+      const layoutUI = new LayoutGridUI('layoutGrid', 'boxesPalette', 'layoutPreview');
+      
+      // Save button
+      const saveLayoutBtn = document.getElementById('saveLayoutBtn');
+      saveLayoutBtn.addEventListener('click', () => {
+        layoutUI.save();
+      });
+      
+      // Reset button
+      const resetLayoutBtn = document.getElementById('resetLayoutBtn');
+      resetLayoutBtn.addEventListener('click', () => {
+        layoutUI.reset();
+      });
     }
   </script>
 </body>
