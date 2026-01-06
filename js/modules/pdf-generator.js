@@ -303,8 +303,9 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.setFont('helvetica', 'bold');
   
   // Calculate dynamic column widths based on content
-  const padding = 4; // Padding on each side
+  const padding = 4; // Padding on each side (mm)
   const emptyColumnWidth = 10; // mm - 1cm width for empty columns
+  const maxDescriptionWidth = 80; // mm - reasonable maximum for descriptions to avoid extremely wide tables
   const minColWidths = {
     pos: emptyColumnWidth,
     beschreibung: 40,
@@ -334,9 +335,8 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     colWidths.gesamtpreis = Math.max(colWidths.gesamtpreis, doc.getTextWidth(formatCurrency(item.gesamtpreis)) + padding);
   });
   
-  // Calculate remaining width for description column
-  // Give description column reasonable width based on longest content or minimum
-  const maxDescriptionWidth = 80; // mm - reasonable maximum for descriptions
+  // Calculate description column width based on longest content
+  // Give description column reasonable width based on content or minimum
   let actualDescriptionWidth = minColWidths.beschreibung;
   
   // Measure description content to find needed width
