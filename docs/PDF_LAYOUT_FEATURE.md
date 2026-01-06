@@ -101,6 +101,37 @@ Neue CSS-Klassen für den Layout-Editor:
 - Benötigt localStorage-Unterstützung
 - Benötigt ES6-Module-Unterstützung
 
+## Spacing-Optimierung (Content-basierte Höhen)
+
+Die PDF-Generierung verwendet **inhaltbasierte Höhen** anstelle der konfigurierten Box-Höhen aus dem Layout-Editor:
+
+### Problem (vorher)
+- Elemente wie Dokumentkopf, Artikeltabelle und Fußzeile verwendeten die im Editor konfigurierte Box-Höhe
+- Dies führte zu sehr großen Abständen zwischen Elementen, selbst wenn der Inhalt klein war
+- Beispiel: Eine Artikeltabelle mit 3 Zeilen hatte eine Box-Höhe von 300px (~106mm), aber der tatsächliche Inhalt war nur ~29mm hoch
+
+### Lösung (jetzt)
+- **Alle Elemente** geben ihre tatsächliche Inhaltshöhe zurück:
+  - `renderDocumentHeader`: Berechnet die Höhe basierend auf vorhandenen Inhalten (Titel + ID/Datum)
+  - `renderItemsTable`: Berechnet die Höhe basierend auf Anzahl der Artikel (Header + Zeilen)
+  - `renderFooter`: Berechnet die Höhe basierend auf Anzahl der Textzeilen
+  - `renderTotals`: Berechnet die Höhe basierend auf Inhalt (Netto + MwSt + Gesamt)
+  
+- **Automatische Positionsanpassung**:
+  - Die Funktion `adjustElementPosition` prüft, ob Elemente sich überschneiden würden
+  - Überlappende Elemente werden automatisch mit einem Mindestabstand von 3mm neu positioniert
+  - Dies gilt für alle dynamischen Elemente: company-name, company-address, company-contact, customer-info, document-header, items-table, totals, footer
+
+### Beispiel
+```javascript
+// Artikeltabelle mit 3 Artikeln
+Konfigurierte Box-Höhe: 300px (105.8mm)
+Tatsächliche Inhaltshöhe: 29mm (Header 8mm + 3 Zeilen × 7mm)
+Platzersparnis: 76.8mm
+
+// Ergebnis: Viel kompaktere PDFs mit optimalen Abständen!
+```
+
 ## Zukünftige Erweiterungen
 
 Mögliche Verbesserungen:
