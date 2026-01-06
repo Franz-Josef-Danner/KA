@@ -473,7 +473,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.setFontSize(9);
   
   let rowY = y + headerHeight;
-  let colX; // Declare colX for use in the loop
+  let colX; // Will be reset for each row
   items.forEach((item, index) => {
     // Check if there's enough space for this row in the allocated table box
     // Note: This checks against the box boundary (y + height), not the page boundary,
@@ -493,7 +493,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
       doc.rect(x, rowY, width, rowHeight, 'F');
     }
     
-    let colX = x;
+    colX = x;
     doc.text(String(item.position || index + 1), colX + 2, rowY + 5);
     colX += colWidths.pos;
     doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5);
