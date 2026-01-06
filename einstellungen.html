@@ -79,93 +79,31 @@
             <button type="button" id="removeLogo" class="btn-secondary">Logo entfernen</button>
           </div>
         </div>
-        
+
         <div class="form-section">
-          <h2>PDF Layout-Vorlage für Aufträge und Rechnungen</h2>
-          <p class="form-hint" style="margin-bottom: 16px;">
-            Erstellen Sie ein individuelles Layout für Ihre PDF-Dokumente. Ziehen Sie die Elemente per Drag & Drop auf die Vorlage und positionieren Sie diese nach Ihren Wünschen. Das PDF wird automatisch auf A4-Breite skaliert.
-          </p>
+          <h2>Fußzeilen-Text</h2>
           
-          <div class="layout-editor-container">
-            <!-- PDF Preview Button -->
-            <div style="margin-bottom: 12px;">
-              <button type="button" id="previewPdfBtn" class="btn-secondary">
-                📄 PDF Vorschau
-              </button>
-            </div>
-            
-            <!-- Layout Canvas -->
-            <div id="layoutCanvas" class="layout-canvas">
-              <div class="canvas-label">Layout-Vorlage</div>
-              <!-- Elements will be positioned here -->
-            </div>
-            
-            <!-- Element Palette - Full Width Below Canvas with 3 Columns -->
-            <div class="element-palette">
-              <h3>Verfügbare Elemente</h3>
-              <div class="palette-items">
-                <div class="palette-item" data-element="logo">
-                  <span class="element-icon">🖼️</span>
-                  <span class="element-label">Firmenlogo</span>
-                </div>
-                <div class="palette-item" data-element="company-name">
-                  <span class="element-icon">🏢</span>
-                  <span class="element-label">Firmenname</span>
-                </div>
-                <div class="palette-item" data-element="company-address">
-                  <span class="element-icon">📍</span>
-                  <span class="element-label">Firmenadresse</span>
-                </div>
-                <div class="palette-item" data-element="company-contact">
-                  <span class="element-icon">📧</span>
-                  <span class="element-label">Kontaktdaten</span>
-                </div>
-                <div class="palette-item" data-element="customer-info">
-                  <span class="element-icon">👤</span>
-                  <span class="element-label">Kundeninformationen</span>
-                </div>
-                <div class="palette-item" data-element="document-header">
-                  <span class="element-icon">📄</span>
-                  <span class="element-label">Dokumentkopf</span>
-                </div>
-                <div class="palette-item" data-element="items-table">
-                  <span class="element-icon">📊</span>
-                  <span class="element-label">Artikeltabelle</span>
-                </div>
-                <div class="palette-item" data-element="totals">
-                  <span class="element-icon">💰</span>
-                  <span class="element-label">Summen</span>
-                </div>
-                <div class="palette-item" data-element="footer">
-                  <span class="element-icon">📝</span>
-                  <span class="element-label">Fußzeile</span>
-                </div>
-              </div>
-            </div>
+          <div class="form-group">
+            <label for="footerTextOrder">Fußzeile für Aufträge</label>
+            <textarea 
+              id="footerTextOrder" 
+              name="footerTextOrder" 
+              rows="2"
+              placeholder="z.B. Bankverbindung, Geschäftsführer, Steuernummer"
+            ></textarea>
           </div>
           
-          <div class="footer-inputs">
-            <h3>Fußzeilen-Text</h3>
-            <div class="form-group">
-              <label for="footerTextOrder">Fußzeile für Aufträge</label>
-              <textarea 
-                id="footerTextOrder" 
-                name="footerTextOrder" 
-                rows="2"
-                placeholder="z.B. Bankverbindung, Geschäftsführer, Steuernummer"
-              ></textarea>
-            </div>
-            <div class="form-group">
-              <label for="footerTextInvoice">Fußzeile für Rechnungen</label>
-              <textarea 
-                id="footerTextInvoice" 
-                name="footerTextInvoice" 
-                rows="2"
-                placeholder="z.B. Bankverbindung, USt-ID, Zahlungsbedingungen"
-              ></textarea>
-            </div>
+          <div class="form-group">
+            <label for="footerTextInvoice">Fußzeile für Rechnungen</label>
+            <textarea 
+              id="footerTextInvoice" 
+              name="footerTextInvoice" 
+              rows="2"
+              placeholder="z.B. Bankverbindung, USt-ID, Zahlungsbedingungen"
+            ></textarea>
           </div>
         </div>
+
         
         <div id="errorMessage" class="message error-message" style="display: none;"></div>
         <div id="successMessage" class="message success-message" style="display: none;"></div>
@@ -187,7 +125,6 @@
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
-    import { initLayoutEditor, refreshCanvas } from './js/modules/simple-grid.js';
     
     (() => {
       try {
@@ -200,9 +137,6 @@
         
         // Initialize settings form
         initSettingsForm();
-        
-        // Initialize PDF layout editor
-        initLayoutEditor();
       } catch (error) {
         // Authentication failed or a redirect is in progress
         console.error('Authentication error on settings page:', error);
@@ -289,8 +223,6 @@
         // Save settings
         if (saveCompanySettings(settings)) {
           showSuccess(MESSAGES.saveSuccess);
-          // Refresh the canvas to show updated company information
-          refreshCanvas();
         } else {
           showError(MESSAGES.saveError);
         }

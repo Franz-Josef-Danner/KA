@@ -197,7 +197,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Kundenportal mit schreibgeschützter Ansicht von Aufträgen und Rechnungen
 - ✅ Admin-Übersicht aller Kunden mit Statistiken (Aufträge in Arbeit, unbezahlte Rechnungen, Gesamtsumme)
 - ✅ Suchfunktion für Kunden
-- ✅ PDF-Export für Aufträge und Rechnungen mit individuellen Layout-Vorlagen
+- ✅ PDF-Export für Aufträge und Rechnungen
 
 ### Einstellungen (NEU)
 - ✅ Verwaltung der Firmendaten (Firmenname, Adresse, E-Mail, Telefon)
@@ -207,14 +207,10 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Datenpersistenz in LocalStorage
 - ✅ Zurücksetzen-Funktion zum Verwerfen von Änderungen
 - ✅ Erfolgs- und Fehlermeldungen
-- ✅ **PDF Layout-Editor**: Visueller Editor mit Drag & Drop für individuelle PDF-Vorlagen (Aufträge & Rechnungen)
+- ✅ Fußzeilen-Text für Aufträge und Rechnungen
 
 ### PDF-Funktionalität (NEU)
-- ✅ Visueller Layout-Editor mit A4-Raster
-- ✅ Drag & Drop-Positionierung von PDF-Elementen
-- ✅ 9 vorkonfigurierte Elemente (Logo, Firmendaten, Kundeninfo, Artikeltabelle, Summen, etc.)
-- ✅ Größenanpassung und Neupositionierung von Elementen
-- ✅ Automatische PDF-Generierung basierend auf Layout-Vorlage
+- ✅ Automatische PDF-Generierung für Aufträge und Rechnungen
 - ✅ Integration mit jsPDF-Bibliothek (via CDN)
 - ✅ PDF-Anzeige im Kundenbereich für Aufträge und Rechnungen
 
