@@ -397,6 +397,10 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
 }
 
 function renderItemsTable(doc, x, y, width, height, documentData) {
+  // Note: The 'height' parameter is used for reference but the table will grow
+  // dynamically to fit all items, checking against page boundaries instead.
+  // The actual rendered height is returned to allow proper positioning of subsequent elements.
+  
   // Parse items from documentData
   let items = [];
   
@@ -427,14 +431,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     }
   }
 
-  // Table header
-  doc.setFillColor(240, 240, 240);
-  doc.rect(x, y, width, 8, 'F');
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
-  
+  // Column widths configuration
   const colWidths = {
     pos: width * 0.08,
     beschreibung: width * 0.35,
@@ -444,35 +441,62 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     gesamtpreis: width * 0.165
   };
   
-  let colX = x;
-  doc.text('Pos.', colX + 2, y + 5);
-  colX += colWidths.pos;
-  doc.text('Beschreibung', colX + 2, y + 5);
-  colX += colWidths.beschreibung;
-  doc.text('Menge', colX + 2, y + 5);
-  colX += colWidths.menge;
-  doc.text('Einheit', colX + 2, y + 5);
-  colX += colWidths.einheit;
-  doc.text('Einzelpreis', colX + 2, y + 5);
-  colX += colWidths.einzelpreis;
-  doc.text('Gesamtpreis', colX + 2, y + 5);
+  // Table dimensions
+  const headerHeight = 8; // Height of table header in mm
+  const rowHeight = 7; // Height of each table row in mm
+  const newPageStartY = 20; // Starting Y position for content on new pages
+  
+  // Helper function to render table header
+  const renderTableHeader = (headerY) => {
+    doc.setFillColor(240, 240, 240);
+    doc.rect(x, headerY, width, headerHeight, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    
+    let headerColX = x;
+    doc.text('Pos.', headerColX + 2, headerY + 5);
+    headerColX += colWidths.pos;
+    doc.text('Beschreibung', headerColX + 2, headerY + 5);
+    headerColX += colWidths.beschreibung;
+    doc.text('Menge', headerColX + 2, headerY + 5);
+    headerColX += colWidths.menge;
+    doc.text('Einheit', headerColX + 2, headerY + 5);
+    headerColX += colWidths.einheit;
+    doc.text('Einzelpreis', headerColX + 2, headerY + 5);
+    headerColX += colWidths.einzelpreis;
+    doc.text('Gesamtpreis', headerColX + 2, headerY + 5);
+  };
+  
+  // Render initial table header
+  renderTableHeader(y);
   
   // Table rows
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   
-  let rowY = y + 8;
+  let rowY = y + headerHeight;
+  let colX; // Will be reset for each row
+  const pageBottomMargin = doc.internal.pageSize.height - PDF_MARGIN;
+  
   items.forEach((item, index) => {
-    if (rowY > y + height - 10) {
+    // Check if there's enough space for this row on the current page
+    // We check against the page boundary to allow the table to grow dynamically
+    // beyond the box height set in the layout editor
+    if (rowY + rowHeight > pageBottomMargin) {
       // Create new page if needed
       doc.addPage();
-      rowY = 20;
+      // Render header on new page
+      renderTableHeader(newPageStartY);
+      // Position first row after header on new page
+      rowY = newPageStartY + headerHeight;
     }
     
     // Alternate row background
     if (index % 2 === 1) {
       doc.setFillColor(250, 250, 250);
-      doc.rect(x, rowY, width, 7, 'F');
+      doc.rect(x, rowY, width, rowHeight, 'F');
     }
     
     colX = x;
@@ -488,7 +512,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     colX += colWidths.einzelpreis;
     doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5);
     
-    rowY += 7;
+    rowY += rowHeight;
   });
   
   // Return actual height of rendered table content
