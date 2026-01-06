@@ -6,6 +6,13 @@ import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
 // PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
 const PDF_MARGIN = 10;
 
+// Minimum gap between elements in mm for proper spacing
+const ELEMENT_GAP = 3;
+
+// Document header spacing constants
+const DOCUMENT_HEADER_TITLE_OFFSET = 8;  // mm from top for title text
+const DOCUMENT_HEADER_BOTTOM_PADDING = 4; // mm padding after last content line
+
 // Generate PDF for an order or invoice
 export async function generatePDF(documentType, documentData, useSampleCompanyData = false, customLayoutTemplate = null) {
   // Load jsPDF library from CDN if not already loaded
@@ -147,11 +154,10 @@ function adjustElementPosition(element, renderedHeights, allElements) {
       // Only adjust position if elements would overlap based on actual content height
       const previousBottom = previousInfo.y - PDF_MARGIN + previousInfo.height;
       const currentTop = elementY;
-      const gap = 3; // 3mm minimum gap between elements
       
-      if (currentTop < previousBottom + gap) {
+      if (currentTop < previousBottom + ELEMENT_GAP) {
         // Position this element right after the previous one with a gap
-        const newY = (previousInfo.y - PDF_MARGIN + previousInfo.height + gap) / 0.352778; // Convert back to px
+        const newY = (previousInfo.y - PDF_MARGIN + previousInfo.height + ELEMENT_GAP) / 0.352778; // Convert back to px
         
         return {
           ...element,
@@ -333,7 +339,7 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
   doc.setTextColor(0, 0, 0);
   
   const title = (documentType === 'order' || documentType === 'auftrag') ? 'Auftrag' : 'Rechnung';
-  doc.text(title, x, y + 8);
+  doc.text(title, x, y + DOCUMENT_HEADER_TITLE_OFFSET);
   
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
@@ -348,18 +354,18 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
     docDate = documentData.invoiceDate || documentData.Rechnungsdatum;
   }
   
-  let maxHeight = 8; // Initial offset for title
+  let maxHeight = DOCUMENT_HEADER_TITLE_OFFSET; // Initial offset for title
   
   if (docId) {
-    doc.text(`Nr: ${docId}`, x + width - 60, y + 8, { align: 'left' });
+    doc.text(`Nr: ${docId}`, x + width - 60, y + DOCUMENT_HEADER_TITLE_OFFSET, { align: 'left' });
   }
   if (docDate) {
     doc.text(`Datum: ${docDate}`, x + width - 60, y + 14, { align: 'left' });
     maxHeight = 14; // Date line is at y + 14
   }
   
-  // Return actual content-based height: highest text position + small padding
-  return maxHeight + 4; // Add 4mm bottom padding
+  // Return actual content-based height: highest text position + bottom padding
+  return maxHeight + DOCUMENT_HEADER_BOTTOM_PADDING;
 }
 
 function renderItemsTable(doc, x, y, width, height, documentData) {
