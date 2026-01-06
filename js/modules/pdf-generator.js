@@ -462,8 +462,10 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.setFontSize(9);
   
   let rowY = y + 8;
+  const rowHeight = 7; // Height of each table row in mm
   items.forEach((item, index) => {
-    if (rowY > y + height - 10) {
+    // Check if there's enough space for this row (7mm) in the current page
+    if (rowY + rowHeight > y + height) {
       // Create new page if needed
       doc.addPage();
       rowY = 20;
