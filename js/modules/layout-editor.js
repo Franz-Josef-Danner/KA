@@ -3,6 +3,17 @@
 // -----------------------------
 
 const LAYOUT_EDITOR_KEY = 'ka_document_layout';
+const PDF_LAYOUT_KEY = 'ka_pdf_layout_template';
+
+// Grid cell dimensions (must match layout-editor-ui.js)
+const CELL_WIDTH = 100;
+const CELL_HEIGHT = 80;
+const CELL_GAP = 8;
+
+// PDF conversion constants
+const PDF_SCALE_FACTOR = 0.9; // Scale down slightly to avoid edge issues
+const PDF_OFFSET_X = 20; // Small left offset
+const PDF_OFFSET_Y = 20; // Small top offset
 
 // Box types available in the library
 export const BOX_TYPES = {
@@ -47,15 +58,70 @@ export function getLayout() {
   }
 }
 
-// Save layout to localStorage
+// Save layout to localStorage and sync with PDF template
 export function saveLayout(layout) {
   try {
+    // Save the grid-based layout
     localStorage.setItem(LAYOUT_EDITOR_KEY, JSON.stringify(layout));
+    
+    // Also convert and save as PDF template to keep them in sync
+    const pdfTemplate = convertLayoutToPDFTemplate(layout);
+    savePdfLayoutTemplateInternal(pdfTemplate);
+    
     return true;
   } catch (error) {
     console.error('Failed to save layout:', error);
     return false;
   }
+}
+
+// Internal function to save PDF layout template (avoiding circular dependency)
+function savePdfLayoutTemplateInternal(template) {
+  try {
+    localStorage.setItem(PDF_LAYOUT_KEY, JSON.stringify(template));
+    return true;
+  } catch (error) {
+    console.error('Failed to save PDF layout template:', error);
+    return false;
+  }
+}
+
+// Convert grid layout to PDF template format
+function convertLayoutToPDFTemplate(layout) {
+  const elements = [];
+  
+  layout.boxes.forEach(box => {
+    const boxType = Object.values(BOX_TYPES).find(bt => bt.id === box.type);
+    if (!boxType) return;
+    
+    // Calculate bounding box
+    const minRow = Math.min(...box.cells.map(([r, c]) => r));
+    const maxRow = Math.max(...box.cells.map(([r, c]) => r));
+    const minCol = Math.min(...box.cells.map(([r, c]) => c));
+    const maxCol = Math.max(...box.cells.map(([r, c]) => c));
+    
+    const rowSpan = maxRow - minRow + 1;
+    const colSpan = maxCol - minCol + 1;
+    
+    // Calculate position in pixels
+    const x = minCol * (CELL_WIDTH + CELL_GAP);
+    const y = minRow * (CELL_HEIGHT + CELL_GAP);
+    const width = colSpan * CELL_WIDTH + (colSpan - 1) * CELL_GAP;
+    const height = rowSpan * CELL_HEIGHT + (rowSpan - 1) * CELL_GAP;
+    
+    // Convert to PDF coordinates with scaling
+    elements.push({
+      id: box.id,
+      type: box.type,
+      x: Math.round((x * PDF_SCALE_FACTOR) + PDF_OFFSET_X),
+      y: Math.round((y * PDF_SCALE_FACTOR) + PDF_OFFSET_Y),
+      width: Math.round(width * PDF_SCALE_FACTOR),
+      height: Math.round(height * PDF_SCALE_FACTOR),
+      textAlign: 'left'
+    });
+  });
+  
+  return { elements };
 }
 
 // Add a row above or below a specific row
