@@ -16,6 +16,7 @@ const PDF_OFFSET_X = 20; // Small left offset
 const PDF_OFFSET_Y = 20; // Small top offset
 
 // Box types available in the library
+// Note: FOOTER is excluded from the layout editor - it will be automatically placed at the bottom of PDFs
 export const BOX_TYPES = {
   LOGO: { id: 'logo', title: 'Firmenlogo', icon: '🏢' },
   COMPANY_NAME: { id: 'company-name', title: 'Firmenname', icon: '📝' },
@@ -24,8 +25,7 @@ export const BOX_TYPES = {
   CUSTOMER_INFO: { id: 'customer-info', title: 'Kundendaten', icon: '👤' },
   DOCUMENT_NUMBER: { id: 'document-number', title: 'Auftrags-/Rechnungsnummer', icon: '🔢' },
   ITEMS_TABLE: { id: 'items-table', title: 'Artikeltabelle', icon: '📊' },
-  TOTALS: { id: 'totals', title: 'Summe', icon: '💰' },
-  FOOTER: { id: 'footer', title: 'Fußzeile', icon: '📄' }
+  TOTALS: { id: 'totals', title: 'Summe', icon: '💰' }
 };
 
 // Initial grid state
@@ -93,6 +93,9 @@ function convertLayoutToPDFTemplate(layout) {
   layout.boxes.forEach(box => {
     const boxType = Object.values(BOX_TYPES).find(bt => bt.id === box.type);
     if (!boxType) return;
+    
+    // Skip footer boxes - they will be automatically placed by the PDF generator
+    if (box.type === 'footer') return;
     
     // Calculate bounding box
     const minRow = Math.min(...box.cells.map(([r, c]) => r));

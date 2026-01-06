@@ -1,0 +1,12 @@
+# Build artifacts and dependencies
+node_modules/
+dist/
+build/
+
+# Temporary files
+*.log
+.DS_Store
+Thumbs.db
+
+# Test and development artifacts
+screenshots/
