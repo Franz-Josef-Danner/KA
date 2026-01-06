@@ -474,7 +474,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     // Alternate row background
     if (index % 2 === 1) {
       doc.setFillColor(250, 250, 250);
-      doc.rect(x, rowY, width, 7, 'F');
+      doc.rect(x, rowY, width, rowHeight, 'F');
     }
     
     colX = x;
@@ -490,7 +490,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     colX += colWidths.einzelpreis;
     doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5);
     
-    rowY += 7;
+    rowY += rowHeight;
   });
   
   // Return actual height of rendered table content
