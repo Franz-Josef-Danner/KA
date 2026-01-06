@@ -1,6 +1,11 @@
 // -----------------------------
 // Simple Grid Layout Module
 // -----------------------------
+import { getCompanySettings } from './settings.js';
+
+// PDF Canvas dimensions (in pixels, matching PDF generator expectations)
+// Width corresponds to A4 width (210mm), height is dynamic based on content
+const CANVAS_WIDTH_PX = 600;  // Base width for layout coordinates (converts to 210mm A4 width)
 
 const ELEMENT_LABELS = {
   'logo': 'Logo',
@@ -40,6 +45,9 @@ export function initLayoutEditor() {
   
   // Setup palette items for drag and drop
   setupPaletteItems();
+  
+  // Setup preview button
+  setupPreviewButton();
 }
 
 export function refreshCanvas() {
@@ -62,7 +70,7 @@ function initializeGrid() {
 
 function renderGrid() {
   // Clear canvas
-  canvas.innerHTML = '<div class="canvas-label">A4 Vorlage (210mm × 297mm)</div>';
+  canvas.innerHTML = '<div class="canvas-label">Layout-Vorlage</div>';
   
   // Create grid container wrapper
   const gridWrapper = document.createElement('div');
@@ -734,4 +742,115 @@ function setupPaletteItems() {
       item.style.opacity = '1';
     });
   });
+}
+
+function setupPreviewButton() {
+  const previewBtn = document.getElementById('previewPdfBtn');
+  if (!previewBtn) {
+    console.warn('Preview button not found');
+    return;
+  }
+  
+  previewBtn.addEventListener('click', async () => {
+    try {
+      // Validate company settings
+      const companySettings = getCompanySettings();
+      const errors = validateCompanyDataForPreview(companySettings);
+      
+      if (errors.length > 0) {
+        alert('Bitte füllen Sie alle erforderlichen Firmendaten aus, bevor Sie die PDF-Vorschau erstellen:\n\n' + errors.join('\n'));
+        return;
+      }
+      
+      // Convert grid state to layout template format
+      const layoutTemplate = convertGridToLayoutTemplate();
+      
+      // Dynamically import the PDF generator module
+      const { generatePDF } = await import('./pdf-generator.js');
+      const { getSampleDocumentData } = await import('./settings.js');
+      
+      // Get sample data for preview (use 'invoice' as default)
+      const sampleData = getSampleDocumentData('invoice');
+      
+      // Generate PDF with actual company data but sample customer/document data
+      // Pass the converted layout template as the 4th parameter
+      const pdf = await generatePDF('invoice', sampleData, false, layoutTemplate);
+      
+      if (pdf) {
+        // Open the PDF in a new window
+        window.open(pdf.output('bloburl'), '_blank');
+      }
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      alert('Fehler beim Erstellen der Vorschau. Bitte stellen Sie sicher, dass alle Firmendaten korrekt ausgefüllt sind.');
+    }
+  });
+}
+
+function convertGridToLayoutTemplate() {
+  // Convert grid state to layout template format expected by PDF generator
+  const elements = [];
+  
+  // Use CANVAS_WIDTH_PX as the reference width for A4 (210mm in PDF)
+  // Height is dynamic and grows based on grid content
+  const cellWidth = CANVAS_WIDTH_PX / gridState.cols;
+  
+  // Use square cells for consistent proportions
+  // This allows the PDF to grow vertically as needed
+  const cellHeight = cellWidth;
+  
+  // Process each box in the grid
+  for (const elementType in gridState.boxes) {
+    const box = gridState.boxes[elementType];
+    
+    // Convert grid coordinates to pixel coordinates
+    const x = box.col * cellWidth;
+    const y = box.row * cellHeight;
+    const width = box.colspan * cellWidth;
+    const height = box.rowspan * cellHeight;
+    
+    elements.push({
+      id: elementType,
+      type: elementType,
+      x: Math.round(x),
+      y: Math.round(y),
+      width: Math.round(width),
+      height: Math.round(height),
+      textAlign: 'left'
+    });
+  }
+  
+  return { elements };
+}
+
+function validateCompanyDataForPreview(settings) {
+  const errors = [];
+  
+  // Check required company fields
+  if (!settings.companyName || settings.companyName.trim() === '') {
+    errors.push('• Firmenname ist erforderlich');
+  }
+  
+  if (!settings.address || settings.address.trim() === '') {
+    errors.push('• Adresse ist erforderlich');
+  }
+  
+  if (!settings.email || settings.email.trim() === '') {
+    errors.push('• E-Mail-Adresse ist erforderlich');
+  }
+  
+  if (!settings.phone || settings.phone.trim() === '') {
+    errors.push('• Telefonnummer ist erforderlich');
+  }
+  
+  // Check footer fields
+  if (!settings.footerTextOrder || settings.footerTextOrder.trim() === '') {
+    errors.push('• Fußzeile für Aufträge ist erforderlich');
+  }
+  
+  if (!settings.footerTextInvoice || settings.footerTextInvoice.trim() === '') {
+    errors.push('• Fußzeile für Rechnungen ist erforderlich');
+  }
+  
+  return errors;
 }

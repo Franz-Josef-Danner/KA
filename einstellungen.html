@@ -83,13 +83,20 @@
         <div class="form-section">
           <h2>PDF Layout-Vorlage für Aufträge und Rechnungen</h2>
           <p class="form-hint" style="margin-bottom: 16px;">
-            Erstellen Sie ein individuelles Layout für Ihre PDF-Dokumente. Ziehen Sie die Elemente per Drag & Drop auf die A4-Vorlage und positionieren Sie diese nach Ihren Wünschen.
+            Erstellen Sie ein individuelles Layout für Ihre PDF-Dokumente. Ziehen Sie die Elemente per Drag & Drop auf die Vorlage und positionieren Sie diese nach Ihren Wünschen. Das PDF wird automatisch auf A4-Breite skaliert.
           </p>
           
           <div class="layout-editor-container">
-            <!-- A4 Canvas -->
+            <!-- PDF Preview Button -->
+            <div style="margin-bottom: 12px;">
+              <button type="button" id="previewPdfBtn" class="btn-secondary">
+                📄 PDF Vorschau
+              </button>
+            </div>
+            
+            <!-- Layout Canvas -->
             <div id="layoutCanvas" class="layout-canvas">
-              <div class="canvas-label">A4 Vorlage (210mm × 297mm)</div>
+              <div class="canvas-label">Layout-Vorlage</div>
               <!-- Elements will be positioned here -->
             </div>
             
