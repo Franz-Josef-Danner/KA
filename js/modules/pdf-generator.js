@@ -440,6 +440,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   // Table dimensions
   const headerHeight = 8; // Height of table header in mm
   const rowHeight = 7; // Height of each table row in mm
+  const newPageStartY = 20; // Starting Y position for content on new pages
   
   // Helper function to render table header
   const renderTableHeader = (headerY) => {
@@ -473,14 +474,16 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   let rowY = y + headerHeight;
   items.forEach((item, index) => {
-    // Check if there's enough space for this row (7mm) in the current page
+    // Check if there's enough space for this row in the allocated table box
+    // Note: This checks against the box boundary (y + height), not the page boundary,
+    // because the layout editor allows users to position boxes anywhere on the page.
     if (rowY + rowHeight > y + height) {
       // Create new page if needed
       doc.addPage();
       // Render header on new page
-      renderTableHeader(20);
+      renderTableHeader(newPageStartY);
       // Position first row after header on new page
-      rowY = 20 + headerHeight;
+      rowY = newPageStartY + headerHeight;
     }
     
     // Alternate row background
