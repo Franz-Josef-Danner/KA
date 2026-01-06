@@ -152,7 +152,7 @@ function adjustElementPosition(element, renderedHeights, allElements) {
 // Render individual element
 // Note: For text-based elements (company-name, company-address, etc.), the height parameter
 // is intentionally ignored - these elements use content-based heights to avoid unnecessary
-// spacing when content is small. Only logo and items-table use the configured height.
+// spacing when content is small. Only logo uses the configured height.
 // Returns the actual height consumed by the element in mm (or null if not applicable).
 function renderElement(doc, element, documentType, documentData, companySettings) {
   // Convert px to mm (600px = 210mm) and add PDF margin to ensure 1cm border
@@ -178,8 +178,7 @@ function renderElement(doc, element, documentType, documentData, companySettings
     case 'document-header':
       return renderDocumentHeader(doc, x, y, width, documentType, documentData);
     case 'items-table':
-      renderItemsTable(doc, x, y, width, height, documentData);
-      return height; // Items table uses configured height
+      return renderItemsTable(doc, x, y, width, height, documentData);
     case 'totals':
       return renderTotals(doc, x, y, width, documentData);
     case 'footer':
@@ -495,6 +494,9 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   // Border
   doc.setDrawColor(200, 200, 200);
   doc.rect(x, y, width, rowY - y);
+  
+  // Return actual height of rendered table content
+  return rowY - y;
 }
 
 function renderTotals(doc, x, y, width, documentData) {
