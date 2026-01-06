@@ -1527,6 +1527,37 @@ td.readonly:hover {
   transform: translateY(-50%) scale(1.15);
 }
 
+/* Box delete button in upper left corner */
+.box-delete-btn {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: #ef4444;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+  pointer-events: all;
+  z-index: 15;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.box-delete-btn:hover {
+  background: #dc2626;
+  transform: scale(1.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
 .grid-control-btn {
   background: #667eea;
   color: white;
