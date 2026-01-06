@@ -413,7 +413,8 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     // Empty rows: minimum 10mm (1cm)
     const contentHeight = beschreibungLines.length * lineHeight;
     const calculatedHeight = contentHeight + rowPaddingTop + rowPaddingBottom;
-    const rowHeight = Math.max(minRowHeight, calculatedHeight);
+    // Only apply minimum height if row is truly empty (no description text)
+    const rowHeight = beschreibungText ? calculatedHeight : Math.max(minRowHeight, calculatedHeight);
     
     if (rowY + rowHeight > y + height - 10) {
       // Create new page and render header
