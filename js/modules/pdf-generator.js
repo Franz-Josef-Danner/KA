@@ -361,19 +361,55 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   
+  const lineHeight = 4; // mm per line
+  const rowPaddingTop = 2; // mm padding top
+  const rowPaddingBottom = 2; // mm padding bottom
+  const textBaselineOffset = 1; // mm adjustment for text baseline alignment
+  const verticalCenterOffset = 1.5; // mm offset for approximate vertical centering
+  
   let rowY = y + headerHeight;
+  
+  // Helper function to render table header on new page
+  const renderTableHeader = (startY) => {
+    doc.setFillColor(240, 240, 240);
+    doc.rect(x, startY, width, headerHeight, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    
+    let headerX = x;
+    doc.text('Pos.', headerX + 2, startY + 5);
+    headerX += colWidths.pos;
+    doc.text('Beschreibung', headerX + 2, startY + 5);
+    headerX += colWidths.beschreibung;
+    doc.text('Menge', headerX + 2, startY + 5);
+    headerX += colWidths.menge;
+    doc.text('Einheit', headerX + 2, startY + 5);
+    headerX += colWidths.einheit;
+    doc.text('Einzelpreis', headerX + 2, startY + 5);
+    headerX += colWidths.einzelpreis;
+    doc.text('Gesamtpreis', headerX + 2, startY + 5);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    
+    return startY + headerHeight;
+  };
+  
   items.forEach((item, index) => {
     // Calculate row height based on description text wrapping
     const beschreibungText = item.beschreibung || item.artikel || '';
     const beschreibungLines = doc.splitTextToSize(beschreibungText, colWidths.beschreibung - padding);
-    const lineHeight = 4; // mm per line
-    const rowPadding = 2; // mm padding top and bottom
-    const rowHeight = Math.max(lineHeight + rowPadding, beschreibungLines.length * lineHeight + rowPadding);
+    // Calculate height: single line needs one lineHeight + top + bottom padding
+    // Multi-line needs lines * lineHeight + top + bottom padding
+    const contentHeight = beschreibungLines.length * lineHeight;
+    const rowHeight = contentHeight + rowPaddingTop + rowPaddingBottom;
     
     if (rowY + rowHeight > y + height - 10) {
-      // Create new page if needed
+      // Create new page and render header
       doc.addPage();
-      rowY = 20;
+      rowY = renderTableHeader(20);
     }
     
     // Alternate row background
@@ -386,15 +422,16 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     colX = x;
     
     // Position - centered vertically in row
-    const textY = rowY + rowHeight / 2 + 1.5; // Approximate vertical center
+    const textY = rowY + rowHeight / 2 + verticalCenterOffset;
     doc.text(String(item.position || index + 1), colX + 2, textY);
     colX += colWidths.pos;
     
     // Description - can be multi-line
     if (beschreibungLines.length > 1) {
-      // Multi-line text
+      // Multi-line text - render each line with proper spacing
       beschreibungLines.forEach((line, lineIndex) => {
-        doc.text(line, colX + 2, rowY + rowPadding + (lineIndex + 1) * lineHeight - 1);
+        const lineY = rowY + rowPaddingTop + (lineIndex + 1) * lineHeight - textBaselineOffset;
+        doc.text(line, colX + 2, lineY);
       });
     } else {
       // Single line - centered vertically
