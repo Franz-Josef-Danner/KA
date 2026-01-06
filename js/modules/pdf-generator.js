@@ -335,9 +335,28 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   });
   
   // Calculate remaining width for description column
-  const otherColumnsWidth = colWidths.pos + colWidths.menge + colWidths.einheit + 
-                             colWidths.einzelpreis + colWidths.gesamtpreis;
-  colWidths.beschreibung = Math.max(minColWidths.beschreibung, width - otherColumnsWidth);
+  // Give description column reasonable width based on longest content or minimum
+  const maxDescriptionWidth = 80; // mm - reasonable maximum for descriptions
+  let actualDescriptionWidth = minColWidths.beschreibung;
+  
+  // Measure description content to find needed width
+  items.forEach((item) => {
+    const beschreibungText = item.beschreibung || item.artikel || '';
+    if (beschreibungText) {
+      const textWidth = doc.getTextWidth(beschreibungText) + padding;
+      // Cap at maxDescriptionWidth to avoid extremely wide tables
+      actualDescriptionWidth = Math.max(actualDescriptionWidth, Math.min(textWidth, maxDescriptionWidth));
+    }
+  });
+  
+  colWidths.beschreibung = actualDescriptionWidth;
+  
+  // Calculate actual table width based on content (not fixed template width)
+  const actualTableWidth = colWidths.pos + colWidths.beschreibung + colWidths.menge + 
+                           colWidths.einheit + colWidths.einzelpreis + colWidths.gesamtpreis;
+  
+  // Use actual table width for rendering
+  const tableWidth = actualTableWidth;
   
   // Constants for row rendering
   const headerHeight = 8;
@@ -353,7 +372,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   // Helper function to render table header
   const renderTableHeader = (startY) => {
     doc.setFillColor(240, 240, 240);
-    doc.rect(x, startY, width, headerHeight, 'F');
+    doc.rect(x, startY, tableWidth, headerHeight, 'F');
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
@@ -405,7 +424,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     // Alternate row background
     if (index % 2 === 1) {
       doc.setFillColor(250, 250, 250);
-      doc.rect(x, rowY, width, rowHeight, 'F');
+      doc.rect(x, rowY, tableWidth, rowHeight, 'F');
     }
     
     // Render cells
@@ -449,7 +468,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   // Border
   doc.setDrawColor(200, 200, 200);
-  doc.rect(x, y, width, rowY - y);
+  doc.rect(x, y, tableWidth, rowY - y);
 }
 
 function renderTotals(doc, x, y, width, documentData) {
