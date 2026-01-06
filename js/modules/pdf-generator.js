@@ -529,38 +529,32 @@ function renderTotals(doc, x, y, width, documentData) {
     return; // No data to display
   }
   
-  // Calculate content-based height for the totals box
-  // 3 lines of content + padding: subtotal, VAT, total
-  const lineHeight = 7;  // 7mm between lines
-  const topPadding = 5;  // 5mm top padding
-  const bottomPadding = 3;  // 3mm bottom padding
-  const boxHeight = topPadding + (3 * lineHeight) + bottomPadding;
-  
-  // Draw box with content-based height
-  doc.setFillColor(245, 245, 245);
-  doc.rect(x, y, width, boxHeight, 'F');
-  doc.setDrawColor(200, 200, 200);
-  doc.rect(x, y, width, boxHeight);
+  // Calculate content-based height for the totals (text only, no box)
+  // 3 lines of content + minimal padding: subtotal, VAT, total
+  const lineHeight = 6;  // 6mm between lines
+  const topPadding = 3;  // 3mm top padding (reduced from 5mm)
+  const bottomPadding = 2;  // 2mm bottom padding (reduced from 3mm)
+  const totalHeight = topPadding + (3 * lineHeight) + bottomPadding;
   
   // Subtotal
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text('Netto:', x + 5, y + topPadding + 3);
-  doc.text(formatCurrency(subtotal), x + width - 5, y + topPadding + 3, { align: 'right' });
+  doc.text('Netto:', x, y + topPadding);
+  doc.text(formatCurrency(subtotal), x + width, y + topPadding, { align: 'right' });
   
   // VAT
   const vatRate = documentData.vatRate || 0.19;
-  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x + 5, y + topPadding + 3 + lineHeight);
-  doc.text(formatCurrency(vat), x + width - 5, y + topPadding + 3 + lineHeight, { align: 'right' });
+  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x, y + topPadding + lineHeight);
+  doc.text(formatCurrency(vat), x + width, y + topPadding + lineHeight, { align: 'right' });
   
   // Total
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text('Gesamtsumme:', x + 5, y + topPadding + 3 + (2 * lineHeight));
-  doc.text(formatCurrency(total), x + width - 5, y + topPadding + 3 + (2 * lineHeight), { align: 'right' });
+  doc.text('Gesamtsumme:', x, y + topPadding + (2 * lineHeight));
+  doc.text(formatCurrency(total), x + width, y + topPadding + (2 * lineHeight), { align: 'right' });
   
-  // Return the actual box height
-  return boxHeight;
+  // Return the actual height
+  return totalHeight;
 }
 
 function renderFooter(doc, x, y, width, companySettings, documentType) {
