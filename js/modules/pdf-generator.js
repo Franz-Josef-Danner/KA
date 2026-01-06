@@ -3,6 +3,9 @@
 // -----------------------------
 import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
 
+// PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
+const PDF_MARGIN = 10;
+
 // Generate PDF for an order or invoice
 export async function generatePDF(documentType, documentData, useSampleCompanyData = false, customLayoutTemplate = null) {
   // Load jsPDF library from CDN if not already loaded
@@ -92,13 +95,13 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
     }
   });
 
-  // Add page numbers
+  // Add page numbers (respecting PDF margin)
   const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(9);
     doc.setTextColor(150, 150, 150);
-    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10, { align: 'right' });
+    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - PDF_MARGIN, doc.internal.pageSize.height - PDF_MARGIN, { align: 'right' });
   }
 }
 
@@ -151,8 +154,9 @@ function adjustElementPosition(element, renderedHeights, allElements) {
 // spacing when content is small. Only logo and items-table use the configured height.
 // Returns the actual height consumed by the element in mm (or null if not applicable).
 function renderElement(doc, element, documentType, documentData, companySettings) {
-  const x = element.x * 0.352778; // Convert px to mm (600px = 210mm)
-  const y = element.y * 0.352778;
+  // Convert px to mm (600px = 210mm) and add PDF margin to ensure 1cm border
+  const x = element.x * 0.352778 + PDF_MARGIN;
+  const y = element.y * 0.352778 + PDF_MARGIN;
   const width = element.width * 0.352778;
   const height = element.height * 0.352778;
 
