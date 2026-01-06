@@ -334,20 +334,22 @@ function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
     label = 'Rechnungsnummer:';
   }
   
-  let offsetY = y + 5;
-  const startY = offsetY;
+  let offsetY = y + 4;
+  let lineCount = 0;
   
   // Render document number
   if (docId) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.text(label, x, offsetY);
-    offsetY += 6;
+    offsetY += 5;
+    lineCount++;
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(12);
     doc.text(docId, x, offsetY);
-    offsetY += 6;
+    offsetY += 5;
+    lineCount++;
   }
   
   // Render date
@@ -355,11 +357,12 @@ function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.text(`Datum: ${docDate}`, x, offsetY);
-    offsetY += 5;
+    offsetY += 4;
+    lineCount++;
   }
   
-  // Return actual height consumed
-  return offsetY - y + 2; // Add small bottom padding
+  // Return actual height: initial offset + (line count * average line height)
+  return 4 + (lineCount * 5); // Consistent with other text elements
 }
 
 function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
