@@ -19,6 +19,24 @@ import {
   isCellOccupied
 } from './layout-editor.js';
 
+// Grid cell dimensions (must match CSS)
+const CELL_WIDTH = 100;
+const CELL_HEIGHT = 80;
+const CELL_GAP = 8;
+
+// Box preview text for each box type
+const BOX_PREVIEWS = {
+  'logo': 'Logo Vorschau',
+  'company-name': 'Musterfirma GmbH',
+  'company-address': 'Straße 123, Stadt',
+  'company-contact': 'Tel. / E-Mail',
+  'customer-info': 'Kundenname + Adresse',
+  'document-number': 'AUF-2024-001',
+  'items-table': 'Pos. | Artikel | Preis',
+  'totals': 'Gesamt: 1.234,56 €',
+  'footer': 'Rechtliche Info'
+};
+
 let currentLayout = null;
 let draggedBoxType = null;
 let draggedBoxId = null;
@@ -162,11 +180,11 @@ function createBoxElement(box) {
   const rowSpan = maxRow - minRow + 1;
   const colSpan = maxCol - minCol + 1;
   
-  // Calculate position (grid cells are 100px wide + 8px gap, 80px tall + 8px gap)
-  const left = minCol * 108; // 100 + 8
-  const top = minRow * 88; // 80 + 8
-  const width = colSpan * 100 + (colSpan - 1) * 8;
-  const height = rowSpan * 80 + (rowSpan - 1) * 8;
+  // Calculate position using constants
+  const left = minCol * (CELL_WIDTH + CELL_GAP);
+  const top = minRow * (CELL_HEIGHT + CELL_GAP);
+  const width = colSpan * CELL_WIDTH + (colSpan - 1) * CELL_GAP;
+  const height = rowSpan * CELL_HEIGHT + (rowSpan - 1) * CELL_GAP;
   
   const boxElement = document.createElement('div');
   boxElement.className = 'box';
@@ -224,18 +242,7 @@ function createBoxElement(box) {
 
 // Get preview text for a box type
 function getBoxPreview(boxType) {
-  const previews = {
-    'logo': 'Logo Vorschau',
-    'company-name': 'Musterfirma GmbH',
-    'company-address': 'Straße 123, Stadt',
-    'company-contact': 'Tel. / E-Mail',
-    'customer-info': 'Kundenname + Adresse',
-    'document-number': 'AUF-2024-001',
-    'items-table': 'Pos. | Artikel | Preis',
-    'totals': 'Gesamt: 1.234,56 €',
-    'footer': 'Rechtliche Info'
-  };
-  return previews[boxType] || '';
+  return BOX_PREVIEWS[boxType] || '';
 }
 
 // Render box library

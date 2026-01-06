@@ -186,7 +186,7 @@ export function addBox(layout, boxType, row, col) {
   }
   
   const newBox = {
-    id: `box-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `box-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     type: boxType,
     cells: [[row, col]]
   };
