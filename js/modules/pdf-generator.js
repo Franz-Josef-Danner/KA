@@ -6,6 +6,9 @@ import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
 // PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
 const PDF_MARGIN = 10;
 
+// Footer positioning constant
+const FOOTER_MARGIN_FROM_BOTTOM = 30; // 30mm from bottom (20mm for footer content + 10mm margin)
+
 // Generate PDF for an order or invoice
 export async function generatePDF(documentType, documentData, useSampleCompanyData = false, customLayoutTemplate = null) {
   // Load jsPDF library from CDN if not already loaded
@@ -99,7 +102,7 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   // Footer is placed at a fixed position near the bottom, above the page numbers
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  const footerY = pageHeight - 30; // 30mm from bottom (20mm for footer content + 10mm margin)
+  const footerY = pageHeight - FOOTER_MARGIN_FROM_BOTTOM;
   const footerX = PDF_MARGIN;
   const footerWidth = pageWidth - (2 * PDF_MARGIN);
   
