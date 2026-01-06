@@ -492,7 +492,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
       doc.rect(x, rowY, width, rowHeight, 'F');
     }
     
-    colX = x;
+    let colX = x;
     doc.text(String(item.position || index + 1), colX + 2, rowY + 5);
     colX += colWidths.pos;
     doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5);
