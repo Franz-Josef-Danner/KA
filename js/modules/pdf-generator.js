@@ -84,12 +84,12 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
     const adjustedElement = adjustElementPosition(element, renderedHeights, layoutTemplate.elements);
     const actualHeight = renderElement(doc, adjustedElement, documentType, documentData, companySettings);
     
-    // Store the actual rendered height for this element
+    // Store the actual rendered height and position for this element (including margin)
     if (actualHeight !== null) {
       renderedHeights.set(element.id, {
-        y: adjustedElement.y * 0.352778,
+        y: adjustedElement.y * 0.352778 + PDF_MARGIN,
         height: actualHeight,
-        x: adjustedElement.x * 0.352778,
+        x: adjustedElement.x * 0.352778 + PDF_MARGIN,
         width: adjustedElement.width * 0.352778
       });
     }
@@ -134,8 +134,9 @@ function adjustElementPosition(element, renderedHeights, allElements) {
     
     if (previousInfo) {
       // Position this element right after the previous one with a small gap
+      // previousInfo.y includes the PDF_MARGIN, so we subtract it before calculating
       const gap = 2; // 2mm gap between elements
-      const newY = (previousInfo.y + previousInfo.height + gap) / 0.352778; // Convert back to px
+      const newY = (previousInfo.y - PDF_MARGIN + previousInfo.height + gap) / 0.352778; // Convert back to px
       
       return {
         ...element,
