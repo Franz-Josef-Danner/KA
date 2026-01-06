@@ -451,18 +451,18 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
     
-    let colX = x;
-    doc.text('Pos.', colX + 2, headerY + 5);
-    colX += colWidths.pos;
-    doc.text('Beschreibung', colX + 2, headerY + 5);
-    colX += colWidths.beschreibung;
-    doc.text('Menge', colX + 2, headerY + 5);
-    colX += colWidths.menge;
-    doc.text('Einheit', colX + 2, headerY + 5);
-    colX += colWidths.einheit;
-    doc.text('Einzelpreis', colX + 2, headerY + 5);
-    colX += colWidths.einzelpreis;
-    doc.text('Gesamtpreis', colX + 2, headerY + 5);
+    let headerColX = x;
+    doc.text('Pos.', headerColX + 2, headerY + 5);
+    headerColX += colWidths.pos;
+    doc.text('Beschreibung', headerColX + 2, headerY + 5);
+    headerColX += colWidths.beschreibung;
+    doc.text('Menge', headerColX + 2, headerY + 5);
+    headerColX += colWidths.menge;
+    doc.text('Einheit', headerColX + 2, headerY + 5);
+    headerColX += colWidths.einheit;
+    doc.text('Einzelpreis', headerColX + 2, headerY + 5);
+    headerColX += colWidths.einzelpreis;
+    doc.text('Gesamtpreis', headerColX + 2, headerY + 5);
   };
   
   // Render initial table header
@@ -473,6 +473,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.setFontSize(9);
   
   let rowY = y + headerHeight;
+  let colX; // Declare colX for use in the loop
   items.forEach((item, index) => {
     // Check if there's enough space for this row in the allocated table box
     // Note: This checks against the box boundary (y + height), not the page boundary,
