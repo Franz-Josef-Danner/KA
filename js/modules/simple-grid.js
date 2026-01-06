@@ -247,6 +247,19 @@ function renderGrid() {
           
           elementDiv.appendChild(arrowsDiv);
           
+          // Add delete button in upper left corner
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'box-delete-btn';
+          deleteBtn.innerHTML = '×';
+          deleteBtn.title = 'Element entfernen';
+          deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`Möchten Sie das Element "${ELEMENT_LABELS[cellData.element]}" wirklich aus dem Layout entfernen?`)) {
+              removeBox(cellData.element);
+            }
+          };
+          elementDiv.appendChild(deleteBtn);
+          
           // Make element draggable from cell
           elementDiv.addEventListener('dragstart', (e) => {
             draggedElement = cellData.element;
@@ -718,6 +731,32 @@ function expandBox(elementType, direction) {
       }
       break;
   }
+  
+  // Re-render grid
+  renderGrid();
+}
+
+function removeBox(elementType) {
+  const box = gridState.boxes[elementType];
+  if (!box) {
+    console.error('Box not found:', elementType);
+    return;
+  }
+  
+  const { row, col, rowspan, colspan } = box;
+  
+  // Clear all cells occupied by this box
+  for (let r = 0; r < rowspan; r++) {
+    for (let c = 0; c < colspan; c++) {
+      const cellId = `${row + r}-${col + c}`;
+      if (gridState.cells[cellId]) {
+        gridState.cells[cellId].element = null;
+      }
+    }
+  }
+  
+  // Remove box from boxes object
+  delete gridState.boxes[elementType];
   
   // Re-render grid
   renderGrid();
