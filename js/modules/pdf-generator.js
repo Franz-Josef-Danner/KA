@@ -295,22 +295,54 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     }
   }
 
+  // Set font for measurements
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  
+  // Calculate dynamic column widths based on content
+  const padding = 4; // Padding on each side
+  const minColWidths = {
+    pos: 10,
+    beschreibung: 40,
+    menge: 15,
+    einheit: 15,
+    einzelpreis: 25,
+    gesamtpreis: 25
+  };
+  
+  // Measure header widths
+  const colWidths = {
+    pos: Math.max(minColWidths.pos, doc.getTextWidth('Pos.') + padding),
+    beschreibung: Math.max(minColWidths.beschreibung, doc.getTextWidth('Beschreibung') + padding),
+    menge: Math.max(minColWidths.menge, doc.getTextWidth('Menge') + padding),
+    einheit: Math.max(minColWidths.einheit, doc.getTextWidth('Einheit') + padding),
+    einzelpreis: Math.max(minColWidths.einzelpreis, doc.getTextWidth('Einzelpreis') + padding),
+    gesamtpreis: Math.max(minColWidths.gesamtpreis, doc.getTextWidth('Gesamtpreis') + padding)
+  };
+  
+  // Measure content widths (except description which can wrap)
+  doc.setFont('helvetica', 'normal');
+  items.forEach((item, index) => {
+    colWidths.pos = Math.max(colWidths.pos, doc.getTextWidth(String(item.position || index + 1)) + padding);
+    colWidths.menge = Math.max(colWidths.menge, doc.getTextWidth(String(item.menge || '1')) + padding);
+    colWidths.einheit = Math.max(colWidths.einheit, doc.getTextWidth(item.einheit || 'Stk') + padding);
+    colWidths.einzelpreis = Math.max(colWidths.einzelpreis, doc.getTextWidth(formatCurrency(item.einzelpreis)) + padding);
+    colWidths.gesamtpreis = Math.max(colWidths.gesamtpreis, doc.getTextWidth(formatCurrency(item.gesamtpreis)) + padding);
+  });
+  
+  // Calculate remaining width for description column
+  const otherColumnsWidth = colWidths.pos + colWidths.menge + colWidths.einheit + 
+                             colWidths.einzelpreis + colWidths.gesamtpreis;
+  colWidths.beschreibung = Math.max(minColWidths.beschreibung, width - otherColumnsWidth);
+  
   // Table header
   doc.setFillColor(240, 240, 240);
-  doc.rect(x, y, width, 8, 'F');
+  const headerHeight = 8;
+  doc.rect(x, y, width, headerHeight, 'F');
   
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  
-  const colWidths = {
-    pos: width * 0.08,
-    beschreibung: width * 0.35,
-    menge: width * 0.12,
-    einheit: width * 0.12,
-    einzelpreis: width * 0.165,
-    gesamtpreis: width * 0.165
-  };
   
   let colX = x;
   doc.text('Pos.', colX + 2, y + 5);
@@ -325,13 +357,20 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   colX += colWidths.einzelpreis;
   doc.text('Gesamtpreis', colX + 2, y + 5);
   
-  // Table rows
+  // Table rows with dynamic heights
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   
-  let rowY = y + 8;
+  let rowY = y + headerHeight;
   items.forEach((item, index) => {
-    if (rowY > y + height - 10) {
+    // Calculate row height based on description text wrapping
+    const beschreibungText = item.beschreibung || item.artikel || '';
+    const beschreibungLines = doc.splitTextToSize(beschreibungText, colWidths.beschreibung - padding);
+    const lineHeight = 4; // mm per line
+    const rowPadding = 2; // mm padding top and bottom
+    const rowHeight = Math.max(lineHeight + rowPadding, beschreibungLines.length * lineHeight + rowPadding);
+    
+    if (rowY + rowHeight > y + height - 10) {
       // Create new page if needed
       doc.addPage();
       rowY = 20;
@@ -340,23 +379,45 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     // Alternate row background
     if (index % 2 === 1) {
       doc.setFillColor(250, 250, 250);
-      doc.rect(x, rowY, width, 7, 'F');
+      doc.rect(x, rowY, width, rowHeight, 'F');
     }
     
+    // Render cells
     colX = x;
-    doc.text(String(item.position || index + 1), colX + 2, rowY + 5);
-    colX += colWidths.pos;
-    doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5);
-    colX += colWidths.beschreibung;
-    doc.text(String(item.menge || '1'), colX + 2, rowY + 5);
-    colX += colWidths.menge;
-    doc.text(item.einheit || 'Stk', colX + 2, rowY + 5);
-    colX += colWidths.einheit;
-    doc.text(formatCurrency(item.einzelpreis), colX + 2, rowY + 5);
-    colX += colWidths.einzelpreis;
-    doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5);
     
-    rowY += 7;
+    // Position - centered vertically in row
+    const textY = rowY + rowHeight / 2 + 1.5; // Approximate vertical center
+    doc.text(String(item.position || index + 1), colX + 2, textY);
+    colX += colWidths.pos;
+    
+    // Description - can be multi-line
+    if (beschreibungLines.length > 1) {
+      // Multi-line text
+      beschreibungLines.forEach((line, lineIndex) => {
+        doc.text(line, colX + 2, rowY + rowPadding + (lineIndex + 1) * lineHeight - 1);
+      });
+    } else {
+      // Single line - centered vertically
+      doc.text(beschreibungText, colX + 2, textY);
+    }
+    colX += colWidths.beschreibung;
+    
+    // Menge - centered vertically
+    doc.text(String(item.menge || '1'), colX + 2, textY);
+    colX += colWidths.menge;
+    
+    // Einheit - centered vertically
+    doc.text(item.einheit || 'Stk', colX + 2, textY);
+    colX += colWidths.einheit;
+    
+    // Einzelpreis - centered vertically
+    doc.text(formatCurrency(item.einzelpreis), colX + 2, textY);
+    colX += colWidths.einzelpreis;
+    
+    // Gesamtpreis - centered vertically
+    doc.text(formatCurrency(item.gesamtpreis), colX + 2, textY);
+    
+    rowY += rowHeight;
   });
   
   // Border
