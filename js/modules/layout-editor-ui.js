@@ -72,6 +72,11 @@ function renderEditor(container) {
         Verwenden Sie die Pfeile um Boxen zu erweitern und X-Buttons um sie zu entfernen.
       </p>
       
+      <div class="layout-editor-actions">
+        <button id="previewOrderBtn" class="btn-preview">📄 Vorschau Auftrag</button>
+        <button id="previewInvoiceBtn" class="btn-preview">🧾 Vorschau Rechnung</button>
+      </div>
+      
       <div class="grid-wrapper">
         <div id="gridContainer" class="grid-container">
           <!-- Grid will be rendered here -->
@@ -95,6 +100,7 @@ function renderEditor(container) {
   
   renderGrid();
   renderBoxLibrary();
+  attachPreviewButtons();
 }
 
 // Render the grid
@@ -533,4 +539,36 @@ function showNotification(message, type = 'info') {
   setTimeout(() => {
     notification.remove();
   }, 3000);
+}
+
+// Attach preview button event listeners
+function attachPreviewButtons() {
+  const previewOrderBtn = document.getElementById('previewOrderBtn');
+  const previewInvoiceBtn = document.getElementById('previewInvoiceBtn');
+  
+  if (previewOrderBtn) {
+    previewOrderBtn.addEventListener('click', async () => {
+      const { showPreviewPDF } = await import('./layout-editor-preview.js');
+      const result = await showPreviewPDF('order', false);
+      
+      if (result.success) {
+        showNotification(result.message || 'Vorschau wurde geöffnet', 'success');
+      } else {
+        showNotification(result.message || 'Fehler beim Öffnen der Vorschau', 'error');
+      }
+    });
+  }
+  
+  if (previewInvoiceBtn) {
+    previewInvoiceBtn.addEventListener('click', async () => {
+      const { showPreviewPDF } = await import('./layout-editor-preview.js');
+      const result = await showPreviewPDF('invoice', false);
+      
+      if (result.success) {
+        showNotification(result.message || 'Vorschau wurde geöffnet', 'success');
+      } else {
+        showNotification(result.message || 'Fehler beim Öffnen der Vorschau', 'error');
+      }
+    });
+  }
 }
