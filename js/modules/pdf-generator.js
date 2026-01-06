@@ -474,11 +474,13 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   let rowY = y + headerHeight;
   let colX; // Will be reset for each row
+  const pageBottomMargin = doc.internal.pageSize.height - PDF_MARGIN;
+  
   items.forEach((item, index) => {
-    // Check if there's enough space for this row in the allocated table box
-    // Note: This checks against the box boundary (y + height), not the page boundary,
-    // because the layout editor allows users to position boxes anywhere on the page.
-    if (rowY + rowHeight > y + height) {
+    // Check if there's enough space for this row on the current page
+    // We check against the page boundary to allow the table to grow dynamically
+    // beyond the box height set in the layout editor
+    if (rowY + rowHeight > pageBottomMargin) {
       // Create new page if needed
       doc.addPage();
       // Render header on new page
