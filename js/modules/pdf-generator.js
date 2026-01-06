@@ -182,8 +182,9 @@ function renderCompanyAddress(doc, x, y, width, companySettings) {
   
   if (companySettings.address) {
     const lines = companySettings.address.split('\n');
+    const lineHeight = 4; // mm - compact line spacing for address lines
     lines.forEach((line, index) => {
-      doc.text(line, x, y + 5 + (index * 5));
+      doc.text(line, x, y + 4 + (index * lineHeight));
     });
   }
 }
@@ -193,10 +194,11 @@ function renderCompanyContact(doc, x, y, width, companySettings) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
   
-  let offsetY = y + 5;
+  const lineHeight = 4; // mm - compact line spacing for contact lines
+  let offsetY = y + 4;
   if (companySettings.email) {
     doc.text(`E-Mail: ${companySettings.email}`, x, offsetY);
-    offsetY += 5;
+    offsetY += lineHeight;
   }
   if (companySettings.phone) {
     doc.text(`Tel: ${companySettings.phone}`, x, offsetY);
@@ -208,10 +210,11 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
   
-  let offsetY = y + 5;
+  const lineHeight = 4; // mm - compact line spacing for customer info
+  let offsetY = y + 4;
   doc.setFont('helvetica', 'bold');
   doc.text('Kunde:', x, offsetY);
-  offsetY += 6;
+  offsetY += lineHeight + 1; // Slightly more space after label
   
   doc.setFont('helvetica', 'normal');
   
@@ -220,17 +223,17 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   
   if (customer.company || customer.Firma) {
     doc.text(customer.company || customer.Firma, x, offsetY);
-    offsetY += 5;
+    offsetY += lineHeight;
   }
   if (customer.contactPerson || customer.Ansprechpartner) {
     doc.text(customer.contactPerson || customer.Ansprechpartner, x, offsetY);
-    offsetY += 5;
+    offsetY += lineHeight;
   }
   if (customer.address) {
     const lines = customer.address.split('\n');
     lines.forEach(line => {
       doc.text(line, x, offsetY);
-      offsetY += 4;
+      offsetY += lineHeight;
     });
   }
 }
