@@ -437,10 +437,14 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     gesamtpreis: width * 0.165
   };
   
+  // Table dimensions
+  const headerHeight = 8; // Height of table header in mm
+  const rowHeight = 7; // Height of each table row in mm
+  
   // Helper function to render table header
   const renderTableHeader = (headerY) => {
     doc.setFillColor(240, 240, 240);
-    doc.rect(x, headerY, width, 8, 'F');
+    doc.rect(x, headerY, width, headerHeight, 'F');
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
@@ -467,9 +471,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   
-  let rowY = y + 8;
-  const rowHeight = 7; // Height of each table row in mm
-  const headerHeight = 8; // Height of table header in mm
+  let rowY = y + headerHeight;
   items.forEach((item, index) => {
     // Check if there's enough space for this row (7mm) in the current page
     if (rowY + rowHeight > y + height) {
