@@ -73,9 +73,23 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   // Set default font
   doc.setFont('helvetica');
 
-  // Render each element according to layout
+  // Create a map to track actual rendered heights for dynamic positioning
+  const renderedHeights = new Map();
+  
+  // Render each element according to layout, with dynamic Y positioning for text elements
   layoutTemplate.elements.forEach(element => {
-    renderElement(doc, element, documentType, documentData, companySettings);
+    const adjustedElement = adjustElementPosition(element, renderedHeights, layoutTemplate.elements);
+    const actualHeight = renderElement(doc, adjustedElement, documentType, documentData, companySettings);
+    
+    // Store the actual rendered height for this element
+    if (actualHeight !== null) {
+      renderedHeights.set(element.id, {
+        y: adjustedElement.y * 0.352778,
+        height: actualHeight,
+        x: adjustedElement.x * 0.352778,
+        width: adjustedElement.width * 0.352778
+      });
+    }
   });
 
   // Add page numbers
@@ -88,10 +102,54 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   }
 }
 
+// Adjust element Y position based on actual content heights of previous elements
+function adjustElementPosition(element, renderedHeights, allElements) {
+  // Elements that should use dynamic positioning (text elements in the same column)
+  const textElements = ['company-name', 'company-address', 'company-contact'];
+  
+  if (!textElements.includes(element.type)) {
+    // Non-text elements keep their original position
+    return element;
+  }
+  
+  // Find the previous text element in the same column (similar X position)
+  const elementX = element.x * 0.352778; // Convert to mm
+  const previousElements = allElements
+    .filter(el => {
+      const elX = el.x * 0.352778;
+      const elY = el.y * 0.352778;
+      const currentY = element.y * 0.352778;
+      // Same column (within 10mm) and positioned before current element
+      return Math.abs(elX - elementX) < 10 && elY < currentY && renderedHeights.has(el.id);
+    })
+    .sort((a, b) => (b.y * 0.352778) - (a.y * 0.352778)); // Sort by Y descending
+  
+  if (previousElements.length > 0) {
+    // Get the last rendered element in this column
+    const previousElement = previousElements[0];
+    const previousInfo = renderedHeights.get(previousElement.id);
+    
+    if (previousInfo) {
+      // Position this element right after the previous one with a small gap
+      const gap = 2; // 2mm gap between elements
+      const newY = (previousInfo.y + previousInfo.height + gap) / 0.352778; // Convert back to px
+      
+      return {
+        ...element,
+        y: newY
+      };
+    }
+  }
+  
+  // No adjustment needed
+  return element;
+}
+
 // Render individual element
 // Note: For text-based elements (company-name, company-address, etc.), the height parameter
 // is intentionally ignored - these elements use content-based heights to avoid unnecessary
 // spacing when content is small. Only logo and items-table use the configured height.
+// Returns the actual height consumed by the element in mm (or null if not applicable).
 function renderElement(doc, element, documentType, documentData, companySettings) {
   const x = element.x * 0.352778; // Convert px to mm (600px = 210mm)
   const y = element.y * 0.352778;
@@ -101,32 +159,27 @@ function renderElement(doc, element, documentType, documentData, companySettings
   switch (element.type) {
     case 'logo':
       renderLogo(doc, x, y, width, height, companySettings);
-      break;
+      return height; // Logo uses configured height
     case 'company-name':
-      renderCompanyName(doc, x, y, width, companySettings);
-      break;
+      return renderCompanyName(doc, x, y, width, companySettings);
     case 'company-address':
-      renderCompanyAddress(doc, x, y, width, companySettings);
-      break;
+      return renderCompanyAddress(doc, x, y, width, companySettings);
     case 'company-contact':
-      renderCompanyContact(doc, x, y, width, companySettings);
-      break;
+      return renderCompanyContact(doc, x, y, width, companySettings);
     case 'customer-info':
-      renderCustomerInfo(doc, x, y, width, documentData);
-      break;
+      return renderCustomerInfo(doc, x, y, width, documentData);
     case 'document-header':
-      renderDocumentHeader(doc, x, y, width, documentType, documentData);
-      break;
+      return renderDocumentHeader(doc, x, y, width, documentType, documentData);
     case 'items-table':
       renderItemsTable(doc, x, y, width, height, documentData);
-      break;
+      return height; // Items table uses configured height
     case 'totals':
-      renderTotals(doc, x, y, width, documentData);
-      break;
+      return renderTotals(doc, x, y, width, documentData);
     case 'footer':
-      renderFooter(doc, x, y, width, companySettings, documentType);
-      break;
+      return renderFooter(doc, x, y, width, companySettings, documentType);
   }
+  
+  return null; // Unknown element type
 }
 
 function renderLogo(doc, x, y, width, height, companySettings) {
@@ -176,6 +229,9 @@ function renderCompanyName(doc, x, y, width, companySettings) {
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text(companySettings.companyName || 'Firma', x, y + 6);
+  
+  // Return actual height: font size + spacing
+  return 16 * 0.352778 + 2; // ~8mm total height
 }
 
 function renderCompanyAddress(doc, x, y, width, companySettings) {
@@ -183,12 +239,17 @@ function renderCompanyAddress(doc, x, y, width, companySettings) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
   
+  let lineCount = 1;
   if (companySettings.address) {
     const lines = companySettings.address.split('\n');
+    lineCount = lines.length;
     lines.forEach((line, index) => {
       doc.text(line, x, y + 5 + (index * 5));
     });
   }
+  
+  // Return actual height: first line offset + (line count * line height)
+  return 5 + (lineCount * 5); // Each line is ~5mm
 }
 
 function renderCompanyContact(doc, x, y, width, companySettings) {
@@ -197,13 +258,19 @@ function renderCompanyContact(doc, x, y, width, companySettings) {
   doc.setTextColor(80, 80, 80);
   
   let offsetY = y + 5;
+  let lineCount = 0;
   if (companySettings.email) {
     doc.text(`E-Mail: ${companySettings.email}`, x, offsetY);
     offsetY += 5;
+    lineCount++;
   }
   if (companySettings.phone) {
     doc.text(`Tel: ${companySettings.phone}`, x, offsetY);
+    lineCount++;
   }
+  
+  // Return actual height: first line offset + (line count * line height)
+  return lineCount > 0 ? (5 + (lineCount * 5)) : 5;
 }
 
 function renderCustomerInfo(doc, x, y, width, documentData) {
@@ -212,6 +279,7 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   doc.setTextColor(0, 0, 0);
   
   let offsetY = y + 5;
+  const startY = offsetY;
   doc.setFont('helvetica', 'bold');
   doc.text('Kunde:', x, offsetY);
   offsetY += 6;
@@ -236,6 +304,9 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
       offsetY += 4;
     });
   }
+  
+  // Return actual height consumed
+  return offsetY - y + 2; // Add small bottom padding
 }
 
 function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
@@ -265,6 +336,9 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
   if (docDate) {
     doc.text(`Datum: ${docDate}`, x + width - 60, y + 14, { align: 'left' });
   }
+  
+  // Return actual height: title height + extra info
+  return 20; // ~20mm for document header
 }
 
 function renderItemsTable(doc, x, y, width, height, documentData) {
@@ -426,6 +500,9 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.setFontSize(11);
   doc.text('Gesamtsumme:', x + 5, y + topPadding + 3 + (2 * lineHeight));
   doc.text(formatCurrency(total), x + width - 5, y + topPadding + 3 + (2 * lineHeight), { align: 'right' });
+  
+  // Return the actual box height
+  return boxHeight;
 }
 
 function renderFooter(doc, x, y, width, companySettings, documentType) {
@@ -455,6 +532,9 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
     doc.text(line, x + width / 2, offsetY, { align: 'center' });
     offsetY += 4;
   });
+  
+  // Return actual height: top padding + (line count * line height)
+  return 5 + (lines.length * 4);
 }
 
 function formatCurrency(value) {
