@@ -4,8 +4,8 @@
 import { getCompanySettings } from './settings.js';
 
 // PDF Canvas dimensions (in pixels, matching PDF generator expectations)
-const CANVAS_WIDTH_PX = 600;  // Base width for layout coordinates
-const A4_HEIGHT_PX = 842;     // Base height for A4 (297mm)
+// Width corresponds to A4 width (210mm), height is dynamic based on content
+const CANVAS_WIDTH_PX = 600;  // Base width for layout coordinates (converts to 210mm A4 width)
 
 const ELEMENT_LABELS = {
   'logo': 'Logo',
@@ -70,7 +70,7 @@ function initializeGrid() {
 
 function renderGrid() {
   // Clear canvas
-  canvas.innerHTML = '<div class="canvas-label">A4 Vorlage (210mm × 297mm)</div>';
+  canvas.innerHTML = '<div class="canvas-label">Layout-Vorlage</div>';
   
   // Create grid container wrapper
   const gridWrapper = document.createElement('div');
@@ -791,9 +791,13 @@ function convertGridToLayoutTemplate() {
   // Convert grid state to layout template format expected by PDF generator
   const elements = [];
   
-  // Calculate cell dimensions
+  // Use CANVAS_WIDTH_PX as the reference width for A4 (210mm in PDF)
+  // Height is calculated based on grid proportions, not fixed to A4 height
   const cellWidth = CANVAS_WIDTH_PX / gridState.cols;
-  const cellHeight = A4_HEIGHT_PX / gridState.rows;
+  
+  // Calculate cell height based on actual grid aspect ratio
+  // This allows the PDF to grow vertically as needed
+  const cellHeight = cellWidth; // Square cells for now, can be adjusted based on content
   
   // Process each box in the grid
   for (const elementType in gridState.boxes) {

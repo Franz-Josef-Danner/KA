@@ -1013,14 +1013,13 @@ td.readonly:hover {
 .layout-canvas {
   position: relative;
   width: 100%;
-  /* A4 aspect ratio: 210mm × 297mm = 1:1.414 */
-  aspect-ratio: 210 / 297;
+  /* Canvas grows dynamically based on grid content, not constrained to A4 */
   background: white;
   border: 2px solid #ccc;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  min-height: 800px;
+  min-height: 400px;
   max-width: 100%;
 }
 
