@@ -17,7 +17,8 @@ const ELEMENT_LABELS = {
 let gridState = {
   rows: 2,
   cols: 2,
-  cells: {} // Format: "row-col": { element: elementType or null }
+  cells: {}, // Format: "row-col": { element: elementType or null }
+  boxes: {} // Format: "elementType": { row, col, rowspan, colspan }
 };
 
 let canvas = null;
@@ -63,9 +64,9 @@ function renderGrid() {
   // Clear canvas
   canvas.innerHTML = '<div class="canvas-label">A4 Vorlage (210mm × 297mm)</div>';
   
-  // Create grid container
-  const gridContainer = document.createElement('div');
-  gridContainer.className = 'simple-grid-container';
+  // Create grid container wrapper
+  const gridWrapper = document.createElement('div');
+  gridWrapper.className = 'simple-grid-wrapper';
   
   // Create column controls row
   const columnControlsRow = document.createElement('div');
@@ -106,14 +107,17 @@ function renderGrid() {
     columnControlsRow.appendChild(colControl);
   }
   
-  gridContainer.appendChild(columnControlsRow);
+  gridWrapper.appendChild(columnControlsRow);
   
-  // Create grid rows with row controls
+  // Create main content area with row controls and grid
+  const mainContent = document.createElement('div');
+  mainContent.className = 'grid-main-content';
+  
+  // Create row controls column
+  const rowControlsColumn = document.createElement('div');
+  rowControlsColumn.className = 'row-controls-column';
+  
   for (let row = 0; row < gridState.rows; row++) {
-    const gridRow = document.createElement('div');
-    gridRow.className = 'grid-row';
-    
-    // Row controls
     const rowControl = document.createElement('div');
     rowControl.className = 'row-control';
     
@@ -139,52 +143,139 @@ function renderGrid() {
     rowControl.appendChild(deleteBtn);
     rowControl.appendChild(downArrow);
     
-    gridRow.appendChild(rowControl);
-    
-    // Add cells
-    for (let col = 0; col < gridState.cols; col++) {
-      const cellId = `${row}-${col}`;
-      const cell = document.createElement('div');
-      cell.className = 'grid-cell';
-      cell.dataset.cellId = cellId;
-      
-      // Make cell a drop target
-      cell.addEventListener('dragover', handleDragOver);
-      cell.addEventListener('drop', handleDrop);
-      cell.addEventListener('dragleave', handleDragLeave);
-      
-      // If cell has an element, render it
-      const cellData = gridState.cells[cellId];
-      if (cellData && cellData.element) {
-        const elementDiv = document.createElement('div');
-        elementDiv.className = 'cell-element';
-        elementDiv.textContent = ELEMENT_LABELS[cellData.element] || cellData.element;
-        elementDiv.draggable = true;
-        elementDiv.dataset.elementType = cellData.element;
-        
-        // Make element draggable from cell
-        elementDiv.addEventListener('dragstart', (e) => {
-          draggedElement = cellData.element;
-          draggedFromCell = cellId;
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', cellData.element);
-          elementDiv.style.opacity = '0.5';
-        });
-        
-        elementDiv.addEventListener('dragend', (e) => {
-          elementDiv.style.opacity = '1';
-        });
-        
-        cell.appendChild(elementDiv);
-      }
-      
-      gridRow.appendChild(cell);
-    }
-    
-    gridContainer.appendChild(gridRow);
+    rowControlsColumn.appendChild(rowControl);
   }
   
-  canvas.appendChild(gridContainer);
+  mainContent.appendChild(rowControlsColumn);
+  
+  // Create the actual grid using CSS Grid
+  const gridContainer = document.createElement('div');
+  gridContainer.className = 'simple-grid-container';
+  gridContainer.style.display = 'grid';
+  gridContainer.style.gridTemplateColumns = `repeat(${gridState.cols}, 1fr)`;
+  gridContainer.style.gridTemplateRows = `repeat(${gridState.rows}, 1fr)`;
+  gridContainer.style.gap = '4px';
+  gridContainer.style.flex = '1';
+  
+  // Track which cells are starting cells of boxes
+  const processedBoxes = new Set();
+  
+  // Create all cells
+  for (let row = 0; row < gridState.rows; row++) {
+    for (let col = 0; col < gridState.cols; col++) {
+      const cellId = `${row}-${col}`;
+      const cellData = gridState.cells[cellId];
+      
+      // Check if this cell has an element and it's the starting cell
+      if (cellData && cellData.element) {
+        const boxInfo = gridState.boxes[cellData.element];
+        
+        // Only render the box from its starting cell
+        if (boxInfo && boxInfo.row === row && boxInfo.col === col && !processedBoxes.has(cellData.element)) {
+          processedBoxes.add(cellData.element);
+          
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.dataset.cellId = cellId;
+          cell.style.gridColumn = `${col + 1} / span ${boxInfo.colspan}`;
+          cell.style.gridRow = `${row + 1} / span ${boxInfo.rowspan}`;
+          
+          // Make cell a drop target
+          cell.addEventListener('dragover', handleDragOver);
+          cell.addEventListener('drop', handleDrop);
+          cell.addEventListener('dragleave', handleDragLeave);
+          
+          // Create element with expansion arrows
+          const elementDiv = document.createElement('div');
+          elementDiv.className = 'cell-element';
+          elementDiv.textContent = ELEMENT_LABELS[cellData.element] || cellData.element;
+          elementDiv.draggable = true;
+          elementDiv.dataset.elementType = cellData.element;
+          
+          // Add expansion arrows
+          const arrowsDiv = document.createElement('div');
+          arrowsDiv.className = 'box-expansion-arrows';
+          
+          const upBtn = document.createElement('button');
+          upBtn.className = 'box-expand-btn expand-up';
+          upBtn.innerHTML = '↑';
+          upBtn.title = 'Nach oben erweitern';
+          upBtn.onclick = (e) => {
+            e.stopPropagation();
+            expandBox(cellData.element, 'up');
+          };
+          
+          const downBtn = document.createElement('button');
+          downBtn.className = 'box-expand-btn expand-down';
+          downBtn.innerHTML = '↓';
+          downBtn.title = 'Nach unten erweitern';
+          downBtn.onclick = (e) => {
+            e.stopPropagation();
+            expandBox(cellData.element, 'down');
+          };
+          
+          const leftBtn = document.createElement('button');
+          leftBtn.className = 'box-expand-btn expand-left';
+          leftBtn.innerHTML = '←';
+          leftBtn.title = 'Nach links erweitern';
+          leftBtn.onclick = (e) => {
+            e.stopPropagation();
+            expandBox(cellData.element, 'left');
+          };
+          
+          const rightBtn = document.createElement('button');
+          rightBtn.className = 'box-expand-btn expand-right';
+          rightBtn.innerHTML = '→';
+          rightBtn.title = 'Nach rechts erweitern';
+          rightBtn.onclick = (e) => {
+            e.stopPropagation();
+            expandBox(cellData.element, 'right');
+          };
+          
+          arrowsDiv.appendChild(upBtn);
+          arrowsDiv.appendChild(downBtn);
+          arrowsDiv.appendChild(leftBtn);
+          arrowsDiv.appendChild(rightBtn);
+          
+          elementDiv.appendChild(arrowsDiv);
+          
+          // Make element draggable from cell
+          elementDiv.addEventListener('dragstart', (e) => {
+            draggedElement = cellData.element;
+            draggedFromCell = cellId;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', cellData.element);
+            elementDiv.style.opacity = '0.5';
+          });
+          
+          elementDiv.addEventListener('dragend', (e) => {
+            elementDiv.style.opacity = '1';
+          });
+          
+          cell.appendChild(elementDiv);
+          gridContainer.appendChild(cell);
+        }
+      } else {
+        // Empty cell - render it normally
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.dataset.cellId = cellId;
+        cell.style.gridColumn = `${col + 1}`;
+        cell.style.gridRow = `${row + 1}`;
+        
+        // Make cell a drop target
+        cell.addEventListener('dragover', handleDragOver);
+        cell.addEventListener('drop', handleDrop);
+        cell.addEventListener('dragleave', handleDragLeave);
+        
+        gridContainer.appendChild(cell);
+      }
+    }
+  }
+  
+  mainContent.appendChild(gridContainer);
+  gridWrapper.appendChild(mainContent);
+  canvas.appendChild(gridWrapper);
 }
 
 function addColumnLeft(col) {
@@ -201,6 +292,14 @@ function addColumnLeft(col) {
     // Add empty cell in the new column
     const newCellId = `${row}-${col}`;
     newCells[newCellId] = { element: null };
+  }
+  
+  // Update box positions
+  for (const elementType in gridState.boxes) {
+    const box = gridState.boxes[elementType];
+    if (box.col >= col) {
+      box.col++;
+    }
   }
   
   gridState.cols++;
@@ -222,6 +321,14 @@ function addColumnRight(col) {
     // Add empty cell in the new column
     const newCellId = `${row}-${col + 1}`;
     newCells[newCellId] = { element: null };
+  }
+  
+  // Update box positions
+  for (const elementType in gridState.boxes) {
+    const box = gridState.boxes[elementType];
+    if (box.col > col) {
+      box.col++;
+    }
   }
   
   gridState.cols++;
@@ -273,6 +380,14 @@ function addRowAbove(row) {
     newCells[newCellId] = { element: null };
   }
   
+  // Update box positions
+  for (const elementType in gridState.boxes) {
+    const box = gridState.boxes[elementType];
+    if (box.row >= row) {
+      box.row++;
+    }
+  }
+  
   gridState.rows++;
   gridState.cells = newCells;
   renderGrid();
@@ -295,6 +410,14 @@ function addRowBelow(row) {
   for (let col = 0; col < gridState.cols; col++) {
     const newCellId = `${row + 1}-${col}`;
     newCells[newCellId] = { element: null };
+  }
+  
+  // Update box positions
+  for (const elementType in gridState.boxes) {
+    const box = gridState.boxes[elementType];
+    if (box.row > row) {
+      box.row++;
+    }
   }
   
   gridState.rows++;
@@ -365,16 +488,228 @@ function handleDrop(e) {
     return;
   }
   
-  // If dragging from another cell, remove from that cell
+  // If dragging from another cell, remove from that cell and its box info
   if (draggedFromCell) {
-    gridState.cells[draggedFromCell].element = null;
+    const oldElement = gridState.cells[draggedFromCell].element;
+    
+    // Clear all cells occupied by the old box
+    if (oldElement && gridState.boxes[oldElement]) {
+      const oldBox = gridState.boxes[oldElement];
+      const [oldRow, oldCol] = draggedFromCell.split('-').map(Number);
+      
+      for (let r = 0; r < oldBox.rowspan; r++) {
+        for (let c = 0; c < oldBox.colspan; c++) {
+          const cellId = `${oldRow + r}-${oldCol + c}`;
+          if (gridState.cells[cellId]) {
+            gridState.cells[cellId].element = null;
+          }
+        }
+      }
+      
+      // Remove box info
+      delete gridState.boxes[oldElement];
+    }
   }
   
   // Place element in target cell
   gridState.cells[targetCellId].element = elementType;
   
+  // Initialize box info with span 1x1
+  const [row, col] = targetCellId.split('-').map(Number);
+  gridState.boxes[elementType] = {
+    row: row,
+    col: col,
+    rowspan: 1,
+    colspan: 1
+  };
+  
   // Reset drag state
   resetDragState();
+  
+  // Re-render grid
+  renderGrid();
+}
+
+function expandBox(elementType, direction) {
+  const box = gridState.boxes[elementType];
+  if (!box) {
+    console.error('Box not found:', elementType);
+    return;
+  }
+  
+  const { row, col, rowspan, colspan } = box;
+  
+  switch (direction) {
+    case 'up':
+      // Check if we can expand upward
+      if (row === 0) {
+        // Need to add a row at the top
+        // First update box info to reflect the expansion
+        box.row = 0;
+        box.rowspan++;
+        
+        // Add the row (which will shift the box down)
+        addRowAbove(0);
+        
+        // Mark new cells as occupied
+        for (let c = 0; c < box.colspan; c++) {
+          const cellId = `0-${box.col + c}`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
+          }
+          gridState.cells[cellId].element = elementType;
+        }
+        return;
+      }
+      
+      // Check if cells above are empty
+      const newRow = row - 1;
+      for (let c = 0; c < colspan; c++) {
+        const checkCellId = `${newRow}-${col + c}`;
+        if (gridState.cells[checkCellId] && gridState.cells[checkCellId].element) {
+          alert('Die Zellen oberhalb sind bereits belegt. Erweiterung nicht möglich.');
+          return;
+        }
+      }
+      
+      // Expand upward
+      box.row = newRow;
+      box.rowspan++;
+      
+      // Mark new cells as occupied
+      for (let c = 0; c < colspan; c++) {
+        const cellId = `${newRow}-${col + c}`;
+        gridState.cells[cellId].element = elementType;
+      }
+      break;
+      
+    case 'down':
+      // Check if we can expand downward
+      const nextRow = row + rowspan;
+      if (nextRow >= gridState.rows) {
+        // Need to add a row at the bottom
+        // First calculate the new row index before modifying
+        const newRowIdx = row + rowspan;
+        box.rowspan++;
+        
+        // Add the row
+        addRowBelow(gridState.rows - 1);
+        
+        // Mark new cells as occupied
+        for (let c = 0; c < box.colspan; c++) {
+          const cellId = `${newRowIdx}-${box.col + c}`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
+          }
+          gridState.cells[cellId].element = elementType;
+        }
+        return;
+      }
+      
+      // Check if cells below are empty
+      for (let c = 0; c < colspan; c++) {
+        const checkCellId = `${nextRow}-${col + c}`;
+        if (gridState.cells[checkCellId] && gridState.cells[checkCellId].element) {
+          alert('Die Zellen unterhalb sind bereits belegt. Erweiterung nicht möglich.');
+          return;
+        }
+      }
+      
+      // Expand downward
+      box.rowspan++;
+      
+      // Mark new cells as occupied
+      for (let c = 0; c < colspan; c++) {
+        const cellId = `${nextRow}-${col + c}`;
+        gridState.cells[cellId].element = elementType;
+      }
+      break;
+      
+    case 'left':
+      // Check if we can expand leftward
+      if (col === 0) {
+        // Need to add a column on the left
+        // First update box info to reflect the expansion
+        box.col = 0;
+        box.colspan++;
+        
+        // Add the column (which will shift the box right)
+        addColumnLeft(0);
+        
+        // Mark new cells as occupied
+        for (let r = 0; r < box.rowspan; r++) {
+          const cellId = `${box.row + r}-0`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
+          }
+          gridState.cells[cellId].element = elementType;
+        }
+        return;
+      }
+      
+      // Check if cells to the left are empty
+      const newCol = col - 1;
+      for (let r = 0; r < rowspan; r++) {
+        const checkCellId = `${row + r}-${newCol}`;
+        if (gridState.cells[checkCellId] && gridState.cells[checkCellId].element) {
+          alert('Die Zellen links sind bereits belegt. Erweiterung nicht möglich.');
+          return;
+        }
+      }
+      
+      // Expand leftward
+      box.col = newCol;
+      box.colspan++;
+      
+      // Mark new cells as occupied
+      for (let r = 0; r < rowspan; r++) {
+        const cellId = `${row + r}-${newCol}`;
+        gridState.cells[cellId].element = elementType;
+      }
+      break;
+      
+    case 'right':
+      // Check if we can expand rightward
+      const nextCol = col + colspan;
+      if (nextCol >= gridState.cols) {
+        // Need to add a column on the right
+        // First calculate the new column index before modifying
+        const newColIdx = col + colspan;
+        box.colspan++;
+        
+        // Add the column
+        addColumnRight(gridState.cols - 1);
+        
+        // Mark new cells as occupied
+        for (let r = 0; r < box.rowspan; r++) {
+          const cellId = `${box.row + r}-${newColIdx}`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
+          }
+          gridState.cells[cellId].element = elementType;
+        }
+        return;
+      }
+      
+      // Check if cells to the right are empty
+      for (let r = 0; r < rowspan; r++) {
+        const checkCellId = `${row + r}-${nextCol}`;
+        if (gridState.cells[checkCellId] && gridState.cells[checkCellId].element) {
+          alert('Die Zellen rechts sind bereits belegt. Erweiterung nicht möglich.');
+          return;
+        }
+      }
+      
+      // Expand rightward
+      box.colspan++;
+      
+      // Mark new cells as occupied
+      for (let r = 0; r < rowspan; r++) {
+        const cellId = `${row + r}-${nextCol}`;
+        gridState.cells[cellId].element = elementType;
+      }
+      break;
+  }
   
   // Re-render grid
   renderGrid();
