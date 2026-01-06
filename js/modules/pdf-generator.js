@@ -4,7 +4,7 @@
 import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
 
 // Generate PDF for an order or invoice
-export async function generatePDF(documentType, documentData, useSampleCompanyData = false) {
+export async function generatePDF(documentType, documentData, useSampleCompanyData = false, customLayoutTemplate = null) {
   // Load jsPDF library from CDN if not already loaded
   if (typeof window.jspdf === 'undefined') {
     try {
@@ -32,7 +32,8 @@ export async function generatePDF(documentType, documentData, useSampleCompanyDa
     companySettings = getCompanySettings();
   }
   
-  const layoutTemplate = getPdfLayoutTemplate();
+  // Use custom layout if provided, otherwise get from settings
+  const layoutTemplate = customLayoutTemplate || getPdfLayoutTemplate();
 
   // Render document based on layout template
   try {
