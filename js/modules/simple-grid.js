@@ -544,25 +544,21 @@ function expandBox(elementType, direction) {
       // Check if we can expand upward
       if (row === 0) {
         // Need to add a row at the top
+        // First update box info to reflect the expansion
+        box.row = 0;
+        box.rowspan++;
+        
+        // Add the row (which will shift the box down)
         addRowAbove(0);
-        // Box row will be shifted down by addRowAbove, but we want to expand up
-        // So we need to adjust after the function returns
-        setTimeout(() => {
-          const updatedBox = gridState.boxes[elementType];
-          if (updatedBox) {
-            updatedBox.row = 0;
-            updatedBox.rowspan++;
-            // Mark new cells as occupied
-            for (let c = 0; c < updatedBox.colspan; c++) {
-              const cellId = `0-${updatedBox.col + c}`;
-              if (!gridState.cells[cellId]) {
-                gridState.cells[cellId] = { element: null };
-              }
-              gridState.cells[cellId].element = elementType;
-            }
-            renderGrid();
+        
+        // Mark new cells as occupied
+        for (let c = 0; c < box.colspan; c++) {
+          const cellId = `0-${box.col + c}`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
           }
-        }, 0);
+          gridState.cells[cellId].element = elementType;
+        }
         return;
       }
       
@@ -592,24 +588,21 @@ function expandBox(elementType, direction) {
       const nextRow = row + rowspan;
       if (nextRow >= gridState.rows) {
         // Need to add a row at the bottom
+        // First calculate the new row index before modifying
+        const newRowIdx = row + rowspan;
+        box.rowspan++;
+        
+        // Add the row
         addRowBelow(gridState.rows - 1);
-        // After adding, expand the box
-        setTimeout(() => {
-          const updatedBox = gridState.boxes[elementType];
-          if (updatedBox) {
-            updatedBox.rowspan++;
-            // Mark new cells as occupied
-            const newRowIdx = updatedBox.row + updatedBox.rowspan - 1;
-            for (let c = 0; c < updatedBox.colspan; c++) {
-              const cellId = `${newRowIdx}-${updatedBox.col + c}`;
-              if (!gridState.cells[cellId]) {
-                gridState.cells[cellId] = { element: null };
-              }
-              gridState.cells[cellId].element = elementType;
-            }
-            renderGrid();
+        
+        // Mark new cells as occupied
+        for (let c = 0; c < box.colspan; c++) {
+          const cellId = `${newRowIdx}-${box.col + c}`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
           }
-        }, 0);
+          gridState.cells[cellId].element = elementType;
+        }
         return;
       }
       
@@ -636,25 +629,21 @@ function expandBox(elementType, direction) {
       // Check if we can expand leftward
       if (col === 0) {
         // Need to add a column on the left
+        // First update box info to reflect the expansion
+        box.col = 0;
+        box.colspan++;
+        
+        // Add the column (which will shift the box right)
         addColumnLeft(0);
-        // Box col will be shifted right by addColumnLeft, but we want to expand left
-        // So we need to adjust after the function returns
-        setTimeout(() => {
-          const updatedBox = gridState.boxes[elementType];
-          if (updatedBox) {
-            updatedBox.col = 0;
-            updatedBox.colspan++;
-            // Mark new cells as occupied
-            for (let r = 0; r < updatedBox.rowspan; r++) {
-              const cellId = `${updatedBox.row + r}-0`;
-              if (!gridState.cells[cellId]) {
-                gridState.cells[cellId] = { element: null };
-              }
-              gridState.cells[cellId].element = elementType;
-            }
-            renderGrid();
+        
+        // Mark new cells as occupied
+        for (let r = 0; r < box.rowspan; r++) {
+          const cellId = `${box.row + r}-0`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
           }
-        }, 0);
+          gridState.cells[cellId].element = elementType;
+        }
         return;
       }
       
@@ -684,24 +673,21 @@ function expandBox(elementType, direction) {
       const nextCol = col + colspan;
       if (nextCol >= gridState.cols) {
         // Need to add a column on the right
+        // First calculate the new column index before modifying
+        const newColIdx = col + colspan;
+        box.colspan++;
+        
+        // Add the column
         addColumnRight(gridState.cols - 1);
-        // After adding, expand the box
-        setTimeout(() => {
-          const updatedBox = gridState.boxes[elementType];
-          if (updatedBox) {
-            updatedBox.colspan++;
-            // Mark new cells as occupied
-            const newColIdx = updatedBox.col + updatedBox.colspan - 1;
-            for (let r = 0; r < updatedBox.rowspan; r++) {
-              const cellId = `${updatedBox.row + r}-${newColIdx}`;
-              if (!gridState.cells[cellId]) {
-                gridState.cells[cellId] = { element: null };
-              }
-              gridState.cells[cellId].element = elementType;
-            }
-            renderGrid();
+        
+        // Mark new cells as occupied
+        for (let r = 0; r < box.rowspan; r++) {
+          const cellId = `${box.row + r}-${newColIdx}`;
+          if (!gridState.cells[cellId]) {
+            gridState.cells[cellId] = { element: null };
           }
-        }, 0);
+          gridState.cells[cellId].element = elementType;
+        }
         return;
       }
       
