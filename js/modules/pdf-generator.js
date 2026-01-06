@@ -335,41 +335,17 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
                              colWidths.einzelpreis + colWidths.gesamtpreis;
   colWidths.beschreibung = Math.max(minColWidths.beschreibung, width - otherColumnsWidth);
   
-  // Table header
-  doc.setFillColor(240, 240, 240);
+  // Constants for row rendering
   const headerHeight = 8;
-  doc.rect(x, y, width, headerHeight, 'F');
+  const lineHeight = 4; // mm per line of text
+  const rowPaddingTop = 2; // mm padding at top of row
+  const rowPaddingBottom = 2; // mm padding at bottom of row
+  const textBaselineOffset = 1; // mm adjustment for text baseline alignment with jsPDF
+  // verticalCenterOffset: For single-line text, this positions text at ~50% of row height
+  // The value 1.5 works well with font size 9 and current row padding to achieve visual centering
+  const verticalCenterOffset = 1.5; // mm offset for vertical centering of single-line text
   
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
-  
-  let colX = x;
-  doc.text('Pos.', colX + 2, y + 5);
-  colX += colWidths.pos;
-  doc.text('Beschreibung', colX + 2, y + 5);
-  colX += colWidths.beschreibung;
-  doc.text('Menge', colX + 2, y + 5);
-  colX += colWidths.menge;
-  doc.text('Einheit', colX + 2, y + 5);
-  colX += colWidths.einheit;
-  doc.text('Einzelpreis', colX + 2, y + 5);
-  colX += colWidths.einzelpreis;
-  doc.text('Gesamtpreis', colX + 2, y + 5);
-  
-  // Table rows with dynamic heights
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  
-  const lineHeight = 4; // mm per line
-  const rowPaddingTop = 2; // mm padding top
-  const rowPaddingBottom = 2; // mm padding bottom
-  const textBaselineOffset = 1; // mm adjustment for text baseline alignment
-  const verticalCenterOffset = 1.5; // mm offset for approximate vertical centering
-  
-  let rowY = y + headerHeight;
-  
-  // Helper function to render table header on new page
+  // Helper function to render table header
   const renderTableHeader = (startY) => {
     doc.setFillColor(240, 240, 240);
     doc.rect(x, startY, width, headerHeight, 'F');
@@ -397,12 +373,19 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     return startY + headerHeight;
   };
   
+  // Render initial table header
+  renderTableHeader(y);
+  
+  // Table rows with dynamic heights
+  let rowY = y + headerHeight;
+  
   items.forEach((item, index) => {
     // Calculate row height based on description text wrapping
     const beschreibungText = item.beschreibung || item.artikel || '';
     const beschreibungLines = doc.splitTextToSize(beschreibungText, colWidths.beschreibung - padding);
-    // Calculate height: single line needs one lineHeight + top + bottom padding
-    // Multi-line needs lines * lineHeight + top + bottom padding
+    // Row height = (number of lines × line height) + top padding + bottom padding
+    // For single line: (1 × 4mm) + 2mm + 2mm = 8mm
+    // For three lines: (3 × 4mm) + 2mm + 2mm = 16mm
     const contentHeight = beschreibungLines.length * lineHeight;
     const rowHeight = contentHeight + rowPaddingTop + rowPaddingBottom;
     
