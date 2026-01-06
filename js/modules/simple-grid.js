@@ -3,6 +3,10 @@
 // -----------------------------
 import { getCompanySettings } from './settings.js';
 
+// PDF Canvas dimensions (in pixels, matching PDF generator expectations)
+const CANVAS_WIDTH_PX = 600;  // Base width for layout coordinates
+const A4_HEIGHT_PX = 842;     // Base height for A4 (297mm)
+
 const ELEMENT_LABELS = {
   'logo': 'Logo',
   'company-name': 'Firmenname',
@@ -786,12 +790,10 @@ function setupPreviewButton() {
 function convertGridToLayoutTemplate() {
   // Convert grid state to layout template format expected by PDF generator
   const elements = [];
-  const canvasWidth = 600; // Base width in px for layout coordinates
-  const canvasHeight = 842; // Base height in px for A4 (297mm)
   
   // Calculate cell dimensions
-  const cellWidth = canvasWidth / gridState.cols;
-  const cellHeight = canvasHeight / gridState.rows;
+  const cellWidth = CANVAS_WIDTH_PX / gridState.cols;
+  const cellHeight = A4_HEIGHT_PX / gridState.rows;
   
   // Process each box in the grid
   for (const elementType in gridState.boxes) {
