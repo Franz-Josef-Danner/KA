@@ -38,7 +38,9 @@ colWidths.beschreibung = Math.max(minColWidths.beschreibung, width - otherColumn
 // Calculate height based on text wrapping
 const beschreibungText = item.beschreibung || item.artikel || '';
 const beschreibungLines = doc.splitTextToSize(beschreibungText, colWidths.beschreibung - padding);
-const rowHeight = Math.max(lineHeight + rowPadding, beschreibungLines.length * lineHeight + rowPadding);
+// Row height = (number of lines × line height) + top padding + bottom padding
+const contentHeight = beschreibungLines.length * lineHeight;
+const rowHeight = contentHeight + rowPaddingTop + rowPaddingBottom;
 ```
 
 **Benefits:**
@@ -49,9 +51,10 @@ const rowHeight = Math.max(lineHeight + rowPadding, beschreibungLines.length * l
 ### 3. Text Wrapping Support
 ```javascript
 if (beschreibungLines.length > 1) {
-  // Multi-line text
+  // Multi-line text - render each line with proper spacing
   beschreibungLines.forEach((line, lineIndex) => {
-    doc.text(line, colX + 2, rowY + rowPadding + (lineIndex + 1) * lineHeight - 1);
+    const lineY = rowY + rowPaddingTop + (lineIndex + 1) * lineHeight - textBaselineOffset;
+    doc.text(line, colX + 2, lineY);
   });
 } else {
   // Single line - centered vertically
@@ -73,10 +76,13 @@ if (beschreibungLines.length > 1) {
 
 ### Constants
 ```javascript
-const padding = 4;           // Padding on each side (mm)
-const lineHeight = 4;        // Height per text line (mm)
-const rowPadding = 2;        // Top/bottom padding per row (mm)
-const headerHeight = 8;      // Fixed header height (mm)
+const padding = 4;                  // Padding on each side (mm)
+const lineHeight = 4;               // Height per text line (mm)
+const rowPaddingTop = 2;            // Top padding per row (mm)
+const rowPaddingBottom = 2;         // Bottom padding per row (mm)
+const headerHeight = 8;             // Fixed header height (mm)
+const textBaselineOffset = 1;       // Text baseline alignment adjustment (mm)
+const verticalCenterOffset = 1.5;   // Vertical centering offset for single-line text (mm)
 ```
 
 ### Minimum Column Widths

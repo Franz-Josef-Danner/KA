@@ -402,7 +402,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     }
     
     // Render cells
-    colX = x;
+    let colX = x;
     
     // Position - centered vertically in row
     const textY = rowY + rowHeight / 2 + verticalCenterOffset;
