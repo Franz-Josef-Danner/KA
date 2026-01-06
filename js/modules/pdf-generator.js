@@ -152,7 +152,7 @@ function adjustElementPosition(element, renderedHeights, allElements) {
 // Render individual element
 // Note: For text-based elements (company-name, company-address, etc.), the height parameter
 // is intentionally ignored - these elements use content-based heights to avoid unnecessary
-// spacing when content is small. Only logo and items-table use the configured height.
+// spacing when content is small. Only logo uses the configured height.
 // Returns the actual height consumed by the element in mm (or null if not applicable).
 function renderElement(doc, element, documentType, documentData, companySettings) {
   // Convert px to mm (600px = 210mm) and add PDF margin to ensure 1cm border
@@ -173,11 +173,12 @@ function renderElement(doc, element, documentType, documentData, companySettings
       return renderCompanyContact(doc, x, y, width, companySettings);
     case 'customer-info':
       return renderCustomerInfo(doc, x, y, width, documentData);
+    case 'document-number':
+      return renderDocumentNumber(doc, x, y, width, documentType, documentData);
     case 'document-header':
       return renderDocumentHeader(doc, x, y, width, documentType, documentData);
     case 'items-table':
-      renderItemsTable(doc, x, y, width, height, documentData);
-      return height; // Items table uses configured height
+      return renderItemsTable(doc, x, y, width, height, documentData);
     case 'totals':
       return renderTotals(doc, x, y, width, documentData);
     case 'footer':
@@ -314,6 +315,55 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   return offsetY - y + 2; // Add small bottom padding
 }
 
+function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  
+  // Support both old format and new sample format
+  let docId, docDate;
+  let label;
+  if (documentType === 'order' || documentType === 'auftrag') {
+    docId = documentData.orderId || documentData.Auftrags_ID;
+    docDate = documentData.orderDate || documentData.Auftragsdatum;
+    label = 'Auftragsnummer:';
+  } else {
+    docId = documentData.invoiceId || documentData.Rechnungs_ID;
+    docDate = documentData.invoiceDate || documentData.Rechnungsdatum;
+    label = 'Rechnungsnummer:';
+  }
+  
+  let offsetY = y + 4;
+  let lineCount = 0;
+  
+  // Render document number
+  if (docId) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(label, x, offsetY);
+    offsetY += 5;
+    lineCount++;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text(docId, x, offsetY);
+    offsetY += 5;
+    lineCount++;
+  }
+  
+  // Render date
+  if (docDate) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Datum: ${docDate}`, x, offsetY);
+    offsetY += 4;
+    lineCount++;
+  }
+  
+  // Return actual height: initial offset + (line count * average line height)
+  return 4 + (lineCount * 5); // Consistent with other text elements
+}
+
 function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
@@ -441,9 +491,8 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     rowY += 7;
   });
   
-  // Border
-  doc.setDrawColor(200, 200, 200);
-  doc.rect(x, y, width, rowY - y);
+  // Return actual height of rendered table content
+  return rowY - y;
 }
 
 function renderTotals(doc, x, y, width, documentData) {
@@ -476,38 +525,32 @@ function renderTotals(doc, x, y, width, documentData) {
     return; // No data to display
   }
   
-  // Calculate content-based height for the totals box
-  // 3 lines of content + padding: subtotal, VAT, total
-  const lineHeight = 7;  // 7mm between lines
-  const topPadding = 5;  // 5mm top padding
-  const bottomPadding = 3;  // 3mm bottom padding
-  const boxHeight = topPadding + (3 * lineHeight) + bottomPadding;
-  
-  // Draw box with content-based height
-  doc.setFillColor(245, 245, 245);
-  doc.rect(x, y, width, boxHeight, 'F');
-  doc.setDrawColor(200, 200, 200);
-  doc.rect(x, y, width, boxHeight);
+  // Calculate content-based height for the totals (text only, no box)
+  // 3 lines of content + minimal padding: subtotal, VAT, total
+  const lineHeight = 6;  // 6mm between lines
+  const topPadding = 3;  // 3mm top padding (reduced from 5mm)
+  const bottomPadding = 2;  // 2mm bottom padding (reduced from 3mm)
+  const totalHeight = topPadding + (3 * lineHeight) + bottomPadding;
   
   // Subtotal
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text('Netto:', x + 5, y + topPadding + 3);
-  doc.text(formatCurrency(subtotal), x + width - 5, y + topPadding + 3, { align: 'right' });
+  doc.text('Netto:', x, y + topPadding);
+  doc.text(formatCurrency(subtotal), x + width, y + topPadding, { align: 'right' });
   
   // VAT
   const vatRate = documentData.vatRate || 0.19;
-  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x + 5, y + topPadding + 3 + lineHeight);
-  doc.text(formatCurrency(vat), x + width - 5, y + topPadding + 3 + lineHeight, { align: 'right' });
+  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x, y + topPadding + lineHeight);
+  doc.text(formatCurrency(vat), x + width, y + topPadding + lineHeight, { align: 'right' });
   
   // Total
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text('Gesamtsumme:', x + 5, y + topPadding + 3 + (2 * lineHeight));
-  doc.text(formatCurrency(total), x + width - 5, y + topPadding + 3 + (2 * lineHeight), { align: 'right' });
+  doc.text('Gesamtsumme:', x, y + topPadding + (2 * lineHeight));
+  doc.text(formatCurrency(total), x + width, y + topPadding + (2 * lineHeight), { align: 'right' });
   
-  // Return the actual box height
-  return boxHeight;
+  // Return the actual height
+  return totalHeight;
 }
 
 function renderFooter(doc, x, y, width, companySettings, documentType) {
