@@ -3,6 +3,17 @@
 // -----------------------------
 
 const LAYOUT_EDITOR_KEY = 'ka_document_layout';
+const PDF_LAYOUT_KEY = 'ka_pdf_layout_template';
+
+// Grid cell dimensions (must match layout-editor-ui.js)
+const CELL_WIDTH = 100;
+const CELL_HEIGHT = 80;
+const CELL_GAP = 8;
+
+// PDF conversion constants
+const PDF_SCALE_FACTOR = 0.9; // Scale down slightly to avoid edge issues
+const PDF_OFFSET_X = 20; // Small left offset
+const PDF_OFFSET_Y = 20; // Small top offset
 
 // Box types available in the library
 export const BOX_TYPES = {
@@ -67,7 +78,7 @@ export function saveLayout(layout) {
 // Internal function to save PDF layout template (avoiding circular dependency)
 function savePdfLayoutTemplateInternal(template) {
   try {
-    localStorage.setItem('ka_pdf_layout_template', JSON.stringify(template));
+    localStorage.setItem(PDF_LAYOUT_KEY, JSON.stringify(template));
     return true;
   } catch (error) {
     console.error('Failed to save PDF layout template:', error);
@@ -76,11 +87,6 @@ function savePdfLayoutTemplateInternal(template) {
 }
 
 // Convert grid layout to PDF template format
-// Grid cell dimensions (must match layout-editor-ui.js)
-const CELL_WIDTH = 100;
-const CELL_HEIGHT = 80;
-const CELL_GAP = 8;
-
 function convertLayoutToPDFTemplate(layout) {
   const elements = [];
   
@@ -104,17 +110,13 @@ function convertLayoutToPDFTemplate(layout) {
     const height = rowSpan * CELL_HEIGHT + (rowSpan - 1) * CELL_GAP;
     
     // Convert to PDF coordinates with scaling
-    const scale = 0.9; // Scale down slightly to avoid edge issues
-    const offsetX = 20; // Small left offset
-    const offsetY = 20; // Small top offset
-    
     elements.push({
       id: box.id,
       type: box.type,
-      x: Math.round((x * scale) + offsetX),
-      y: Math.round((y * scale) + offsetY),
-      width: Math.round(width * scale),
-      height: Math.round(height * scale),
+      x: Math.round((x * PDF_SCALE_FACTOR) + PDF_OFFSET_X),
+      y: Math.round((y * PDF_SCALE_FACTOR) + PDF_OFFSET_Y),
+      width: Math.round(width * PDF_SCALE_FACTOR),
+      height: Math.round(height * PDF_SCALE_FACTOR),
       textAlign: 'left'
     });
   });
