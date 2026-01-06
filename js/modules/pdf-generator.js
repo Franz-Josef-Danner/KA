@@ -89,6 +89,9 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
 }
 
 // Render individual element
+// Note: For text-based elements (company-name, company-address, etc.), the height parameter
+// is intentionally ignored - these elements use content-based heights to avoid unnecessary
+// spacing when content is small. Only logo and items-table use the configured height.
 function renderElement(doc, element, documentType, documentData, companySettings) {
   const x = element.x * 0.352778; // Convert px to mm (600px = 210mm)
   const y = element.y * 0.352778;
@@ -394,28 +397,35 @@ function renderTotals(doc, x, y, width, documentData) {
     return; // No data to display
   }
   
-  // Draw box
+  // Calculate content-based height for the totals box
+  // 3 lines of content + padding: subtotal, VAT, total
+  const lineHeight = 7;  // 7mm between lines
+  const topPadding = 5;  // 5mm top padding
+  const bottomPadding = 3;  // 3mm bottom padding
+  const boxHeight = topPadding + (3 * lineHeight) + bottomPadding;
+  
+  // Draw box with content-based height
   doc.setFillColor(245, 245, 245);
-  doc.rect(x, y, width, 30, 'F');
+  doc.rect(x, y, width, boxHeight, 'F');
   doc.setDrawColor(200, 200, 200);
-  doc.rect(x, y, width, 30);
+  doc.rect(x, y, width, boxHeight);
   
   // Subtotal
   doc.setFont('helvetica', 'normal');
-  doc.text('Netto:', x + 5, y + 8);
-  doc.text(formatCurrency(subtotal), x + width - 5, y + 8, { align: 'right' });
+  doc.setFontSize(10);
+  doc.text('Netto:', x + 5, y + topPadding + 3);
+  doc.text(formatCurrency(subtotal), x + width - 5, y + topPadding + 3, { align: 'right' });
   
   // VAT
   const vatRate = documentData.vatRate || 0.19;
-  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x + 5, y + 15);
-  doc.text(formatCurrency(vat), x + width - 5, y + 15, { align: 'right' });
+  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x + 5, y + topPadding + 3 + lineHeight);
+  doc.text(formatCurrency(vat), x + width - 5, y + topPadding + 3 + lineHeight, { align: 'right' });
   
   // Total
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.text('Gesamtsumme:', x + 5, y + 24);
-  doc.setFontSize(14);
-  doc.text(formatCurrency(total), x + width - 5, y + 24, { align: 'right' });
+  doc.setFontSize(11);
+  doc.text('Gesamtsumme:', x + 5, y + topPadding + 3 + (2 * lineHeight));
+  doc.text(formatCurrency(total), x + width - 5, y + topPadding + 3 + (2 * lineHeight), { align: 'right' });
 }
 
 function renderFooter(doc, x, y, width, companySettings, documentType) {
