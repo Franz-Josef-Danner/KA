@@ -107,41 +107,57 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
 
 // Adjust element Y position based on actual content heights of previous elements
 function adjustElementPosition(element, renderedHeights, allElements) {
-  // Elements that should use dynamic positioning (text elements in the same column)
-  const textElements = ['company-name', 'company-address', 'company-contact'];
+  // Elements that should use dynamic positioning based on actual content height
+  // This includes all text-based elements and elements that render variable-height content
+  const dynamicElements = [
+    'company-name', 
+    'company-address', 
+    'company-contact',
+    'customer-info',
+    'document-header',
+    'items-table',
+    'totals',
+    'footer'
+  ];
   
-  if (!textElements.includes(element.type)) {
-    // Non-text elements keep their original position
+  if (!dynamicElements.includes(element.type)) {
+    // Non-dynamic elements keep their original position (e.g., logo)
     return element;
   }
   
-  // Find the previous text element in the same column (similar X position)
+  // Find elements that are in the same column (similar X position) and above this one
   const elementX = element.x * 0.352778; // Convert to mm
+  const elementY = element.y * 0.352778; // Convert to mm
   const previousElements = allElements
     .filter(el => {
       const elX = el.x * 0.352778;
       const elY = el.y * 0.352778;
-      const currentY = element.y * 0.352778;
-      // Same column (within 10mm) and positioned before current element
-      return Math.abs(elX - elementX) < 10 && elY < currentY && renderedHeights.has(el.id);
+      // Same column (within 15mm horizontally) and positioned above current element
+      return Math.abs(elX - elementX) < 15 && elY < elementY && renderedHeights.has(el.id);
     })
-    .sort((a, b) => (b.y * 0.352778) - (a.y * 0.352778)); // Sort by Y descending
+    .sort((a, b) => (b.y * 0.352778) - (a.y * 0.352778)); // Sort by Y descending (closest first)
   
   if (previousElements.length > 0) {
-    // Get the last rendered element in this column
+    // Get the closest element above this one in the same column
     const previousElement = previousElements[0];
     const previousInfo = renderedHeights.get(previousElement.id);
     
     if (previousInfo) {
-      // Position this element right after the previous one with a small gap
-      // previousInfo.y includes the PDF_MARGIN, so we subtract it before calculating
-      const gap = 2; // 2mm gap between elements
-      const newY = (previousInfo.y - PDF_MARGIN + previousInfo.height + gap) / 0.352778; // Convert back to px
+      // Check if this element would overlap with the previous one
+      // Only adjust position if elements would overlap based on actual content height
+      const previousBottom = previousInfo.y - PDF_MARGIN + previousInfo.height;
+      const currentTop = elementY;
+      const gap = 3; // 3mm minimum gap between elements
       
-      return {
-        ...element,
-        y: newY
-      };
+      if (currentTop < previousBottom + gap) {
+        // Position this element right after the previous one with a gap
+        const newY = (previousInfo.y - PDF_MARGIN + previousInfo.height + gap) / 0.352778; // Convert back to px
+        
+        return {
+          ...element,
+          y: newY
+        };
+      }
     }
   }
   
@@ -150,10 +166,8 @@ function adjustElementPosition(element, renderedHeights, allElements) {
 }
 
 // Render individual element
-// Note: For text-based elements (company-name, company-address, etc.), the height parameter
-// is intentionally ignored - these elements use content-based heights to avoid unnecessary
-// spacing when content is small. Only logo and items-table use the configured height.
 // Returns the actual height consumed by the element in mm (or null if not applicable).
+// All elements now return content-based heights to enable proper dynamic spacing.
 function renderElement(doc, element, documentType, documentData, companySettings) {
   // Convert px to mm (600px = 210mm) and add PDF margin to ensure 1cm border
   const x = element.x * 0.352778 + PDF_MARGIN;
@@ -176,8 +190,7 @@ function renderElement(doc, element, documentType, documentData, companySettings
     case 'document-header':
       return renderDocumentHeader(doc, x, y, width, documentType, documentData);
     case 'items-table':
-      renderItemsTable(doc, x, y, width, height, documentData);
-      return height; // Items table uses configured height
+      return renderItemsTable(doc, x, y, width, height, documentData);
     case 'totals':
       return renderTotals(doc, x, y, width, documentData);
     case 'footer':
@@ -335,15 +348,18 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
     docDate = documentData.invoiceDate || documentData.Rechnungsdatum;
   }
   
+  let maxHeight = 8; // Initial offset for title
+  
   if (docId) {
     doc.text(`Nr: ${docId}`, x + width - 60, y + 8, { align: 'left' });
   }
   if (docDate) {
     doc.text(`Datum: ${docDate}`, x + width - 60, y + 14, { align: 'left' });
+    maxHeight = 14; // Date line is at y + 14
   }
   
-  // Return actual height: title height + extra info
-  return 20; // ~20mm for document header
+  // Return actual content-based height: highest text position + small padding
+  return maxHeight + 4; // Add 4mm bottom padding
 }
 
 function renderItemsTable(doc, x, y, width, height, documentData) {
@@ -441,9 +457,15 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     rowY += 7;
   });
   
-  // Border
+  // Calculate actual content height
+  const actualTableHeight = rowY - y;
+  
+  // Border - draw with actual content height instead of configured height
   doc.setDrawColor(200, 200, 200);
-  doc.rect(x, y, width, rowY - y);
+  doc.rect(x, y, width, actualTableHeight);
+  
+  // Return actual content height instead of configured height
+  return actualTableHeight;
 }
 
 function renderTotals(doc, x, y, width, documentData) {
