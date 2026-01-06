@@ -435,10 +435,33 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   let rowY = y + 8;
   items.forEach((item, index) => {
-    if (rowY > y + height - 10) {
+    // Check if we need a new page (when approaching page bottom with margin)
+    const pageHeight = doc.internal.pageSize.height;
+    if (rowY > pageHeight - PDF_MARGIN - 20) {
       // Create new page if needed
       doc.addPage();
-      rowY = 20;
+      rowY = PDF_MARGIN + 8; // Start from margin + header height
+      
+      // Re-render table header on new page
+      doc.setFillColor(240, 240, 240);
+      doc.rect(x, PDF_MARGIN, width, 8, 'F');
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      
+      colX = x;
+      doc.text('Pos.', colX + 2, PDF_MARGIN + 5);
+      colX += colWidths.pos;
+      doc.text('Beschreibung', colX + 2, PDF_MARGIN + 5);
+      colX += colWidths.beschreibung;
+      doc.text('Menge', colX + 2, PDF_MARGIN + 5);
+      colX += colWidths.menge;
+      doc.text('Einheit', colX + 2, PDF_MARGIN + 5);
+      colX += colWidths.einheit;
+      doc.text('Einzelpreis', colX + 2, PDF_MARGIN + 5);
+      colX += colWidths.einzelpreis;
+      doc.text('Gesamtpreis', colX + 2, PDF_MARGIN + 5);
+      
+      doc.setFont('helvetica', 'normal');
     }
     
     // Alternate row background
