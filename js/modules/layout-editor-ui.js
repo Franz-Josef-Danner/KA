@@ -25,6 +25,7 @@ const CELL_HEIGHT = 80;
 const CELL_GAP = 8;
 
 // Box preview text for each box type
+// Note: Footer is excluded - it will be automatically placed at the bottom of PDFs
 const BOX_PREVIEWS = {
   'logo': 'Logo Vorschau',
   'company-name': 'Musterfirma GmbH',
@@ -33,8 +34,7 @@ const BOX_PREVIEWS = {
   'customer-info': 'Kundenname + Adresse',
   'document-number': 'AUF-2024-001',
   'items-table': 'Pos. | Artikel | Preis',
-  'totals': 'Gesamt: 1.234,56 €',
-  'footer': 'Rechtliche Info'
+  'totals': 'Gesamt: 1.234,56 €'
 };
 
 let currentLayout = null;
@@ -70,6 +70,7 @@ function renderEditor(container) {
       <p class="layout-editor-description">
         Gestalten Sie das Layout für Aufträge und Rechnungen durch Ziehen der Boxen in das Grid.
         Verwenden Sie die Pfeile um Boxen zu erweitern und X-Buttons um sie zu entfernen.
+        <br><strong>Hinweis:</strong> Die Fußzeile wird automatisch am Ende des Dokuments platziert und kann nicht manuell positioniert werden.
       </p>
       
       <div class="layout-editor-actions">

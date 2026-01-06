@@ -23,6 +23,9 @@ export function convertLayoutToPDFTemplate(layout) {
     const boxType = Object.values(BOX_TYPES).find(bt => bt.id === box.type);
     if (!boxType) return;
     
+    // Skip footer boxes - they will be automatically placed by the PDF generator
+    if (box.type === 'footer') return;
+    
     // Calculate bounding box
     const minRow = Math.min(...box.cells.map(([r, c]) => r));
     const maxRow = Math.max(...box.cells.map(([r, c]) => r));

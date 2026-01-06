@@ -58,6 +58,7 @@ export function getPdfLayoutTemplate() {
 }
 
 // Get default layout template structure
+// Note: Footer is excluded from the layout editor - it will be automatically placed at the bottom of PDFs
 export function getDefaultLayoutTemplate() {
   return {
     elements: [
@@ -68,8 +69,7 @@ export function getDefaultLayoutTemplate() {
       { id: 'customer-info', type: 'customer-info', x: 400, y: 90, width: 180, height: 70, textAlign: 'left' },
       { id: 'document-header', type: 'document-header', x: 20, y: 230, width: 560, height: 40, textAlign: 'left' },
       { id: 'items-table', type: 'items-table', x: 20, y: 280, width: 560, height: 300, textAlign: 'left' },
-      { id: 'totals', type: 'totals', x: 400, y: 590, width: 180, height: 70, textAlign: 'right' },
-      { id: 'footer', type: 'footer', x: 20, y: 750, width: 560, height: 40, textAlign: 'center' }
+      { id: 'totals', type: 'totals', x: 400, y: 590, width: 180, height: 70, textAlign: 'right' }
     ]
   };
 }
