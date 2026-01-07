@@ -1,8 +1,8 @@
 // -----------------------------
 // Email Configuration Module
 // -----------------------------
-// Note: Frontend-only applications cannot directly send emails via IMAP/SMTP
-// This module stores email configuration for future backend integration
+// Note: Server connection (IMAP/SMTP) is handled by backend
+// This module only manages test email and notification preferences
 
 const EMAIL_CONFIG_KEY = 'ka_email_config';
 
@@ -24,14 +24,6 @@ export function getEmailConfig() {
 function getDefaultEmailConfig() {
   return {
     enabled: false,
-    imapServer: '',
-    imapPort: 993,
-    smtpServer: '',
-    smtpPort: 587,
-    email: '',
-    password: '', // Note: Stored in localStorage - not secure for production
-    webmailUrl: '',
-    useSSL: true,
     testEmail: '', // Test email address for development/testing purposes
     notificationSettings: {
       newCustomer: true,
@@ -57,33 +49,7 @@ export function saveEmailConfig(config) {
 export function validateEmailConfig(config) {
   const errors = [];
   
-  if (config.enabled) {
-    if (!config.email || !isValidEmail(config.email)) {
-      errors.push('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
-    }
-    
-    if (!config.imapServer) {
-      errors.push('Bitte geben Sie einen IMAP-Server ein.');
-    }
-    
-    if (!config.smtpServer) {
-      errors.push('Bitte geben Sie einen SMTP-Server ein.');
-    }
-    
-    if (!config.password) {
-      errors.push('Bitte geben Sie ein Passwort ein.');
-    }
-    
-    if (!config.imapPort || config.imapPort < 1 || config.imapPort > 65535) {
-      errors.push('Bitte geben Sie einen gültigen IMAP-Port ein.');
-    }
-    
-    if (!config.smtpPort || config.smtpPort < 1 || config.smtpPort > 65535) {
-      errors.push('Bitte geben Sie einen gültigen SMTP-Port ein.');
-    }
-  }
-  
-  // Validate test email if provided (regardless of enabled status)
+  // Only validate test email if provided
   if (config.testEmail && !isValidEmail(config.testEmail)) {
     errors.push('Bitte geben Sie eine gültige Test-E-Mail-Adresse ein.');
   }
@@ -100,7 +66,8 @@ function isValidEmail(email) {
 // Check if email is configured and enabled
 export function isEmailConfigured() {
   const config = getEmailConfig();
-  return config.enabled && config.email && config.imapServer && config.smtpServer;
+  // Backend handles server configuration, we just check if enabled
+  return config.enabled;
 }
 
 // Queue email notification
@@ -170,15 +137,14 @@ export function getPendingNotifications() {
   return getEmailQueue().filter(item => item.status === 'pending');
 }
 
-// Get the effective recipient email (test email if set, otherwise regular email)
+// Get the effective recipient email (test email if set, otherwise backend default)
 export function getRecipientEmail() {
   const config = getEmailConfig();
-  return config.testEmail || config.email;
+  return config.testEmail || null; // Returns test email or null (backend will use default)
 }
 
 // Test email configuration
 // Note: This only validates the configuration format
-// Actual connection testing requires a backend
 export function testEmailConfig(config) {
   const errors = validateEmailConfig(config);
   
@@ -191,6 +157,6 @@ export function testEmailConfig(config) {
   
   return {
     success: true,
-    message: 'Konfiguration ist gültig. Hinweis: Die tatsächliche Verbindung kann nur mit einem Backend-Server getestet werden.'
+    message: 'Konfiguration ist gültig. Die Server-Verbindung wird vom Backend verwaltet.'
   };
 }
