@@ -182,7 +182,7 @@ export function getSampleCompanyData() {
     phone: actualSettings.phone || '+49 123 456789',
     logo: actualSettings.logo || '', // Use actual logo if exists, otherwise empty
     footerTextOrder: actualSettings.footerTextOrder || 'Geschäftsführer: Max Mustermann | HRB 12345 | Steuernr.: 123/456/78900',
-    footerTextInvoice: actualSettings.footerTextInvoice || 'Bank: Musterbank | IBAN: DE89 3704 0044 0532 0130 00 | BIC: COBADEFFXXX | USt-ID: DE123456789'
+    footerTextInvoice: actualSettings.footerTextInvoice || 'Bank: Musterbank | IBAN: DE89 3704 0044 0532 0130 00 | BIC: COBADEFFXXX'
   };
 }
 
@@ -232,17 +232,11 @@ export function getSampleItems() {
 // Get sample document data for preview
 export function getSampleDocumentData(documentType) {
   const items = getSampleItems();
-  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-  const vatRate = 0.19;
-  const vat = subtotal * vatRate;
-  const total = subtotal + vat;
+  const total = items.reduce((sum, item) => sum + item.total, 0);
   
   const baseData = {
     customer: getSampleCustomerData(),
     items: items,
-    subtotal: subtotal,
-    vat: vat,
-    vatRate: vatRate,
     total: total,
     date: new Date().toLocaleDateString('de-DE')
   };

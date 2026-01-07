@@ -9,8 +9,7 @@ const PDF_MARGIN = 10;
 // Footer positioning constant
 const FOOTER_MARGIN_FROM_BOTTOM = 30; // 30mm from bottom (20mm for footer content + 10mm margin)
 
-// Default VAT rate (19%)
-const DEFAULT_VAT_RATE = 0.19;
+// VAT has been removed as the user is VAT exempt
 
 // Generate PDF for an order or invoice
 // Parameters:
@@ -619,69 +618,38 @@ function renderTotals(doc, x, y, width, documentData) {
   
   // Check if we have new format with pre-calculated values
   if (documentData.subtotal !== undefined && documentData.total !== undefined) {
-    subtotal = documentData.subtotal;
-    vat = documentData.vat || 0;
+    // Since VAT is removed, subtotal and total should be the same
     total = documentData.total;
   } else if (documentData.items && Array.isArray(documentData.items) && documentData.items.length > 0) {
     // Calculate from items array, checking for both capitalized and lowercase field names
-    subtotal = documentData.items.reduce((sum, item) => {
+    total = documentData.items.reduce((sum, item) => {
       const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
       return sum + price;
     }, 0);
     
-    // If subtotal is 0 but Budget exists, use Budget as fallback
-    if (subtotal === 0 && documentData.Budget) {
+    // If total is 0 but Budget exists, use Budget as fallback
+    if (total === 0 && documentData.Budget) {
       total = parseBudgetValue(documentData.Budget);
-      subtotal = total / (1 + DEFAULT_VAT_RATE);
-      vat = total - subtotal;
-    } else {
-      vat = subtotal * DEFAULT_VAT_RATE;
-      total = subtotal + vat;
     }
   } else if (documentData.Budget) {
     total = parseBudgetValue(documentData.Budget);
-    subtotal = total / (1 + DEFAULT_VAT_RATE);
-    vat = total - subtotal;
   } else {
     return; // No data to display
   }
   
   // Calculate dynamic width based on content to ensure text fits properly
   // Measure the width of all text elements that will be displayed
-  const vatRate = documentData.vatRate || DEFAULT_VAT_RATE;
-  
-  // Measure labels (normal font, size 10)
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  const labelWidths = [
-    doc.getTextWidth('Nettobetrag:'),
-    doc.getTextWidth(`MwSt. (${(vatRate * 100).toFixed(0)}%)`)
-  ];
   
   // Measure total label (bold font, size 12)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  labelWidths.push(doc.getTextWidth('Gesamtbetrag:'));
+  const labelWidth = doc.getTextWidth('Gesamtbetrag:');
+  const valueWidth = doc.getTextWidth(formatCurrency(total));
   
-  // Measure values (normal font for subtotal/vat, bold for total)
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  const valueWidths = [
-    doc.getTextWidth(formatCurrency(subtotal)),
-    doc.getTextWidth(formatCurrency(vat))
-  ];
-  
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  valueWidths.push(doc.getTextWidth(formatCurrency(total)));
-  
-  // Calculate required width: max label + max value + spacing + padding
-  // Ensure we have valid widths (fallback to 0 if arrays are somehow empty)
-  const maxLabelWidth = labelWidths.length > 0 ? Math.max(...labelWidths) : 0;
-  const maxValueWidth = valueWidths.length > 0 ? Math.max(...valueWidths) : 0;
+  // Calculate required width: label + value + spacing + padding
   const horizontalPadding = 10; // 5mm on each side
   const labelValueGap = 5; // Gap between label and value
-  const calculatedWidth = maxLabelWidth + labelValueGap + maxValueWidth + horizontalPadding;
+  const calculatedWidth = labelWidth + labelValueGap + valueWidth + horizontalPadding;
   
   // Use the larger of calculated width or provided width, with a reasonable minimum
   const minWidth = 55; // Minimum width in mm (same as original ~158px)
@@ -698,7 +666,7 @@ function renderTotals(doc, x, y, width, documentData) {
   const lineHeight = 6;
   const topPadding = 5;
   const bottomPadding = 5;
-  const totalHeight = topPadding + (3 * lineHeight) + bottomPadding;
+  const totalHeight = topPadding + lineHeight + bottomPadding;
   
   doc.setFillColor(248, 248, 248);
   doc.setDrawColor(220, 220, 220);
@@ -708,27 +676,12 @@ function renderTotals(doc, x, y, width, documentData) {
   const labelX = adjustedX + 5;
   const valueX = adjustedX + actualWidth - 5;
   
-  // Subtotal
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text('Nettobetrag:', labelX, y + topPadding + 4);
-  doc.text(formatCurrency(subtotal), valueX, y + topPadding + 4, { align: 'right' });
-  
-  // VAT
-  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%)`, labelX, y + topPadding + lineHeight + 4);
-  doc.text(formatCurrency(vat), valueX, y + topPadding + lineHeight + 4, { align: 'right' });
-  
-  // Separator line
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.5);
-  doc.line(labelX, y + topPadding + (1.7 * lineHeight), valueX, y + topPadding + (1.7 * lineHeight));
-  
-  // Total
+  // Total (no VAT calculation as user is VAT exempt)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(30, 30, 30);
-  doc.text('Gesamtbetrag:', labelX, y + topPadding + (2 * lineHeight) + 4);
-  doc.text(formatCurrency(total), valueX, y + topPadding + (2 * lineHeight) + 4, { align: 'right' });
+  doc.text('Gesamtbetrag:', labelX, y + topPadding + 4);
+  doc.text(formatCurrency(total), valueX, y + topPadding + 4, { align: 'right' });
   
   // Return the actual height
   return totalHeight;
