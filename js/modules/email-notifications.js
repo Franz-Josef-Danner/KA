@@ -83,7 +83,7 @@ Neuer Auftrag erstellt
 Auftragsnummer: ${data.orderId}
 Kunde: ${data.customerName}
 Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Anzahl Artikel: ${data.items?.length || 0}
+Anzahl Artikel: ${data.items?.length ?? 0}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
     newInvoice: `

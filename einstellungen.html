@@ -432,9 +432,9 @@
         document.getElementById('emailAddress').value = emailConfig.email || '';
         document.getElementById('emailPassword').value = emailConfig.password || '';
         document.getElementById('imapServer').value = emailConfig.imapServer || '';
-        document.getElementById('imapPort').value = emailConfig.imapPort || 993;
+        document.getElementById('imapPort').value = emailConfig.imapPort ?? 993;
         document.getElementById('smtpServer').value = emailConfig.smtpServer || '';
-        document.getElementById('smtpPort').value = emailConfig.smtpPort || 587;
+        document.getElementById('smtpPort').value = emailConfig.smtpPort ?? 587;
         document.getElementById('webmailUrl').value = emailConfig.webmailUrl || '';
         document.getElementById('useSSL').checked = emailConfig.useSSL !== false;
         document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
