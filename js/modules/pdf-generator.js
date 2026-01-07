@@ -30,6 +30,16 @@ export async function generatePDF(documentType, documentData, useSampleCompanyDa
     }
   }
 
+  // Load QRCode library for payment QR codes
+  if (typeof window.QRCode === 'undefined') {
+    try {
+      await loadQRCodeLibrary();
+    } catch (error) {
+      console.warn('Failed to load QRCode library:', error);
+      // Continue without QR code functionality
+    }
+  }
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -57,9 +67,49 @@ export async function generatePDF(documentType, documentData, useSampleCompanyDa
     layoutTemplate = customLayoutTemplate || getPdfLayoutTemplate();
   }
 
+  // Generate QR code for invoices if bank account data is available
+  let paymentQRCode = null;
+  if ((documentType === 'invoice' || documentType === 'rechnung') && 
+      companySettings.iban && 
+      typeof window.QRCode !== 'undefined') {
+    try {
+      // Calculate total amount from document data
+      let totalAmount = 0;
+      if (documentData.total !== undefined) {
+        totalAmount = parseFloat(documentData.total);
+      } else if (documentData.items && Array.isArray(documentData.items)) {
+        totalAmount = documentData.items.reduce((sum, item) => {
+          const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
+          return sum + price;
+        }, 0);
+      } else if (documentData.Budget) {
+        totalAmount = parseBudgetValue(documentData.Budget);
+      }
+      
+      // Get invoice number
+      const invoiceNumber = documentData.invoiceId || documentData.Rechnungs_ID || 'UNBEKANNT';
+      
+      // Generate EPC QR code data
+      const epcData = generateEPCQRData(
+        companySettings.iban,
+        companySettings.bic,
+        companySettings.accountHolder,
+        totalAmount,
+        invoiceNumber,
+        companySettings.companyName
+      );
+      
+      // Generate QR code image
+      paymentQRCode = await generateQRCodeDataURL(epcData, 256);
+    } catch (error) {
+      console.error('Failed to generate payment QR code:', error);
+      // Continue without QR code
+    }
+  }
+
   // Render document based on layout template
   try {
-    renderPDFDocument(doc, documentType, documentData, companySettings, layoutTemplate);
+    renderPDFDocument(doc, documentType, documentData, companySettings, layoutTemplate, paymentQRCode);
     return doc;
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -90,8 +140,30 @@ function loadJsPDF() {
   });
 }
 
+// Load QRCode.js library from CDN
+function loadQRCodeLibrary() {
+  return new Promise((resolve, reject) => {
+    // Check if already loaded
+    if (typeof window.QRCode !== 'undefined') {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = () => {
+      console.log('QRCode.js library loaded successfully');
+      resolve();
+    };
+    script.onerror = () => {
+      reject(new Error('Failed to load QRCode.js from CDN'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 // Render PDF document based on layout template
-function renderPDFDocument(doc, documentType, documentData, companySettings, layoutTemplate) {
+function renderPDFDocument(doc, documentType, documentData, companySettings, layoutTemplate, paymentQRCode = null) {
   // Set default font
   doc.setFont('helvetica');
 
@@ -125,7 +197,7 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   // Render footer on the last page
   const pageCount = doc.internal.getNumberOfPages();
   doc.setPage(pageCount);
-  renderFooter(doc, footerX, footerY, footerWidth, companySettings, documentType);
+  renderFooter(doc, footerX, footerY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
 
   // Add page numbers (respecting PDF margin)
   for (let i = 1; i <= pageCount; i++) {
@@ -216,7 +288,7 @@ function renderElement(doc, element, documentType, documentData, companySettings
     case 'totals':
       return renderTotals(doc, x, y, width, documentData);
     case 'footer':
-      return renderFooter(doc, x, y, width, companySettings, documentType);
+      return renderFooter(doc, x, y, width, companySettings, documentType, documentData);
   }
   
   return null; // Unknown element type
@@ -694,7 +766,7 @@ function renderTotals(doc, x, y, width, documentData) {
   return totalHeight;
 }
 
-function renderFooter(doc, x, y, width, companySettings, documentType) {
+function renderFooter(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
@@ -709,36 +781,99 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
   // For invoices, show bank account information prominently if IBAN is available
   if ((documentType === 'invoice' || documentType === 'rechnung') && companySettings.iban) {
     
-    // Bank account section header
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    doc.text('Zahlungsinformationen:', x + width / 2, offsetY, { align: 'center' });
-    offsetY += 5;
+    // Determine layout based on QR code availability
+    const hasQRCode = paymentQRCode !== null;
+    const qrSize = 30; // QR code size in mm
+    const qrMargin = 5; // Margin around QR code
     
-    // Bank account details
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(80, 80, 80);
-    
-    if (companySettings.accountHolder) {
-      doc.text(`Kontoinhaber: ${companySettings.accountHolder}`, x + width / 2, offsetY, { align: 'center' });
-      offsetY += 3.5;
-    }
-    
-    if (companySettings.bankName) {
-      doc.text(`Bank: ${companySettings.bankName}`, x + width / 2, offsetY, { align: 'center' });
-      offsetY += 3.5;
-    }
-    
-    if (companySettings.iban) {
-      doc.text(`IBAN: ${companySettings.iban}`, x + width / 2, offsetY, { align: 'center' });
-      offsetY += 3.5;
-    }
-    
-    if (companySettings.bic) {
-      doc.text(`BIC: ${companySettings.bic}`, x + width / 2, offsetY, { align: 'center' });
-      offsetY += 3.5;
+    if (hasQRCode) {
+      // Layout: QR code on left, text information on right
+      const qrX = x + 10;
+      const qrY = offsetY;
+      const textX = qrX + qrSize + qrMargin;
+      const textWidth = width - (qrSize + qrMargin + 20);
+      
+      // Add QR code
+      try {
+        doc.addImage(paymentQRCode, 'PNG', qrX, qrY, qrSize, qrSize);
+      } catch (error) {
+        console.error('Failed to add QR code to PDF:', error);
+      }
+      
+      // Bank account section header (above QR code)
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      doc.text('Zahlungsinformationen:', textX, offsetY + 2, { align: 'left' });
+      let textOffsetY = offsetY + 7;
+      
+      // Bank account details (to the right of QR code)
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(80, 80, 80);
+      
+      if (companySettings.accountHolder) {
+        doc.text(`Kontoinhaber: ${companySettings.accountHolder}`, textX, textOffsetY, { align: 'left' });
+        textOffsetY += 3.5;
+      }
+      
+      if (companySettings.bankName) {
+        doc.text(`Bank: ${companySettings.bankName}`, textX, textOffsetY, { align: 'left' });
+        textOffsetY += 3.5;
+      }
+      
+      if (companySettings.iban) {
+        doc.text(`IBAN: ${companySettings.iban}`, textX, textOffsetY, { align: 'left' });
+        textOffsetY += 3.5;
+      }
+      
+      if (companySettings.bic) {
+        doc.text(`BIC: ${companySettings.bic}`, textX, textOffsetY, { align: 'left' });
+        textOffsetY += 3.5;
+      }
+      
+      // QR code hint
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text('Scannen Sie den QR-Code', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+      doc.text('für schnelle Überweisung', qrX + qrSize / 2, qrY + qrSize + 6, { align: 'center' });
+      
+      // Move offset to after QR code section
+      offsetY = Math.max(qrY + qrSize + 8, textOffsetY + 2);
+      
+    } else {
+      // Original centered layout without QR code
+      // Bank account section header
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      doc.text('Zahlungsinformationen:', x + width / 2, offsetY, { align: 'center' });
+      offsetY += 5;
+      
+      // Bank account details
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(80, 80, 80);
+      
+      if (companySettings.accountHolder) {
+        doc.text(`Kontoinhaber: ${companySettings.accountHolder}`, x + width / 2, offsetY, { align: 'center' });
+        offsetY += 3.5;
+      }
+      
+      if (companySettings.bankName) {
+        doc.text(`Bank: ${companySettings.bankName}`, x + width / 2, offsetY, { align: 'center' });
+        offsetY += 3.5;
+      }
+      
+      if (companySettings.iban) {
+        doc.text(`IBAN: ${companySettings.iban}`, x + width / 2, offsetY, { align: 'center' });
+        offsetY += 3.5;
+      }
+      
+      if (companySettings.bic) {
+        doc.text(`BIC: ${companySettings.bic}`, x + width / 2, offsetY, { align: 'center' });
+        offsetY += 3.5;
+      }
     }
     
     offsetY += 2; // Extra spacing before footer text
@@ -776,6 +911,83 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
 // Helper function to parse budget value from string
 function parseBudgetValue(budget) {
   return parseFloat(String(budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+}
+
+// Generate EPC QR code data for SEPA transfers
+// Follows the European Payments Council Quick Response Code specification
+function generateEPCQRData(iban, bic, accountHolder, amount, invoiceNumber, companyName) {
+  // EPC QR code format specification:
+  // Line 1: Service Tag (always "BCD")
+  // Line 2: Version (001, 002)
+  // Line 3: Character set (1 = UTF-8)
+  // Line 4: Identification (always "SCT" for SEPA Credit Transfer)
+  // Line 5: BIC of the beneficiary bank (optional from version 002)
+  // Line 6: Beneficiary name (max 70 chars)
+  // Line 7: Beneficiary IBAN
+  // Line 8: Amount in EUR with format EUR123.45 (max 12 chars including EUR)
+  // Line 9: Purpose (optional, max 4 chars)
+  // Line 10: Structured reference (optional)
+  // Line 11: Unstructured remittance information (max 140 chars)
+  // Line 12: Beneficiary to originator information (optional)
+  
+  const lines = [
+    'BCD',                                    // Service Tag
+    '002',                                    // Version
+    '1',                                      // Character set (UTF-8)
+    'SCT',                                    // Identification
+    bic || '',                                // BIC (optional in version 002)
+    (accountHolder || companyName || '').substring(0, 70),  // Beneficiary name
+    (iban || '').replace(/\s/g, ''),         // IBAN without spaces
+    `EUR${amount.toFixed(2)}`,               // Amount
+    '',                                       // Purpose (empty)
+    '',                                       // Structured reference (empty)
+    `Rechnung ${invoiceNumber}`.substring(0, 140), // Unstructured reference
+    ''                                        // Beneficiary to originator info (empty)
+  ];
+  
+  return lines.join('\n');
+}
+
+// Generate QR code as data URL using QRCode.js library
+async function generateQRCodeDataURL(data, size = 256) {
+  return new Promise((resolve, reject) => {
+    try {
+      // Create a temporary container for QR code generation
+      const container = document.createElement('div');
+      container.style.display = 'none';
+      document.body.appendChild(container);
+      
+      // Generate QR code
+      const qr = new QRCode(container, {
+        text: data,
+        width: size,
+        height: size,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      
+      // Wait for QR code generation and extract as data URL
+      setTimeout(() => {
+        try {
+          const canvas = container.querySelector('canvas');
+          if (canvas) {
+            const dataURL = canvas.toDataURL('image/png');
+            document.body.removeChild(container);
+            resolve(dataURL);
+          } else {
+            document.body.removeChild(container);
+            reject(new Error('QR code canvas not found'));
+          }
+        } catch (error) {
+          document.body.removeChild(container);
+          reject(error);
+        }
+      }, 100); // Small delay to ensure QR code is generated
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
 
 function formatCurrency(value) {
