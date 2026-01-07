@@ -7,6 +7,7 @@ import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo }
 import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
 import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js';
 import { notifyNewCustomer } from './email-notifications.js';
+import { isEmailConfigured } from './email-config.js';
 
 let rows = loadSync() ?? [];
 
@@ -54,12 +55,17 @@ async function syncFirmenIds(rowsToSync) {
           await createOrUpdateCustomerAccount(row.Firmen_ID, email, firmenName);
         }
         // Send email notification for new customer
-        notifyNewCustomer({
+        const notificationResult = notifyNewCustomer({
           firma: firmenName,
           ansprechpartner: row.Ansprechpartner || '',
           email: email,
           telefon: row.Telefon || ''
         });
+        
+        // Show warning if notification was not queued
+        if (!notificationResult && isEmailConfigured()) {
+          console.warn('E-Mail-Benachrichtigung für neuen Kunden konnte nicht versendet werden.');
+        }
       } else {
         // Customer already has ID - ensure article list and account exist
         if (!artikellisteExists(idStr)) {

@@ -7,6 +7,14 @@ import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewOrder } from './email-notifications.js';
+import { isEmailConfigured } from './email-config.js';
+
+// Helper function to show email notification warning
+function showEmailNotificationWarning() {
+  if (!isEmailConfigured()) {
+    alert('⚠️ Hinweis: E-Mail-Benachrichtigungen sind nicht aktiviert.\n\nDer Auftrag wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie E-Mail-Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.');
+  }
+}
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -749,7 +757,7 @@ function saveOrder() {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    notifyNewOrder({
+    const notificationResult = notifyNewOrder({
       orderId: formData.Auftrags_ID || 'N/A',
       customerName: formData.Firma || 'Unbekannt',
       contactPerson: formData.Ansprechpartner || '',
@@ -758,6 +766,11 @@ function saveOrder() {
       project: formData.Projekt || '',
       status: formData.Status || ''
     });
+    
+    // Show warning if notification was not queued
+    if (!notificationResult) {
+      showEmailNotificationWarning();
+    }
   }
   
   // Trigger render event - avoid circular dependency by using custom event
