@@ -30,6 +30,15 @@ export function displayEmailErrors() {
     return;
   }
   
+  // Check if banner was recently dismissed
+  const dismissedTime = sessionStorage.getItem('emailErrorBannerDismissed');
+  if (dismissedTime) {
+    const timeSinceDismissal = Date.now() - parseInt(dismissedTime);
+    if (timeSinceDismissal < 300000) { // Less than 5 minutes
+      return; // Don't show banner yet
+    }
+  }
+  
   // Create or update banner
   let banner = document.getElementById(ERROR_BANNER_ID);
   

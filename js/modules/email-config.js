@@ -84,7 +84,7 @@ export function queueEmailNotification(type, data) {
   const recipientEmail = getRecipientEmail();
   
   // Generate unique ID for notification
-  const id = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const id = `${type}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   
   // Store notification in queue for future processing
   const queue = getEmailQueue();
