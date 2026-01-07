@@ -61,6 +61,7 @@
   <script type="module">
     import { requireAuth, requireAdmin } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
+    import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     
     (() => {
       try {
@@ -70,6 +71,9 @@
 
         // Initialize navigation only after successful authentication
         initNavigation('dashboard.html');
+        
+        // Initialize email error display
+        initEmailErrorDisplay();
       } catch (error) {
         // Authentication failed or a redirect is in progress; avoid further DOM manipulation
         console.error('Authentication error on dashboard page:', error);

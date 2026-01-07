@@ -104,6 +104,59 @@
           </div>
         </div>
 
+        <div class="form-section">
+          <h2>E-Mail-Benachrichtigungen</h2>
+          <div class="form-hint" style="margin-bottom: 15px;">
+            <strong>ℹ️ Hinweis:</strong> Die Server-Verbindung (IMAP/SMTP) wird über das Backend verwaltet. 
+            Hier können Sie nur die Test-E-Mail-Adresse für Entwicklungszwecke konfigurieren.
+          </div>
+          
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="emailEnabled" name="emailEnabled" />
+              E-Mail-Benachrichtigungen aktivieren
+            </label>
+          </div>
+
+          <div id="emailConfigSection" style="display: none;">
+            <div class="form-group">
+              <label for="testEmail">Test-E-Mail-Adresse (optional)</label>
+              <input 
+                type="email" 
+                id="testEmail" 
+                name="testEmail" 
+                placeholder="scener@gmx.net"
+              />
+              <div class="form-hint">Wenn ausgefüllt, werden alle Benachrichtigungen an diese Adresse gesendet (für Testzwecke). Ansonsten werden die Benachrichtigungen an die im Backend konfigurierte E-Mail-Adresse gesendet.</div>
+            </div>
+
+            <div class="form-group">
+              <label><strong>Benachrichtigungen senden für:</strong></label>
+              <label>
+                <input type="checkbox" id="notifyNewCustomer" name="notifyNewCustomer" checked />
+                Neue Kunden
+              </label>
+              <label>
+                <input type="checkbox" id="notifyNewOrder" name="notifyNewOrder" checked />
+                Neue Aufträge
+              </label>
+              <label>
+                <input type="checkbox" id="notifyNewInvoice" name="notifyNewInvoice" checked />
+                Neue Rechnungen
+              </label>
+              <label>
+                <input type="checkbox" id="notifyPaymentReceived" name="notifyPaymentReceived" checked />
+                Zahlungseingänge
+              </label>
+            </div>
+
+            <div class="form-hint">
+              <strong>Hinweis:</strong> Die E-Mail-Funktionalität erfordert eine Backend-Integration. 
+              Derzeit werden die Benachrichtigungen nur in der Warteschlange gespeichert.
+            </div>
+          </div>
+        </div>
+
         
         <div id="errorMessage" class="message error-message" style="display: none;"></div>
         <div id="successMessage" class="message success-message" style="display: none;"></div>
@@ -128,7 +181,13 @@
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
+    import {
+      getEmailConfig,
+      saveEmailConfig,
+      validateEmailConfig
+    } from './js/modules/email-config.js';
     import { initLayoutEditor } from './js/modules/layout-editor-ui.js';
+    import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     
     (() => {
       try {
@@ -144,6 +203,9 @@
         
         // Initialize layout editor
         initLayoutEditor('layoutEditor');
+        
+        // Initialize email error display
+        initEmailErrorDisplay();
       } catch (error) {
         // Authentication failed or a redirect is in progress
         console.error('Authentication error on settings page:', error);
@@ -170,9 +232,16 @@
       const logoImage = document.getElementById('logoImage');
       const removeLogo = document.getElementById('removeLogo');
       const resetBtn = document.getElementById('resetBtn');
+      const emailEnabled = document.getElementById('emailEnabled');
+      const emailConfigSection = document.getElementById('emailConfigSection');
       
       // Load current settings
       loadSettings();
+      
+      // Handle email enabled checkbox
+      emailEnabled.addEventListener('change', (e) => {
+        emailConfigSection.style.display = e.target.checked ? 'block' : 'none';
+      });
       
       // Handle logo upload preview
       logoUpload.addEventListener('change', async (e) => {
@@ -222,13 +291,35 @@
         
         // Validate settings
         const errors = validateSettings(settings);
+        
+        // Get email configuration
+        const emailConfig = {
+          enabled: emailEnabled.checked,
+          testEmail: document.getElementById('testEmail').value.trim(),
+          notificationSettings: {
+            newCustomer: document.getElementById('notifyNewCustomer').checked,
+            newOrder: document.getElementById('notifyNewOrder').checked,
+            newInvoice: document.getElementById('notifyNewInvoice').checked,
+            paymentReceived: document.getElementById('notifyPaymentReceived').checked
+          }
+        };
+        
+        // Validate email configuration if enabled
+        if (emailConfig.enabled) {
+          const emailErrors = validateEmailConfig(emailConfig);
+          errors.push(...emailErrors);
+        }
+        
         if (errors.length > 0) {
           showError(errors.join(' '));
           return;
         }
         
-        // Save settings
-        if (saveCompanySettings(settings)) {
+        // Save settings and email config
+        const settingsSaved = saveCompanySettings(settings);
+        const emailConfigSaved = saveEmailConfig(emailConfig);
+        
+        if (settingsSaved && emailConfigSaved) {
           showSuccess(MESSAGES.saveSuccess);
         } else {
           showError(MESSAGES.saveError);
@@ -260,6 +351,16 @@
           logoImage.src = '';
           logoPreview.style.display = 'none';
         }
+        
+        // Load email configuration
+        const emailConfig = getEmailConfig();
+        emailEnabled.checked = emailConfig.enabled;
+        emailConfigSection.style.display = emailConfig.enabled ? 'block' : 'none';
+        document.getElementById('testEmail').value = emailConfig.testEmail || '';
+        document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
+        document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;
+        document.getElementById('notifyNewInvoice').checked = emailConfig.notificationSettings?.newInvoice !== false;
+        document.getElementById('notifyPaymentReceived').checked = emailConfig.notificationSettings?.paymentReceived !== false;
       }
       
       function showError(message) {

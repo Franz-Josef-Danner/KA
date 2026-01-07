@@ -5,6 +5,7 @@ import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyInvoiceI
 import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
+import { notifyNewInvoice } from './email-notifications.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -683,7 +684,9 @@ function saveInvoice() {
   const formData = getFormData();
   const rows = getRows();
   
-  if (currentEditingRowIndex === null) {
+  const isNewInvoice = (currentEditingRowIndex === null);
+  
+  if (isNewInvoice) {
     // New invoice - add to beginning
     rows.unshift(formData);
   } else {
@@ -693,6 +696,25 @@ function saveInvoice() {
   
   setRows(rows);
   save();
+  
+  // Send email notification for new invoices
+  if (isNewInvoice) {
+    const invoiceItems = formData.Artikel || [];
+    const total = invoiceItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.Gesamtpreis) || 0);
+    }, 0);
+    
+    notifyNewInvoice({
+      invoiceId: formData.Rechnungs_ID || 'N/A',
+      customerName: formData.Firma || 'Unbekannt',
+      contactPerson: formData.Ansprechpartner || '',
+      total: total,
+      items: invoiceItems,
+      project: formData.Projekt || '',
+      orderId: formData.Auftrags_ID || '',
+      dueDate: '' // Could calculate this if needed
+    });
+  }
   
   // Trigger render event - avoid circular dependency by using custom event
   window.dispatchEvent(new Event('invoicesChanged'));

@@ -6,6 +6,7 @@ import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-confi
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
+import { notifyNewOrder } from './email-notifications.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -728,7 +729,9 @@ function saveOrder() {
   const formData = getFormData();
   const rows = getRows();
   
-  if (currentEditingRowIndex === null) {
+  const isNewOrder = (currentEditingRowIndex === null);
+  
+  if (isNewOrder) {
     // New order - add to beginning
     rows.unshift(formData);
   } else {
@@ -738,6 +741,24 @@ function saveOrder() {
   
   setRows(rows);
   save();
+  
+  // Send email notification for new orders
+  if (isNewOrder) {
+    const orderItems = formData.Artikel || [];
+    const total = orderItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.Gesamtpreis) || 0);
+    }, 0);
+    
+    notifyNewOrder({
+      orderId: formData.Auftrags_ID || 'N/A',
+      customerName: formData.Firma || 'Unbekannt',
+      contactPerson: formData.Ansprechpartner || '',
+      total: total,
+      items: orderItems,
+      project: formData.Projekt || '',
+      status: formData.Status || ''
+    });
+  }
   
   // Trigger render event - avoid circular dependency by using custom event
   window.dispatchEvent(new Event('ordersChanged'));
