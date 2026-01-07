@@ -83,20 +83,25 @@ export function queueEmailNotification(type, data) {
   // Use helper function to get the effective recipient email
   const recipientEmail = getRecipientEmail();
   
+  // Generate unique ID for notification
+  const id = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
   // Store notification in queue for future processing
   const queue = getEmailQueue();
   queue.push({
+    id,
     type,
     data,
     recipientEmail: recipientEmail,
     timestamp: new Date().toISOString(),
-    status: 'pending'
+    status: 'pending',
+    retryCount: 0
   });
   saveEmailQueue(queue);
   
   console.log(`Email notification queued: ${type}`, data);
-  console.log(`Recipient: ${recipientEmail}${config.testEmail ? ' (Test Mode)' : ''}`);
-  return true;
+  console.log(`Recipient: ${recipientEmail || 'Backend default'}${config.testEmail ? ' (Test Mode)' : ''}`);
+  return id; // Return ID for tracking
 }
 
 // Get email notification queue
@@ -135,6 +140,74 @@ export function clearEmailQueue() {
 // Get pending email notifications
 export function getPendingNotifications() {
   return getEmailQueue().filter(item => item.status === 'pending');
+}
+
+// Get failed email notifications
+export function getFailedNotifications() {
+  return getEmailQueue().filter(item => item.status === 'failed');
+}
+
+// Mark notification as failed
+export function markNotificationAsFailed(notificationId, errorMessage) {
+  const queue = getEmailQueue();
+  const notification = queue.find(item => item.id === notificationId);
+  
+  if (notification) {
+    notification.status = 'failed';
+    notification.error = errorMessage;
+    notification.failedAt = new Date().toISOString();
+    saveEmailQueue(queue);
+    return true;
+  }
+  
+  return false;
+}
+
+// Mark notification as sent
+export function markNotificationAsSent(notificationId) {
+  const queue = getEmailQueue();
+  const notification = queue.find(item => item.id === notificationId);
+  
+  if (notification) {
+    notification.status = 'sent';
+    notification.sentAt = new Date().toISOString();
+    saveEmailQueue(queue);
+    return true;
+  }
+  
+  return false;
+}
+
+// Retry failed notification
+export function retryFailedNotification(notificationId) {
+  const queue = getEmailQueue();
+  const notification = queue.find(item => item.id === notificationId);
+  
+  if (notification && notification.status === 'failed') {
+    notification.status = 'pending';
+    delete notification.error;
+    delete notification.failedAt;
+    notification.retryCount = (notification.retryCount || 0) + 1;
+    saveEmailQueue(queue);
+    return true;
+  }
+  
+  return false;
+}
+
+// Get error summary for display
+export function getEmailErrorSummary() {
+  const failed = getFailedNotifications();
+  
+  if (failed.length === 0) {
+    return null;
+  }
+  
+  return {
+    count: failed.length,
+    latest: failed[failed.length - 1],
+    message: `${failed.length} E-Mail-Benachrichtigung${failed.length > 1 ? 'en' : ''} konnte${failed.length > 1 ? 'n' : ''} nicht gesendet werden.`
+  };
 }
 
 // Get the effective recipient email (test email if set, otherwise backend default)

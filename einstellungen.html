@@ -187,6 +187,7 @@
       validateEmailConfig
     } from './js/modules/email-config.js';
     import { initLayoutEditor } from './js/modules/layout-editor-ui.js';
+    import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     
     (() => {
       try {
@@ -202,6 +203,9 @@
         
         // Initialize layout editor
         initLayoutEditor('layoutEditor');
+        
+        // Initialize email error display
+        initEmailErrorDisplay();
       } catch (error) {
         // Authentication failed or a redirect is in progress
         console.error('Authentication error on settings page:', error);

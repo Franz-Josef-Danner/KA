@@ -84,6 +84,37 @@ Das System ist in Frontend und Backend aufgeteilt:
 - Verwaltet E-Mail-Server-Zugangsdaten sicher
 - Versendet E-Mails über SMTP
 - Nutzt Test-E-Mail falls angegeben, sonst Standard-E-Mail
+- Aktualisiert Benachrichtigungsstatus (sent/failed)
+
+### Fehlerbehandlung
+
+Das System verfügt über umfassende Fehlerbehandlung:
+
+**Automatische Fehlererkennung:**
+- Das Frontend prüft regelmäßig (alle 30 Sekunden) auf fehlgeschlagene E-Mail-Benachrichtigungen
+- Fehlgeschlagene Benachrichtigungen werden mit Fehlermeldung gespeichert
+
+**Fehleranzeige:**
+- Bei Fehlern erscheint ein roter Banner am oberen Bildschirmrand
+- Der Banner zeigt die Anzahl fehlgeschlagener Benachrichtigungen
+- Über "Details anzeigen" können Sie alle fehlgeschlagenen Benachrichtigungen einsehen
+
+**Fehlerbehebung:**
+- Einzelne Benachrichtigungen können über "Erneut versuchen" erneut in die Warteschlange eingereiht werden
+- Alle fehlgeschlagenen Benachrichtigungen können auf einmal gelöscht werden
+- Der Banner kann vorübergehend ausgeblendet werden (erscheint nach 5 Minuten wieder)
+
+**Backend-Integration:**
+Das Backend sollte den Status von Benachrichtigungen aktualisieren:
+```javascript
+// Benachrichtigung als erfolgreich markieren
+import { markNotificationAsSent } from './email-config.js';
+markNotificationAsSent(notificationId);
+
+// Benachrichtigung als fehlgeschlagen markieren
+import { markNotificationAsFailed } from './email-config.js';
+markNotificationAsFailed(notificationId, 'SMTP-Verbindungsfehler: Timeout');
+```
 
 ### Integrierte Ereignisse
 
