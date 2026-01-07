@@ -9,6 +9,9 @@ const PDF_MARGIN = 10;
 // Footer positioning constant
 const FOOTER_MARGIN_FROM_BOTTOM = 30; // 30mm from bottom (20mm for footer content + 10mm margin)
 
+// Default VAT rate (19%)
+const DEFAULT_VAT_RATE = 0.19;
+
 // Generate PDF for an order or invoice
 // Parameters:
 // - documentType: 'order'/'auftrag' or 'invoice'/'rechnung'
@@ -474,13 +477,18 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   if (documentData.items && Array.isArray(documentData.items)) {
     // New format with items array
+    // Field mapping supports multiple naming conventions for backward compatibility:
+    // - API field names (where applicable): description, quantity, unit, pricePerUnit, total
+    // - German lowercase (legacy): artikel, beschreibung, menge, einheit, einzelpreis, gesamtpreis
+    // - German Capitalized (UI forms): Artikel, Beschreibung, Menge, Einheit, Einzelpreis, Gesamtpreis
+    // Priority: API name (if exists) → lowercase → Capitalized
     items = documentData.items.map(item => ({
-      artikel: item.description || item.artikel || '',
-      beschreibung: item.description || item.beschreibung || '',
-      menge: item.quantity || item.menge || '1',
-      einheit: item.unit || item.einheit || 'Stk',
-      einzelpreis: item.pricePerUnit || item.einzelpreis || '0',
-      gesamtpreis: item.total || item.gesamtpreis || '0'
+      artikel: item.artikel || item.Artikel || '',
+      beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
+      menge: item.quantity || item.menge || item.Menge || '1',
+      einheit: item.unit || item.einheit || item.Einheit || 'Stk',
+      einzelpreis: item.pricePerUnit || item.einzelpreis || item.Einzelpreis || '0',
+      gesamtpreis: item.total || item.gesamtpreis || item.Gesamtpreis || '0'
     }));
   } else if (documentData.Artikel) {
     // Try to parse from single field (legacy format)
@@ -614,20 +622,77 @@ function renderTotals(doc, x, y, width, documentData) {
     subtotal = documentData.subtotal;
     vat = documentData.vat || 0;
     total = documentData.total;
-  } else if (documentData.items && Array.isArray(documentData.items)) {
+  } else if (documentData.items && Array.isArray(documentData.items) && documentData.items.length > 0) {
+    // Calculate from items array, checking for both capitalized and lowercase field names
     subtotal = documentData.items.reduce((sum, item) => {
-      const price = parseFloat(String(item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
+      const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
       return sum + price;
     }, 0);
-    vat = subtotal * 0.19; // Default 19% VAT
-    total = subtotal + vat;
+    
+    // If subtotal is 0 but Budget exists, use Budget as fallback
+    if (subtotal === 0 && documentData.Budget) {
+      total = parseBudgetValue(documentData.Budget);
+      subtotal = total / (1 + DEFAULT_VAT_RATE);
+      vat = total - subtotal;
+    } else {
+      vat = subtotal * DEFAULT_VAT_RATE;
+      total = subtotal + vat;
+    }
   } else if (documentData.Budget) {
-    total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
-    subtotal = total / 1.19;
+    total = parseBudgetValue(documentData.Budget);
+    subtotal = total / (1 + DEFAULT_VAT_RATE);
     vat = total - subtotal;
   } else {
     return; // No data to display
   }
+  
+  // Calculate dynamic width based on content to ensure text fits properly
+  // Measure the width of all text elements that will be displayed
+  const vatRate = documentData.vatRate || DEFAULT_VAT_RATE;
+  
+  // Measure labels (normal font, size 10)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const labelWidths = [
+    doc.getTextWidth('Nettobetrag:'),
+    doc.getTextWidth(`MwSt. (${(vatRate * 100).toFixed(0)}%)`)
+  ];
+  
+  // Measure total label (bold font, size 12)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  labelWidths.push(doc.getTextWidth('Gesamtbetrag:'));
+  
+  // Measure values (normal font for subtotal/vat, bold for total)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const valueWidths = [
+    doc.getTextWidth(formatCurrency(subtotal)),
+    doc.getTextWidth(formatCurrency(vat))
+  ];
+  
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  valueWidths.push(doc.getTextWidth(formatCurrency(total)));
+  
+  // Calculate required width: max label + max value + spacing + padding
+  // Ensure we have valid widths (fallback to 0 if arrays are somehow empty)
+  const maxLabelWidth = labelWidths.length > 0 ? Math.max(...labelWidths) : 0;
+  const maxValueWidth = valueWidths.length > 0 ? Math.max(...valueWidths) : 0;
+  const horizontalPadding = 10; // 5mm on each side
+  const labelValueGap = 5; // Gap between label and value
+  const calculatedWidth = maxLabelWidth + labelValueGap + maxValueWidth + horizontalPadding;
+  
+  // Use the larger of calculated width or provided width, with a reasonable minimum
+  const minWidth = 55; // Minimum width in mm (same as original ~158px)
+  const actualWidth = Math.max(calculatedWidth, width, minWidth);
+  
+  // Adjust x position to keep the box right-aligned if width increased
+  // Ensure adjustedX stays within valid page boundaries (minimum at left margin)
+  const pageWidth = doc.internal.pageSize.width;
+  const rightMargin = PDF_MARGIN;
+  const leftMargin = PDF_MARGIN;
+  const adjustedX = Math.max(leftMargin, Math.min(x, pageWidth - rightMargin - actualWidth));
   
   // Add subtle background box for totals
   const lineHeight = 6;
@@ -638,10 +703,10 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.setFillColor(248, 248, 248);
   doc.setDrawColor(220, 220, 220);
   doc.setLineWidth(0.3);
-  doc.rect(x, y, width, totalHeight, 'FD');
+  doc.rect(adjustedX, y, actualWidth, totalHeight, 'FD');
   
-  const labelX = x + 5;
-  const valueX = x + width - 5;
+  const labelX = adjustedX + 5;
+  const valueX = adjustedX + actualWidth - 5;
   
   // Subtotal
   doc.setFont('helvetica', 'normal');
@@ -650,7 +715,6 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.text(formatCurrency(subtotal), valueX, y + topPadding + 4, { align: 'right' });
   
   // VAT
-  const vatRate = documentData.vatRate || 0.19;
   doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%)`, labelX, y + topPadding + lineHeight + 4);
   doc.text(formatCurrency(vat), valueX, y + topPadding + lineHeight + 4, { align: 'right' });
   
@@ -705,6 +769,11 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
   
   // Return actual height: top padding + (line count * line height)
   return 3 + (lines.length * 3.5);
+}
+
+// Helper function to parse budget value from string
+function parseBudgetValue(budget) {
+  return parseFloat(String(budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 }
 
 function formatCurrency(value) {
