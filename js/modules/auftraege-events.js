@@ -4,8 +4,12 @@
 import { getRows, setRows, save, undo, redo, newEmptyRow } from './auftraege-state.js';
 import { render } from './auftraege-render.js';
 import { updateUndoRedoButtons, openOrderModal } from './auftraege-ui.js';
+import { initEmailErrorDisplay } from './email-error-display.js';
 
 export function initEventHandlers() {
+  // Initialize email error display
+  initEmailErrorDisplay();
+  
   // New order button - open modal for creating new order
   document.getElementById("newOrderBtn").addEventListener("click", () => {
     openOrderModal(null); // null means new order

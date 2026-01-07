@@ -4,8 +4,12 @@
 import { getRows, setRows, save, undo, redo, newEmptyRow } from './rechnungen-state.js';
 import { render } from './rechnungen-render.js';
 import { updateUndoRedoButtons, openInvoiceModal } from './rechnungen-ui.js';
+import { initEmailErrorDisplay } from './email-error-display.js';
 
 export function initEventHandlers() {
+  // Initialize email error display
+  initEmailErrorDisplay();
+  
   // New invoice button - open modal for creating new invoice
   const newInvoiceBtn = document.getElementById("newInvoiceBtn");
   if (newInvoiceBtn) {
