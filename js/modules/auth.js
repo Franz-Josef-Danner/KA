@@ -2,6 +2,10 @@
 // Authentication Module
 // -----------------------------
 
+// Import email service for customer notifications
+import { sendTemplateEmail } from './email-service.js';
+import { EMAIL_TEMPLATES } from './email-config.js';
+
 const AUTH_KEY = 'ka_auth_session';
 const USERS_KEY = 'ka_users';
 const CUSTOMER_ACCOUNTS_KEY = 'ka_customer_accounts';
@@ -240,6 +244,22 @@ export async function createOrUpdateCustomerAccount(firmenId, email, firmenName)
   }
   
   if (saveCustomerAccounts(accounts)) {
+    // Send welcome email for new accounts
+    if (isNewAccount && password) {
+      try {
+        await sendTemplateEmail(EMAIL_TEMPLATES.CUSTOMER_WELCOME, email, {
+          customerName: firmenName || 'Kunde',
+          firmenId: firmenId,
+          email: email,
+          password: password
+        });
+        console.log(`Welcome email queued for ${email}`);
+      } catch (error) {
+        console.error('Failed to send welcome email:', error);
+        // Don't fail account creation if email fails
+      }
+    }
+    
     // Return password only for new/updated accounts
     return isNewAccount ? password : null;
   }

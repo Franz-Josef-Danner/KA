@@ -114,6 +114,150 @@
         </div>
       </form>
     </div>
+
+    <!-- Email Configuration Card -->
+    <div class="settings-card" style="margin-top: 20px;">
+      <h2>E-Mail-Konfiguration</h2>
+      <form id="emailConfigForm" class="settings-form">
+        <div class="form-section">
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="emailEnabled" name="emailEnabled" />
+              E-Mail-Versand aktivieren
+            </label>
+            <div class="form-hint">Aktivieren Sie diese Option, um automatische E-Mails zu versenden</div>
+          </div>
+
+          <div id="emailConfigFields" style="display: none;">
+            <h3>SMTP-Einstellungen</h3>
+            
+            <div class="form-group">
+              <label for="smtpHost">SMTP-Host *</label>
+              <input 
+                type="text" 
+                id="smtpHost" 
+                name="smtpHost" 
+                placeholder="z.B. smtp.gmail.com oder smtp.office365.com"
+              />
+              <div class="form-hint">Hostname des SMTP-Servers</div>
+            </div>
+
+            <div class="form-group">
+              <label for="smtpPort">SMTP-Port *</label>
+              <input 
+                type="number" 
+                id="smtpPort" 
+                name="smtpPort" 
+                placeholder="587"
+                min="1"
+                max="65535"
+              />
+              <div class="form-hint">Standard: 587 (TLS) oder 465 (SSL)</div>
+            </div>
+
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="smtpSecure" name="smtpSecure" />
+                SSL verwenden (Port 465)
+              </label>
+              <div class="form-hint">Aktivieren für SSL-Verbindungen (Port 465), ansonsten STARTTLS (Port 587)</div>
+            </div>
+
+            <div class="form-group">
+              <label for="smtpUser">SMTP-Benutzername *</label>
+              <input 
+                type="text" 
+                id="smtpUser" 
+                name="smtpUser" 
+                placeholder="Ihre E-Mail-Adresse oder Benutzername"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="smtpPass">SMTP-Passwort *</label>
+              <input 
+                type="password" 
+                id="smtpPass" 
+                name="smtpPass" 
+                placeholder="Ihr SMTP-Passwort"
+              />
+              <div class="form-hint">
+                <strong>Wichtig:</strong> Für Gmail verwenden Sie ein App-Passwort, kein normales Passwort.
+                <a href="https://support.google.com/accounts/answer/185833" target="_blank">Mehr Infos</a>
+              </div>
+            </div>
+
+            <h3>Absender-Einstellungen</h3>
+
+            <div class="form-group">
+              <label for="fromName">Absender-Name</label>
+              <input 
+                type="text" 
+                id="fromName" 
+                name="fromName" 
+                placeholder="Ihr Firmenname"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="fromEmail">Absender-E-Mail *</label>
+              <input 
+                type="email" 
+                id="fromEmail" 
+                name="fromEmail" 
+                placeholder="noreply@ihre-firma.de"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="replyTo">Antwort-E-Mail</label>
+              <input 
+                type="email" 
+                id="replyTo" 
+                name="replyTo" 
+                placeholder="kontakt@ihre-firma.de"
+              />
+              <div class="form-hint">E-Mail-Adresse für Antworten (optional)</div>
+            </div>
+
+            <h3>Test-E-Mail</h3>
+
+            <div class="form-group">
+              <label for="testEmail">Test-E-Mail-Adresse</label>
+              <input 
+                type="email" 
+                id="testEmail" 
+                name="testEmail" 
+                placeholder="test@example.com"
+              />
+              <button type="button" id="sendTestEmailBtn" class="btn-secondary" style="margin-top: 10px;">
+                Test-E-Mail senden
+              </button>
+              <div class="form-hint">Senden Sie eine Test-E-Mail, um Ihre Konfiguration zu überprüfen</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="emailErrorMessage" class="message error-message" style="display: none;"></div>
+        <div id="emailSuccessMessage" class="message success-message" style="display: none;"></div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">E-Mail-Einstellungen speichern</button>
+          <button type="button" id="resetEmailBtn" class="btn-secondary">Zurücksetzen</button>
+        </div>
+      </form>
+
+      <!-- Email Queue Section -->
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+        <h3>E-Mail-Warteschlange</h3>
+        <div id="emailQueueInfo" style="margin: 15px 0;">
+          <p>Anzahl ausstehender E-Mails: <strong id="queueCount">0</strong></p>
+        </div>
+        <button type="button" id="viewQueueBtn" class="btn-secondary">Warteschlange anzeigen</button>
+        <button type="button" id="exportQueueBtn" class="btn-secondary">Warteschlange exportieren</button>
+        <button type="button" id="clearQueueBtn" class="btn-secondary" style="background: #d32f2f;">Warteschlange leeren</button>
+      </div>
+    </div>
     
     <!-- Layout Editor Section -->
     <div id="layoutEditor"></div>
@@ -128,6 +272,17 @@
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
+    import {
+      getEmailConfig,
+      saveEmailConfig,
+      validateEmailConfig
+    } from './js/modules/email-config.js';
+    import {
+      sendTestEmail,
+      getEmailQueue,
+      clearEmailQueue,
+      exportEmailQueue
+    } from './js/modules/email-service.js';
     import { initLayoutEditor } from './js/modules/layout-editor-ui.js';
     
     (() => {
@@ -141,6 +296,9 @@
         
         // Initialize settings form
         initSettingsForm();
+        
+        // Initialize email configuration form
+        initEmailConfigForm();
         
         // Initialize layout editor
         initLayoutEditor('layoutEditor');
@@ -282,6 +440,191 @@
       function hideMessages() {
         errorMessage.style.display = 'none';
         successMessage.style.display = 'none';
+      }
+    }
+
+    // Initialize email configuration form
+    function initEmailConfigForm() {
+      const form = document.getElementById('emailConfigForm');
+      const emailEnabled = document.getElementById('emailEnabled');
+      const emailConfigFields = document.getElementById('emailConfigFields');
+      const emailErrorMessage = document.getElementById('emailErrorMessage');
+      const emailSuccessMessage = document.getElementById('emailSuccessMessage');
+      const sendTestEmailBtn = document.getElementById('sendTestEmailBtn');
+      const resetEmailBtn = document.getElementById('resetEmailBtn');
+      const viewQueueBtn = document.getElementById('viewQueueBtn');
+      const exportQueueBtn = document.getElementById('exportQueueBtn');
+      const clearQueueBtn = document.getElementById('clearQueueBtn');
+      const queueCount = document.getElementById('queueCount');
+
+      // Load email configuration
+      loadEmailConfig();
+
+      // Update queue count
+      updateQueueCount();
+
+      // Toggle email config fields visibility
+      emailEnabled.addEventListener('change', () => {
+        emailConfigFields.style.display = emailEnabled.checked ? 'block' : 'none';
+      });
+
+      // Handle form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideEmailMessages();
+
+        const config = {
+          enabled: emailEnabled.checked,
+          service: 'smtp',
+          smtp: {
+            host: document.getElementById('smtpHost').value.trim(),
+            port: parseInt(document.getElementById('smtpPort').value) || 587,
+            secure: document.getElementById('smtpSecure').checked,
+            auth: {
+              user: document.getElementById('smtpUser').value.trim(),
+              pass: document.getElementById('smtpPass').value
+            }
+          },
+          api: {
+            provider: '',
+            apiKey: '',
+            endpoint: ''
+          },
+          from: {
+            name: document.getElementById('fromName').value.trim(),
+            email: document.getElementById('fromEmail').value.trim()
+          },
+          replyTo: document.getElementById('replyTo').value.trim(),
+          testEmail: document.getElementById('testEmail').value.trim()
+        };
+
+        // Validate configuration
+        const errors = validateEmailConfig(config);
+        if (errors.length > 0) {
+          showEmailError(errors.join(' '));
+          return;
+        }
+
+        // Save configuration
+        if (saveEmailConfig(config)) {
+          showEmailSuccess('E-Mail-Einstellungen wurden erfolgreich gespeichert.');
+        } else {
+          showEmailError('Fehler beim Speichern der E-Mail-Einstellungen.');
+        }
+      });
+
+      // Handle test email button
+      sendTestEmailBtn.addEventListener('click', async () => {
+        const testEmailAddress = document.getElementById('testEmail').value.trim();
+        if (!testEmailAddress) {
+          showEmailError('Bitte geben Sie eine Test-E-Mail-Adresse ein.');
+          return;
+        }
+
+        hideEmailMessages();
+        sendTestEmailBtn.disabled = true;
+        sendTestEmailBtn.textContent = 'Sende...';
+
+        try {
+          const result = await sendTestEmail(testEmailAddress);
+          if (result.success) {
+            showEmailSuccess('Test-E-Mail wurde zur Warteschlange hinzugefügt. ' + 
+              'Da dies eine Client-seitige Anwendung ist, müssen E-Mails über ein Backend verarbeitet werden.');
+            updateQueueCount();
+          } else {
+            showEmailError(result.message || 'Fehler beim Senden der Test-E-Mail.');
+          }
+        } catch (error) {
+          showEmailError('Fehler beim Senden der Test-E-Mail: ' + error.message);
+        } finally {
+          sendTestEmailBtn.disabled = false;
+          sendTestEmailBtn.textContent = 'Test-E-Mail senden';
+        }
+      });
+
+      // Handle reset button
+      resetEmailBtn.addEventListener('click', () => {
+        if (confirm('Möchten Sie alle Änderungen verwerfen und die gespeicherten E-Mail-Einstellungen neu laden?')) {
+          loadEmailConfig();
+          hideEmailMessages();
+        }
+      });
+
+      // Handle queue buttons
+      viewQueueBtn.addEventListener('click', () => {
+        const queue = getEmailQueue();
+        if (queue.length === 0) {
+          alert('Die E-Mail-Warteschlange ist leer.');
+          return;
+        }
+        
+        // Display queue in a simple format
+        const queueText = queue.map((email, index) => {
+          return `${index + 1}. An: ${email.to.join(', ')}\n   Betreff: ${email.subject}\n   Status: ${email.status}\n   Zeitstempel: ${new Date(email.timestamp).toLocaleString('de-DE')}`;
+        }).join('\n\n');
+        
+        alert('E-Mail-Warteschlange:\n\n' + queueText);
+      });
+
+      exportQueueBtn.addEventListener('click', () => {
+        const queue = getEmailQueue();
+        if (queue.length === 0) {
+          alert('Die E-Mail-Warteschlange ist leer.');
+          return;
+        }
+        exportEmailQueue();
+        showEmailSuccess('E-Mail-Warteschlange wurde exportiert.');
+      });
+
+      clearQueueBtn.addEventListener('click', () => {
+        if (confirm('Möchten Sie die gesamte E-Mail-Warteschlange wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+          clearEmailQueue();
+          updateQueueCount();
+          showEmailSuccess('E-Mail-Warteschlange wurde geleert.');
+        }
+      });
+
+      function loadEmailConfig() {
+        const config = getEmailConfig();
+
+        emailEnabled.checked = config.enabled;
+        emailConfigFields.style.display = config.enabled ? 'block' : 'none';
+        
+        document.getElementById('smtpHost').value = config.smtp.host || '';
+        document.getElementById('smtpPort').value = config.smtp.port || 587;
+        document.getElementById('smtpSecure').checked = config.smtp.secure || false;
+        document.getElementById('smtpUser').value = config.smtp.auth.user || '';
+        document.getElementById('smtpPass').value = config.smtp.auth.pass || '';
+        document.getElementById('fromName').value = config.from.name || '';
+        document.getElementById('fromEmail').value = config.from.email || '';
+        document.getElementById('replyTo').value = config.replyTo || '';
+        document.getElementById('testEmail').value = config.testEmail || '';
+      }
+
+      function updateQueueCount() {
+        const queue = getEmailQueue();
+        queueCount.textContent = queue.length;
+      }
+
+      function showEmailError(message) {
+        emailErrorMessage.textContent = message;
+        emailErrorMessage.style.display = 'block';
+        emailSuccessMessage.style.display = 'none';
+      }
+
+      function showEmailSuccess(message) {
+        emailSuccessMessage.textContent = message;
+        emailSuccessMessage.style.display = 'block';
+        emailErrorMessage.style.display = 'none';
+
+        setTimeout(() => {
+          emailSuccessMessage.style.display = 'none';
+        }, 3000);
+      }
+
+      function hideEmailMessages() {
+        emailErrorMessage.style.display = 'none';
+        emailSuccessMessage.style.display = 'none';
       }
     }
   </script>

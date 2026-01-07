@@ -208,11 +208,22 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Zurücksetzen-Funktion zum Verwerfen von Änderungen
 - ✅ Erfolgs- und Fehlermeldungen
 - ✅ Fußzeilen-Text für Aufträge und Rechnungen
+- ✅ E-Mail-Konfiguration (SMTP-Einstellungen)
+- ✅ Test-E-Mail-Funktion
 
 ### PDF-Funktionalität (NEU)
 - ✅ Automatische PDF-Generierung für Aufträge und Rechnungen
 - ✅ Integration mit jsPDF-Bibliothek (via CDN)
 - ✅ PDF-Anzeige im Kundenbereich für Aufträge und Rechnungen
+
+### E-Mail-Funktionalität (NEU)
+- ✅ SMTP-Konfiguration für E-Mail-Versand
+- ✅ E-Mail-Vorlagen für Kunden-Willkommens-E-Mails
+- ✅ E-Mail-Vorlagen für Auftrags- und Rechnungs-Benachrichtigungen
+- ✅ E-Mail-Warteschlange für Client-seitige Anwendung
+- ✅ Export der E-Mail-Warteschlange für Backend-Verarbeitung
+- ✅ Test-E-Mail-Funktion zur Konfigurationsprüfung
+- ℹ️ Benötigt Backend-Integration für tatsächlichen E-Mail-Versand (siehe [EMAIL_CONFIGURATION.md](EMAIL_CONFIGURATION.md))
 
 ## Technologie
 
