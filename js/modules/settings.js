@@ -82,19 +82,19 @@ export function getStandardLayoutTemplate() {
     elements: [
       // Header row: Logo on left, company info on right
       { id: 'logo', type: 'logo', x: 20, y: 20, width: 150, height: 70, textAlign: 'left' },
-      { id: 'company-name', type: 'company-name', x: 380, y: 20, width: 200, height: 25, textAlign: 'right' },
-      { id: 'company-address', type: 'company-address', x: 380, y: 50, width: 200, height: 50, textAlign: 'right' },
-      { id: 'company-contact', type: 'company-contact', x: 380, y: 105, width: 200, height: 40, textAlign: 'right' },
+      { id: 'company-name', type: 'company-name', x: 380, y: 20, width: 158, height: 25, textAlign: 'right' },
+      { id: 'company-address', type: 'company-address', x: 380, y: 50, width: 158, height: 50, textAlign: 'right' },
+      { id: 'company-contact', type: 'company-contact', x: 380, y: 105, width: 158, height: 40, textAlign: 'right' },
       
       // Document header and customer info side by side
       { id: 'document-header', type: 'document-header', x: 20, y: 160, width: 260, height: 50, textAlign: 'left' },
-      { id: 'customer-info', type: 'customer-info', x: 320, y: 160, width: 260, height: 90, textAlign: 'left' },
+      { id: 'customer-info', type: 'customer-info', x: 320, y: 160, width: 218, height: 90, textAlign: 'left' },
       
       // Items table with more space
-      { id: 'items-table', type: 'items-table', x: 20, y: 270, width: 560, height: 350, textAlign: 'left' },
+      { id: 'items-table', type: 'items-table', x: 20, y: 270, width: 518, height: 350, textAlign: 'left' },
       
       // Totals aligned to the right
-      { id: 'totals', type: 'totals', x: 380, y: 630, width: 200, height: 80, textAlign: 'right' }
+      { id: 'totals', type: 'totals', x: 380, y: 630, width: 158, height: 80, textAlign: 'right' }
     ]
   };
 }
