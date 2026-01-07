@@ -120,8 +120,8 @@ markNotificationAsFailed(notificationId, 'SMTP-Verbindungsfehler: Timeout');
 
 Die folgenden Ereignisse lösen automatisch Benachrichtigungen aus:
 
-#### 1. Neuer Kunde
-Wird ausgelöst, wenn der Status einer Firma auf "Kunde" geändert wird:
+#### 1. Neuer Kunde ✅
+Wird automatisch ausgelöst, wenn der Status einer Firma auf "Kunde" geändert wird:
 ```javascript
 // In js/modules/state.js
 notifyNewCustomer({
@@ -132,32 +132,38 @@ notifyNewCustomer({
 });
 ```
 
-#### 2. Neuer Auftrag
-Integration für neue Aufträge vorbereitet:
+#### 2. Neuer Auftrag ✅
+Wird automatisch ausgelöst, wenn ein neuer Auftrag erstellt wird:
 ```javascript
-import { notifyNewOrder } from './js/modules/email-notifications.js';
+// In js/modules/auftraege-ui.js (saveOrder function)
 notifyNewOrder({
-  orderId: 'AUF-2024-001',
-  customerName: 'Beispiel GmbH',
-  total: 1500.00,
-  items: [...]
+  orderId: formData.Auftrags_ID,
+  customerName: formData.Firma,
+  contactPerson: formData.Ansprechpartner,
+  total: calculatedTotal,
+  items: formData.Artikel,
+  project: formData.Projekt,
+  status: formData.Status
 });
 ```
 
-#### 3. Neue Rechnung
-Integration für neue Rechnungen vorbereitet:
+#### 3. Neue Rechnung ✅
+Wird automatisch ausgelöst, wenn eine neue Rechnung erstellt wird:
 ```javascript
-import { notifyNewInvoice } from './js/modules/email-notifications.js';
+// In js/modules/rechnungen-ui.js (saveInvoice function)
 notifyNewInvoice({
-  invoiceId: 'RE-2024-001',
-  customerName: 'Beispiel GmbH',
-  total: 1500.00,
-  dueDate: '2024-02-15'
+  invoiceId: formData.Rechnungs_ID,
+  customerName: formData.Firma,
+  contactPerson: formData.Ansprechpartner,
+  total: calculatedTotal,
+  items: formData.Artikel,
+  project: formData.Projekt,
+  orderId: formData.Auftrags_ID
 });
 ```
 
-#### 4. Zahlungseingang
-Integration für Zahlungseingänge vorbereitet:
+#### 4. Zahlungseingang ⚠️
+Integration für Zahlungseingänge vorbereitet (erfordert Zahlungstracking-Feature):
 ```javascript
 import { notifyPaymentReceived } from './js/modules/email-notifications.js';
 notifyPaymentReceived({
