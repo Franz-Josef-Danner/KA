@@ -194,6 +194,17 @@
             </div>
 
             <div class="form-group">
+              <label for="testEmail">Test-E-Mail-Adresse (optional)</label>
+              <input 
+                type="email" 
+                id="testEmail" 
+                name="testEmail" 
+                placeholder="scener@gmx.net"
+              />
+              <div class="form-hint">Wenn ausgefüllt, werden alle Benachrichtigungen an diese Adresse gesendet (für Testzwecke).</div>
+            </div>
+
+            <div class="form-group">
               <label>
                 <input type="checkbox" id="useSSL" name="useSSL" checked />
                 SSL/TLS verwenden (empfohlen)
@@ -368,6 +379,7 @@
           email: document.getElementById('emailAddress').value.trim(),
           password: document.getElementById('emailPassword').value,
           webmailUrl: document.getElementById('webmailUrl').value.trim(),
+          testEmail: document.getElementById('testEmail').value.trim(),
           useSSL: document.getElementById('useSSL').checked,
           notificationSettings: {
             newCustomer: document.getElementById('notifyNewCustomer').checked,
@@ -436,6 +448,7 @@
         document.getElementById('smtpServer').value = emailConfig.smtpServer || '';
         document.getElementById('smtpPort').value = emailConfig.smtpPort ?? 587;
         document.getElementById('webmailUrl').value = emailConfig.webmailUrl || '';
+        document.getElementById('testEmail').value = emailConfig.testEmail || '';
         document.getElementById('useSSL').checked = emailConfig.useSSL !== false;
         document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
         document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;

@@ -31,6 +31,7 @@ Aktivieren Sie die Checkbox "E-Mail-Benachrichtigungen aktivieren" und füllen S
 - **SMTP-Server**: Server für Postausgang (z.B. smtp.franzjosef-danner.at)
 - **SMTP-Port**: Port für SMTP (Standard: 587 für STARTTLS, 465 für SSL)
 - **Webmail-URL**: Optional - Link zu Ihrem Webmail (z.B. https://webmail.world4you.com)
+- **Test-E-Mail-Adresse**: Optional - Adresse für Testzwecke (z.B. scener@gmx.net). Wenn ausgefüllt, werden alle Benachrichtigungen an diese Adresse gesendet statt an die konfigurierte E-Mail-Adresse.
 - **SSL/TLS verwenden**: Sollte aktiviert bleiben (empfohlen)
 
 ### 3. Benachrichtigungstypen auswählen
@@ -48,6 +49,16 @@ Klicken Sie auf **Speichern**, um die Konfiguration zu übernehmen.
 
 ## Funktionsweise
 
+### Test-E-Mail-Modus
+
+Wenn eine **Test-E-Mail-Adresse** konfiguriert ist, werden alle E-Mail-Benachrichtigungen an diese Adresse gesendet, unabhängig vom Ereignis. Dies ist besonders nützlich für:
+
+- Entwicklung und Testing
+- Qualitätssicherung vor Produktivbetrieb
+- Demo-Zwecke
+
+Die Test-E-Mail-Adresse überschreibt die normale E-Mail-Adresse nur für die Benachrichtigungen. Die IMAP/SMTP-Konfiguration bleibt unverändert.
+
 ### Aktuelle Implementierung (Frontend-Only)
 
 Da dies eine reine Frontend-Anwendung ist, werden E-Mails **nicht direkt** versendet. Stattdessen:
@@ -57,6 +68,7 @@ Da dies eine reine Frontend-Anwendung ist, werden E-Mails **nicht direkt** verse
 3. Jede Benachrichtigung enthält:
    - Ereignistyp (z.B. neuer Kunde)
    - Relevante Daten (Firmenname, E-Mail, etc.)
+   - Empfänger-E-Mail-Adresse (Test-E-Mail wenn konfiguriert, sonst normale E-Mail)
    - Zeitstempel
    - Status (pending)
 

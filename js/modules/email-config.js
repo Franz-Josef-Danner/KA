@@ -32,6 +32,7 @@ function getDefaultEmailConfig() {
     password: '', // Note: Stored in localStorage - not secure for production
     webmailUrl: '',
     useSSL: true,
+    testEmail: '', // Test email address for development/testing purposes
     notificationSettings: {
       newCustomer: true,
       newOrder: true,
@@ -107,17 +108,22 @@ export function queueEmailNotification(type, data) {
     return false;
   }
   
+  // Use test email if configured, otherwise use the regular email
+  const recipientEmail = config.testEmail || config.email;
+  
   // Store notification in queue for future processing
   const queue = getEmailQueue();
   queue.push({
     type,
     data,
+    recipientEmail: recipientEmail,
     timestamp: new Date().toISOString(),
     status: 'pending'
   });
   saveEmailQueue(queue);
   
   console.log(`Email notification queued: ${type}`, data);
+  console.log(`Recipient: ${recipientEmail}${config.testEmail ? ' (Test Mode)' : ''}`);
   return true;
 }
 
@@ -157,6 +163,12 @@ export function clearEmailQueue() {
 // Get pending email notifications
 export function getPendingNotifications() {
   return getEmailQueue().filter(item => item.status === 'pending');
+}
+
+// Get the effective recipient email (test email if set, otherwise regular email)
+export function getRecipientEmail() {
+  const config = getEmailConfig();
+  return config.testEmail || config.email;
 }
 
 // Test email configuration
