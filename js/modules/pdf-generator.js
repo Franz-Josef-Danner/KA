@@ -676,8 +676,9 @@ function renderTotals(doc, x, y, width, documentData) {
   valueWidths.push(doc.getTextWidth(formatCurrency(total)));
   
   // Calculate required width: max label + max value + spacing + padding
-  const maxLabelWidth = Math.max(...labelWidths);
-  const maxValueWidth = Math.max(...valueWidths);
+  // Ensure we have valid widths (fallback to 0 if arrays are somehow empty)
+  const maxLabelWidth = labelWidths.length > 0 ? Math.max(...labelWidths) : 0;
+  const maxValueWidth = valueWidths.length > 0 ? Math.max(...valueWidths) : 0;
   const horizontalPadding = 10; // 5mm on each side
   const labelValueGap = 5; // Gap between label and value
   const calculatedWidth = maxLabelWidth + labelValueGap + maxValueWidth + horizontalPadding;
@@ -687,9 +688,11 @@ function renderTotals(doc, x, y, width, documentData) {
   const actualWidth = Math.max(calculatedWidth, width, minWidth);
   
   // Adjust x position to keep the box right-aligned if width increased
+  // Ensure adjustedX stays within valid page boundaries (minimum at left margin)
   const pageWidth = doc.internal.pageSize.width;
   const rightMargin = PDF_MARGIN;
-  const adjustedX = Math.min(x, pageWidth - rightMargin - actualWidth);
+  const leftMargin = PDF_MARGIN;
+  const adjustedX = Math.max(leftMargin, Math.min(x, pageWidth - rightMargin - actualWidth));
   
   // Add subtle background box for totals
   const lineHeight = 6;
