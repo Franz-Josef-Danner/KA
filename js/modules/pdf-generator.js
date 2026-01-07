@@ -475,12 +475,12 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   if (documentData.items && Array.isArray(documentData.items)) {
     // New format with items array
     items = documentData.items.map(item => ({
-      artikel: item.description || item.artikel || '',
-      beschreibung: item.description || item.beschreibung || '',
-      menge: item.quantity || item.menge || '1',
-      einheit: item.unit || item.einheit || 'Stk',
-      einzelpreis: item.pricePerUnit || item.einzelpreis || '0',
-      gesamtpreis: item.total || item.gesamtpreis || '0'
+      artikel: item.description || item.artikel || item.Artikel || '',
+      beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
+      menge: item.quantity || item.menge || item.Menge || '1',
+      einheit: item.unit || item.einheit || item.Einheit || 'Stk',
+      einzelpreis: item.pricePerUnit || item.einzelpreis || item.Einzelpreis || '0',
+      gesamtpreis: item.total || item.gesamtpreis || item.Gesamtpreis || '0'
     }));
   } else if (documentData.Artikel) {
     // Try to parse from single field (legacy format)
@@ -614,13 +614,22 @@ function renderTotals(doc, x, y, width, documentData) {
     subtotal = documentData.subtotal;
     vat = documentData.vat || 0;
     total = documentData.total;
-  } else if (documentData.items && Array.isArray(documentData.items)) {
+  } else if (documentData.items && Array.isArray(documentData.items) && documentData.items.length > 0) {
+    // Calculate from items array, checking for both capitalized and lowercase field names
     subtotal = documentData.items.reduce((sum, item) => {
-      const price = parseFloat(String(item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
+      const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
       return sum + price;
     }, 0);
-    vat = subtotal * 0.19; // Default 19% VAT
-    total = subtotal + vat;
+    
+    // If subtotal is 0 but Budget exists, use Budget as fallback
+    if (subtotal === 0 && documentData.Budget) {
+      total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+      subtotal = total / 1.19;
+      vat = total - subtotal;
+    } else {
+      vat = subtotal * 0.19; // Default 19% VAT
+      total = subtotal + vat;
+    }
   } else if (documentData.Budget) {
     total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
     subtotal = total / 1.19;
