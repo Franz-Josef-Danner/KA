@@ -5,7 +5,7 @@ import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyInvoiceI
 import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewInvoice } from './email-notifications.js';
+import { notifyNewInvoice, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -704,7 +704,7 @@ function saveInvoice() {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    notifyNewInvoice({
+    const notificationResult = notifyNewInvoice({
       invoiceId: formData.Rechnungs_ID || 'N/A',
       customerName: formData.Firma || 'Unbekannt',
       contactPerson: formData.Ansprechpartner || '',
@@ -714,6 +714,13 @@ function saveInvoice() {
       orderId: formData.Auftrags_ID || '',
       dueDate: '' // Could calculate this if needed
     });
+    
+    // Show feedback about notification status
+    if (!notificationResult) {
+      showEmailNotificationWarning('Die Rechnung', 'newInvoice');
+    } else {
+      showEmailNotificationQueued('Die Rechnung');
+    }
   }
   
   // Trigger render event - avoid circular dependency by using custom event
