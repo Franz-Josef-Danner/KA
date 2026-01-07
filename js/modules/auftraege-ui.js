@@ -828,6 +828,8 @@ function convertToInvoice() {
     Rechnungs_ID: "", // Will be auto-generated
     Rechnungsdatum: new Date().toISOString().split('T')[0],
     Firma: formData.Firma,
+    Firmenadresse: formData.Firmenadresse || "",
+    Firmen_Email: formData.Firmen_Email || "",
     Ansprechpartner: formData.Ansprechpartner,
     Artikel: "", // Kept for backward compatibility
     Beschreibung: "", // Kept for backward compatibility
