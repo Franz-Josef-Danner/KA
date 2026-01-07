@@ -39,7 +39,6 @@ Das PDF-Layout wurde vollständig neu gestaltet, um ein sauberes, modernes und p
 ### 4. **Summenbereich**
 - **Boxed-Design**: Hintergrund mit feinem Rahmen
   - Hellgrauer Hintergrund (RGB: 248,248,248)
-  - Abgerundete Ecken (2mm Radius)
 - **Trennlinie**: Zwischen MwSt. und Gesamtbetrag
 - **Größerer Gesamtbetrag**: 12pt fett für bessere Sichtbarkeit
 - **Bessere Beschriftungen**: "Nettobetrag" statt "Netto"

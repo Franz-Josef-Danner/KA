@@ -561,7 +561,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
       rowY = newPageStartY + headerHeight;
     }
     
-    // Alternate row background with lighter colors
+    // Alternate row background - even rows get lighter background
     if (index % 2 === 0) {
       doc.setFillColor(248, 248, 248);
       doc.rect(x, rowY, width, rowHeight, 'F');
