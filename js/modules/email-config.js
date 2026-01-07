@@ -83,6 +83,11 @@ export function validateEmailConfig(config) {
     }
   }
   
+  // Validate test email if provided (regardless of enabled status)
+  if (config.testEmail && !isValidEmail(config.testEmail)) {
+    errors.push('Bitte geben Sie eine gültige Test-E-Mail-Adresse ein.');
+  }
+  
   return errors;
 }
 
@@ -108,8 +113,8 @@ export function queueEmailNotification(type, data) {
     return false;
   }
   
-  // Use test email if configured, otherwise use the regular email
-  const recipientEmail = config.testEmail || config.email;
+  // Use helper function to get the effective recipient email
+  const recipientEmail = getRecipientEmail();
   
   // Store notification in queue for future processing
   const queue = getEmailQueue();
