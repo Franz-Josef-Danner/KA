@@ -636,7 +636,7 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.setFillColor(248, 248, 248);
   doc.setDrawColor(220, 220, 220);
   doc.setLineWidth(0.3);
-  doc.roundedRect(x, y, width, totalHeight, 2, 2, 'FD');
+  doc.rect(x, y, width, totalHeight, 'FD');
   
   const labelX = x + 5;
   const valueX = x + width - 5;

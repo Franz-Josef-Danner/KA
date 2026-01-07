@@ -77,7 +77,6 @@ export function getDefaultLayoutTemplate() {
 // Get standard layout template for customer-facing PDFs
 // This provides a fixed, professional template without customization
 // Independent of the layout editor configuration
-// NEW: Professional modern layout with better spacing and alignment
 export function getStandardLayoutTemplate() {
   return {
     elements: [
