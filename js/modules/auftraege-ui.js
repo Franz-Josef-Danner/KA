@@ -6,7 +6,7 @@ import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-confi
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewOrder, showEmailNotificationWarning } from './email-notifications.js';
+import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -759,9 +759,11 @@ function saveOrder() {
       status: formData.Status || ''
     });
     
-    // Show warning if notification was not queued
+    // Show feedback about notification status
     if (!notificationResult) {
       showEmailNotificationWarning('Der Auftrag', 'newOrder');
+    } else {
+      showEmailNotificationQueued('Der Auftrag');
     }
   }
   

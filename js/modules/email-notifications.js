@@ -141,3 +141,8 @@ export function showEmailNotificationWarning(itemType = 'Element', notificationT
     alert(`⚠️ Hinweis: E-Mail-Benachrichtigung konnte nicht versendet werden.\n\n${itemType} wurde erfolgreich gespeichert, aber die E-Mail-Benachrichtigung konnte nicht in die Warteschlange eingereiht werden.\n\nBitte prüfen Sie Ihre E-Mail-Einstellungen.`);
   }
 }
+
+// Show info when email notification was successfully queued
+export function showEmailNotificationQueued(itemType = 'Element') {
+  alert(`ℹ️ ${itemType} wurde gespeichert.\n\nE-Mail-Benachrichtigung wurde in die Warteschlange eingereiht.\n\nHinweis: Die aktuelle Version speichert nur Benachrichtigungen. Für den tatsächlichen E-Mail-Versand ist eine Backend-Integration erforderlich.`);
+}
