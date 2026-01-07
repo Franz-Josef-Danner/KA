@@ -676,6 +676,26 @@ function getFormData() {
       continue;
     }
     
+    // Handle Firmenadresse and Firmen_Email separately - get from company data
+    if (col === "Firmenadresse" || col === "Firmen_Email") {
+      const firmaInput = document.getElementById("edit_Firma");
+      if (firmaInput && firmaInput.value) {
+        const company = getCompanyByName(firmaInput.value);
+        if (company) {
+          if (col === "Firmenadresse") {
+            formData[col] = sanitizeText(company.Adresse || "");
+          } else if (col === "Firmen_Email") {
+            formData[col] = sanitizeText(company["E-mail"] || "");
+          }
+        } else {
+          formData[col] = "";
+        }
+      } else {
+        formData[col] = "";
+      }
+      continue;
+    }
+    
     const input = document.getElementById(`edit_${col}`);
     if (input) {
       formData[col] = sanitizeText(input.value || "");
