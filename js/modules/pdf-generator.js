@@ -353,8 +353,10 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
     doc.text(customer.contactPerson || customer.Ansprechpartner, x + padding, offsetY);
     offsetY += 4.5;
   }
-  if (customer.address) {
-    const lines = customer.address.split('\n');
+  // Support both address and Firmenadresse fields
+  const address = customer.address || customer.Firmenadresse;
+  if (address) {
+    const lines = address.split('\n');
     lines.forEach(line => {
       doc.text(line, x + padding, offsetY);
       offsetY += 4;
