@@ -4,6 +4,8 @@
 
 Das PDF-Layout wurde vollständig neu gestaltet, um ein sauberes, modernes und professionelles Erscheinungsbild zu erreichen.
 
+**Wichtiger Hinweis:** Die Elementbreiten wurden angepasst, um sicherzustellen, dass alle Inhalte innerhalb der Seitenränder (10mm auf jeder Seite) bleiben und nicht über den rechten Rand hinausragen. A4-Format hat eine Breite von 210mm, bei 10mm Seitenrand auf beiden Seiten bleiben 190mm nutzbarer Platz.
+
 ## Hauptverbesserungen
 
 ### 1. **Header-Bereich**
@@ -84,19 +86,19 @@ Das PDF-Layout wurde vollständig neu gestaltet, um ein sauberes, modernes und p
   elements: [
     // Header: Logo links, Firmendaten rechts
     { id: 'logo', x: 20, y: 20, width: 150, height: 70 },
-    { id: 'company-name', x: 380, y: 20, width: 200, height: 25 },
-    { id: 'company-address', x: 380, y: 50, width: 200, height: 50 },
-    { id: 'company-contact', x: 380, y: 105, width: 200, height: 40 },
+    { id: 'company-name', x: 380, y: 20, width: 158, height: 25 },
+    { id: 'company-address', x: 380, y: 50, width: 158, height: 50 },
+    { id: 'company-contact', x: 380, y: 105, width: 158, height: 40 },
     
     // Dokumentkopf und Kunde nebeneinander
     { id: 'document-header', x: 20, y: 160, width: 260, height: 50 },
-    { id: 'customer-info', x: 320, y: 160, width: 260, height: 90 },
+    { id: 'customer-info', x: 320, y: 160, width: 218, height: 90 },
     
     // Artikeltabelle mit mehr Platz
-    { id: 'items-table', x: 20, y: 270, width: 560, height: 350 },
+    { id: 'items-table', x: 20, y: 270, width: 518, height: 350 },
     
     // Summen rechts ausgerichtet
-    { id: 'totals', x: 380, y: 630, width: 200, height: 80 }
+    { id: 'totals', x: 380, y: 630, width: 158, height: 80 }
   ]
 }
 ```
