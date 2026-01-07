@@ -27,12 +27,13 @@ Implemented dynamic width calculation in the `renderTotals` function in `js/modu
      - Template-provided width
      - Minimum width (55mm, same as original)
 
-3. **Right-Aligned Box Positioning (Lines 689-692)**
+3. **Right-Aligned Box Positioning (Lines 689-695)**
    ```javascript
-   const adjustedX = Math.min(x, pageWidth - rightMargin - actualWidth);
+   const adjustedX = Math.max(leftMargin, Math.min(x, pageWidth - rightMargin - actualWidth));
    ```
    - Keeps the totals box right-aligned
-   - Prevents overflow beyond page margins
+   - Prevents overflow beyond right page margin
+   - Prevents negative positioning beyond left page margin
    - Adjusts X position when width increases
 
 ### Benefits
@@ -63,14 +64,14 @@ doc.rect(x, y, width, totalHeight, 'FD');
 
 **After:**
 ```javascript
-// Measure all content widths
-const maxLabelWidth = Math.max(...labelWidths);
-const maxValueWidth = Math.max(...valueWidths);
+// Measure all content widths with safety checks
+const maxLabelWidth = labelWidths.length > 0 ? Math.max(...labelWidths) : 0;
+const maxValueWidth = valueWidths.length > 0 ? Math.max(...valueWidths) : 0;
 const calculatedWidth = maxLabelWidth + labelValueGap + maxValueWidth + horizontalPadding;
 const actualWidth = Math.max(calculatedWidth, width, minWidth);
 
-// Adjust position to stay right-aligned
-const adjustedX = Math.min(x, pageWidth - rightMargin - actualWidth);
+// Adjust position to stay right-aligned with boundary checks
+const adjustedX = Math.max(leftMargin, Math.min(x, pageWidth - rightMargin - actualWidth));
 doc.rect(adjustedX, y, actualWidth, totalHeight, 'FD');
 ```
 
