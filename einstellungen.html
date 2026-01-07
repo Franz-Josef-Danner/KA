@@ -105,6 +105,57 @@
         </div>
 
         <div class="form-section">
+          <h2>Bankverbindung</h2>
+          <div class="form-hint" style="margin-bottom: 15px;">
+            Diese Daten werden auf Rechnungen angezeigt, damit Kunden Zahlungen überweisen können.
+          </div>
+          
+          <div class="form-group">
+            <label for="bankName">Name der Bank</label>
+            <input 
+              type="text" 
+              id="bankName" 
+              name="bankName" 
+              placeholder="z.B. Sparkasse Musterstadt"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="accountHolder">Kontoinhaber</label>
+            <input 
+              type="text" 
+              id="accountHolder" 
+              name="accountHolder" 
+              placeholder="z.B. Ihre Firma GmbH"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="iban">IBAN</label>
+            <input 
+              type="text" 
+              id="iban" 
+              name="iban" 
+              placeholder="DE89 3704 0044 0532 0130 00"
+              maxlength="34"
+            />
+            <div class="form-hint">Internationale Bankkontonummer (mit oder ohne Leerzeichen)</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="bic">BIC / SWIFT</label>
+            <input 
+              type="text" 
+              id="bic" 
+              name="bic" 
+              placeholder="COBADEFFXXX"
+              maxlength="11"
+            />
+            <div class="form-hint">Bank Identifier Code (8 oder 11 Zeichen)</div>
+          </div>
+        </div>
+
+        <div class="form-section">
           <h2>E-Mail-Benachrichtigungen</h2>
           <div class="form-hint" style="margin-bottom: 15px;">
             <strong>ℹ️ Hinweis:</strong> Die Server-Verbindung (IMAP/SMTP) wird über das Backend verwaltet. 
@@ -286,7 +337,11 @@
           phone: document.getElementById('phone').value.trim(),
           logo: logoImage.src || '',
           footerTextOrder: document.getElementById('footerTextOrder').value.trim(),
-          footerTextInvoice: document.getElementById('footerTextInvoice').value.trim()
+          footerTextInvoice: document.getElementById('footerTextInvoice').value.trim(),
+          bankName: document.getElementById('bankName').value.trim(),
+          accountHolder: document.getElementById('accountHolder').value.trim(),
+          iban: document.getElementById('iban').value.trim(),
+          bic: document.getElementById('bic').value.trim()
         };
         
         // Validate settings
@@ -343,6 +398,10 @@
         document.getElementById('phone').value = settings.phone || '';
         document.getElementById('footerTextOrder').value = settings.footerTextOrder || '';
         document.getElementById('footerTextInvoice').value = settings.footerTextInvoice || '';
+        document.getElementById('bankName').value = settings.bankName || '';
+        document.getElementById('accountHolder').value = settings.accountHolder || '';
+        document.getElementById('iban').value = settings.iban || '';
+        document.getElementById('bic').value = settings.bic || '';
         
         if (settings.logo) {
           logoImage.src = settings.logo;

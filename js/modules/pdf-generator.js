@@ -699,6 +699,52 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
   
+  // Add subtle top border
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(x, y - 2, x + width, y - 2);
+  
+  let offsetY = y + 3;
+  
+  // For invoices, show bank account information prominently if available
+  if ((documentType === 'invoice' || documentType === 'rechnung') && 
+      (companySettings.iban || companySettings.bankName)) {
+    
+    // Bank account section header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Zahlungsinformationen:', x + width / 2, offsetY, { align: 'center' });
+    offsetY += 5;
+    
+    // Bank account details
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    
+    if (companySettings.accountHolder) {
+      doc.text(`Kontoinhaber: ${companySettings.accountHolder}`, x + width / 2, offsetY, { align: 'center' });
+      offsetY += 3.5;
+    }
+    
+    if (companySettings.bankName) {
+      doc.text(`Bank: ${companySettings.bankName}`, x + width / 2, offsetY, { align: 'center' });
+      offsetY += 3.5;
+    }
+    
+    if (companySettings.iban) {
+      doc.text(`IBAN: ${companySettings.iban}`, x + width / 2, offsetY, { align: 'center' });
+      offsetY += 3.5;
+    }
+    
+    if (companySettings.bic) {
+      doc.text(`BIC: ${companySettings.bic}`, x + width / 2, offsetY, { align: 'center' });
+      offsetY += 3.5;
+    }
+    
+    offsetY += 2; // Extra spacing before footer text
+  }
+  
   // Use appropriate footer text based on document type
   let footerText = '';
   if (documentType === 'invoice' || documentType === 'rechnung') {
@@ -714,21 +760,18 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
       'Vielen Dank für Ihr Vertrauen!';
   }
   
-  // Add subtle top border
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.3);
-  doc.line(x, y - 2, x + width, y - 2);
-  
   // Split long text into multiple lines if needed
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
   const lines = doc.splitTextToSize(footerText, width - 10);
-  let offsetY = y + 3;
   lines.forEach(line => {
     doc.text(line, x + width / 2, offsetY, { align: 'center' });
     offsetY += 3.5;
   });
   
-  // Return actual height: top padding + (line count * line height)
-  return 3 + (lines.length * 3.5);
+  // Return actual height: from y to offsetY
+  return offsetY - y;
 }
 
 // Helper function to parse budget value from string
