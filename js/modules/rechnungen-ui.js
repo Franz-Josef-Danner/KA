@@ -5,15 +5,7 @@ import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyInvoiceI
 import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewInvoice } from './email-notifications.js';
-import { isEmailConfigured } from './email-config.js';
-
-// Helper function to show email notification warning
-function showEmailNotificationWarning() {
-  if (!isEmailConfigured()) {
-    alert('⚠️ Hinweis: E-Mail-Benachrichtigungen sind nicht aktiviert.\n\nDie Rechnung wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie E-Mail-Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.');
-  }
-}
+import { notifyNewInvoice, showEmailNotificationWarning } from './email-notifications.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -725,7 +717,7 @@ function saveInvoice() {
     
     // Show warning if notification was not queued
     if (!notificationResult) {
-      showEmailNotificationWarning();
+      showEmailNotificationWarning('Die Rechnung');
     }
   }
   

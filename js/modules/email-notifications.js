@@ -120,3 +120,10 @@ export function getNotificationSubject(type, data) {
   
   return subjects[type] || 'KA System Benachrichtigung';
 }
+
+// Show warning when email notification failed
+export function showEmailNotificationWarning(itemType = 'Element') {
+  if (!isEmailConfigured()) {
+    alert(`⚠️ Hinweis: E-Mail-Benachrichtigungen sind nicht aktiviert.\n\n${itemType} wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie E-Mail-Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.`);
+  }
+}

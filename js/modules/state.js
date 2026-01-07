@@ -63,8 +63,12 @@ async function syncFirmenIds(rowsToSync) {
         });
         
         // Show warning if notification was not queued
-        if (!notificationResult && isEmailConfigured()) {
-          console.warn('E-Mail-Benachrichtigung für neuen Kunden konnte nicht versendet werden.');
+        if (!notificationResult) {
+          if (!isEmailConfigured()) {
+            console.warn('E-Mail-Benachrichtigung für neuen Kunden nicht gesendet: E-Mail-Benachrichtigungen sind nicht aktiviert.');
+          } else {
+            console.warn('E-Mail-Benachrichtigung für neuen Kunden konnte nicht versendet werden.');
+          }
         }
       } else {
         // Customer already has ID - ensure article list and account exist
