@@ -104,6 +104,129 @@
           </div>
         </div>
 
+        <div class="form-section">
+          <h2>E-Mail-Konfiguration</h2>
+          <div class="form-hint" style="color: #e74c3c; margin-bottom: 15px;">
+            <strong>⚠️ Sicherheitshinweis:</strong> E-Mail-Zugangsdaten werden im Browser gespeichert. 
+            Für Produktivumgebungen empfehlen wir eine Backend-Integration.
+          </div>
+          
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="emailEnabled" name="emailEnabled" />
+              E-Mail-Benachrichtigungen aktivieren
+            </label>
+          </div>
+
+          <div id="emailConfigSection" style="display: none;">
+            <div class="form-group">
+              <label for="emailAddress">E-Mail-Adresse *</label>
+              <input 
+                type="email" 
+                id="emailAddress" 
+                name="emailAddress" 
+                placeholder="office@franzjosef-danner.at"
+              />
+            </div>
+            
+            <div class="form-group">
+              <label for="emailPassword">Passwort *</label>
+              <input 
+                type="password" 
+                id="emailPassword" 
+                name="emailPassword" 
+                placeholder="••••••••••••"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="imapServer">IMAP-Server *</label>
+              <input 
+                type="text" 
+                id="imapServer" 
+                name="imapServer" 
+                placeholder="imap.franzjosef-danner.at"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="imapPort">IMAP-Port *</label>
+              <input 
+                type="number" 
+                id="imapPort" 
+                name="imapPort" 
+                value="993"
+                min="1"
+                max="65535"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="smtpServer">SMTP-Server *</label>
+              <input 
+                type="text" 
+                id="smtpServer" 
+                name="smtpServer" 
+                placeholder="smtp.franzjosef-danner.at"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="smtpPort">SMTP-Port *</label>
+              <input 
+                type="number" 
+                id="smtpPort" 
+                name="smtpPort" 
+                value="587"
+                min="1"
+                max="65535"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="webmailUrl">Webmail-URL</label>
+              <input 
+                type="url" 
+                id="webmailUrl" 
+                name="webmailUrl" 
+                placeholder="https://webmail.world4you.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="useSSL" name="useSSL" checked />
+                SSL/TLS verwenden (empfohlen)
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label><strong>Benachrichtigungen senden für:</strong></label>
+              <label>
+                <input type="checkbox" id="notifyNewCustomer" name="notifyNewCustomer" checked />
+                Neue Kunden
+              </label>
+              <label>
+                <input type="checkbox" id="notifyNewOrder" name="notifyNewOrder" checked />
+                Neue Aufträge
+              </label>
+              <label>
+                <input type="checkbox" id="notifyNewInvoice" name="notifyNewInvoice" checked />
+                Neue Rechnungen
+              </label>
+              <label>
+                <input type="checkbox" id="notifyPaymentReceived" name="notifyPaymentReceived" checked />
+                Zahlungseingänge
+              </label>
+            </div>
+
+            <div class="form-hint">
+              <strong>Hinweis:</strong> Die E-Mail-Funktionalität erfordert eine Backend-Integration. 
+              Derzeit werden die Benachrichtigungen nur in der Warteschlange gespeichert.
+            </div>
+          </div>
+        </div>
+
         
         <div id="errorMessage" class="message error-message" style="display: none;"></div>
         <div id="successMessage" class="message success-message" style="display: none;"></div>
@@ -128,6 +251,11 @@
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
+    import {
+      getEmailConfig,
+      saveEmailConfig,
+      validateEmailConfig
+    } from './js/modules/email-config.js';
     import { initLayoutEditor } from './js/modules/layout-editor-ui.js';
     
     (() => {
@@ -170,9 +298,16 @@
       const logoImage = document.getElementById('logoImage');
       const removeLogo = document.getElementById('removeLogo');
       const resetBtn = document.getElementById('resetBtn');
+      const emailEnabled = document.getElementById('emailEnabled');
+      const emailConfigSection = document.getElementById('emailConfigSection');
       
       // Load current settings
       loadSettings();
+      
+      // Handle email enabled checkbox
+      emailEnabled.addEventListener('change', (e) => {
+        emailConfigSection.style.display = e.target.checked ? 'block' : 'none';
+      });
       
       // Handle logo upload preview
       logoUpload.addEventListener('change', async (e) => {
@@ -222,13 +357,42 @@
         
         // Validate settings
         const errors = validateSettings(settings);
+        
+        // Get email configuration
+        const emailConfig = {
+          enabled: emailEnabled.checked,
+          imapServer: document.getElementById('imapServer').value.trim(),
+          imapPort: parseInt(document.getElementById('imapPort').value, 10),
+          smtpServer: document.getElementById('smtpServer').value.trim(),
+          smtpPort: parseInt(document.getElementById('smtpPort').value, 10),
+          email: document.getElementById('emailAddress').value.trim(),
+          password: document.getElementById('emailPassword').value,
+          webmailUrl: document.getElementById('webmailUrl').value.trim(),
+          useSSL: document.getElementById('useSSL').checked,
+          notificationSettings: {
+            newCustomer: document.getElementById('notifyNewCustomer').checked,
+            newOrder: document.getElementById('notifyNewOrder').checked,
+            newInvoice: document.getElementById('notifyNewInvoice').checked,
+            paymentReceived: document.getElementById('notifyPaymentReceived').checked
+          }
+        };
+        
+        // Validate email configuration if enabled
+        if (emailConfig.enabled) {
+          const emailErrors = validateEmailConfig(emailConfig);
+          errors.push(...emailErrors);
+        }
+        
         if (errors.length > 0) {
           showError(errors.join(' '));
           return;
         }
         
-        // Save settings
-        if (saveCompanySettings(settings)) {
+        // Save settings and email config
+        const settingsSaved = saveCompanySettings(settings);
+        const emailConfigSaved = saveEmailConfig(emailConfig);
+        
+        if (settingsSaved && emailConfigSaved) {
           showSuccess(MESSAGES.saveSuccess);
         } else {
           showError(MESSAGES.saveError);
@@ -260,6 +424,23 @@
           logoImage.src = '';
           logoPreview.style.display = 'none';
         }
+        
+        // Load email configuration
+        const emailConfig = getEmailConfig();
+        emailEnabled.checked = emailConfig.enabled;
+        emailConfigSection.style.display = emailConfig.enabled ? 'block' : 'none';
+        document.getElementById('emailAddress').value = emailConfig.email || '';
+        document.getElementById('emailPassword').value = emailConfig.password || '';
+        document.getElementById('imapServer').value = emailConfig.imapServer || '';
+        document.getElementById('imapPort').value = emailConfig.imapPort || 993;
+        document.getElementById('smtpServer').value = emailConfig.smtpServer || '';
+        document.getElementById('smtpPort').value = emailConfig.smtpPort || 587;
+        document.getElementById('webmailUrl').value = emailConfig.webmailUrl || '';
+        document.getElementById('useSSL').checked = emailConfig.useSSL !== false;
+        document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
+        document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;
+        document.getElementById('notifyNewInvoice').checked = emailConfig.notificationSettings?.newInvoice !== false;
+        document.getElementById('notifyPaymentReceived').checked = emailConfig.notificationSettings?.paymentReceived !== false;
       }
       
       function showError(message) {
