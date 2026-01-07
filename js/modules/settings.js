@@ -77,17 +77,25 @@ export function getDefaultLayoutTemplate() {
 // Get standard layout template for customer-facing PDFs
 // This provides a fixed, professional template without customization
 // Independent of the layout editor configuration
+// NEW: Professional modern layout with better spacing and alignment
 export function getStandardLayoutTemplate() {
   return {
     elements: [
-      { id: 'logo', type: 'logo', x: 20, y: 20, width: 120, height: 60, textAlign: 'left' },
-      { id: 'company-name', type: 'company-name', x: 20, y: 90, width: 200, height: 20, textAlign: 'left' },
-      { id: 'company-address', type: 'company-address', x: 20, y: 115, width: 180, height: 50, textAlign: 'left' },
-      { id: 'company-contact', type: 'company-contact', x: 20, y: 170, width: 180, height: 35, textAlign: 'left' },
-      { id: 'customer-info', type: 'customer-info', x: 400, y: 90, width: 180, height: 70, textAlign: 'left' },
-      { id: 'document-header', type: 'document-header', x: 20, y: 230, width: 560, height: 40, textAlign: 'left' },
-      { id: 'items-table', type: 'items-table', x: 20, y: 280, width: 560, height: 300, textAlign: 'left' },
-      { id: 'totals', type: 'totals', x: 400, y: 590, width: 180, height: 70, textAlign: 'right' }
+      // Header row: Logo on left, company info on right
+      { id: 'logo', type: 'logo', x: 20, y: 20, width: 150, height: 70, textAlign: 'left' },
+      { id: 'company-name', type: 'company-name', x: 380, y: 20, width: 200, height: 25, textAlign: 'right' },
+      { id: 'company-address', type: 'company-address', x: 380, y: 50, width: 200, height: 50, textAlign: 'right' },
+      { id: 'company-contact', type: 'company-contact', x: 380, y: 105, width: 200, height: 40, textAlign: 'right' },
+      
+      // Document header and customer info side by side
+      { id: 'document-header', type: 'document-header', x: 20, y: 160, width: 260, height: 50, textAlign: 'left' },
+      { id: 'customer-info', type: 'customer-info', x: 320, y: 160, width: 260, height: 90, textAlign: 'left' },
+      
+      // Items table with more space
+      { id: 'items-table', type: 'items-table', x: 20, y: 270, width: 560, height: 350, textAlign: 'left' },
+      
+      // Totals aligned to the right
+      { id: 'totals', type: 'totals', x: 380, y: 630, width: 200, height: 80, textAlign: 'right' }
     ]
   };
 }

@@ -189,17 +189,18 @@ function renderElement(doc, element, documentType, documentData, companySettings
   const y = element.y * 0.352778 + PDF_MARGIN;
   const width = element.width * 0.352778;
   const height = element.height * 0.352778;
+  const textAlign = element.textAlign || 'left';
 
   switch (element.type) {
     case 'logo':
       renderLogo(doc, x, y, width, height, companySettings);
       return height; // Logo uses configured height
     case 'company-name':
-      return renderCompanyName(doc, x, y, width, companySettings);
+      return renderCompanyName(doc, x, y, width, companySettings, textAlign);
     case 'company-address':
-      return renderCompanyAddress(doc, x, y, width, companySettings);
+      return renderCompanyAddress(doc, x, y, width, companySettings, textAlign);
     case 'company-contact':
-      return renderCompanyContact(doc, x, y, width, companySettings);
+      return renderCompanyContact(doc, x, y, width, companySettings, textAlign);
     case 'customer-info':
       return renderCustomerInfo(doc, x, y, width, documentData);
     case 'document-number':
@@ -259,89 +260,113 @@ function renderLogo(doc, x, y, width, height, companySettings) {
   }
 }
 
-function renderCompanyName(doc, x, y, width, companySettings) {
-  doc.setFontSize(16);
+function renderCompanyName(doc, x, y, width, companySettings, textAlign = 'left') {
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
-  doc.text(companySettings.companyName || 'Firma', x, y + 6);
+  doc.setTextColor(30, 30, 30);
+  
+  const align = textAlign === 'right' ? 'right' : textAlign === 'center' ? 'center' : 'left';
+  const textX = align === 'right' ? (x + width) : align === 'center' ? (x + width / 2) : x;
+  
+  doc.text(companySettings.companyName || 'Firma', textX, y + 5, { align });
   
   // Return actual height: font size + spacing
-  return 16 * 0.352778 + 2; // ~8mm total height
+  return 14 * 0.352778 + 2; // ~7mm total height
 }
 
-function renderCompanyAddress(doc, x, y, width, companySettings) {
-  doc.setFontSize(10);
+function renderCompanyAddress(doc, x, y, width, companySettings, textAlign = 'left') {
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
+  
+  const align = textAlign === 'right' ? 'right' : textAlign === 'center' ? 'center' : 'left';
+  const textX = align === 'right' ? (x + width) : align === 'center' ? (x + width / 2) : x;
   
   let lineCount = 1;
   if (companySettings.address) {
     const lines = companySettings.address.split('\n');
     lineCount = lines.length;
     lines.forEach((line, index) => {
-      doc.text(line, x, y + 5 + (index * 5));
+      doc.text(line, textX, y + 4 + (index * 4.5), { align });
     });
   }
   
   // Return actual height: first line offset + (line count * line height)
-  return 5 + (lineCount * 5); // Each line is ~5mm
+  return 4 + (lineCount * 4.5); // Each line is ~4.5mm
 }
 
-function renderCompanyContact(doc, x, y, width, companySettings) {
-  doc.setFontSize(9);
+function renderCompanyContact(doc, x, y, width, companySettings, textAlign = 'left') {
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
   
-  let offsetY = y + 5;
+  const align = textAlign === 'right' ? 'right' : textAlign === 'center' ? 'center' : 'left';
+  const textX = align === 'right' ? (x + width) : align === 'center' ? (x + width / 2) : x;
+  
+  let offsetY = y + 4;
   let lineCount = 0;
   if (companySettings.email) {
-    doc.text(`E-Mail: ${companySettings.email}`, x, offsetY);
-    offsetY += 5;
+    doc.text(`E-Mail: ${companySettings.email}`, textX, offsetY, { align });
+    offsetY += 4.5;
     lineCount++;
   }
   if (companySettings.phone) {
-    doc.text(`Tel: ${companySettings.phone}`, x, offsetY);
+    doc.text(`Tel: ${companySettings.phone}`, textX, offsetY, { align });
     lineCount++;
   }
   
   // Return actual height: first line offset + (line count * line height)
-  return lineCount > 0 ? (5 + (lineCount * 5)) : 5;
+  return lineCount > 0 ? (4 + (lineCount * 4.5)) : 4;
 }
 
 function renderCustomerInfo(doc, x, y, width, documentData) {
-  doc.setFontSize(10);
+  // Add a subtle box around customer info
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
   
-  let offsetY = y + 5;
+  let offsetY = y + 6;
   const startY = offsetY;
+  const padding = 3;
+  
   doc.setFont('helvetica', 'bold');
-  doc.text('Kunde:', x, offsetY);
+  doc.setFontSize(10);
+  doc.text('Rechnungsadresse:', x + padding, offsetY);
   offsetY += 6;
   
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
   
   // Support both old format (Firma, Ansprechpartner) and new format (customer object)
   const customer = documentData.customer || documentData;
   
   if (customer.company || customer.Firma) {
-    doc.text(customer.company || customer.Firma, x, offsetY);
+    doc.setFont('helvetica', 'bold');
+    doc.text(customer.company || customer.Firma, x + padding, offsetY);
+    doc.setFont('helvetica', 'normal');
     offsetY += 5;
   }
   if (customer.contactPerson || customer.Ansprechpartner) {
-    doc.text(customer.contactPerson || customer.Ansprechpartner, x, offsetY);
-    offsetY += 5;
+    doc.text(customer.contactPerson || customer.Ansprechpartner, x + padding, offsetY);
+    offsetY += 4.5;
   }
   if (customer.address) {
     const lines = customer.address.split('\n');
     lines.forEach(line => {
-      doc.text(line, x, offsetY);
+      doc.text(line, x + padding, offsetY);
       offsetY += 4;
     });
   }
   
+  // Draw box around customer info
+  const boxHeight = offsetY - y + 3;
+  doc.rect(x, y, width, boxHeight);
+  
   // Return actual height consumed
-  return offsetY - y + 2; // Add small bottom padding
+  return boxHeight;
 }
 
 function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
@@ -394,15 +419,18 @@ function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
 }
 
 function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
-  doc.setFontSize(20);
+  // Title with accent color
+  doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(40, 40, 40);
   
   const title = (documentType === 'order' || documentType === 'auftrag') ? 'Auftrag' : 'Rechnung';
-  doc.text(title, x, y + 8);
+  doc.text(title, x, y + 10);
   
-  doc.setFontSize(11);
+  // Document metadata
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 80);
   
   // Support both old format and new sample format
   let docId, docDate;
@@ -414,15 +442,24 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
     docDate = documentData.invoiceDate || documentData.Rechnungsdatum;
   }
   
+  let offsetY = y + 20;
   if (docId) {
-    doc.text(`Nr: ${docId}`, x + width - 60, y + 8, { align: 'left' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(`Nummer:`, x, offsetY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(docId, x + 20, offsetY);
+    offsetY += 5;
   }
   if (docDate) {
-    doc.text(`Datum: ${docDate}`, x + width - 60, y + 14, { align: 'left' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Datum:`, x, offsetY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(docDate, x + 20, offsetY);
   }
   
   // Return actual height: title height + extra info
-  return 20; // ~20mm for document header
+  return 30; // ~30mm for document header
 }
 
 function renderItemsTable(doc, x, y, width, height, documentData) {
@@ -460,42 +497,43 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     }
   }
 
-  // Column widths configuration
+  // Column widths configuration - optimized for better readability
   const colWidths = {
     pos: width * 0.08,
-    beschreibung: width * 0.35,
-    menge: width * 0.12,
-    einheit: width * 0.12,
-    einzelpreis: width * 0.165,
-    gesamtpreis: width * 0.165
+    beschreibung: width * 0.38,
+    menge: width * 0.10,
+    einheit: width * 0.10,
+    einzelpreis: width * 0.17,
+    gesamtpreis: width * 0.17
   };
   
   // Table dimensions
-  const headerHeight = 8; // Height of table header in mm
-  const rowHeight = 7; // Height of each table row in mm
+  const headerHeight = 9; // Height of table header in mm
+  const rowHeight = 8; // Height of each table row in mm
   const newPageStartY = 20; // Starting Y position for content on new pages
   
   // Helper function to render table header
   const renderTableHeader = (headerY) => {
-    doc.setFillColor(240, 240, 240);
+    // Header background with darker color
+    doc.setFillColor(60, 60, 60);
     doc.rect(x, headerY, width, headerHeight, 'F');
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(255, 255, 255);
     
     let headerColX = x;
-    doc.text('Pos.', headerColX + 2, headerY + 5);
+    doc.text('Pos.', headerColX + 2, headerY + 6);
     headerColX += colWidths.pos;
-    doc.text('Beschreibung', headerColX + 2, headerY + 5);
+    doc.text('Beschreibung', headerColX + 2, headerY + 6);
     headerColX += colWidths.beschreibung;
-    doc.text('Menge', headerColX + 2, headerY + 5);
+    doc.text('Menge', headerColX + 2, headerY + 6);
     headerColX += colWidths.menge;
-    doc.text('Einheit', headerColX + 2, headerY + 5);
+    doc.text('Einheit', headerColX + 2, headerY + 6);
     headerColX += colWidths.einheit;
-    doc.text('Einzelpreis', headerColX + 2, headerY + 5);
+    doc.text('Einzelpreis', headerColX + 2, headerY + 6);
     headerColX += colWidths.einzelpreis;
-    doc.text('Gesamtpreis', headerColX + 2, headerY + 5);
+    doc.text('Gesamt', headerColX + 2, headerY + 6);
   };
   
   // Render initial table header
@@ -504,6 +542,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   // Table rows
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
+  doc.setTextColor(40, 40, 40);
   
   let rowY = y + headerHeight;
   let colX; // Will be reset for each row
@@ -522,36 +561,46 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
       rowY = newPageStartY + headerHeight;
     }
     
-    // Alternate row background
-    if (index % 2 === 1) {
-      doc.setFillColor(250, 250, 250);
+    // Alternate row background with lighter colors
+    if (index % 2 === 0) {
+      doc.setFillColor(248, 248, 248);
       doc.rect(x, rowY, width, rowHeight, 'F');
     }
     
+    // Add subtle borders between rows
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.1);
+    doc.line(x, rowY, x + width, rowY);
+    
     colX = x;
-    doc.text(String(item.position || index + 1), colX + 2, rowY + 5);
+    doc.text(String(item.position || index + 1), colX + 2, rowY + 5.5);
     colX += colWidths.pos;
-    doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5);
+    doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5.5);
     colX += colWidths.beschreibung;
-    doc.text(String(item.menge || '1'), colX + 2, rowY + 5);
+    doc.text(String(item.menge || '1'), colX + 2, rowY + 5.5);
     colX += colWidths.menge;
-    doc.text(item.einheit || 'Stk', colX + 2, rowY + 5);
+    doc.text(item.einheit || 'Stk', colX + 2, rowY + 5.5);
     colX += colWidths.einheit;
-    doc.text(formatCurrency(item.einzelpreis), colX + 2, rowY + 5);
+    doc.text(formatCurrency(item.einzelpreis), colX + 2, rowY + 5.5);
     colX += colWidths.einzelpreis;
-    doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5);
+    doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5.5);
     
     rowY += rowHeight;
   });
   
+  // Add bottom border to table
+  doc.setDrawColor(60, 60, 60);
+  doc.setLineWidth(0.5);
+  doc.line(x, rowY, x + width, rowY);
+  
   // Return actual height of rendered table content
-  return rowY - y;
+  return rowY - y + 1; // Add 1mm for bottom border
 }
 
 function renderTotals(doc, x, y, width, documentData) {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(40, 40, 40);
   
   // Calculate total and subtotal
   let subtotal = 0;
@@ -578,29 +627,42 @@ function renderTotals(doc, x, y, width, documentData) {
     return; // No data to display
   }
   
-  // Calculate content-based height for the totals (text only, no box)
-  // 3 lines of content + minimal padding: subtotal, VAT, total
-  const lineHeight = 6;  // 6mm between lines
-  const topPadding = 3;  // 3mm top padding (reduced from 5mm)
-  const bottomPadding = 2;  // 2mm bottom padding (reduced from 3mm)
+  // Add subtle background box for totals
+  const lineHeight = 6;
+  const topPadding = 5;
+  const bottomPadding = 5;
   const totalHeight = topPadding + (3 * lineHeight) + bottomPadding;
+  
+  doc.setFillColor(248, 248, 248);
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(x, y, width, totalHeight, 2, 2, 'FD');
+  
+  const labelX = x + 5;
+  const valueX = x + width - 5;
   
   // Subtotal
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text('Netto:', x, y + topPadding);
-  doc.text(formatCurrency(subtotal), x + width, y + topPadding, { align: 'right' });
+  doc.text('Nettobetrag:', labelX, y + topPadding + 4);
+  doc.text(formatCurrency(subtotal), valueX, y + topPadding + 4, { align: 'right' });
   
   // VAT
   const vatRate = documentData.vatRate || 0.19;
-  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%):`, x, y + topPadding + lineHeight);
-  doc.text(formatCurrency(vat), x + width, y + topPadding + lineHeight, { align: 'right' });
+  doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%)`, labelX, y + topPadding + lineHeight + 4);
+  doc.text(formatCurrency(vat), valueX, y + topPadding + lineHeight + 4, { align: 'right' });
+  
+  // Separator line
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.5);
+  doc.line(labelX, y + topPadding + (1.7 * lineHeight), valueX, y + topPadding + (1.7 * lineHeight));
   
   // Total
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('Gesamtsumme:', x, y + topPadding + (2 * lineHeight));
-  doc.text(formatCurrency(total), x + width, y + topPadding + (2 * lineHeight), { align: 'right' });
+  doc.setFontSize(12);
+  doc.setTextColor(30, 30, 30);
+  doc.text('Gesamtbetrag:', labelX, y + topPadding + (2 * lineHeight) + 4);
+  doc.text(formatCurrency(total), valueX, y + topPadding + (2 * lineHeight) + 4, { align: 'right' });
   
   // Return the actual height
   return totalHeight;
@@ -609,7 +671,7 @@ function renderTotals(doc, x, y, width, documentData) {
 function renderFooter(doc, x, y, width, companySettings, documentType) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(120, 120, 120);
+  doc.setTextColor(100, 100, 100);
   
   // Use appropriate footer text based on document type
   let footerText = '';
@@ -626,16 +688,21 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
       'Vielen Dank für Ihr Vertrauen!';
   }
   
+  // Add subtle top border
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(x, y - 2, x + width, y - 2);
+  
   // Split long text into multiple lines if needed
   const lines = doc.splitTextToSize(footerText, width - 10);
-  let offsetY = y + 5;
+  let offsetY = y + 3;
   lines.forEach(line => {
     doc.text(line, x + width / 2, offsetY, { align: 'center' });
-    offsetY += 4;
+    offsetY += 3.5;
   });
   
   // Return actual height: top padding + (line count * line height)
-  return 5 + (lines.length * 4);
+  return 3 + (lines.length * 3.5);
 }
 
 function formatCurrency(value) {
