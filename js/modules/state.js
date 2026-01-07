@@ -6,6 +6,7 @@ import { sanitizeText } from '../utils/sanitize.js';
 import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
 import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
 import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js';
+import { notifyNewCustomer } from './email-notifications.js';
 
 let rows = loadSync() ?? [];
 
@@ -40,7 +41,8 @@ async function syncFirmenIds(rowsToSync) {
     if (row.Status === 'Kunde') {
       // If status is "Kunde" and no ID exists, generate one
       const idStr = typeof row.Firmen_ID === 'string' ? row.Firmen_ID : '';
-      if (!idStr || idStr.trim() === '') {
+      const isNewCustomer = !idStr || idStr.trim() === '';
+      if (isNewCustomer) {
         maxId += 1;
         row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
         // Create empty article list for new customer
@@ -51,6 +53,13 @@ async function syncFirmenIds(rowsToSync) {
         if (email) {
           await createOrUpdateCustomerAccount(row.Firmen_ID, email, firmenName);
         }
+        // Send email notification for new customer
+        notifyNewCustomer({
+          firma: firmenName,
+          ansprechpartner: row.Ansprechpartner || '',
+          email: email,
+          telefon: row.Telefon || ''
+        });
       } else {
         // Customer already has ID - ensure article list and account exist
         if (!artikellisteExists(idStr)) {

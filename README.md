@@ -208,6 +208,15 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Zurücksetzen-Funktion zum Verwerfen von Änderungen
 - ✅ Erfolgs- und Fehlermeldungen
 - ✅ Fußzeilen-Text für Aufträge und Rechnungen
+- ✅ E-Mail-Konfiguration für automatische Benachrichtigungen
+
+### E-Mail-Benachrichtigungen (NEU)
+- ✅ Konfiguration von IMAP/SMTP-Einstellungen
+- ✅ Automatische Benachrichtigungen für neue Kunden
+- ✅ Benachrichtigungswarteschlange für spätere Backend-Integration
+- ✅ Auswählbare Benachrichtigungstypen (Kunden, Aufträge, Rechnungen, Zahlungen)
+- ⚠️ **Hinweis**: Frontend-only - E-Mails werden in Warteschlange gespeichert, Backend erforderlich zum Versenden
+- 📖 Siehe [EMAIL_CONFIGURATION.md](EMAIL_CONFIGURATION.md) für Details
 
 ### PDF-Funktionalität (NEU)
 - ✅ Automatische PDF-Generierung für Aufträge und Rechnungen
