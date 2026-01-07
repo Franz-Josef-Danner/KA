@@ -717,7 +717,7 @@ function saveInvoice() {
     
     // Show warning if notification was not queued
     if (!notificationResult) {
-      showEmailNotificationWarning('Die Rechnung');
+      showEmailNotificationWarning('Die Rechnung', 'newInvoice');
     }
   }
   

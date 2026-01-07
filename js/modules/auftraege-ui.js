@@ -761,7 +761,7 @@ function saveOrder() {
     
     // Show warning if notification was not queued
     if (!notificationResult) {
-      showEmailNotificationWarning('Der Auftrag');
+      showEmailNotificationWarning('Der Auftrag', 'newOrder');
     }
   }
   

@@ -3,7 +3,7 @@
 // -----------------------------
 // Integrates email notifications with various system events
 
-import { queueEmailNotification, isEmailConfigured } from './email-config.js';
+import { queueEmailNotification, isEmailConfigured, getEmailConfig } from './email-config.js';
 
 // Send notification when a new customer is created
 export function notifyNewCustomer(customerData) {
@@ -122,8 +122,22 @@ export function getNotificationSubject(type, data) {
 }
 
 // Show warning when email notification failed
-export function showEmailNotificationWarning(itemType = 'Element') {
-  if (!isEmailConfigured()) {
+export function showEmailNotificationWarning(itemType = 'Element', notificationType = null) {
+  const config = getEmailConfig();
+  
+  if (!config.enabled) {
     alert(`⚠️ Hinweis: E-Mail-Benachrichtigungen sind nicht aktiviert.\n\n${itemType} wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie E-Mail-Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.`);
+  } else if (notificationType && !config.notificationSettings[notificationType]) {
+    const typeLabels = {
+      newOrder: 'für neue Aufträge',
+      newInvoice: 'für neue Rechnungen',
+      newCustomer: 'für neue Kunden',
+      paymentReceived: 'für Zahlungseingänge'
+    };
+    const typeLabel = typeLabels[notificationType] || 'für diesen Typ';
+    alert(`⚠️ Hinweis: E-Mail-Benachrichtigungen ${typeLabel} sind deaktiviert.\n\n${itemType} wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie diese Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.`);
+  } else {
+    // Some other reason for failure
+    alert(`⚠️ Hinweis: E-Mail-Benachrichtigung konnte nicht versendet werden.\n\n${itemType} wurde erfolgreich gespeichert, aber die E-Mail-Benachrichtigung konnte nicht in die Warteschlange eingereiht werden.\n\nBitte prüfen Sie Ihre E-Mail-Einstellungen.`);
   }
 }
