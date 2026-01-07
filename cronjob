@@ -1,0 +1,37 @@
+Ich habe ein komplettes Backend-System für den Cronjob-basierten E-Mail-Versand erstellt in Commit 4d2b0af.
+
+Schnellstart
+bash
+cd backend
+./setup.sh
+nano config.json  # Zugangsdaten eintragen
+node email-sender.js  # Testen
+Cronjob einrichten
+bash
+crontab -e
+Fügen Sie hinzu (alle 5 Minuten):
+
+bash
+*/5 * * * * cd /ABSOLUTER/PFAD/zu/KA/backend && node email-sender.js >> /var/log/ka-email.log 2>&1
+Konfiguration (config.json)
+JSON
+{
+  "email": "office@franzjosef-danner.at",
+  "password": "IHR_PASSWORT",
+  "fromName": "KA System",
+  "smtp": {
+    "host": "smtp.franzjosef-danner.at",
+    "port": 587,
+    "secure": false
+  }
+}
+Dokumentation
+backend/CRONJOB_SETUP.md - Detaillierte Cronjob-Anleitung
+backend/README.md - Backend-Dokumentation
+Enthält Fehlerbehebung und Beispiele
+Das System:
+
+Liest Warteschlange aus email-queue.json
+Versendet E-Mails via SMTP
+Markiert Status (sent/failed)
+Läuft automatisch via Cronjob
