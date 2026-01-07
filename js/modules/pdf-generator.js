@@ -182,6 +182,8 @@ function adjustElementPosition(element, renderedHeights, allElements) {
 // Note: For text-based elements (company-name, company-address, etc.), the height parameter
 // is intentionally ignored - these elements use content-based heights to avoid unnecessary
 // spacing when content is small. Only logo uses the configured height.
+// The textAlign parameter is supported by company-name, company-address, and company-contact elements.
+// Other elements have fixed alignment or don't support text alignment.
 // Returns the actual height consumed by the element in mm (or null if not applicable).
 function renderElement(doc, element, documentType, documentData, companySettings) {
   // Convert px to mm (600px = 210mm) and add PDF margin to ensure 1cm border
@@ -320,10 +322,6 @@ function renderCompanyContact(doc, x, y, width, companySettings, textAlign = 'le
 }
 
 function renderCustomerInfo(doc, x, y, width, documentData) {
-  // Add a subtle box around customer info
-  doc.setDrawColor(220, 220, 220);
-  doc.setLineWidth(0.3);
-  
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
@@ -361,8 +359,12 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
     });
   }
   
-  // Draw box around customer info
+  // Calculate box height and draw box around customer info (draw after text to ensure proper height)
   const boxHeight = offsetY - y + 3;
+  
+  // Draw subtle box around customer info
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
   doc.rect(x, y, width, boxHeight);
   
   // Return actual height consumed
