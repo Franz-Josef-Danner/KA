@@ -212,7 +212,7 @@ export function markEmailAsFailed(emailId, errorMessage) {
  * Generate unique email ID
  */
 function generateEmailId() {
-  return 'email_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  return 'email_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
 }
 
 /**

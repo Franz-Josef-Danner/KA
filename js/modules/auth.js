@@ -253,7 +253,8 @@ export async function createOrUpdateCustomerAccount(firmenId, email, firmenName)
           email: email,
           password: password
         });
-        console.log(`Welcome email queued for ${email}`);
+        // Log success without exposing sensitive data
+        console.log('Welcome email queued for new customer account');
       } catch (error) {
         console.error('Failed to send welcome email:', error);
         // Don't fail account creation if email fails

@@ -132,13 +132,23 @@ Alle Vorlagen sind in deutscher Sprache und können bei Bedarf angepasst werden.
 
 ## Sicherheitshinweise
 
-1. **Passwörter**: SMTP-Passwörter werden im LocalStorage gespeichert. In einer Produktionsumgebung sollten diese auf dem Backend gespeichert werden.
+1. **Passwörter in E-Mails**: Die Willkommens-E-Mail enthält das generierte Passwort im Klartext. Dies ist eine gängige Praxis für erste Zugangsdaten, aber:
+   - Benutzer werden aufgefordert, ihr Passwort nach der ersten Anmeldung zu ändern
+   - Die E-Mail enthält einen Hinweis, diese nach der Passwortänderung zu löschen
+   - Für höhere Sicherheit: Implementieren Sie einen Passwort-Reset-Flow statt Passwort-Versand
 
-2. **App-Passwörter**: Verwenden Sie für Gmail und ähnliche Dienste App-Passwörter, keine normalen Passwörter.
+2. **SMTP-Passwörter**: SMTP-Passwörter werden im LocalStorage gespeichert. In einer Produktionsumgebung sollten diese auf dem Backend gespeichert werden.
 
-3. **SSL/TLS**: Verwenden Sie immer verschlüsselte Verbindungen (Port 587 oder 465).
+3. **App-Passwörter**: Verwenden Sie für Gmail und ähnliche Dienste App-Passwörter, keine normalen Passwörter.
 
-4. **Test zuerst**: Testen Sie die Konfiguration immer mit einer Test-E-Mail, bevor Sie sie produktiv nutzen.
+4. **SSL/TLS**: Verwenden Sie immer verschlüsselte Verbindungen (Port 587 oder 465).
+
+5. **Test zuerst**: Testen Sie die Konfiguration immer mit einer Test-E-Mail, bevor Sie sie produktiv nutzen.
+
+6. **Produktions-Empfehlung**: Für Produktionsumgebungen wird dringend empfohlen:
+   - Backend-Service für E-Mail-Versand zu implementieren
+   - Passwort-Reset-Links statt Passwörter zu versenden
+   - E-Mail-Verschlüsselung (z.B. PGP) in Betracht zu ziehen
 
 ## Häufige Probleme und Lösungen
 

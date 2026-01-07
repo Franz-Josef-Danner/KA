@@ -132,6 +132,7 @@ export function getEmailTemplate(templateType, data = {}) {
             <p>Sie können sich unter folgendem Link anmelden:<br>
             <a href="{{loginUrl}}">{{loginUrl}}</a></p>
             <p><strong>Wichtig:</strong> Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung.</p>
+            <p style="color: #666; font-size: 12px;"><em>Hinweis: Diese E-Mail enthält vertrauliche Zugangsdaten. Bitte löschen Sie diese E-Mail nach der ersten Anmeldung und Passwortänderung.</em></p>
             <p>Mit freundlichen Grüßen,<br>
             Ihr {{companyName}} Team</p>
           </body>
@@ -153,6 +154,8 @@ Sie können sich unter folgendem Link anmelden:
 {{loginUrl}}
 
 Wichtig: Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung.
+
+Hinweis: Diese E-Mail enthält vertrauliche Zugangsdaten. Bitte löschen Sie diese E-Mail nach der ersten Anmeldung und Passwortänderung.
 
 Mit freundlichen Grüßen,
 Ihr {{companyName}} Team
