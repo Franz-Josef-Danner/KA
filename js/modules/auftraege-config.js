@@ -7,6 +7,8 @@ export const COLUMNS = [
   "Auftrags_ID",
   "Auftragsdatum",
   "Firma",
+  "Firmenadresse",
+  "Firmen_Email",
   "Ansprechpartner",
   "Artikel",
   "Beschreibung",
