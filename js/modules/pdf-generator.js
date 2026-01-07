@@ -9,6 +9,9 @@ const PDF_MARGIN = 10;
 // Footer positioning constant
 const FOOTER_MARGIN_FROM_BOTTOM = 30; // 30mm from bottom (20mm for footer content + 10mm margin)
 
+// Default VAT rate (19%)
+const DEFAULT_VAT_RATE = 0.19;
+
 // Generate PDF for an order or invoice
 // Parameters:
 // - documentType: 'order'/'auftrag' or 'invoice'/'rechnung'
@@ -474,8 +477,9 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   if (documentData.items && Array.isArray(documentData.items)) {
     // New format with items array
+    // Field mapping priority: camelCase (new format) > lowercase (old format) > Capitalized (UI format)
     items = documentData.items.map(item => ({
-      artikel: item.description || item.artikel || item.Artikel || '',
+      artikel: item.artikel || item.Artikel || '',
       beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
       menge: item.quantity || item.menge || item.Menge || '1',
       einheit: item.unit || item.einheit || item.Einheit || 'Stk',
@@ -624,15 +628,15 @@ function renderTotals(doc, x, y, width, documentData) {
     // If subtotal is 0 but Budget exists, use Budget as fallback
     if (subtotal === 0 && documentData.Budget) {
       total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
-      subtotal = total / 1.19;
+      subtotal = total / (1 + DEFAULT_VAT_RATE);
       vat = total - subtotal;
     } else {
-      vat = subtotal * 0.19; // Default 19% VAT
+      vat = subtotal * DEFAULT_VAT_RATE;
       total = subtotal + vat;
     }
   } else if (documentData.Budget) {
     total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
-    subtotal = total / 1.19;
+    subtotal = total / (1 + DEFAULT_VAT_RATE);
     vat = total - subtotal;
   } else {
     return; // No data to display
@@ -659,7 +663,7 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.text(formatCurrency(subtotal), valueX, y + topPadding + 4, { align: 'right' });
   
   // VAT
-  const vatRate = documentData.vatRate || 0.19;
+  const vatRate = documentData.vatRate || DEFAULT_VAT_RATE;
   doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%)`, labelX, y + topPadding + lineHeight + 4);
   doc.text(formatCurrency(vat), valueX, y + topPadding + lineHeight + 4, { align: 'right' });
   
