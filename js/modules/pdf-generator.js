@@ -706,9 +706,8 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
   
   let offsetY = y + 3;
   
-  // For invoices, show bank account information prominently if available
-  if ((documentType === 'invoice' || documentType === 'rechnung') && 
-      (companySettings.iban || companySettings.bankName)) {
+  // For invoices, show bank account information prominently if IBAN is available
+  if ((documentType === 'invoice' || documentType === 'rechnung') && companySettings.iban) {
     
     // Bank account section header
     doc.setFont('helvetica', 'bold');

@@ -188,10 +188,11 @@ function isValidIBAN(iban) {
     return char;
   }).join('');
   
-  // Calculate mod 97
+  // Calculate mod 97 using smaller chunks to avoid precision issues
   let remainder = numericIban;
   while (remainder.length > 2) {
-    const block = remainder.slice(0, 9);
+    // Process 6 digits at a time to ensure accuracy (prevents integer overflow)
+    const block = remainder.slice(0, 6);
     remainder = (parseInt(block, 10) % 97) + remainder.slice(block.length);
   }
   
