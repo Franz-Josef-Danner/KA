@@ -477,7 +477,10 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   if (documentData.items && Array.isArray(documentData.items)) {
     // New format with items array
-    // Field mapping priority: UI format (Capitalized) and stored format checked first, then camelCase (API format)
+    // Field mapping priority order (checks in this sequence):
+    // 1. Specific API field names (description, quantity, pricePerUnit, total) - from external sources
+    // 2. German lowercase names (artikel, beschreibung, menge, etc.) - from legacy data
+    // 3. German Capitalized names (Artikel, Beschreibung, Menge, etc.) - from UI forms
     items = documentData.items.map(item => ({
       artikel: item.artikel || item.Artikel || '',
       beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
