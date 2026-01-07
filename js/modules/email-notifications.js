@@ -82,8 +82,8 @@ Neuer Auftrag erstellt
 
 Auftragsnummer: ${data.orderId}
 Kunde: ${data.customerName}
-Gesamtsumme: ${data.total.toFixed(2)} €
-Anzahl Artikel: ${data.items.length}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length || 0}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
     newInvoice: `
@@ -91,7 +91,7 @@ Neue Rechnung erstellt
 
 Rechnungsnummer: ${data.invoiceId}
 Kunde: ${data.customerName}
-Gesamtsumme: ${data.total.toFixed(2)} €
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
 Fälligkeitsdatum: ${data.dueDate}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
@@ -100,7 +100,7 @@ Zahlung eingegangen
 
 Rechnungsnummer: ${data.invoiceId}
 Kunde: ${data.customerName}
-Betrag: ${data.amount.toFixed(2)} €
+Betrag: ${(data.amount || 0).toFixed(2)} €
 Zahlungsdatum: ${data.paymentDate}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `
