@@ -10,3 +10,4 @@ Thumbs.db
 
 # Test and development artifacts
 screenshots/
+test-*.html
