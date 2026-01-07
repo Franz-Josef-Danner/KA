@@ -1,0 +1,10 @@
+{
+  "email": "office@franzjosef-danner.at",
+  "password": "IHRE_PASSWORT_HIER",
+  "fromName": "KA System",
+  "smtp": {
+    "host": "smtp.franzjosef-danner.at",
+    "port": 587,
+    "secure": false
+  }
+}

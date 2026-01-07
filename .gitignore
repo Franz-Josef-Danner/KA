@@ -11,3 +11,8 @@ Thumbs.db
 # Test and development artifacts
 screenshots/
 test-*.html
+
+# Backend sensitive data
+backend/config.json
+backend/email-queue.json
+backend/*.log
