@@ -477,7 +477,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   if (documentData.items && Array.isArray(documentData.items)) {
     // New format with items array
-    // Field mapping priority: camelCase (new format) > lowercase (old format) > Capitalized (UI format)
+    // Field mapping priority: UI format (Capitalized) and stored format checked first, then camelCase (API format)
     items = documentData.items.map(item => ({
       artikel: item.artikel || item.Artikel || '',
       beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
@@ -627,7 +627,7 @@ function renderTotals(doc, x, y, width, documentData) {
     
     // If subtotal is 0 but Budget exists, use Budget as fallback
     if (subtotal === 0 && documentData.Budget) {
-      total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+      total = parseBudgetValue(documentData.Budget);
       subtotal = total / (1 + DEFAULT_VAT_RATE);
       vat = total - subtotal;
     } else {
@@ -635,7 +635,7 @@ function renderTotals(doc, x, y, width, documentData) {
       total = subtotal + vat;
     }
   } else if (documentData.Budget) {
-    total = parseFloat(String(documentData.Budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+    total = parseBudgetValue(documentData.Budget);
     subtotal = total / (1 + DEFAULT_VAT_RATE);
     vat = total - subtotal;
   } else {
@@ -718,6 +718,11 @@ function renderFooter(doc, x, y, width, companySettings, documentType) {
   
   // Return actual height: top padding + (line count * line height)
   return 3 + (lines.length * 3.5);
+}
+
+// Helper function to parse budget value from string
+function parseBudgetValue(budget) {
+  return parseFloat(String(budget).replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 }
 
 function formatCurrency(value) {
