@@ -1,7 +1,7 @@
 // -----------------------------
 // PDF Generation Module
 // -----------------------------
-import { getCompanySettings, getPdfLayoutTemplate } from './settings.js';
+import { getCompanySettings, getPdfLayoutTemplate, getStandardLayoutTemplate } from './settings.js';
 
 // PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
 const PDF_MARGIN = 10;
@@ -10,7 +10,13 @@ const PDF_MARGIN = 10;
 const FOOTER_MARGIN_FROM_BOTTOM = 30; // 30mm from bottom (20mm for footer content + 10mm margin)
 
 // Generate PDF for an order or invoice
-export async function generatePDF(documentType, documentData, useSampleCompanyData = false, customLayoutTemplate = null) {
+// Parameters:
+// - documentType: 'order'/'auftrag' or 'invoice'/'rechnung'
+// - documentData: The document data object
+// - useSampleCompanyData: If true, uses sample company data for preview (default: false)
+// - customLayoutTemplate: Optional custom layout to use (default: null)
+// - useStandardTemplate: If true, uses fixed standard template instead of custom layout (default: false)
+export async function generatePDF(documentType, documentData, useSampleCompanyData = false, customLayoutTemplate = null, useStandardTemplate = false) {
   // Load jsPDF library from CDN if not already loaded
   if (typeof window.jspdf === 'undefined') {
     try {
@@ -38,8 +44,16 @@ export async function generatePDF(documentType, documentData, useSampleCompanyDa
     companySettings = getCompanySettings();
   }
   
-  // Use custom layout if provided, otherwise get from settings
-  const layoutTemplate = customLayoutTemplate || getPdfLayoutTemplate();
+  // Determine which layout template to use:
+  // 1. If useStandardTemplate is true, use the fixed standard template
+  // 2. Otherwise, use custom layout if provided
+  // 3. Otherwise, get from settings (layout editor)
+  let layoutTemplate;
+  if (useStandardTemplate) {
+    layoutTemplate = getStandardLayoutTemplate();
+  } else {
+    layoutTemplate = customLayoutTemplate || getPdfLayoutTemplate();
+  }
 
   // Render document based on layout template
   try {

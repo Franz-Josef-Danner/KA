@@ -127,7 +127,8 @@ function renderOrders(firmenId) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
-          const pdf = await generatePDF('order', order);
+          // Use standard template for customer-facing PDFs (5th parameter = true)
+          const pdf = await generatePDF('order', order, false, null, true);
           if (pdf) {
             viewPDF(pdf);
           }
@@ -193,7 +194,8 @@ function renderInvoices(firmenId) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
-          const pdf = await generatePDF('invoice', invoice);
+          // Use standard template for customer-facing PDFs (5th parameter = true)
+          const pdf = await generatePDF('invoice', invoice, false, null, true);
           if (pdf) {
             viewPDF(pdf);
           }
