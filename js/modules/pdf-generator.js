@@ -618,7 +618,7 @@ function renderTotals(doc, x, y, width, documentData) {
   
   // Check if we have new format with pre-calculated values
   if (documentData.subtotal !== undefined && documentData.total !== undefined) {
-    // Since VAT is removed, subtotal and total should be the same
+    // Use the pre-calculated total since VAT calculations are not needed
     total = documentData.total;
   } else if (documentData.items && Array.isArray(documentData.items) && documentData.items.length > 0) {
     // Calculate from items array, checking for both capitalized and lowercase field names
@@ -628,6 +628,7 @@ function renderTotals(doc, x, y, width, documentData) {
     }, 0);
     
     // If total is 0 but Budget exists, use Budget as fallback
+    // Budget represents the final total amount when items don't provide pricing
     if (total === 0 && documentData.Budget) {
       total = parseBudgetValue(documentData.Budget);
     }
