@@ -646,6 +646,51 @@ function renderTotals(doc, x, y, width, documentData) {
     return; // No data to display
   }
   
+  // Calculate dynamic width based on content to ensure text fits properly
+  // Measure the width of all text elements that will be displayed
+  const vatRate = documentData.vatRate || DEFAULT_VAT_RATE;
+  
+  // Measure labels (normal font, size 10)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const labelWidths = [
+    doc.getTextWidth('Nettobetrag:'),
+    doc.getTextWidth(`MwSt. (${(vatRate * 100).toFixed(0)}%)`)
+  ];
+  
+  // Measure total label (bold font, size 12)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  labelWidths.push(doc.getTextWidth('Gesamtbetrag:'));
+  
+  // Measure values (normal font for subtotal/vat, bold for total)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const valueWidths = [
+    doc.getTextWidth(formatCurrency(subtotal)),
+    doc.getTextWidth(formatCurrency(vat))
+  ];
+  
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  valueWidths.push(doc.getTextWidth(formatCurrency(total)));
+  
+  // Calculate required width: max label + max value + spacing + padding
+  const maxLabelWidth = Math.max(...labelWidths);
+  const maxValueWidth = Math.max(...valueWidths);
+  const horizontalPadding = 10; // 5mm on each side
+  const labelValueGap = 5; // Gap between label and value
+  const calculatedWidth = maxLabelWidth + labelValueGap + maxValueWidth + horizontalPadding;
+  
+  // Use the larger of calculated width or provided width, with a reasonable minimum
+  const minWidth = 55; // Minimum width in mm (same as original ~158px)
+  const actualWidth = Math.max(calculatedWidth, width, minWidth);
+  
+  // Adjust x position to keep the box right-aligned if width increased
+  const pageWidth = doc.internal.pageSize.width;
+  const rightMargin = PDF_MARGIN;
+  const adjustedX = Math.min(x, pageWidth - rightMargin - actualWidth);
+  
   // Add subtle background box for totals
   const lineHeight = 6;
   const topPadding = 5;
@@ -655,10 +700,10 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.setFillColor(248, 248, 248);
   doc.setDrawColor(220, 220, 220);
   doc.setLineWidth(0.3);
-  doc.rect(x, y, width, totalHeight, 'FD');
+  doc.rect(adjustedX, y, actualWidth, totalHeight, 'FD');
   
-  const labelX = x + 5;
-  const valueX = x + width - 5;
+  const labelX = adjustedX + 5;
+  const valueX = adjustedX + actualWidth - 5;
   
   // Subtotal
   doc.setFont('helvetica', 'normal');
@@ -667,7 +712,6 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.text(formatCurrency(subtotal), valueX, y + topPadding + 4, { align: 'right' });
   
   // VAT
-  const vatRate = documentData.vatRate || DEFAULT_VAT_RATE;
   doc.text(`MwSt. (${(vatRate * 100).toFixed(0)}%)`, labelX, y + topPadding + lineHeight + 4);
   doc.text(formatCurrency(vat), valueX, y + topPadding + lineHeight + 4, { align: 'right' });
   
