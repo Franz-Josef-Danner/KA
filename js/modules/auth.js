@@ -182,12 +182,14 @@ export function getCurrentUser() {
   }
 }
 
-// Generate a random password
+// Generate a cryptographically secure random password
 function generatePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const array = new Uint8Array(12);
+  crypto.getRandomValues(array);
   let password = '';
   for (let i = 0; i < 12; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
+    password += chars.charAt(array[i] % chars.length);
   }
   return password;
 }
@@ -258,6 +260,30 @@ export function deleteCustomerAccount(firmenId) {
 export function getCustomerAccountByFirmenId(firmenId) {
   const accounts = getCustomerAccounts();
   return accounts.find(a => a.firmenId === firmenId);
+}
+
+// Reset password for a customer account
+export async function resetCustomerPassword(firmenId) {
+  const accounts = getCustomerAccounts();
+  const accountIndex = accounts.findIndex(a => a.firmenId === firmenId);
+  
+  if (accountIndex < 0) {
+    console.error('Customer account not found');
+    return null;
+  }
+  
+  // Generate new password
+  const newPassword = generatePassword();
+  
+  // Update account with new password hash
+  accounts[accountIndex].password = await simpleHash(newPassword);
+  accounts[accountIndex].updatedAt = new Date().toISOString();
+  
+  if (saveCustomerAccounts(accounts)) {
+    return newPassword;
+  }
+  
+  return null;
 }
 
 // Check if user is admin

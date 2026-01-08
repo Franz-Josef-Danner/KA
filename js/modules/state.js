@@ -3,6 +3,7 @@
 // -----------------------------
 import { STORAGE_KEY, COLUMNS, STATUS_OPTIONS } from './config.js';
 import { sanitizeText } from '../utils/sanitize.js';
+import { escapeHtml } from '../utils/sanitize.js';
 import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
 import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
 import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js';
@@ -17,6 +18,98 @@ pushState(rows);
 export function getRows() {
   return rows;
 }
+
+// Show a notification modal with the new customer password
+function showNewCustomerPasswordNotification(firmenName, email, password) {
+  // Create modal overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  `;
+  
+  // Create modal content
+  const modal = document.createElement('div');
+  modal.className = 'credentials-modal';
+  modal.style.cssText = `
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  `;
+  
+  modal.innerHTML = `
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: #28a745;">✓ Kundenkonto erstellt</h2>
+    <div style="margin-bottom: 1rem;">
+      <strong>Firma:</strong> ${escapeHtml(firmenName)}
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <strong>E-Mail (Login):</strong> ${escapeHtml(email)}
+    </div>
+    <div style="margin-bottom: 1.5rem; padding: 1rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+      <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #155724;">Generiertes Passwort:</p>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <code style="font-size: 1.2rem; padding: 0.5rem; background: white; border-radius: 4px; flex: 1; word-break: break-all;">${escapeHtml(password)}</code>
+        <button class="btn-secondary" id="copyPasswordBtn" style="flex-shrink: 0;">Kopieren</button>
+      </div>
+    </div>
+    <div style="margin-bottom: 1.5rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+      <p style="margin: 0; color: #856404; font-size: 0.9rem;">
+        <strong>⚠️ Wichtig:</strong> Bitte notieren Sie sich das Passwort und teilen Sie es dem Kunden mit.
+        Das Passwort wird aus Sicherheitsgründen nicht erneut angezeigt.<br><br>
+        Sie können das Passwort später über <strong>Kundenbereiche → Zugangsdaten</strong> zurücksetzen.
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+      <button class="btn-primary" id="closePasswordModal">Schließen</button>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // Close modal when clicking overlay
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+  
+  // Close button handler
+  document.getElementById('closePasswordModal').addEventListener('click', () => {
+    document.body.removeChild(overlay);
+  });
+  
+  // Copy password button handler
+  document.getElementById('copyPasswordBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(password).then(() => {
+      const btn = document.getElementById('copyPasswordBtn');
+      btn.textContent = '✓ Kopiert!';
+      btn.style.background = '#28a745';
+      btn.style.color = 'white';
+      setTimeout(() => {
+        btn.textContent = 'Kopieren';
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy password:', err);
+      alert('Fehler beim Kopieren. Bitte kopieren Sie das Passwort manuell.');
+    });
+  });
+}
+
 
 /**
  * Sync Firmen_ID based on Status: assign ID if Status is "Kunde", remove otherwise
@@ -52,7 +145,12 @@ async function syncFirmenIds(rowsToSync) {
         // Create customer account
         const email = row['E-mail'] || '';
         if (email) {
-          await createOrUpdateCustomerAccount(row.Firmen_ID, email, firmenName);
+          const generatedPassword = await createOrUpdateCustomerAccount(row.Firmen_ID, email, firmenName);
+          
+          // Show password notification if a new password was generated
+          if (generatedPassword) {
+            showNewCustomerPasswordNotification(firmenName, email, generatedPassword);
+          }
         }
         // Send email notification for new customer
         const notificationResult = notifyNewCustomer({
@@ -79,7 +177,12 @@ async function syncFirmenIds(rowsToSync) {
         // Update or create customer account
         const email = row['E-mail'] || '';
         if (email) {
-          await createOrUpdateCustomerAccount(idStr, email, row.Firma || 'Unbekannt');
+          const generatedPassword = await createOrUpdateCustomerAccount(idStr, email, row.Firma || 'Unbekannt');
+          
+          // Show password notification if a new password was generated (e.g., email changed)
+          if (generatedPassword) {
+            showNewCustomerPasswordNotification(row.Firma || 'Unbekannt', email, generatedPassword);
+          }
         }
       }
     } else {
