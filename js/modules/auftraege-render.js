@@ -86,10 +86,12 @@ export function render() {
       }
 
       tr.appendChild(td);
+      
+      // Insert Summe column right after Artikel column
+      if (col === "Artikel") {
+        tr.appendChild(createSummeCell(row, idx));
+      }
     }
-    
-    // Add Summe (total) column after iterating through COLUMNS
-    tr.appendChild(createSummeCell(row, idx));
 
     const act = document.createElement("td");
     act.className = "actions";
