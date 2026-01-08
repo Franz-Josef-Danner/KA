@@ -182,12 +182,14 @@ export function getCurrentUser() {
   }
 }
 
-// Generate a random password
+// Generate a cryptographically secure random password
 function generatePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const array = new Uint8Array(12);
+  crypto.getRandomValues(array);
   let password = '';
   for (let i = 0; i < 12; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
+    password += chars.charAt(array[i] % chars.length);
   }
   return password;
 }
