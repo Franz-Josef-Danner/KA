@@ -12,8 +12,8 @@ const FOOTER_MARGIN_FROM_BOTTOM = 50; // 50mm from bottom (40mm for footer conte
 // Page number positioning (distance from bottom edge)
 const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // 5mm from bottom to avoid overlap with footer text
 
-// Totals positioning adjustment (raise totals above footer line)
-const TOTALS_VERTICAL_ADJUSTMENT = 3; // Raise totals by 3mm to prevent overlap with footer line
+// Totals positioning adjustment (raise totals above footer line to prevent overlap)
+const TOTALS_FOOTER_SPACING_MM = 3; // Raise totals by 3mm above their default position
 
 // VAT has been removed as the user is VAT exempt
 
@@ -294,7 +294,7 @@ function renderElement(doc, element, documentType, documentData, companySettings
       return renderItemsTable(doc, x, y, width, height, documentData);
     case 'totals':
       // Raise totals slightly to prevent overlap with footer line
-      return renderTotals(doc, x, y - TOTALS_VERTICAL_ADJUSTMENT, width, documentData);
+      return renderTotals(doc, x, y - TOTALS_FOOTER_SPACING_MM, width, documentData);
     case 'footer':
       return renderFooter(doc, x, y, width, companySettings, documentType, documentData);
   }
