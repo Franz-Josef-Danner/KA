@@ -32,6 +32,11 @@ export function render() {
     tr.style.cursor = "pointer";
 
     for (const col of COLUMNS) {
+      // Skip Beschreibung and Status columns - they are not displayed in the table
+      if (col === "Beschreibung" || col === "Status") {
+        continue;
+      }
+      
       const td = document.createElement("td");
       td.dataset.row = String(idx);
       td.dataset.col = col;
@@ -46,9 +51,6 @@ export function render() {
         } else {
           td.innerHTML = `<span style="font-weight: 500;">${itemCount} Artikel</span>`;
         }
-      } else if (col === "Beschreibung" || col === "Status") {
-        // Skip Beschreibung and Status columns - they are not displayed in the table
-        continue;
       } else {
         // Display formatted content (read-only)
         td.innerHTML = toCellDisplay(col, row[col]);
@@ -71,8 +73,11 @@ export function render() {
       }, 0);
     }
     
-    // Format total as currency
-    const formattedTotal = total.toFixed(2).replace('.', ',') + ' €';
+    // Format total as currency using proper locale formatting
+    const formattedTotal = new Intl.NumberFormat('de-DE', { 
+      style: 'currency', 
+      currency: 'EUR' 
+    }).format(total);
     summeTd.innerHTML = `<span style="font-weight: 600;">${formattedTotal}</span>`;
     summeTd.style.textAlign = "right";
     
