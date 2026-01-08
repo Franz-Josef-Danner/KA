@@ -32,8 +32,8 @@ export function render() {
     tr.style.cursor = "pointer";
 
     for (const col of COLUMNS) {
-      // Skip Beschreibung and Status columns - they are not displayed in the table
-      if (col === "Beschreibung" || col === "Status") {
+      // Skip Beschreibung, Status, and Budget columns - they are not displayed in the table
+      if (col === "Beschreibung" || col === "Status" || col === "Budget") {
         continue;
       }
       
