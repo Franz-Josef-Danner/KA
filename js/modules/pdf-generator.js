@@ -199,14 +199,12 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   doc.setPage(pageCount);
   renderFooter(doc, footerX, footerY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
 
-  // Add page numbers (respecting PDF margin and footer area)
-  // Place page numbers above the footer to avoid overlap
-  const pageNumberY = pageHeight - FOOTER_MARGIN_FROM_BOTTOM - 5; // 5mm above footer
+  // Add page numbers (respecting PDF margin)
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(9);
     doc.setTextColor(150, 150, 150);
-    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - PDF_MARGIN, pageNumberY, { align: 'right' });
+    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - PDF_MARGIN, doc.internal.pageSize.height - PDF_MARGIN, { align: 'right' });
   }
 }
 
