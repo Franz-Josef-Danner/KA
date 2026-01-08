@@ -28,7 +28,12 @@ function getDefaultSettings() {
     phone: '',
     logo: '', // Base64-encoded image or URL
     footerTextOrder: '',
-    footerTextInvoice: ''
+    footerTextInvoice: '',
+    // Bank account information for invoices
+    bankName: '',
+    accountHolder: '',
+    iban: '',
+    bic: ''
   };
 }
 
@@ -124,6 +129,16 @@ export function validateSettings(settings) {
     errors.push('Bitte geben Sie eine gültige Telefonnummer ein.');
   }
   
+  // IBAN validation
+  if (settings.iban && !isValidIBAN(settings.iban)) {
+    errors.push('Bitte geben Sie eine gültige IBAN ein.');
+  }
+  
+  // BIC validation
+  if (settings.bic && !isValidBIC(settings.bic)) {
+    errors.push('Bitte geben Sie eine gültige BIC ein.');
+  }
+  
   return errors;
 }
 
@@ -146,6 +161,53 @@ function isValidPhone(phone) {
   // Must have at least 5 digits
   const digitCount = cleanPhone.replace(/\D/g, '').length;
   return digitCount >= 5;
+}
+
+// IBAN validation (supports all European formats)
+function isValidIBAN(iban) {
+  // Remove spaces and convert to uppercase
+  const cleanIban = iban.replace(/\s/g, '').toUpperCase();
+  
+  // IBAN must be between 15 and 34 characters
+  if (cleanIban.length < 15 || cleanIban.length > 34) return false;
+  
+  // IBAN must start with 2 letters (country code) followed by 2 digits (check digits)
+  const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/;
+  if (!ibanRegex.test(cleanIban)) return false;
+  
+  // Perform mod-97 check digit validation
+  // Move first 4 characters to the end
+  const rearranged = cleanIban.slice(4) + cleanIban.slice(0, 4);
+  
+  // Replace letters with numbers (A=10, B=11, ..., Z=35)
+  const numericIban = rearranged.split('').map(char => {
+    const code = char.charCodeAt(0);
+    if (code >= 65 && code <= 90) {
+      return code - 55; // A=10, B=11, etc.
+    }
+    return char;
+  }).join('');
+  
+  // Calculate mod 97 using smaller chunks to avoid precision issues
+  let remainder = numericIban;
+  while (remainder.length > 2) {
+    // Process 6 digits at a time to ensure accuracy (prevents integer overflow)
+    const block = remainder.slice(0, 6);
+    remainder = (parseInt(block, 10) % 97) + remainder.slice(block.length);
+  }
+  
+  return parseInt(remainder, 10) % 97 === 1;
+}
+
+// BIC validation (Business Identifier Code / SWIFT code)
+function isValidBIC(bic) {
+  // Remove spaces and convert to uppercase
+  const cleanBic = bic.replace(/\s/g, '').toUpperCase();
+  
+  // BIC must be either 8 or 11 characters
+  // Format: 4 letters (bank code) + 2 letters (country code) + 2 alphanumeric (location) + optional 3 alphanumeric (branch)
+  const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+  return bicRegex.test(cleanBic);
 }
 
 // Convert image file to base64
@@ -182,7 +244,11 @@ export function getSampleCompanyData() {
     phone: actualSettings.phone || '+49 123 456789',
     logo: actualSettings.logo || '', // Use actual logo if exists, otherwise empty
     footerTextOrder: actualSettings.footerTextOrder || 'Geschäftsführer: Max Mustermann | HRB 12345 | Steuernr.: 123/456/78900',
-    footerTextInvoice: actualSettings.footerTextInvoice || 'Bank: Musterbank | IBAN: DE89 3704 0044 0532 0130 00 | BIC: COBADEFFXXX'
+    footerTextInvoice: actualSettings.footerTextInvoice || 'Bank: Musterbank | IBAN: DE89 3704 0044 0532 0130 00 | BIC: COBADEFFXXX',
+    bankName: actualSettings.bankName || 'Musterbank',
+    accountHolder: actualSettings.accountHolder || 'Muster GmbH & Co. KG',
+    iban: actualSettings.iban || 'DE89 3704 0044 0532 0130 00',
+    bic: actualSettings.bic || 'COBADEFFXXX'
   };
 }
 
