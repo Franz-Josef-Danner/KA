@@ -12,7 +12,7 @@ const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
 // Columns that are stored but not displayed in the table
-const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Status', 'Budget'];
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Status', 'Budget', 'Rabatt'];
 
 // Helper function to create the Summe (total) cell
 function createSummeCell(row, idx) {
@@ -20,14 +20,19 @@ function createSummeCell(row, idx) {
   summeTd.dataset.row = String(idx);
   summeTd.dataset.col = "Summe";
   
-  // Calculate total from order items
-  let total = 0;
+  // Calculate subtotal from order items
+  let subtotal = 0;
   if (row.items && Array.isArray(row.items)) {
-    total = row.items.reduce((sum, item) => {
+    subtotal = row.items.reduce((sum, item) => {
       const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
       return sum + gesamtpreis;
     }, 0);
   }
+  
+  // Apply discount if present
+  const rabattPercent = parseFloat(row.Rabatt) || 0;
+  const discountAmount = (subtotal * rabattPercent) / 100;
+  const total = subtotal - discountAmount;
   
   // Format total as currency using proper locale formatting
   const formattedTotal = new Intl.NumberFormat('de-DE', { 
