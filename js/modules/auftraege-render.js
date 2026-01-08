@@ -46,9 +46,9 @@ export function render() {
         } else {
           td.innerHTML = `<span style="font-weight: 500;">${itemCount} Artikel</span>`;
         }
-      } else if (col === "Beschreibung") {
-        // Skip beschreibung column since it's now part of items
-        td.innerHTML = "";
+      } else if (col === "Beschreibung" || col === "Status") {
+        // Skip Beschreibung and Status columns - they are not displayed in the table
+        continue;
       } else {
         // Display formatted content (read-only)
         td.innerHTML = toCellDisplay(col, row[col]);
@@ -56,6 +56,27 @@ export function render() {
 
       tr.appendChild(td);
     }
+    
+    // Add Summe (total) column after Artikel
+    const summeTd = document.createElement("td");
+    summeTd.dataset.row = String(idx);
+    summeTd.dataset.col = "Summe";
+    
+    // Calculate total from order items
+    let total = 0;
+    if (row.items && Array.isArray(row.items)) {
+      total = row.items.reduce((sum, item) => {
+        const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+        return sum + gesamtpreis;
+      }, 0);
+    }
+    
+    // Format total as currency
+    const formattedTotal = total.toFixed(2).replace('.', ',') + ' €';
+    summeTd.innerHTML = `<span style="font-weight: 600;">${formattedTotal}</span>`;
+    summeTd.style.textAlign = "right";
+    
+    tr.appendChild(summeTd);
 
     const act = document.createElement("td");
     act.className = "actions";
