@@ -18,11 +18,12 @@ export const COLUMNS = [
   "Kommentare"
 ];
 
-// Status column dropdown options
+// Status column dropdown options (currently hidden from UI, status is automated)
 export const STATUS_OPTIONS = ["in Arbeit", "abgeschlossen"];
 
 // Active order statuses - used for validation (orders with these statuses are considered "active")
-// Empty string and "offen" included for backward compatibility with orders that don't have a status yet or had the old "offen" status
+// "offen" is included only for backward compatibility with legacy data and will be auto-converted to "in Arbeit"
+// Empty string is included for backward compatibility with orders that don't have a status yet
 export const ACTIVE_ORDER_STATUSES = ["in Arbeit", "", "offen"];
 
 // Completed status constant
