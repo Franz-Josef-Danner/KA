@@ -13,7 +13,7 @@ const FOOTER_MARGIN_FROM_BOTTOM = 50; // 50mm from bottom (40mm for footer conte
 const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // 5mm from bottom to avoid overlap with footer text
 
 // Totals positioning adjustment (raise totals above footer line to prevent overlap)
-const TOTALS_FOOTER_SPACING_MM = 3; // Raise totals by 3mm above their default position
+const TOTALS_FOOTER_SPACING_MM = 6; // Raise totals by 6mm above their default position
 
 // VAT has been removed as the user is VAT exempt
 
