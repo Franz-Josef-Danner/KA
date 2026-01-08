@@ -260,6 +260,30 @@ export function getCustomerAccountByFirmenId(firmenId) {
   return accounts.find(a => a.firmenId === firmenId);
 }
 
+// Reset password for a customer account
+export async function resetCustomerPassword(firmenId) {
+  const accounts = getCustomerAccounts();
+  const accountIndex = accounts.findIndex(a => a.firmenId === firmenId);
+  
+  if (accountIndex < 0) {
+    console.error('Customer account not found');
+    return null;
+  }
+  
+  // Generate new password
+  const newPassword = generatePassword();
+  
+  // Update account with new password hash
+  accounts[accountIndex].password = await simpleHash(newPassword);
+  accounts[accountIndex].updatedAt = new Date().toISOString();
+  
+  if (saveCustomerAccounts(accounts)) {
+    return newPassword;
+  }
+  
+  return null;
+}
+
 // Check if user is admin
 export function isAdmin() {
   const user = getCurrentUser();

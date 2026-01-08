@@ -145,12 +145,37 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 3. Die Firma erhält automatisch:
    - Eine Firmen-ID (Format: F-00001)
    - Ein Kundenkonto mit der hinterlegten E-Mail
-   - Ein generiertes Passwort (in Produktion per E-Mail versenden)
-4. Der Kunde kann sich nun mit seiner E-Mail und dem Passwort anmelden
-5. Im **Kundenbereich** sieht der Kunde:
+   - Ein generiertes Passwort (wird in einem Pop-up angezeigt)
+4. **Wichtig:** Notieren Sie sich das angezeigte Passwort und teilen Sie es dem Kunden mit
+5. Der Kunde kann sich nun mit seiner E-Mail und dem Passwort anmelden
+6. Im **Kundenbereich** sieht der Kunde:
    - Alle seine Aufträge (schreibgeschützt)
    - Alle seine Rechnungen (schreibgeschützt)
-6. Admins können in **Kundenbereiche** alle Kunden verwalten und deren Portale einsehen
+7. Admins können in **Kundenbereiche** alle Kunden verwalten und deren Portale einsehen
+
+### Kunden-Zugangsdaten finden und verwalten
+
+**Wo finde ich die Zugangsdaten für den Login einer Kundenfirma?**
+
+1. Öffnen Sie **Kundenbereiche** im Navigationsmenü
+2. Suchen Sie den gewünschten Kunden in der Liste
+3. Klicken Sie auf den Button **"Zugangsdaten"** in der Zeile des Kunden
+4. Es öffnet sich ein Dialog mit folgenden Informationen:
+   - E-Mail-Adresse (Login)
+   - Erstellungsdatum des Kontos
+   - Datum der letzten Aktualisierung
+5. **Passwort zurücksetzen:** 
+   - Klicken Sie auf **"Passwort zurücksetzen"**
+   - Ein neues Passwort wird automatisch generiert
+   - Das neue Passwort wird im Dialog angezeigt
+   - Kopieren Sie das Passwort mit dem **"Kopieren"**-Button
+   - Teilen Sie das neue Passwort dem Kunden mit
+
+**Hinweise:**
+- Passwörter werden aus Sicherheitsgründen verschlüsselt gespeichert und können nicht angezeigt werden
+- Bei der Erstellung eines neuen Kundenkontos wird das Passwort einmalig in einem Pop-up angezeigt
+- Wenn Sie das Passwort nicht notiert haben, können Sie es jederzeit über die Funktion "Passwort zurücksetzen" neu generieren
+- Das alte Passwort wird beim Zurücksetzen ungültig
 
 ### Firmendaten einrichten
 

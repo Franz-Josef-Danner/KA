@@ -7,6 +7,8 @@ import { getRows as getInvoices } from './rechnungen-state.js';
 import { escapeHtml } from '../utils/sanitize.js';
 import { getSearchTerm } from './kundenbereiche-search.js';
 import { ACTIVE_ORDER_STATUSES } from './auftraege-config.js';
+import { getCustomerAccountByFirmenId, resetCustomerPassword } from './auth.js';
+
 
 export function render() {
   const companies = getCompanies();
@@ -81,6 +83,7 @@ export function render() {
         <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-customer-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}">Kundenbereich ansehen</button>
+          <button class="btn-primary credentials-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}" data-email="${escapeHtml(email)}" data-firma="${escapeHtml(firmenName)}">Zugangsdaten</button>
         </td>
       </tr>
     `;
@@ -114,6 +117,19 @@ function attachEventHandlers() {
       }
     });
   });
+  
+  // Click handler for credentials buttons
+  document.querySelectorAll('.credentials-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent row click
+      const firmenId = btn.dataset.firmenId;
+      const email = btn.dataset.email;
+      const firma = btn.dataset.firma;
+      if (firmenId) {
+        showCredentialsModal(firmenId, email, firma);
+      }
+    });
+  });
 }
 
 function viewCustomerPortal(firmenId) {
@@ -125,4 +141,148 @@ function viewCustomerPortal(firmenId) {
     console.error('Failed to store customer ID:', error);
     alert('Fehler: Kundenbereich konnte nicht geöffnet werden.');
   }
+}
+
+function showCredentialsModal(firmenId, email, firma) {
+  const account = getCustomerAccountByFirmenId(firmenId);
+  
+  if (!account) {
+    alert('Kundenkonto nicht gefunden. Bitte stellen Sie sicher, dass für diesen Kunden ein Kundenkonto erstellt wurde.');
+    return;
+  }
+  
+  // Create modal overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  `;
+  
+  // Create modal content
+  const modal = document.createElement('div');
+  modal.className = 'credentials-modal';
+  modal.style.cssText = `
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  `;
+  
+  modal.innerHTML = `
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Kunden-Zugangsdaten</h2>
+    <div style="margin-bottom: 1rem;">
+      <strong>Firma:</strong> ${escapeHtml(firma)}
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <strong>Firmen-ID:</strong> ${escapeHtml(firmenId)}
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <strong>E-Mail (Login):</strong> ${escapeHtml(email)}
+    </div>
+    <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f0f0f0; border-radius: 4px;">
+      <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.9rem;">
+        <strong>Wichtig:</strong> Das Passwort wurde bei der Kontoerstellung automatisch generiert und kann nicht angezeigt werden.
+        Sie können das Passwort zurücksetzen, um ein neues zu generieren.
+      </p>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <strong>Konto erstellt:</strong> ${new Date(account.createdAt).toLocaleString('de-DE')}
+    </div>
+    <div style="margin-bottom: 1.5rem;">
+      <strong>Letzte Aktualisierung:</strong> ${new Date(account.updatedAt).toLocaleString('de-DE')}
+    </div>
+    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+      <button class="btn-secondary" id="closeCredentialsModal">Schließen</button>
+      <button class="btn-primary" id="resetPasswordBtn">Passwort zurücksetzen</button>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // Close modal when clicking overlay
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+  
+  // Close button handler
+  document.getElementById('closeCredentialsModal').addEventListener('click', () => {
+    document.body.removeChild(overlay);
+  });
+  
+  // Reset password button handler
+  document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
+    if (!confirm(`Möchten Sie wirklich ein neues Passwort für ${firma} generieren?\n\nDas alte Passwort wird ungültig und der Kunde muss über das neue Passwort informiert werden.`)) {
+      return;
+    }
+    
+    const newPassword = await resetCustomerPassword(firmenId);
+    
+    if (newPassword) {
+      // Update modal to show new password
+      modal.innerHTML = `
+        <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: #28a745;">Neues Passwort generiert</h2>
+        <div style="margin-bottom: 1rem;">
+          <strong>Firma:</strong> ${escapeHtml(firma)}
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <strong>E-Mail (Login):</strong> ${escapeHtml(email)}
+        </div>
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+          <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #155724;">Neues Passwort:</p>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <code style="font-size: 1.2rem; padding: 0.5rem; background: white; border-radius: 4px; flex: 1; word-break: break-all;">${escapeHtml(newPassword)}</code>
+            <button class="btn-secondary" id="copyPasswordBtn" style="flex-shrink: 0;">Kopieren</button>
+          </div>
+        </div>
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+          <p style="margin: 0; color: #856404; font-size: 0.9rem;">
+            <strong>⚠️ Wichtig:</strong> Bitte notieren Sie sich das Passwort und teilen Sie es dem Kunden mit.
+            Das Passwort wird aus Sicherheitsgründen nicht erneut angezeigt.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button class="btn-primary" id="closeCredentialsModal2">Schließen</button>
+        </div>
+      `;
+      
+      // Copy password button handler
+      document.getElementById('copyPasswordBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(newPassword).then(() => {
+          const btn = document.getElementById('copyPasswordBtn');
+          btn.textContent = '✓ Kopiert!';
+          btn.style.background = '#28a745';
+          btn.style.color = 'white';
+          setTimeout(() => {
+            btn.textContent = 'Kopieren';
+            btn.style.background = '';
+            btn.style.color = '';
+          }, 2000);
+        }).catch(err => {
+          console.error('Failed to copy password:', err);
+          alert('Fehler beim Kopieren. Bitte kopieren Sie das Passwort manuell.');
+        });
+      });
+      
+      // Close button handler
+      document.getElementById('closeCredentialsModal2').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+      });
+    } else {
+      alert('Fehler beim Zurücksetzen des Passworts. Bitte versuchen Sie es erneut.');
+    }
+  });
 }
