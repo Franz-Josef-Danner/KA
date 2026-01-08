@@ -571,21 +571,11 @@ function onCompanySelectionChange(event) {
 function updateCompanyInfo(firmaName) {
   const company = getCompanyByName(firmaName);
   
-  const addressGroup = document.getElementById("company_address_group");
-  const addressDiv = document.getElementById("company_address");
   const emailGroup = document.getElementById("company_email_group");
   const emailDiv = document.getElementById("company_email");
   const ansprechpartnerInput = document.getElementById("edit_Ansprechpartner");
   
   if (company) {
-    // Show and populate address
-    if (company.Adresse && addressDiv && addressGroup) {
-      addressDiv.textContent = company.Adresse;
-      addressGroup.style.display = "block";
-    } else if (addressGroup) {
-      addressGroup.style.display = "none";
-    }
-    
     // Show and populate email
     if (company["E-mail"] && emailDiv && emailGroup) {
       emailDiv.textContent = company["E-mail"];
@@ -611,11 +601,9 @@ function updateCompanyInfo(firmaName) {
 
 // Function to hide company info fields
 function hideCompanyInfo() {
-  const addressGroup = document.getElementById("company_address_group");
   const emailGroup = document.getElementById("company_email_group");
   const ansprechpartnerInput = document.getElementById("edit_Ansprechpartner");
   
-  if (addressGroup) addressGroup.style.display = "none";
   if (emailGroup) emailGroup.style.display = "none";
   if (ansprechpartnerInput) ansprechpartnerInput.value = "";
 }

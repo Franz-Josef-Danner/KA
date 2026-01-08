@@ -7,12 +7,11 @@ export const COLUMNS = [
   "Rechnungs_ID",
   "Rechnungsdatum",
   "Firma",
-  "Firmenadresse",
   "Firmen_Email",
   "Ansprechpartner",
   "Artikel",
   "Beschreibung",
-  "Budget",
+  "Gesamtsumme",
   "Projekt",
   "Kommentare",
   "Auftrags_ID" // Reference to original order
