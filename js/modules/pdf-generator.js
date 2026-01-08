@@ -199,12 +199,13 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   doc.setPage(pageCount);
   renderFooter(doc, footerX, footerY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
 
-  // Add page numbers (respecting PDF margin)
+  // Add page numbers (with extra spacing to avoid overlap with footer text)
+  // Position page numbers 5mm from bottom instead of 10mm to raise them up
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(9);
     doc.setTextColor(150, 150, 150);
-    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - PDF_MARGIN, doc.internal.pageSize.height - PDF_MARGIN, { align: 'right' });
+    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - PDF_MARGIN, doc.internal.pageSize.height - 5, { align: 'right' });
   }
 }
 
@@ -771,10 +772,10 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
   
-  // Add subtle top border
+  // Add subtle top border with more spacing above it to prevent overlap with totals
   doc.setDrawColor(200, 200, 200);
   doc.setLineWidth(0.3);
-  doc.line(x, y - 2, x + width, y - 2);
+  doc.line(x, y - 5, x + width, y - 5);
   
   let offsetY = y + 3;
   
