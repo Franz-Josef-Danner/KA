@@ -293,7 +293,7 @@ function renderElement(doc, element, documentType, documentData, companySettings
     case 'items-table':
       return renderItemsTable(doc, x, y, width, height, documentData);
     case 'totals':
-      // Raise totals slightly to prevent overlap with footer line
+      // Raise totals to prevent overlap with footer line (spacing defined by TOTALS_FOOTER_SPACING_MM)
       return renderTotals(doc, x, y - TOTALS_FOOTER_SPACING_MM, width, documentData);
     case 'footer':
       return renderFooter(doc, x, y, width, companySettings, documentType, documentData);
