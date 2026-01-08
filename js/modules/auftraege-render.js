@@ -12,7 +12,7 @@ const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
 // Columns that are stored but not displayed in the table
-const HIDDEN_COLUMNS = ['Beschreibung', 'Status', 'Budget'];
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Status', 'Budget'];
 
 // Helper function to create the Summe (total) cell
 function createSummeCell(row, idx) {
