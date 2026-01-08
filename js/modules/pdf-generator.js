@@ -12,8 +12,8 @@ const FOOTER_MARGIN_FROM_BOTTOM = 50; // 50mm from bottom (40mm for footer conte
 // Page number positioning (distance from bottom edge)
 const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // 5mm from bottom to avoid overlap with footer text
 
-// Footer line spacing (distance above footer content)
-const FOOTER_LINE_SPACING = 5; // 5mm above footer content to prevent overlap with totals
+// Totals positioning adjustment (raise totals above footer line)
+const TOTALS_VERTICAL_ADJUSTMENT = 3; // Raise totals by 3mm to prevent overlap with footer line
 
 // VAT has been removed as the user is VAT exempt
 
@@ -293,7 +293,8 @@ function renderElement(doc, element, documentType, documentData, companySettings
     case 'items-table':
       return renderItemsTable(doc, x, y, width, height, documentData);
     case 'totals':
-      return renderTotals(doc, x, y, width, documentData);
+      // Raise totals slightly to prevent overlap with footer line
+      return renderTotals(doc, x, y - TOTALS_VERTICAL_ADJUSTMENT, width, documentData);
     case 'footer':
       return renderFooter(doc, x, y, width, companySettings, documentType, documentData);
   }
@@ -778,10 +779,10 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
   
-  // Add subtle top border with more spacing above it to prevent overlap with totals
+  // Add subtle top border
   doc.setDrawColor(200, 200, 200);
   doc.setLineWidth(0.3);
-  doc.line(x, y - FOOTER_LINE_SPACING, x + width, y - FOOTER_LINE_SPACING);
+  doc.line(x, y - 2, x + width, y - 2);
   
   let offsetY = y + 3;
   
