@@ -11,6 +11,35 @@ import { updateUndoRedoButtons } from './auftraege-ui.js';
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
+// Columns that are stored but not displayed in the table
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Status', 'Budget'];
+
+// Helper function to create the Summe (total) cell
+function createSummeCell(row, idx) {
+  const summeTd = document.createElement("td");
+  summeTd.dataset.row = String(idx);
+  summeTd.dataset.col = "Summe";
+  
+  // Calculate total from order items
+  let total = 0;
+  if (row.items && Array.isArray(row.items)) {
+    total = row.items.reduce((sum, item) => {
+      const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+      return sum + gesamtpreis;
+    }, 0);
+  }
+  
+  // Format total as currency using proper locale formatting
+  const formattedTotal = new Intl.NumberFormat('de-DE', { 
+    style: 'currency', 
+    currency: 'EUR' 
+  }).format(total);
+  summeTd.innerHTML = `<span style="font-weight: 600;">${formattedTotal}</span>`;
+  summeTd.style.textAlign = "right";
+  
+  return summeTd;
+}
+
 export function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
@@ -32,6 +61,11 @@ export function render() {
     tr.style.cursor = "pointer";
 
     for (const col of COLUMNS) {
+      // Skip columns that are stored but not displayed in the table
+      if (HIDDEN_COLUMNS.includes(col)) {
+        continue;
+      }
+      
       const td = document.createElement("td");
       td.dataset.row = String(idx);
       td.dataset.col = col;
@@ -46,15 +80,17 @@ export function render() {
         } else {
           td.innerHTML = `<span style="font-weight: 500;">${itemCount} Artikel</span>`;
         }
-      } else if (col === "Beschreibung") {
-        // Skip beschreibung column since it's now part of items
-        td.innerHTML = "";
       } else {
         // Display formatted content (read-only)
         td.innerHTML = toCellDisplay(col, row[col]);
       }
 
       tr.appendChild(td);
+      
+      // Insert Summe column right after Artikel column
+      if (col === "Artikel") {
+        tr.appendChild(createSummeCell(row, idx));
+      }
     }
 
     const act = document.createElement("td");
