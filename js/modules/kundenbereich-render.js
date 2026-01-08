@@ -154,7 +154,7 @@ function renderInvoices(firmenId) {
   if (customerInvoices.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+        <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
           Keine Rechnungen vorhanden.
         </td>
       </tr>
@@ -165,19 +165,26 @@ function renderInvoices(firmenId) {
   tbody.innerHTML = customerInvoices.map(invoice => {
     const rechnungId = escapeHtml(invoice.Rechnungs_ID || '');
     const datum = escapeHtml(invoice.Rechnungsdatum || '');
-    const ansprechpartner = escapeHtml(invoice.Ansprechpartner || '');
     const projekt = escapeHtml(invoice.Projekt || '');
-    const budget = escapeHtml(invoice.Budget || '');
-    const auftragId = escapeHtml(invoice.Auftrags_ID || '');
+    
+    // Calculate total from invoice items
+    let total = 0;
+    if (Array.isArray(invoice.items) && invoice.items.length > 0) {
+      total = invoice.items.reduce((sum, item) => {
+        const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
+        return sum + price;
+      }, 0);
+    }
+    
+    // Format the total with German formatting (comma as decimal separator)
+    const formattedTotal = total.toFixed(2).replace('.', ',') + ' €';
 
     return `
       <tr>
         <td>${rechnungId}</td>
         <td>${datum}</td>
-        <td>${ansprechpartner}</td>
         <td>${projekt}</td>
-        <td>${budget}</td>
-        <td>${auftragId}</td>
+        <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-invoice-pdf" data-invoice-id="${rechnungId}">PDF anzeigen</button>
         </td>
