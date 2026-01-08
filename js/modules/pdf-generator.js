@@ -9,6 +9,12 @@ const PDF_MARGIN = 10;
 // Footer positioning constant
 const FOOTER_MARGIN_FROM_BOTTOM = 50; // 50mm from bottom (40mm for footer content including QR code + 10mm margin)
 
+// Page number positioning (distance from bottom edge)
+const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // 5mm from bottom to avoid overlap with footer text
+
+// Totals positioning adjustment (raise totals above footer line to prevent overlap)
+const TOTALS_FOOTER_SPACING_MM = 6; // Raise totals by 6mm above their default position
+
 // VAT has been removed as the user is VAT exempt
 
 // Generate PDF for an order or invoice
@@ -199,12 +205,13 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   doc.setPage(pageCount);
   renderFooter(doc, footerX, footerY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
 
-  // Add page numbers (respecting PDF margin)
+  // Add page numbers (with extra spacing to avoid overlap with footer text)
+  // Position page numbers closer to bottom edge, creating more space above for footer text
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(9);
     doc.setTextColor(150, 150, 150);
-    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - PDF_MARGIN, doc.internal.pageSize.height - PDF_MARGIN, { align: 'right' });
+    doc.text(`Seite ${i} von ${pageCount}`, doc.internal.pageSize.width - PDF_MARGIN, doc.internal.pageSize.height - PAGE_NUMBER_MARGIN_FROM_BOTTOM, { align: 'right' });
   }
 }
 
@@ -286,7 +293,8 @@ function renderElement(doc, element, documentType, documentData, companySettings
     case 'items-table':
       return renderItemsTable(doc, x, y, width, height, documentData);
     case 'totals':
-      return renderTotals(doc, x, y, width, documentData);
+      // Raise totals to prevent overlap with footer line (spacing defined by TOTALS_FOOTER_SPACING_MM)
+      return renderTotals(doc, x, y - TOTALS_FOOTER_SPACING_MM, width, documentData);
     case 'footer':
       return renderFooter(doc, x, y, width, companySettings, documentType, documentData);
   }
