@@ -7,7 +7,7 @@ import { getCompanySettings, getPdfLayoutTemplate, getStandardLayoutTemplate } f
 const PDF_MARGIN = 10;
 
 // Footer positioning constant
-const FOOTER_MARGIN_FROM_BOTTOM = 30; // 30mm from bottom (20mm for footer content + 10mm margin)
+const FOOTER_MARGIN_FROM_BOTTOM = 50; // 50mm from bottom (40mm for footer content including QR code + 10mm margin)
 
 // VAT has been removed as the user is VAT exempt
 
@@ -783,7 +783,7 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
     
     // Determine layout based on QR code availability
     const hasQRCode = paymentQRCode !== null;
-    const qrSize = 30; // QR code size in mm
+    const qrSize = 25; // QR code size in mm (reduced for better fit)
     const qrMargin = 5; // Margin around QR code
     
     if (hasQRCode) {
