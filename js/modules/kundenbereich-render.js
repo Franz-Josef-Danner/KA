@@ -87,7 +87,7 @@ function renderOrders(firmenId) {
   if (customerOrders.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+        <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
           Keine Aufträge vorhanden.
         </td>
       </tr>
@@ -98,19 +98,26 @@ function renderOrders(firmenId) {
   tbody.innerHTML = customerOrders.map(order => {
     const auftragId = escapeHtml(order.Auftrags_ID || '');
     const datum = escapeHtml(order.Auftragsdatum || '');
-    const ansprechpartner = escapeHtml(order.Ansprechpartner || '');
     const projekt = escapeHtml(order.Projekt || '');
-    const status = escapeHtml(order.Status || '');
-    const budget = escapeHtml(order.Budget || '');
+    
+    // Calculate total from order items
+    let total = 0;
+    if (Array.isArray(order.items) && order.items.length > 0) {
+      total = order.items.reduce((sum, item) => {
+        const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
+        return sum + price;
+      }, 0);
+    }
+    
+    // Format the total with German formatting (comma as decimal separator)
+    const formattedTotal = total.toFixed(2).replace('.', ',') + ' €';
 
     return `
       <tr>
         <td>${auftragId}</td>
         <td>${datum}</td>
-        <td>${ansprechpartner}</td>
         <td>${projekt}</td>
-        <td>${status}</td>
-        <td>${budget}</td>
+        <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-order-pdf" data-order-id="${auftragId}">PDF anzeigen</button>
         </td>
