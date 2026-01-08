@@ -180,16 +180,37 @@ function updateInvoiceTotals() {
     subtotal += gesamtpreis;
   });
   
+  // Get discount percentage from the form
+  const rabattInput = document.getElementById("edit_Rabatt");
+  const rabattPercent = parseFloat(rabattInput?.value) || 0;
+  
+  // Calculate discount amount
+  const discountAmount = (subtotal * rabattPercent) / 100;
+  
+  // Calculate final total after discount
+  const finalTotal = subtotal - discountAmount;
+  
   const subtotalElement = document.getElementById("invoiceSubtotal");
+  const discountDisplayDiv = document.getElementById("invoiceDiscountDisplay");
+  const discountAmountElement = document.getElementById("invoiceDiscountAmount");
   const totalElement = document.getElementById("invoiceTotal");
   
   if (subtotalElement) {
     subtotalElement.textContent = subtotal.toFixed(2).replace('.', ',') + ' €';
   }
   
+  // Show/hide discount display based on whether there's a discount
+  if (discountDisplayDiv && discountAmountElement) {
+    if (rabattPercent > 0) {
+      discountDisplayDiv.style.display = 'block';
+      discountAmountElement.textContent = '-' + discountAmount.toFixed(2).replace('.', ',') + ' € (' + rabattPercent.toFixed(2) + '%)';
+    } else {
+      discountDisplayDiv.style.display = 'none';
+    }
+  }
+  
   if (totalElement) {
-    // For now, final total is the same as subtotal (could add tax/discounts later)
-    totalElement.textContent = subtotal.toFixed(2).replace('.', ',') + ' €';
+    totalElement.textContent = finalTotal.toFixed(2).replace('.', ',') + ' €';
   }
 }
 
@@ -788,6 +809,14 @@ function initModalHandlers() {
     addInvoiceItemBtn.addEventListener("click", (e) => {
       e.preventDefault();
       addInvoiceItem();
+    });
+  }
+  
+  // Add event listener for discount input to update totals
+  const rabattInput = document.getElementById("edit_Rabatt");
+  if (rabattInput) {
+    rabattInput.addEventListener("input", () => {
+      updateInvoiceTotals();
     });
   }
 }
