@@ -32,8 +32,8 @@ export function newEmptyRow() {
       // Leave empty - will be generated when company is selected
       obj[c] = "";
     } else if (c === "Status") {
-      // Default status is "offen" (open)
-      obj[c] = "offen";
+      // Default status is "in Arbeit" (automatically set for all new orders)
+      obj[c] = "in Arbeit";
     } else {
       obj[c] = "";
     }
@@ -80,8 +80,9 @@ export function load() {
         row[c] = sanitizeText(r?.[c] ?? "");
       }
       // Set default Status if not present (backward compatibility)
-      if (!row.Status) {
-        row.Status = "offen";
+      // Also convert "offen" to "in Arbeit" for legacy orders
+      if (!row.Status || row.Status === "offen") {
+        row.Status = "in Arbeit";
       }
       // Initialize items array if not present (backward compatibility)
       row.items = Array.isArray(r?.items) ? r.items : [];
