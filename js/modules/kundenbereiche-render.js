@@ -83,7 +83,7 @@ export function render() {
         <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-customer-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}">Kundenbereich ansehen</button>
-          <button class="btn-primary credentials-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}" data-email="${escapeHtml(email)}" data-firma-name="${customer.Firma || 'Unbekannt'}" data-firma-display="${escapeHtml(firmenName)}">Zugangsdaten</button>
+          <button class="btn-primary credentials-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}" data-email="${escapeHtml(email)}" data-firma="${escapeHtml(customer.Firma || 'Unbekannt')}">Zugangsdaten</button>
         </td>
       </tr>
     `;
@@ -124,10 +124,9 @@ function attachEventHandlers() {
       e.stopPropagation(); // Prevent row click
       const firmenId = btn.dataset.firmenId;
       const email = btn.dataset.email;
-      const firmaName = btn.dataset.firmaName; // Original unescaped name for confirm dialog
-      const firmaDisplay = btn.dataset.firmaDisplay; // Escaped name for display
+      const firma = btn.dataset.firma; // Browser auto-decodes HTML entities from data attributes
       if (firmenId) {
-        showCredentialsModal(firmenId, email, firmaName, firmaDisplay);
+        showCredentialsModal(firmenId, email, firma);
       }
     });
   });
@@ -144,13 +143,17 @@ function viewCustomerPortal(firmenId) {
   }
 }
 
-function showCredentialsModal(firmenId, email, firmaName, firmaDisplay) {
+function showCredentialsModal(firmenId, email, firma) {
   const account = getCustomerAccountByFirmenId(firmenId);
   
   if (!account) {
     alert('Kundenkonto nicht gefunden. Bitte stellen Sie sicher, dass für diesen Kunden ein Kundenkonto erstellt wurde.');
     return;
   }
+  
+  // Note: firma comes from data attribute and is already decoded by browser
+  // We need to re-escape it for HTML display to prevent XSS
+  const firmaEscaped = escapeHtml(firma);
   
   // Create modal overlay
   const overlay = document.createElement('div');
@@ -183,7 +186,7 @@ function showCredentialsModal(firmenId, email, firmaName, firmaDisplay) {
   modal.innerHTML = `
     <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Kunden-Zugangsdaten</h2>
     <div style="margin-bottom: 1rem;">
-      <strong>Firma:</strong> ${firmaDisplay}
+      <strong>Firma:</strong> ${firmaEscaped}
     </div>
     <div style="margin-bottom: 1rem;">
       <strong>Firmen-ID:</strong> ${escapeHtml(firmenId)}
@@ -224,9 +227,9 @@ function showCredentialsModal(firmenId, email, firmaName, firmaDisplay) {
     document.body.removeChild(overlay);
   });
   
-  // Reset password button handler - use firmaName for confirm dialog (plain text, safe)
+  // Reset password button handler - firma is plain text, safe for confirm()
   document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
-    if (!confirm(`Möchten Sie wirklich ein neues Passwort für ${firmaName} generieren?\n\nDas alte Passwort wird ungültig und der Kunde muss über das neue Passwort informiert werden.`)) {
+    if (!confirm(`Möchten Sie wirklich ein neues Passwort für ${firma} generieren?\n\nDas alte Passwort wird ungültig und der Kunde muss über das neue Passwort informiert werden.`)) {
       return;
     }
     
@@ -237,7 +240,7 @@ function showCredentialsModal(firmenId, email, firmaName, firmaDisplay) {
       modal.innerHTML = `
         <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: #28a745;">Neues Passwort generiert</h2>
         <div style="margin-bottom: 1rem;">
-          <strong>Firma:</strong> ${firmaDisplay}
+          <strong>Firma:</strong> ${firmaEscaped}
         </div>
         <div style="margin-bottom: 1rem;">
           <strong>E-Mail (Login):</strong> ${escapeHtml(email)}
