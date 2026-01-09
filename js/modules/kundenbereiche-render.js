@@ -72,11 +72,16 @@ export function render() {
     unpaidCustomerInvoices.forEach(invoice => {
       // Calculate sum from invoice items
       let invoiceTotal = 0;
-      if (invoice.items && Array.isArray(invoice.items)) {
+      if (invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0) {
+        // New invoice format: calculate from items array
         invoice.items.forEach(item => {
           const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
           invoiceTotal += gesamtpreis;
         });
+      } else if (invoice.Gesamtsumme) {
+        // Old invoice format: use Gesamtsumme field (backward compatibility)
+        const gesamtsummeStr = String(invoice.Gesamtsumme).replace(/[^\d.,-]/g, '').replace(',', '.');
+        invoiceTotal = parseFloat(gesamtsummeStr) || 0;
       }
       
       // Apply discount if present
