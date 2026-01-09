@@ -55,20 +55,36 @@ export function render() {
       ACTIVE_ORDER_STATUSES.includes(order.Status)
     ).length;
 
-    // Count unpaid invoices (all invoices are considered unpaid for now)
-    // In a real system, there would be a "bezahlt" status
+    // Count unpaid invoices and calculate outstanding amount
+    // Filter invoices by company and exclude paid invoices
     const customerInvoices = invoices.filter(invoice => invoice.Firma === customer.Firma);
-    const unpaidInvoices = customerInvoices.length;
+    
+    // Filter out paid invoices (those with Bezahlt === true or Status === "bezahlt")
+    const unpaidCustomerInvoices = customerInvoices.filter(invoice => {
+      const isPaid = invoice.Bezahlt === true || invoice.Status === "bezahlt";
+      return !isPaid;
+    });
+    
+    const unpaidInvoices = unpaidCustomerInvoices.length;
 
-    // Calculate total outstanding amount from unpaid invoices
+    // Calculate total outstanding amount from unpaid invoices only
     let totalOutstanding = 0;
-    customerInvoices.forEach(invoice => {
-      // Try to parse the budget field as a number
-      const budget = invoice.Budget || '';
-      const amount = parseFloat(budget.replace(/[^\d.,-]/g, '').replace(',', '.'));
-      if (!isNaN(amount)) {
-        totalOutstanding += amount;
+    unpaidCustomerInvoices.forEach(invoice => {
+      // Calculate sum from invoice items
+      let invoiceTotal = 0;
+      if (invoice.items && Array.isArray(invoice.items)) {
+        invoice.items.forEach(item => {
+          const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+          invoiceTotal += gesamtpreis;
+        });
       }
+      
+      // Apply discount if present
+      const rabattPercent = parseFloat(invoice.Rabatt) || 0;
+      const discountAmount = (invoiceTotal * rabattPercent) / 100;
+      invoiceTotal -= discountAmount;
+      
+      totalOutstanding += invoiceTotal;
     });
 
     const formattedTotal = totalOutstanding.toFixed(2).replace('.', ',') + ' €';
