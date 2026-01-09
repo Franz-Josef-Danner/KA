@@ -80,17 +80,22 @@ export async function generatePDF(documentType, documentData, useSampleCompanyDa
       typeof window.QRCode !== 'undefined') {
     try {
       // Calculate total amount from document data
-      let totalAmount = 0;
+      let subtotalAmount = 0;
       if (documentData.total !== undefined) {
-        totalAmount = parseFloat(documentData.total);
+        subtotalAmount = parseFloat(documentData.total);
       } else if (documentData.items && Array.isArray(documentData.items)) {
-        totalAmount = documentData.items.reduce((sum, item) => {
+        subtotalAmount = documentData.items.reduce((sum, item) => {
           const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
           return sum + price;
         }, 0);
       } else if (documentData.Budget) {
-        totalAmount = parseBudgetValue(documentData.Budget);
+        subtotalAmount = parseBudgetValue(documentData.Budget);
       }
+      
+      // Apply discount if present
+      const rabattPercent = parseFloat(documentData.Rabatt) || 0;
+      const discountAmount = (subtotalAmount * rabattPercent) / 100;
+      const totalAmount = subtotalAmount - discountAmount;
       
       // Get invoice number
       const invoiceNumber = documentData.invoiceId || documentData.Rechnungs_ID || 'UNBEKANNT';
@@ -697,9 +702,9 @@ function renderTotals(doc, x, y, width, documentData) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(40, 40, 40);
   
-  // Calculate total and subtotal
+  // Calculate subtotal, discount, and total
   let subtotal = 0;
-  let vat = 0;
+  let discount = 0;
   let total = 0;
   
   // Check if we have new format with pre-calculated values
@@ -707,19 +712,28 @@ function renderTotals(doc, x, y, width, documentData) {
     // Use the pre-calculated total since VAT calculations are not needed
     total = documentData.total;
   } else if (documentData.items && Array.isArray(documentData.items) && documentData.items.length > 0) {
-    // Calculate from items array, checking for both capitalized and lowercase field names
-    total = documentData.items.reduce((sum, item) => {
+    // Calculate subtotal from items array
+    subtotal = documentData.items.reduce((sum, item) => {
       const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
       return sum + price;
     }, 0);
     
-    // If total is 0 but Budget exists, use Budget as fallback
+    // Apply discount if present
+    const rabattPercent = parseFloat(documentData.Rabatt) || 0;
+    discount = (subtotal * rabattPercent) / 100;
+    total = subtotal - discount;
+    
+    // If subtotal is 0 but Budget exists, use Budget as fallback
     // Budget represents the final total amount when items don't provide pricing
-    if (total === 0 && documentData.Budget) {
+    if (subtotal === 0 && documentData.Budget) {
       total = parseBudgetValue(documentData.Budget);
+      subtotal = total;
+      discount = 0;
     }
   } else if (documentData.Budget) {
     total = parseBudgetValue(documentData.Budget);
+    subtotal = total;
+    discount = 0;
   } else {
     return; // No data to display
   }
@@ -727,19 +741,27 @@ function renderTotals(doc, x, y, width, documentData) {
   // Calculate dynamic width based on content to ensure text fits properly
   // Measure the width of all text elements that will be displayed
   
-  // Measure total label (bold font, size 12)
+  // Measure subtotal/discount/total labels and values (whichever is wider)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const subtotalLabelWidth = doc.getTextWidth('Zwischensumme:');
+  const subtotalValueWidth = doc.getTextWidth(formatCurrency(subtotal));
+  
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  const labelWidth = doc.getTextWidth('Gesamtbetrag:');
-  const valueWidth = doc.getTextWidth(formatCurrency(total));
+  const totalLabelWidth = doc.getTextWidth('Gesamtbetrag:');
+  const totalValueWidth = doc.getTextWidth(formatCurrency(total));
+  
+  const maxLabelWidth = Math.max(subtotalLabelWidth, totalLabelWidth);
+  const maxValueWidth = Math.max(subtotalValueWidth, totalValueWidth);
   
   // Calculate required width: label + value + spacing + padding
   const horizontalPadding = 10; // 5mm on each side
   const labelValueGap = 5; // Gap between label and value
-  const calculatedWidth = labelWidth + labelValueGap + valueWidth + horizontalPadding;
+  const calculatedWidth = maxLabelWidth + labelValueGap + maxValueWidth + horizontalPadding;
   
   // Use the larger of calculated width or provided width, with a reasonable minimum
-  const minWidth = 55; // Minimum width in mm (same as original ~158px)
+  const minWidth = 55; // Minimum width in mm
   const actualWidth = Math.max(calculatedWidth, width, minWidth);
   
   // Adjust x position to keep the box right-aligned if width increased
@@ -749,12 +771,15 @@ function renderTotals(doc, x, y, width, documentData) {
   const leftMargin = PDF_MARGIN;
   const adjustedX = Math.max(leftMargin, Math.min(x, pageWidth - rightMargin - actualWidth));
   
-  // Add subtle background box for totals
-  const lineHeight = 6;
+  // Calculate height based on whether we have a discount
+  const lineHeight = 5;
   const topPadding = 5;
   const bottomPadding = 5;
-  const totalHeight = topPadding + lineHeight + bottomPadding;
+  const hasDiscount = discount > 0;
+  const numberOfLines = hasDiscount ? 3 : 1; // Subtotal + Discount + Total if discount, otherwise just Total
+  const totalHeight = topPadding + (numberOfLines * lineHeight) + bottomPadding;
   
+  // Add subtle background box for totals
   doc.setFillColor(248, 248, 248);
   doc.setDrawColor(220, 220, 220);
   doc.setLineWidth(0.3);
@@ -762,13 +787,33 @@ function renderTotals(doc, x, y, width, documentData) {
   
   const labelX = adjustedX + 5;
   const valueX = adjustedX + actualWidth - 5;
+  let currentY = y + topPadding + 4;
   
-  // Total (no VAT calculation as user is VAT exempt)
+  if (hasDiscount) {
+    // Show subtotal, discount, and total
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    
+    // Subtotal
+    doc.text('Zwischensumme:', labelX, currentY);
+    doc.text(formatCurrency(subtotal), valueX, currentY, { align: 'right' });
+    currentY += lineHeight;
+    
+    // Discount (show as negative with percentage)
+    const rabattPercent = parseFloat(documentData.Rabatt) || 0;
+    doc.setTextColor(16, 185, 129); // Green color for discount
+    doc.text(`Rabatt (${rabattPercent.toFixed(2)}%):`, labelX, currentY);
+    doc.text(`-${formatCurrency(discount)}`, valueX, currentY, { align: 'right' });
+    currentY += lineHeight;
+  }
+  
+  // Total (always shown)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(30, 30, 30);
-  doc.text('Gesamtbetrag:', labelX, y + topPadding + 4);
-  doc.text(formatCurrency(total), valueX, y + topPadding + 4, { align: 'right' });
+  doc.text('Gesamtbetrag:', labelX, currentY);
+  doc.text(formatCurrency(total), valueX, currentY, { align: 'right' });
   
   // Return the actual height
   return totalHeight;
