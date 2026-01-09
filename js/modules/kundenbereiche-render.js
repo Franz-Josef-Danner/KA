@@ -80,8 +80,19 @@ export function render() {
         });
       } else if (invoice.Gesamtsumme) {
         // Old invoice format: use Gesamtsumme field (backward compatibility)
-        const gesamtsummeStr = String(invoice.Gesamtsumme).replace(/[^\d.,-]/g, '').replace(',', '.');
-        invoiceTotal = parseFloat(gesamtsummeStr) || 0;
+        // Handle both German (1.234,56) and English (1234.56) number formats
+        const gesamtsummeStr = String(invoice.Gesamtsumme);
+        // Remove currency symbols and whitespace
+        let cleanStr = gesamtsummeStr.replace(/[€$\s]/g, '');
+        // Detect if comma is decimal separator (German format)
+        if (cleanStr.includes(',') && cleanStr.lastIndexOf(',') > cleanStr.lastIndexOf('.')) {
+          // German format: 1.234,56 -> remove periods (thousands), replace comma with period
+          cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
+        } else {
+          // English format or ambiguous: just remove commas (thousands separator)
+          cleanStr = cleanStr.replace(/,/g, '');
+        }
+        invoiceTotal = parseFloat(cleanStr) || 0;
       }
       
       // Apply discount if present
