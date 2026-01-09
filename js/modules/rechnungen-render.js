@@ -73,6 +73,12 @@ export function render() {
       } else if (col === "Rabatt") {
         // Skip Rabatt column - it's stored but not displayed in the table
         continue;
+      } else if (col === "Bezahlt") {
+        // Display payment status with color coding
+        const bezahlt = row[col] || "unbezahlt";
+        const statusColor = bezahlt === "bezahlt" ? "#10b981" : "#f59e0b";
+        const statusText = bezahlt === "bezahlt" ? "Bezahlt" : "Unbezahlt";
+        td.innerHTML = `<span style="font-weight: 500; color: ${statusColor};">${statusText}</span>`;
       } else {
         // Display formatted content (read-only)
         td.innerHTML = toCellDisplay(col, row[col]);

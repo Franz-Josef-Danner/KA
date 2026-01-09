@@ -59,10 +59,10 @@ export function render() {
     // Filter invoices by company and exclude paid invoices
     const customerInvoices = invoices.filter(invoice => invoice.Firma === customer.Firma);
     
-    // Filter out paid invoices (those with Bezahlt === true or Status === "bezahlt")
+    // Filter out paid invoices (Bezahlt field with value "bezahlt")
     const unpaidCustomerInvoices = customerInvoices.filter(invoice => {
-      const isPaid = invoice.Bezahlt === true || invoice.Status === "bezahlt";
-      return !isPaid;
+      const bezahlt = invoice.Bezahlt || "unbezahlt";
+      return bezahlt !== "bezahlt";
     });
     
     const unpaidInvoices = unpaidCustomerInvoices.length;

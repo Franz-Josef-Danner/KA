@@ -37,6 +37,7 @@
           <th>Projekt</th>
           <th>Kommentare</th>
           <th>Auftrags_ID</th>
+          <th>Bezahlt</th>
           <th class="actions">Aktion</th>
         </tr>
       </thead>
@@ -134,6 +135,13 @@
           <div class="form-group">
             <label for="edit_Auftrags_ID">Auftrags-ID (Referenz):</label>
             <input type="text" id="edit_Auftrags_ID" name="Auftrags_ID" readonly style="background-color: #f5f5f5;" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Bezahlt">Bezahlstatus:</label>
+            <select id="edit_Bezahlt" name="Bezahlt">
+              <option value="unbezahlt">Unbezahlt</option>
+              <option value="bezahlt">Bezahlt</option>
+            </select>
           </div>
         </form>
       </div>
