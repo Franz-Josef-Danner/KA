@@ -244,13 +244,13 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   // Now render totals positioned right after the items table
   if (totalsElement) {
     // Position totals based on where the items table ended
-    const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
-    const totalsHeight = 25; // Estimated height for totals section
+    // Estimated height for totals section: enough for subtotal, discount, and total lines with padding
+    const ESTIMATED_TOTALS_HEIGHT = 25; // mm - adjust if totals section needs more space
     const spacing = 5; // Space between table and totals
     
     // Check if totals will fit on current page above footer
     let totalsY = tableEndY + spacing;
-    if (totalsY + totalsHeight > footerY - TOTALS_FOOTER_SPACING_MM) {
+    if (totalsY + ESTIMATED_TOTALS_HEIGHT > footerY - TOTALS_FOOTER_SPACING_MM) {
       // Totals would collide with footer, move to next page
       doc.addPage();
       totalsY = PDF_MARGIN + 10; // Start near top of new page
