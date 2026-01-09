@@ -100,14 +100,19 @@ function renderOrders(firmenId) {
     const datum = escapeHtml(order.Auftragsdatum || '');
     const projekt = escapeHtml(order.Projekt || '');
     
-    // Calculate total from order items
-    let total = 0;
+    // Calculate subtotal from order items
+    let subtotal = 0;
     if (Array.isArray(order.items) && order.items.length > 0) {
-      total = order.items.reduce((sum, item) => {
+      subtotal = order.items.reduce((sum, item) => {
         const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
         return sum + price;
       }, 0);
     }
+    
+    // Apply discount if present
+    const rabattPercent = parseFloat(order.Rabatt) || 0;
+    const discountAmount = (subtotal * rabattPercent) / 100;
+    const total = subtotal - discountAmount;
     
     // Format the total with German formatting (comma as decimal separator)
     const formattedTotal = total.toFixed(2).replace('.', ',') + ' €';
@@ -174,14 +179,19 @@ function renderInvoices(firmenId) {
     const datum = escapeHtml(invoice.Rechnungsdatum || '');
     const projekt = escapeHtml(invoice.Projekt || '');
     
-    // Calculate total from invoice items
-    let total = 0;
+    // Calculate subtotal from invoice items
+    let subtotal = 0;
     if (Array.isArray(invoice.items) && invoice.items.length > 0) {
-      total = invoice.items.reduce((sum, item) => {
+      subtotal = invoice.items.reduce((sum, item) => {
         const price = parseFloat(String(item.Gesamtpreis || item.gesamtpreis || item.total || 0).replace(',', '.')) || 0;
         return sum + price;
       }, 0);
     }
+    
+    // Apply discount if present
+    const rabattPercent = parseFloat(invoice.Rabatt) || 0;
+    const discountAmount = (subtotal * rabattPercent) / 100;
+    const total = subtotal - discountAmount;
     
     // Format the total with German formatting (comma as decimal separator)
     const formattedTotal = total.toFixed(2).replace('.', ',') + ' €';

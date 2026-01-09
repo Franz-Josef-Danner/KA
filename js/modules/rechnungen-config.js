@@ -14,7 +14,8 @@ export const COLUMNS = [
   "Gesamtsumme",
   "Projekt",
   "Kommentare",
-  "Auftrags_ID" // Reference to original order
+  "Auftrags_ID", // Reference to original order
+  "Rabatt"
 ];
 
 // Columns for invoice items (Positionen)

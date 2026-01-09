@@ -55,15 +55,24 @@ export function render() {
         // Skip beschreibung column since it's now part of items
         td.innerHTML = "";
       } else if (col === "Gesamtsumme") {
-        // Calculate total sum from invoice items
-        let totalSum = 0;
+        // Calculate subtotal sum from invoice items
+        let subtotal = 0;
         if (row.items && Array.isArray(row.items)) {
           row.items.forEach(item => {
             const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
-            totalSum += gesamtpreis;
+            subtotal += gesamtpreis;
           });
         }
+        
+        // Apply discount if present
+        const rabattPercent = parseFloat(row.Rabatt) || 0;
+        const discountAmount = (subtotal * rabattPercent) / 100;
+        const totalSum = subtotal - discountAmount;
+        
         td.innerHTML = `<span style="font-weight: 500;">${totalSum.toFixed(2).replace('.', ',')} €</span>`;
+      } else if (col === "Rabatt") {
+        // Skip Rabatt column - it's stored but not displayed in the table
+        continue;
       } else {
         // Display formatted content (read-only)
         td.innerHTML = toCellDisplay(col, row[col]);
