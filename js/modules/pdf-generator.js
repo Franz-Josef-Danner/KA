@@ -6,14 +6,17 @@ import { getCompanySettings, getPdfLayoutTemplate, getStandardLayoutTemplate } f
 // PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
 const PDF_MARGIN = 10;
 
-// Footer positioning constant
-const FOOTER_MARGIN_FROM_BOTTOM = 50; // 50mm from bottom (40mm for footer content including QR code + 10mm margin)
-
 // Page number positioning (distance from bottom edge)
 const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // 5mm from bottom to avoid overlap with footer text
 
 // Totals positioning adjustment (raise totals above footer line to prevent overlap)
-const TOTALS_FOOTER_SPACING_MM = 6; // Raise totals by 6mm above their default position
+const TOTALS_FOOTER_SPACING_MM = 6; // Minimum spacing between totals and footer
+
+// Footer measurement constants
+const FOOTER_MEASUREMENT_Y = 100; // Temporary Y position for measuring footer height
+const FOOTER_TOP_BORDER_SPACING = 2; // Space for top border line
+const FOOTER_TEXT_MARGIN = 10; // Margin for footer text width (5mm on each side)
+const FOOTER_LINE_HEIGHT = 3.5; // Height per line of footer text in mm
 
 // VAT has been removed as the user is VAT exempt
 
@@ -178,11 +181,42 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   // Set default font
   doc.setFont('helvetica');
 
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+  const footerX = PDF_MARGIN;
+  const footerWidth = pageWidth - (2 * PDF_MARGIN);
+  
+  // Calculate actual footer height by rendering it to a temporary position
+  // This allows the footer to grow upward based on content
+  const tempY = FOOTER_MEASUREMENT_Y; // Temporary Y position for measurement
+  const footerHeight = calculateFooterHeight(doc, footerX, tempY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
+  
+  // Position footer from bottom, growing upward based on actual content height
+  // The footer bottom edge is at pageHeight - PAGE_NUMBER_MARGIN_FROM_BOTTOM - 5mm (for page number spacing)
+  const footerBottomY = pageHeight - PAGE_NUMBER_MARGIN_FROM_BOTTOM - 5;
+  const footerY = footerBottomY - footerHeight;
+
   // Create a map to track actual rendered heights for dynamic positioning
   const renderedHeights = new Map();
   
+  // Store context for items table and totals rendering
+  let itemsTableInfo = null;
+  let totalsElement = null;
+  
   // Render each element according to layout, with dynamic Y positioning for text elements
+  // Skip items-table and totals for now - they need special handling
   layoutTemplate.elements.forEach(element => {
+    if (element.type === 'items-table') {
+      // Store for later rendering with footer collision detection
+      itemsTableInfo = element;
+      return;
+    }
+    if (element.type === 'totals') {
+      // Store for later rendering after items table
+      totalsElement = element;
+      return;
+    }
+    
     const adjustedElement = adjustElementPosition(element, renderedHeights, layoutTemplate.elements);
     const actualHeight = renderElement(doc, adjustedElement, documentType, documentData, companySettings);
     
@@ -197,18 +231,64 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
     }
   });
 
-  // Automatically add footer at the bottom of the page
-  // Footer is placed at a fixed position near the bottom, above the page numbers
-  const pageWidth = doc.internal.pageSize.width;
-  const pageHeight = doc.internal.pageSize.height;
-  const footerY = pageHeight - FOOTER_MARGIN_FROM_BOTTOM;
-  const footerX = PDF_MARGIN;
-  const footerWidth = pageWidth - (2 * PDF_MARGIN);
-  
-  // Render footer on the last page
+  // Now render items table with footer collision detection
+  let tableEndY = 0;
+  if (itemsTableInfo) {
+    const adjustedElement = adjustElementPosition(itemsTableInfo, renderedHeights, layoutTemplate.elements);
+    const x = adjustedElement.x * 0.352778 + PDF_MARGIN;
+    const y = adjustedElement.y * 0.352778 + PDF_MARGIN;
+    const width = adjustedElement.width * 0.352778;
+    const height = adjustedElement.height * 0.352778;
+    
+    // Render table with footer position awareness
+    tableEndY = renderItemsTableWithFooter(doc, x, y, width, height, documentData, footerY);
+    
+    // Store the table info
+    renderedHeights.set(itemsTableInfo.id, {
+      y: y,
+      height: tableEndY - y,
+      x: x,
+      width: width
+    });
+  }
+
+  // Now render totals positioned right after the items table
+  if (totalsElement) {
+    // Position totals based on where the items table ended
+    // Estimated height for totals section: enough for subtotal, discount, and total lines with padding
+    const ESTIMATED_TOTALS_HEIGHT = 25; // mm - adjust if totals section needs more space
+    const spacing = 5; // Space between table and totals
+    
+    // Check if totals will fit on current page above footer
+    let totalsY = tableEndY + spacing;
+    if (totalsY + ESTIMATED_TOTALS_HEIGHT > footerY - TOTALS_FOOTER_SPACING_MM) {
+      // Totals would collide with footer, move to next page
+      doc.addPage();
+      totalsY = PDF_MARGIN + 10; // Start near top of new page
+    }
+    
+    const x = totalsElement.x * 0.352778 + PDF_MARGIN;
+    const width = totalsElement.width * 0.352778;
+    
+    // Render totals with adjusted position
+    const actualHeight = renderTotals(doc, x, totalsY, width, documentData);
+    
+    if (actualHeight !== null) {
+      renderedHeights.set(totalsElement.id, {
+        y: totalsY,
+        height: actualHeight,
+        x: x,
+        width: width
+      });
+    }
+  }
+
+  // Render footer on all pages at fixed position
   const pageCount = doc.internal.getNumberOfPages();
-  doc.setPage(pageCount);
-  renderFooter(doc, footerX, footerY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    renderFooter(doc, footerX, footerY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
+  }
 
   // Add page numbers (with extra spacing to avoid overlap with footer text)
   // Position page numbers closer to bottom edge, creating more space above for footer text
@@ -557,6 +637,142 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
   return 30; // ~30mm for document header
 }
 
+// Render items table with footer collision detection
+// Returns the Y position where the table ends
+function renderItemsTableWithFooter(doc, x, y, width, height, documentData, footerY) {
+  // Note: The 'height' parameter is used for reference but the table will grow
+  // dynamically to fit all items, checking against footer position to prevent collision.
+  // The actual end Y position is returned to allow proper positioning of totals.
+  
+  // Parse items from documentData
+  let items = [];
+  
+  if (documentData.items && Array.isArray(documentData.items)) {
+    // New format with items array
+    items = documentData.items.map(item => ({
+      artikel: item.artikel || item.Artikel || '',
+      beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
+      menge: item.quantity || item.menge || item.Menge || '1',
+      einheit: item.unit || item.einheit || item.Einheit || 'Stk',
+      einzelpreis: item.pricePerUnit || item.einzelpreis || item.Einzelpreis || '0',
+      gesamtpreis: item.total || item.gesamtpreis || item.Gesamtpreis || '0'
+    }));
+  } else if (documentData.Artikel) {
+    // Try to parse from single field (legacy format)
+    try {
+      items = JSON.parse(documentData.Artikel);
+    } catch (e) {
+      // Single item
+      items = [{
+        artikel: documentData.Artikel || '',
+        beschreibung: documentData.Beschreibung || '',
+        menge: '1',
+        einheit: 'Stk',
+        einzelpreis: documentData.Budget || '0',
+        gesamtpreis: documentData.Budget || '0'
+      }];
+    }
+  }
+
+  // Column widths configuration - optimized for better readability
+  const colWidths = {
+    pos: width * 0.08,
+    beschreibung: width * 0.38,
+    menge: width * 0.10,
+    einheit: width * 0.10,
+    einzelpreis: width * 0.17,
+    gesamtpreis: width * 0.17
+  };
+  
+  // Table dimensions
+  const headerHeight = 9; // Height of table header in mm
+  const rowHeight = 8; // Height of each table row in mm
+  const newPageStartY = 20; // Starting Y position for content on new pages
+  const minSpacingBeforeFooter = 10; // Minimum space to keep before footer (mm)
+  
+  // Helper function to render table header
+  const renderTableHeader = (headerY, headerX, headerWidth) => {
+    // Header background with darker color
+    doc.setFillColor(60, 60, 60);
+    doc.rect(headerX, headerY, headerWidth, headerHeight, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    
+    let headerColX = headerX;
+    doc.text('Pos.', headerColX + 2, headerY + 6);
+    headerColX += colWidths.pos;
+    doc.text('Beschreibung', headerColX + 2, headerY + 6);
+    headerColX += colWidths.beschreibung;
+    doc.text('Menge', headerColX + 2, headerY + 6);
+    headerColX += colWidths.menge;
+    doc.text('Einheit', headerColX + 2, headerY + 6);
+    headerColX += colWidths.einheit;
+    doc.text('Einzelpreis', headerColX + 2, headerY + 6);
+    headerColX += colWidths.einzelpreis;
+    doc.text('Gesamt', headerColX + 2, headerY + 6);
+  };
+  
+  // Render initial table header
+  renderTableHeader(y, x, width);
+  
+  // Table rows
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(40, 40, 40);
+  
+  let rowY = y + headerHeight;
+  let colX; // Will be reset for each row
+  
+  items.forEach((item, index) => {
+    // Check if there's enough space for this row before the footer
+    // Include the minimum spacing before footer
+    if (rowY + rowHeight + minSpacingBeforeFooter > footerY) {
+      // Create new page if row would collide with footer
+      doc.addPage();
+      // Render header on new page
+      renderTableHeader(newPageStartY, x, width);
+      // Position first row after header on new page
+      rowY = newPageStartY + headerHeight;
+    }
+    
+    // Alternate row background - even rows get lighter background
+    if (index % 2 === 0) {
+      doc.setFillColor(248, 248, 248);
+      doc.rect(x, rowY, width, rowHeight, 'F');
+    }
+    
+    // Add subtle borders between rows
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.1);
+    doc.line(x, rowY, x + width, rowY);
+    
+    colX = x;
+    doc.text(String(item.position || index + 1), colX + 2, rowY + 5.5);
+    colX += colWidths.pos;
+    doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5.5);
+    colX += colWidths.beschreibung;
+    doc.text(String(item.menge || '1'), colX + 2, rowY + 5.5);
+    colX += colWidths.menge;
+    doc.text(item.einheit || 'Stk', colX + 2, rowY + 5.5);
+    colX += colWidths.einheit;
+    doc.text(formatCurrency(item.einzelpreis), colX + 2, rowY + 5.5);
+    colX += colWidths.einzelpreis;
+    doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5.5);
+    
+    rowY += rowHeight;
+  });
+  
+  // Add bottom border to table
+  doc.setDrawColor(60, 60, 60);
+  doc.setLineWidth(0.5);
+  doc.line(x, rowY, x + width, rowY);
+  
+  // Return the Y position where the table ends
+  return rowY + 1; // Add 1mm for bottom border
+}
+
 function renderItemsTable(doc, x, y, width, height, documentData) {
   // Note: The 'height' parameter is used for reference but the table will grow
   // dynamically to fit all items, checking against page boundaries instead.
@@ -819,6 +1035,60 @@ function renderTotals(doc, x, y, width, documentData) {
   return totalHeight;
 }
 
+// Calculate footer height without rendering (for layout planning)
+// This allows the footer to dynamically grow upward based on content
+function calculateFooterHeight(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {
+  let offsetY = y + 3; // Initial offset from top border
+  
+  // For invoices, calculate space needed for bank account information
+  if ((documentType === 'invoice' || documentType === 'rechnung') && companySettings.iban) {
+    const hasQRCode = paymentQRCode !== null;
+    const qrSize = 25; // QR code size in mm
+    
+    if (hasQRCode) {
+      // QR code layout: header (5mm) + max(QR code height + hint, bank details)
+      const qrHeight = qrSize + 9; // QR code + hint text below
+      const bankDetailsHeight = 7 + // Header
+        (companySettings.accountHolder ? 3.5 : 0) +
+        (companySettings.bankName ? 3.5 : 0) +
+        (companySettings.iban ? 3.5 : 0) +
+        (companySettings.bic ? 3.5 : 0);
+      offsetY += Math.max(qrHeight, bankDetailsHeight) + 2; // Extra spacing
+    } else {
+      // Centered layout without QR code
+      offsetY += 5; // Header
+      if (companySettings.accountHolder) offsetY += 3.5;
+      if (companySettings.bankName) offsetY += 3.5;
+      if (companySettings.iban) offsetY += 3.5;
+      if (companySettings.bic) offsetY += 3.5;
+      offsetY += 2; // Extra spacing before footer text
+    }
+  }
+  
+  // Calculate footer text height
+  let footerText = '';
+  if (documentType === 'invoice' || documentType === 'rechnung') {
+    footerText = companySettings.footerTextInvoice || '';
+  } else if (documentType === 'order' || documentType === 'auftrag') {
+    footerText = companySettings.footerTextOrder || '';
+  }
+  
+  if (!footerText) {
+    footerText = companySettings.companyName ? 
+      `${companySettings.companyName} | ${companySettings.email || ''} | ${companySettings.phone || ''}` :
+      'Vielen Dank für Ihr Vertrauen!';
+  }
+  
+  // Split text and calculate required lines
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  const lines = doc.splitTextToSize(footerText, width - FOOTER_TEXT_MARGIN);
+  offsetY += lines.length * FOOTER_LINE_HEIGHT; // Each line height
+  
+  // Return total height including top border space and initial offset
+  return offsetY - y + FOOTER_TOP_BORDER_SPACING; // Add space for the top border
+}
+
 function renderFooter(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
@@ -951,10 +1221,10 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  const lines = doc.splitTextToSize(footerText, width - 10);
+  const lines = doc.splitTextToSize(footerText, width - FOOTER_TEXT_MARGIN);
   lines.forEach(line => {
     doc.text(line, x + width / 2, offsetY, { align: 'center' });
-    offsetY += 3.5;
+    offsetY += FOOTER_LINE_HEIGHT;
   });
   
   // Return actual height: from y to offsetY
