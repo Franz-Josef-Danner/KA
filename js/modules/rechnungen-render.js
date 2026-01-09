@@ -8,6 +8,12 @@ import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 
+// Payment status display configuration
+const PAYMENT_STATUS_CONFIG = {
+  bezahlt: { color: '#10b981', text: 'Bezahlt' },
+  unbezahlt: { color: '#f59e0b', text: 'Unbezahlt' }
+};
+
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
@@ -76,9 +82,8 @@ export function render() {
       } else if (col === "Bezahlt") {
         // Display payment status with color coding
         const bezahlt = row[col] || "unbezahlt";
-        const statusColor = bezahlt === "bezahlt" ? "#10b981" : "#f59e0b";
-        const statusText = bezahlt === "bezahlt" ? "Bezahlt" : "Unbezahlt";
-        td.innerHTML = `<span style="font-weight: 500; color: ${statusColor};">${statusText}</span>`;
+        const config = PAYMENT_STATUS_CONFIG[bezahlt] || PAYMENT_STATUS_CONFIG.unbezahlt;
+        td.innerHTML = `<span style="font-weight: 500; color: ${config.color};">${config.text}</span>`;
       } else {
         // Display formatted content (read-only)
         td.innerHTML = toCellDisplay(col, row[col]);
