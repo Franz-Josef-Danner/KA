@@ -12,6 +12,12 @@ const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // 5mm from bottom to avoid overlap wi
 // Totals positioning adjustment (raise totals above footer line to prevent overlap)
 const TOTALS_FOOTER_SPACING_MM = 6; // Minimum spacing between totals and footer
 
+// Footer measurement constants
+const FOOTER_MEASUREMENT_Y = 100; // Temporary Y position for measuring footer height
+const FOOTER_TOP_BORDER_SPACING = 2; // Space for top border line
+const FOOTER_TEXT_MARGIN = 10; // Margin for footer text width (5mm on each side)
+const FOOTER_LINE_HEIGHT = 3.5; // Height per line of footer text in mm
+
 // VAT has been removed as the user is VAT exempt
 
 // Generate PDF for an order or invoice
@@ -182,7 +188,7 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   
   // Calculate actual footer height by rendering it to a temporary position
   // This allows the footer to grow upward based on content
-  const tempY = 100; // Temporary Y position for measurement
+  const tempY = FOOTER_MEASUREMENT_Y; // Temporary Y position for measurement
   const footerHeight = calculateFooterHeight(doc, footerX, tempY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
   
   // Position footer from bottom, growing upward based on actual content height
@@ -1076,11 +1082,11 @@ function calculateFooterHeight(doc, x, y, width, companySettings, documentType, 
   // Split text and calculate required lines
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  const lines = doc.splitTextToSize(footerText, width - 10);
-  offsetY += lines.length * 3.5; // Each line is 3.5mm
+  const lines = doc.splitTextToSize(footerText, width - FOOTER_TEXT_MARGIN);
+  offsetY += lines.length * FOOTER_LINE_HEIGHT; // Each line height
   
   // Return total height including top border space and initial offset
-  return offsetY - y + 2; // Add 2mm for the top border
+  return offsetY - y + FOOTER_TOP_BORDER_SPACING; // Add space for the top border
 }
 
 function renderFooter(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {
@@ -1215,10 +1221,10 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  const lines = doc.splitTextToSize(footerText, width - 10);
+  const lines = doc.splitTextToSize(footerText, width - FOOTER_TEXT_MARGIN);
   lines.forEach(line => {
     doc.text(line, x + width / 2, offsetY, { align: 'center' });
-    offsetY += 3.5;
+    offsetY += FOOTER_LINE_HEIGHT;
   });
   
   // Return actual height: from y to offsetY
