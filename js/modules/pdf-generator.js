@@ -6,14 +6,11 @@ import { getCompanySettings, getPdfLayoutTemplate, getStandardLayoutTemplate } f
 // PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
 const PDF_MARGIN = 10;
 
-// Footer positioning constant
-const FOOTER_MARGIN_FROM_BOTTOM = 50; // 50mm from bottom (40mm for footer content including QR code + 10mm margin)
-
 // Page number positioning (distance from bottom edge)
 const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // 5mm from bottom to avoid overlap with footer text
 
 // Totals positioning adjustment (raise totals above footer line to prevent overlap)
-const TOTALS_FOOTER_SPACING_MM = 6; // Raise totals by 6mm above their default position
+const TOTALS_FOOTER_SPACING_MM = 6; // Minimum spacing between totals and footer
 
 // VAT has been removed as the user is VAT exempt
 
@@ -178,12 +175,20 @@ function renderPDFDocument(doc, documentType, documentData, companySettings, lay
   // Set default font
   doc.setFont('helvetica');
 
-  // Calculate footer position first - it stays fixed at bottom on all pages
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  const footerY = pageHeight - FOOTER_MARGIN_FROM_BOTTOM;
   const footerX = PDF_MARGIN;
   const footerWidth = pageWidth - (2 * PDF_MARGIN);
+  
+  // Calculate actual footer height by rendering it to a temporary position
+  // This allows the footer to grow upward based on content
+  const tempY = 100; // Temporary Y position for measurement
+  const footerHeight = calculateFooterHeight(doc, footerX, tempY, footerWidth, companySettings, documentType, documentData, paymentQRCode);
+  
+  // Position footer from bottom, growing upward based on actual content height
+  // The footer bottom edge is at pageHeight - PAGE_NUMBER_MARGIN_FROM_BOTTOM - 5mm (for page number spacing)
+  const footerBottomY = pageHeight - PAGE_NUMBER_MARGIN_FROM_BOTTOM - 5;
+  const footerY = footerBottomY - footerHeight;
 
   // Create a map to track actual rendered heights for dynamic positioning
   const renderedHeights = new Map();
@@ -1022,6 +1027,60 @@ function renderTotals(doc, x, y, width, documentData) {
   
   // Return the actual height
   return totalHeight;
+}
+
+// Calculate footer height without rendering (for layout planning)
+// This allows the footer to dynamically grow upward based on content
+function calculateFooterHeight(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {
+  let offsetY = y + 3; // Initial offset from top border
+  
+  // For invoices, calculate space needed for bank account information
+  if ((documentType === 'invoice' || documentType === 'rechnung') && companySettings.iban) {
+    const hasQRCode = paymentQRCode !== null;
+    const qrSize = 25; // QR code size in mm
+    
+    if (hasQRCode) {
+      // QR code layout: header (5mm) + max(QR code height + hint, bank details)
+      const qrHeight = qrSize + 9; // QR code + hint text below
+      const bankDetailsHeight = 7 + // Header
+        (companySettings.accountHolder ? 3.5 : 0) +
+        (companySettings.bankName ? 3.5 : 0) +
+        (companySettings.iban ? 3.5 : 0) +
+        (companySettings.bic ? 3.5 : 0);
+      offsetY += Math.max(qrHeight, bankDetailsHeight) + 2; // Extra spacing
+    } else {
+      // Centered layout without QR code
+      offsetY += 5; // Header
+      if (companySettings.accountHolder) offsetY += 3.5;
+      if (companySettings.bankName) offsetY += 3.5;
+      if (companySettings.iban) offsetY += 3.5;
+      if (companySettings.bic) offsetY += 3.5;
+      offsetY += 2; // Extra spacing before footer text
+    }
+  }
+  
+  // Calculate footer text height
+  let footerText = '';
+  if (documentType === 'invoice' || documentType === 'rechnung') {
+    footerText = companySettings.footerTextInvoice || '';
+  } else if (documentType === 'order' || documentType === 'auftrag') {
+    footerText = companySettings.footerTextOrder || '';
+  }
+  
+  if (!footerText) {
+    footerText = companySettings.companyName ? 
+      `${companySettings.companyName} | ${companySettings.email || ''} | ${companySettings.phone || ''}` :
+      'Vielen Dank für Ihr Vertrauen!';
+  }
+  
+  // Split text and calculate required lines
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  const lines = doc.splitTextToSize(footerText, width - 10);
+  offsetY += lines.length * 3.5; // Each line is 3.5mm
+  
+  // Return total height including top border space and initial offset
+  return offsetY - y + 2; // Add 2mm for the top border
 }
 
 function renderFooter(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {

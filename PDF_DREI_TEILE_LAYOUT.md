@@ -16,9 +16,11 @@ Die PDF-Generierung wurde angepasst, um die Anforderungen der Drei-Teile-Struktu
 - Wächst nach unten bei mehr Inhalt
 
 ### 3. Fuß (Footer)
-- Fußzeile mit Firmendaten und Bankverbindung
+- **Fuß**: Hauptbereich mit Firmendaten und Bankverbindung
+- **Zehen**: Fußzeilentext (footerTextOrder/footerTextInvoice)
 - Bleibt stabil am Boden auf allen Seiten
-- Wächst bei mehr Inhalt nach oben
+- **Wächst nach oben, wenn der Fußzeilentext (Zehen) länger wird**
+- Die Fußzeile passt sich dynamisch an die Textlänge an
 
 ## Implementierte Regeln
 
@@ -28,8 +30,11 @@ Die PDF-Generierung wurde angepasst, um die Anforderungen der Drei-Teile-Struktu
 ### Regel 2: Körper folgt dem Kopf
 ✅ Der Summenbereich (Körper) wird immer direkt nach der Artikeltabelle positioniert, mit einem festen Abstand von 5mm.
 
-### Regel 3: Fuß bleibt am Boden
-✅ Der Fuß wird auf allen Seiten an derselben Position vom Seitenende (50mm) gerendert.
+### Regel 3: Fuß bleibt am Boden und wächst nach oben
+✅ Der Fuß wird auf allen Seiten am Boden positioniert.
+✅ Die Fußzeilenhöhe wird dynamisch basierend auf dem Inhalt berechnet.
+✅ **Der Fußzeilentext ("Zehen") kann wachsen, und die Fußzeile wächst dann nach oben.**
+✅ Der Fuß weicht nach oben aus, wenn die Zehen (Fußzeilentext) wachsen.
 
 ### Regel 4: Kollisionserkennung
 ✅ Wenn eine Artikelzeile den Fuß berühren würde (weniger als 10mm Abstand), wird automatisch eine neue Seite eingefügt.
@@ -46,6 +51,11 @@ Die PDF-Generierung wurde angepasst, um die Anforderungen der Drei-Teile-Struktu
 
 ### Neue Funktionen
 
+**`calculateFooterHeight(doc, x, y, width, companySettings, documentType, documentData, paymentQRCode)`**
+- Berechnet die tatsächliche Höhe der Fußzeile basierend auf dem Inhalt
+- Berücksichtigt Bankverbindungsinformationen, QR-Code und Fußzeilentext
+- Ermöglicht dynamisches Wachstum der Fußzeile nach oben
+
 **`renderItemsTableWithFooter(doc, x, y, width, height, documentData, footerY)`**
 - Rendert die Artikeltabelle mit Kollisionserkennung für den Fuß
 - Prüft vor jeder Zeile, ob genug Platz bis zum Fuß vorhanden ist
@@ -55,19 +65,47 @@ Die PDF-Generierung wurde angepasst, um die Anforderungen der Drei-Teile-Struktu
 ### Geänderte Funktionen
 
 **`renderPDFDocument(...)`**
-- Berechnet die Fußposition zu Beginn
+- Berechnet die Fußzeilenhöhe dynamisch zu Beginn
+- Positioniert die Fußzeile vom Seitenende aus, wachsend nach oben basierend auf der tatsächlichen Höhe
 - Rendert Items-Tabelle und Totals separat mit spezieller Logik
 - Positioniert Totals dynamisch nach der Tabelle
-- Rendert den Fuß auf allen Seiten an derselben Position
+- Rendert den Fuß auf allen Seiten an der dynamisch berechneten Position
 
 ### Konstanten
 
 ```javascript
 const PDF_MARGIN = 10; // Seitenrand in mm
-const FOOTER_MARGIN_FROM_BOTTOM = 50; // Abstand des Fußes vom Seitenende
-const minSpacingBeforeFooter = 10; // Mindestabstand vor dem Fuß
+const PAGE_NUMBER_MARGIN_FROM_BOTTOM = 5; // Abstand der Seitennummer vom Seitenende
+const TOTALS_FOOTER_SPACING_MM = 6; // Mindestabstand zwischen Summen und Fuß
+const minSpacingBeforeFooter = 10; // Mindestabstand vor dem Fuß für Artikeltabelle
 const spacing = 5; // Abstand zwischen Tabelle und Summen
 ```
+
+**Hinweis:** Die Fußzeilenhöhe wird dynamisch berechnet und ist nicht mehr fest auf 50mm gesetzt.
+
+## Fußzeilen-Wachstum (Fuß und Zehen)
+
+Die Fußzeile besteht konzeptuell aus zwei Teilen:
+
+### Fuß (Hauptbereich)
+- Bankverbindungsinformationen (bei Rechnungen)
+- QR-Code für Zahlungen (bei Rechnungen mit IBAN)
+- Feste Strukturelemente
+
+### Zehen (Fußzeilentext)
+- Konfigurierbarer Text (`footerTextOrder` für Aufträge, `footerTextInvoice` für Rechnungen)
+- Kann beliebig lang sein und wird automatisch umbrochen
+- Wächst nach oben, wenn mehr Text hinzugefügt wird
+
+### Dynamisches Verhalten
+1. Die Gesamthöhe der Fußzeile wird vor dem Rendern berechnet
+2. Die Fußzeile wird vom Seitenende aus positioniert (5mm über der Seitennummer)
+3. Bei längerem Fußzeilentext wächst die Fußzeile nach oben
+4. Der Rest des Dokuments (Kopf und Körper) passt sich automatisch an
+
+**Beispiel:**
+- Kurzer Fußzeilentext: Fußzeile beginnt bei ca. Y=270mm
+- Langer Fußzeilentext (5 Zeilen): Fußzeile beginnt bei ca. Y=252mm (wächst 18mm nach oben)
 
 ## Beispiel-Szenarien
 
