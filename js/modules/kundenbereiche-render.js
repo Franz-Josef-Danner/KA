@@ -55,20 +55,52 @@ export function render() {
       ACTIVE_ORDER_STATUSES.includes(order.Status)
     ).length;
 
-    // Count unpaid invoices (all invoices are considered unpaid for now)
-    // In a real system, there would be a "bezahlt" status
+    // Count unpaid invoices and calculate outstanding amount
+    // Filter invoices by company and exclude paid invoices
     const customerInvoices = invoices.filter(invoice => invoice.Firma === customer.Firma);
-    const unpaidInvoices = customerInvoices.length;
+    
+    // Filter out paid invoices (Bezahlt field with value "bezahlt")
+    const unpaidCustomerInvoices = customerInvoices.filter(invoice => {
+      const bezahlt = invoice.Bezahlt || "unbezahlt";
+      return bezahlt !== "bezahlt";
+    });
+    
+    const unpaidInvoices = unpaidCustomerInvoices.length;
 
-    // Calculate total outstanding amount from unpaid invoices
+    // Calculate total outstanding amount from unpaid invoices only
     let totalOutstanding = 0;
-    customerInvoices.forEach(invoice => {
-      // Try to parse the budget field as a number
-      const budget = invoice.Budget || '';
-      const amount = parseFloat(budget.replace(/[^\d.,-]/g, '').replace(',', '.'));
-      if (!isNaN(amount)) {
-        totalOutstanding += amount;
+    unpaidCustomerInvoices.forEach(invoice => {
+      // Calculate sum from invoice items
+      let invoiceTotal = 0;
+      if (invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0) {
+        // New invoice format: calculate from items array
+        invoice.items.forEach(item => {
+          const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+          invoiceTotal += gesamtpreis;
+        });
+      } else if (invoice.Gesamtsumme) {
+        // Old invoice format: use Gesamtsumme field (backward compatibility)
+        // Handle both German (1.234,56) and English (1234.56) number formats
+        const gesamtsummeStr = String(invoice.Gesamtsumme);
+        // Remove currency symbols and whitespace
+        let cleanStr = gesamtsummeStr.replace(/[€$\s]/g, '');
+        // Detect if comma is decimal separator (German format)
+        if (cleanStr.includes(',') && cleanStr.lastIndexOf(',') > cleanStr.lastIndexOf('.')) {
+          // German format: 1.234,56 -> remove periods (thousands), replace comma with period
+          cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
+        } else {
+          // English format or ambiguous: just remove commas (thousands separator)
+          cleanStr = cleanStr.replace(/,/g, '');
+        }
+        invoiceTotal = parseFloat(cleanStr) || 0;
       }
+      
+      // Apply discount if present
+      const rabattPercent = parseFloat(invoice.Rabatt) || 0;
+      const discountAmount = (invoiceTotal * rabattPercent) / 100;
+      invoiceTotal -= discountAmount;
+      
+      totalOutstanding += invoiceTotal;
     });
 
     const formattedTotal = totalOutstanding.toFixed(2).replace('.', ',') + ' €';

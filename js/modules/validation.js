@@ -72,8 +72,8 @@ export function hasUnpaidInvoices(firmaName) {
     // Invoices would be linked by Firma name and have a payment status
     const hasUnpaid = invoices.some(invoice => {
       const invoiceFirma = (invoice.Firma || "").trim();
-      const isPaid = invoice.Bezahlt === true || invoice.Status === "bezahlt";
-      return invoiceFirma && invoiceFirma === firmaName && !isPaid;
+      const bezahlt = invoice.Bezahlt || "unbezahlt";
+      return invoiceFirma && invoiceFirma === firmaName && bezahlt !== "bezahlt";
     });
     
     return hasUnpaid;

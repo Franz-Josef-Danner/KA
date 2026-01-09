@@ -15,7 +15,8 @@ export const COLUMNS = [
   "Projekt",
   "Kommentare",
   "Auftrags_ID", // Reference to original order
-  "Rabatt"
+  "Rabatt",
+  "Bezahlt" // Payment status: "unbezahlt" or "bezahlt"
 ];
 
 // Columns for invoice items (Positionen)

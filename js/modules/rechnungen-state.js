@@ -31,6 +31,9 @@ export function newEmptyRow() {
     } else if (c === "Rechnungs_ID") {
       // Leave empty - will be generated
       obj[c] = "";
+    } else if (c === "Bezahlt") {
+      // Set default payment status to "unbezahlt"
+      obj[c] = "unbezahlt";
     } else {
       obj[c] = "";
     }
@@ -78,6 +81,10 @@ export function load() {
       }
       // Initialize items array if not present (backward compatibility)
       row.items = Array.isArray(r?.items) ? r.items : [];
+      // Set default Bezahlt status if not present (backward compatibility)
+      if (!row.Bezahlt) {
+        row.Bezahlt = "unbezahlt";
+      }
       return row;
     });
   } catch {
