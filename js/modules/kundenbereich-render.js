@@ -258,6 +258,6 @@ function enrichInvoiceDataWithAddress(invoice, firmenId) {
   // Create enriched invoice data with customer address
   return {
     ...invoice,
-    Firmenadresse: company ? company.Adresse : ''
+    Firmenadresse: (company && company.Adresse) ? company.Adresse : ''
   };
 }
