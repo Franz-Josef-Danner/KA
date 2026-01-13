@@ -304,7 +304,8 @@ export function getSampleDocumentData(documentType) {
     customer: getSampleCustomerData(),
     items: items,
     total: total,
-    date: new Date().toLocaleDateString('de-DE')
+    date: new Date().toLocaleDateString('de-DE'),
+    Projekt: 'Website Relaunch 2024'
   };
   
   if (documentType === 'order' || documentType === 'auftrag') {
