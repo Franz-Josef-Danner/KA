@@ -532,6 +532,19 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
     });
   }
   
+  // Add project name if available
+  const projekt = customer.project || customer.Projekt;
+  if (projekt) {
+    offsetY += 2; // Add some spacing before project
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Projekt:', x + padding, offsetY);
+    offsetY += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.text(projekt, x + padding, offsetY);
+    offsetY += 4;
+  }
+  
   // Calculate box height and draw box around customer info (draw after text to ensure proper height)
   const boxHeight = offsetY - y + 3;
   

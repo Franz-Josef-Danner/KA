@@ -139,8 +139,10 @@ function renderOrders(firmenId) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
+          // Enrich order data with customer address before generating PDF
+          const enrichedOrder = enrichInvoiceDataWithAddress(order, firmenId);
           // Use standard template for customer-facing PDFs (5th parameter = true)
-          const pdf = await generatePDF('order', order, false, null, true);
+          const pdf = await generatePDF('order', enrichedOrder, false, null, true);
           if (pdf) {
             viewPDF(pdf);
           }
@@ -218,8 +220,10 @@ function renderInvoices(firmenId) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
+          // Enrich invoice data with customer address before generating PDF
+          const enrichedInvoice = enrichInvoiceDataWithAddress(invoice, firmenId);
           // Use standard template for customer-facing PDFs (5th parameter = true)
-          const pdf = await generatePDF('invoice', invoice, false, null, true);
+          const pdf = await generatePDF('invoice', enrichedInvoice, false, null, true);
           if (pdf) {
             viewPDF(pdf);
           }
@@ -239,4 +243,21 @@ function getCompanyNameByFirmenId(firmenId) {
   const companies = getCompanies();
   const company = companies.find(c => c.Firmen_ID === firmenId);
   return company ? company.Firma : '';
+}
+
+// Helper function to get full company details by Firmen_ID
+function getCompanyByFirmenId(firmenId) {
+  const companies = getCompanies();
+  return companies.find(c => c.Firmen_ID === firmenId);
+}
+
+// Helper function to enrich invoice data with customer address for PDF generation
+function enrichInvoiceDataWithAddress(invoice, firmenId) {
+  const company = getCompanyByFirmenId(firmenId);
+  
+  // Create enriched invoice data with customer address
+  return {
+    ...invoice,
+    Firmenadresse: company ? company.Adresse : ''
+  };
 }
