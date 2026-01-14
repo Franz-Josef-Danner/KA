@@ -3,9 +3,12 @@
 // -----------------------------
 import { render } from './modules/kundenbereiche-render.js';
 import { initSearch } from './modules/kundenbereiche-search.js';
+import { ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
 
 // Initialize the application
-function init() {
+async function init() {
+  // Ensure company list is loaded before rendering
+  await ensureFirmenlisteInitialized();
   initSearch();
   render();
 }
