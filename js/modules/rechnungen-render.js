@@ -125,13 +125,20 @@ export function render() {
     
     // PDF button - generate and view PDF
     const pdfBtn = document.createElement("button");
-    pdfBtn.textContent = "📄";
+    pdfBtn.textContent = "📄 PDF";
     pdfBtn.title = "PDF anzeigen";
-    pdfBtn.className = "btn-secondary";
+    pdfBtn.style.backgroundColor = "#667eea";
+    pdfBtn.style.color = "white";
+    pdfBtn.style.border = "none";
+    pdfBtn.style.padding = "4px 8px";
+    pdfBtn.style.cursor = "pointer";
+    pdfBtn.style.borderRadius = "4px";
     pdfBtn.addEventListener("click", async (e) => {
       e.stopPropagation(); // Prevent row double-click event
       pdfBtn.disabled = true;
-      pdfBtn.textContent = "⏳";
+      const originalText = pdfBtn.textContent;
+      pdfBtn.textContent = "⏳ Lädt...";
+      pdfBtn.style.backgroundColor = "#9ca3af";
       try {
         // Enrich invoice data with customer address
         const enrichedInvoice = enrichInvoiceWithAddress(row);
@@ -144,7 +151,8 @@ export function render() {
         alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
       } finally {
         pdfBtn.disabled = false;
-        pdfBtn.textContent = "📄";
+        pdfBtn.textContent = originalText;
+        pdfBtn.style.backgroundColor = "#667eea";
       }
     });
     act.appendChild(pdfBtn);
