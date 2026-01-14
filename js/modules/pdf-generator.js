@@ -18,6 +18,12 @@ const FOOTER_TOP_BORDER_SPACING = 2; // Space for top border line
 const FOOTER_TEXT_MARGIN = 10; // Margin for footer text width (5mm on each side)
 const FOOTER_LINE_HEIGHT = 3.5; // Height per line of footer text in mm
 
+// Table cell formatting constants
+const CELL_PADDING = 4; // Padding for table cells in mm
+const TEXT_LINE_HEIGHT = 4; // Height per line of text in table cells in mm
+const ROW_TOP_PADDING = 4; // Top padding for rows with wrapped text in mm
+const ROW_BOTTOM_PADDING = 2; // Bottom padding for rows with wrapped text in mm
+
 // VAT has been removed as the user is VAT exempt
 
 // Generate PDF for an order or invoice
@@ -690,11 +696,11 @@ function calculateColumnWidths(doc, items, tableWidth) {
   
   // Also measure header text
   doc.setFont('helvetica', 'bold');
-  maxPos = Math.max(maxPos, doc.getTextWidth('Pos.') + 4); // +4mm padding
-  maxMenge = Math.max(maxMenge, doc.getTextWidth('Menge') + 4);
-  maxEinheit = Math.max(maxEinheit, doc.getTextWidth('Einheit') + 4);
-  maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth('Einzelpreis') + 4);
-  maxGesamtpreis = Math.max(maxGesamtpreis, doc.getTextWidth('Gesamt') + 4);
+  maxPos = Math.max(maxPos, doc.getTextWidth('Pos.') + CELL_PADDING);
+  maxMenge = Math.max(maxMenge, doc.getTextWidth('Menge') + CELL_PADDING);
+  maxEinheit = Math.max(maxEinheit, doc.getTextWidth('Einheit') + CELL_PADDING);
+  maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth('Einzelpreis') + CELL_PADDING);
+  maxGesamtpreis = Math.max(maxGesamtpreis, doc.getTextWidth('Gesamt') + CELL_PADDING);
   
   doc.setFont('helvetica', 'normal');
   
@@ -706,11 +712,11 @@ function calculateColumnWidths(doc, items, tableWidth) {
     const einzelpreisText = formatCurrency(item.einzelpreis);
     const gesamtpreisText = formatCurrency(item.gesamtpreis);
     
-    maxPos = Math.max(maxPos, doc.getTextWidth(posText) + 4);
-    maxMenge = Math.max(maxMenge, doc.getTextWidth(mengeText) + 4);
-    maxEinheit = Math.max(maxEinheit, doc.getTextWidth(einheitText) + 4);
-    maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth(einzelpreisText) + 4);
-    maxGesamtpreis = Math.max(maxGesamtpreis, doc.getTextWidth(gesamtpreisText) + 4);
+    maxPos = Math.max(maxPos, doc.getTextWidth(posText) + CELL_PADDING);
+    maxMenge = Math.max(maxMenge, doc.getTextWidth(mengeText) + CELL_PADDING);
+    maxEinheit = Math.max(maxEinheit, doc.getTextWidth(einheitText) + CELL_PADDING);
+    maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth(einzelpreisText) + CELL_PADDING);
+    maxGesamtpreis = Math.max(maxGesamtpreis, doc.getTextWidth(gesamtpreisText) + CELL_PADDING);
   });
   
   // Apply maximum width constraints
@@ -745,15 +751,14 @@ function calculateRowHeight(doc, beschreibung, beschreibungWidth, baseRowHeight)
   doc.setFont('helvetica', 'normal');
   
   // Split text to fit within column width (subtract padding)
-  const lines = doc.splitTextToSize(beschreibung, beschreibungWidth - 4);
+  const lines = doc.splitTextToSize(beschreibung, beschreibungWidth - CELL_PADDING);
   
   // Calculate height: base height for single line + extra height for additional lines
-  const lineHeight = 4; // mm per line
   if (lines.length <= 1) {
     return baseRowHeight;
   } else {
     // Need more height for multiple lines
-    return Math.max(baseRowHeight, 4 + (lines.length * lineHeight) + 2); // 4mm top padding + lines + 2mm bottom padding
+    return Math.max(baseRowHeight, ROW_TOP_PADDING + (lines.length * TEXT_LINE_HEIGHT) + ROW_BOTTOM_PADDING);
   }
 }
 
@@ -877,11 +882,11 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
     
     // Description (with text wrapping if needed)
     if (beschreibung) {
-      const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - 4);
+      const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - CELL_PADDING);
       let textY = rowY + 5.5;
       lines.forEach((line, lineIndex) => {
         doc.text(line, colX + 2, textY);
-        textY += 4; // Line height in mm
+        textY += TEXT_LINE_HEIGHT;
       });
     }
     colX += colWidths.beschreibung;
@@ -1037,11 +1042,11 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     
     // Description (with text wrapping if needed)
     if (beschreibung) {
-      const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - 4);
+      const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - CELL_PADDING);
       let textY = rowY + 5.5;
       lines.forEach((line, lineIndex) => {
         doc.text(line, colX + 2, textY);
-        textY += 4; // Line height in mm
+        textY += TEXT_LINE_HEIGHT;
       });
     }
     colX += colWidths.beschreibung;
