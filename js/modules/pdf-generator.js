@@ -641,6 +641,16 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
     doc.text(`Datum:`, x, offsetY);
     doc.setFont('helvetica', 'normal');
     doc.text(docDate, x + 20, offsetY);
+    offsetY += 5;
+  }
+  
+  // Render project name if available
+  const projektName = documentData.Projekt || documentData.projektName;
+  if (projektName) {
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Projekt:`, x, offsetY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(projektName, x + 20, offsetY);
   }
   
   // Return actual height: title height + extra info
