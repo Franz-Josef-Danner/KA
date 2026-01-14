@@ -140,7 +140,42 @@ Neues Verzeichnis `data/`:
 - ✅ PHP-Validierung der Eingabedaten
 - ✅ Automatische Backups vor jedem Speichern
 - ✅ JSON-Encoding mit UTF-8-Unterstützung
-- ✅ CORS-Header für API-Zugriffe
+- ⚠️ **CORS-Konfiguration**: In den API-Dateien ist `Access-Control-Allow-Origin: *` gesetzt (erlaubt alle Domains)
+  - **Für Produktion**: Ändern Sie dies zu Ihrer spezifischen Domain
+  - **Beispiel**: `header('Access-Control-Allow-Origin: https://ihre-domain.de');`
+- ⚠️ **Verzeichnisrechte**: 
+  - Entwicklung: `chmod 755 data/` (für einfachen Zugriff)
+  - Produktion: `chmod 750 data/` oder `chmod 700 data/` (restriktiver)
+  - Owner auf Webserver-Benutzer setzen: `chown www-data:www-data data/`
+
+### Produktions-Checkliste
+
+Vor dem Deployment auf Produktion:
+
+1. **CORS-Header anpassen**:
+   ```php
+   // In api/save-firmenliste.php und api/load-firmenliste.php
+   header('Access-Control-Allow-Origin: https://ihre-domain.de');
+   ```
+
+2. **Verzeichnisrechte setzen**:
+   ```bash
+   chown -R www-data:www-data data/
+   chmod 750 data/
+   chmod 640 data/*.json
+   ```
+
+3. **HTTPS aktivieren**:
+   - Stellen Sie sicher, dass Ihre Website über HTTPS läuft
+   - Moderne Browser blockieren möglicherweise Mixed Content
+
+4. **PHP-Fehlerprotokollierung**:
+   - Prüfen Sie regelmäßig die PHP-Fehlerprotokolle
+   - Implementieren Sie Monitoring für API-Fehler
+
+5. **Backup-Strategie**:
+   - Richten Sie automatische Backups der `data/` Verzeichnis ein
+   - Speichern Sie Backups außerhalb des Webroot
 
 ## Backup
 

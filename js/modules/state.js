@@ -21,6 +21,7 @@ let usingApiStorage = true;
 // Initialize rows - will be loaded asynchronously
 let rows = [];
 let initializationPromise = null;
+let isInitialized = false;
 
 // Ensure state is initialized before use
 export async function ensureInitialized() {
@@ -29,8 +30,8 @@ export async function ensureInitialized() {
     return initializationPromise;
   }
   
-  // If already initialized (rows not empty), return immediately
-  if (rows.length > 0) {
+  // If already initialized, return immediately
+  if (isInitialized) {
     return;
   }
   
@@ -38,6 +39,7 @@ export async function ensureInitialized() {
   initializationPromise = (async () => {
     rows = await loadFromServerOrLocalStorage();
     pushState(rows);
+    isInitialized = true;
   })();
   
   await initializationPromise;
@@ -178,9 +180,6 @@ async function loadFromServer() {
   try {
     const response = await fetch(LOAD_ENDPOINT, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
 
     if (!response.ok) {

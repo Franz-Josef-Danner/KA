@@ -7,7 +7,11 @@
 
 // Set headers for JSON response
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+
+// CORS headers - Configure for production!
+// For development: Allow all origins
+// For production: Replace * with your specific domain(s)
+header('Access-Control-Allow-Origin: *');  // TODO: Replace with specific domain in production
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
