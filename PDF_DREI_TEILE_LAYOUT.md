@@ -173,4 +173,37 @@ Um die Implementierung zu testen:
 ## Bekannte Einschränkungen
 
 - Die Höhe des Summenbereichs wird auf 25mm geschätzt. Bei sehr langen Rabatt-Texten könnte eine Anpassung nötig sein.
-- Mehrzeilige Artikelbeschreibungen werden derzeit nicht unterstützt (jeder Artikel = 1 Zeile).
+
+## Dynamische Spaltenbreiten und Textumbruch (Neu)
+
+### Übersicht
+Die Tabellenspalten passen sich nun automatisch an den Inhalt an, und lange Beschreibungen werden automatisch auf mehrere Zeilen umgebrochen.
+
+### Regel 1: Spaltenbreiten basierend auf Inhalt
+- Spaltenbreiten werden dynamisch berechnet basierend auf dem tatsächlichen Inhalt der Zellen
+- Jede Spalte (außer Beschreibung) erhält die minimale Breite, die benötigt wird, um ihren Inhalt anzuzeigen
+- Mindest- und Maximalbreiten verhindern zu schmale oder zu breite Spalten:
+  - Position: 6-10% der Tabellenbreite
+  - Menge: 8-12%
+  - Einheit: 8-12%
+  - Einzelpreis: 14-18%
+  - Gesamtpreis: 14-18%
+- Die Beschreibungsspalte erhält den verbleibenden Platz
+
+### Regel 2: Textumbruch in der Beschreibungsspalte
+- Wenn eine Beschreibung nicht in die Spaltenbreite passt, wird sie automatisch auf mehrere Zeilen umgebrochen
+- Die Zeilenhöhe wird dynamisch angepasst, um allen Text anzuzeigen
+- Andere Spalten bleiben vertikal zentriert in der Zeile
+- Zeilenabstand: 4mm pro Zeile
+
+### Vorteile
+- ✅ Effizientere Nutzung des verfügbaren Platzes
+- ✅ Keine abgeschnittenen Texte in Beschreibungen
+- ✅ Schmale Spalten für kurze Inhalte (z.B. "1", "Stk")
+- ✅ Maximaler Platz für Beschreibungen
+- ✅ Professionelles Erscheinungsbild bei allen Inhaltstypen
+
+### Technische Details
+- Neue Funktion `calculateColumnWidths()`: Misst Inhaltsbreiten und berechnet optimale Spaltenbreiten
+- Neue Funktion `calculateRowHeight()`: Berechnet benötigte Zeilenhöhe basierend auf umgebrochenem Text
+- Beide Rendering-Funktionen (`renderItemsTable` und `renderItemsTableWithFooter`) verwenden diese Logik
