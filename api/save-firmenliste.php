@@ -39,6 +39,13 @@ if ($data === null) {
     exit;
 }
 
+// Ensure data is an array
+if (!is_array($data)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Data must be an array']);
+    exit;
+}
+
 // Path to the data file
 $dataDir = __DIR__ . '/../data';
 $dataFile = $dataDir . '/firmenliste.json';
