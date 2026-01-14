@@ -508,6 +508,12 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   // Support both old format (Firma, Ansprechpartner) and new format (customer object)
   const customer = documentData.customer || documentData;
   
+  // Debug logging
+  console.log('renderCustomerInfo - documentData:', documentData);
+  console.log('renderCustomerInfo - customer:', customer);
+  console.log('renderCustomerInfo - Firmenadresse:', customer.Firmenadresse);
+  console.log('renderCustomerInfo - Projekt:', customer.Projekt);
+  
   if (customer.company || customer.Firma) {
     doc.setFont('helvetica', 'bold');
     doc.text(customer.company || customer.Firma, x + padding, offsetY);
@@ -520,6 +526,7 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   }
   // Support both address and Firmenadresse fields
   const address = customer.address || customer.Firmenadresse;
+  console.log('renderCustomerInfo - address:', address);
   if (address) {
     // Split by newlines first, then split each line by commas
     // This handles addresses with either \n or , as separators
@@ -534,6 +541,7 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   
   // Add project name if available
   const projekt = customer.project || customer.Projekt;
+  console.log('renderCustomerInfo - projekt:', projekt);
   if (projekt) {
     offsetY += 2; // Add some spacing before project
     doc.setFont('helvetica', 'bold');

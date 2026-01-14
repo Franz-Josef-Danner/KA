@@ -163,11 +163,23 @@ export const debouncedRender = debounce(render, 300);
 
 // Helper function to enrich invoice data with customer address for PDF generation
 function enrichInvoiceWithAddress(invoice) {
+  console.log('enrichInvoiceWithAddress - input invoice:', invoice);
+  console.log('enrichInvoiceWithAddress - invoice.Firma:', invoice.Firma);
+  console.log('enrichInvoiceWithAddress - invoice.Projekt:', invoice.Projekt);
+  
   const company = getCompanyByName(invoice.Firma);
+  console.log('enrichInvoiceWithAddress - company:', company);
+  console.log('enrichInvoiceWithAddress - company.Adresse:', company?.Adresse);
   
   // Create enriched invoice data with customer address
-  return {
+  const enriched = {
     ...invoice,
     Firmenadresse: company?.Adresse || ''
   };
+  
+  console.log('enrichInvoiceWithAddress - enriched invoice:', enriched);
+  console.log('enrichInvoiceWithAddress - enriched.Firmenadresse:', enriched.Firmenadresse);
+  console.log('enrichInvoiceWithAddress - enriched.Projekt:', enriched.Projekt);
+  
+  return enriched;
 }
