@@ -1,12 +1,13 @@
-# Firmenliste im Webspace speichern - Implementierungsdokumentation
+# Firmenliste und Artikellisten im Webspace speichern - Implementierungsdokumentation
 
 ## Übersicht
 
-Die Firmenliste wird jetzt im Webspace (Server) statt im Browser-LocalStorage gespeichert. Dies ermöglicht:
+Die Firmenliste und Artikellisten werden jetzt im Webspace (Server) statt im Browser-LocalStorage gespeichert. Dies ermöglicht:
 - ✅ Zentrale Datenspeicherung auf dem Server
 - ✅ Zugriff von mehreren Geräten/Browsern
 - ✅ Automatische Datensicherung auf dem Server
 - ✅ Automatische Migration von bestehenden LocalStorage-Daten
+- ✅ Artikellisten referenzieren die Firmenliste via Firmen_ID
 
 ## Änderungen
 
@@ -14,6 +15,7 @@ Die Firmenliste wird jetzt im Webspace (Server) statt im Browser-LocalStorage ge
 
 Neue Dateien im Verzeichnis `api/`:
 
+**Firmenliste:**
 - **`api/save-firmenliste.php`**: Speichert die Firmenliste als JSON-Datei
   - Empfängt POST-Anfragen mit JSON-Daten
   - Speichert Daten in `data/firmenliste.json`
@@ -24,13 +26,31 @@ Neue Dateien im Verzeichnis `api/`:
   - Gibt JSON-Daten zurück
   - Gibt leeres Array zurück, wenn keine Daten vorhanden
 
+**Artikellisten:**
+- **`api/save-artikellisten.php`**: Speichert die Artikellisten als JSON-Datei
+  - Empfängt POST-Anfragen mit JSON-Daten (Objekt mit Firmen_ID als Keys)
+  - Speichert Daten in `data/artikellisten.json`
+  - Erstellt automatisch Backups (`data/artikellisten.backup.json`)
+
+- **`api/load-artikellisten.php`**: Lädt die Artikellisten vom Server
+  - Empfängt GET-Anfragen
+  - Gibt JSON-Daten zurück (Objekt mit Firmen_ID als Keys)
+  - Gibt leeres Objekt zurück, wenn keine Daten vorhanden
+
 ### 2. Datenspeicherung
 
 Neues Verzeichnis `data/`:
 
-- Enthält die JSON-Dateien mit den Firmendaten
+- Enthält die JSON-Dateien mit den Firmen- und Artikellistendaten
 - Geschützt durch `.htaccess` (kein direkter Zugriff)
 - Dateien werden NICHT in Git eingecheckt (siehe `.gitignore`)
+- Artikellisten referenzieren Firmenliste via `Firmen_ID`
+
+Gespeicherte Dateien:
+- `firmenliste.json` - Firmenliste (Array von Firmen-Objekten)
+- `firmenliste.backup.json` - Backup der Firmenliste
+- `artikellisten.json` - Artikellisten (Objekt mit Firmen_ID als Keys)
+- `artikellisten.backup.json` - Backup der Artikellisten
 
 ### 3. Frontend-Änderungen
 
@@ -39,6 +59,20 @@ Neues Verzeichnis `data/`:
 - Automatische Migration von LocalStorage zu Server
 - Fallback auf LocalStorage bei Serverproblemen
 - LocalStorage dient als Cache
+
+**`js/modules/artikellisten-state.js`**:
+- Neue Funktionen für API-Kommunikation
+- Automatische Migration von LocalStorage zu Server
+- Fallback auf LocalStorage bei Serverproblemen
+- LocalStorage dient als Cache
+- Alle Funktionen sind jetzt async
+
+**`js/artikellisten-app.js`**:
+- Async/await für Artikellisten-Funktionen
+
+**`js/artikelliste-detail-app.js`**:
+- Async/await für Artikellisten-Funktionen
+- Angepasste Speichern-Meldung ("im Webspace")
 
 **`js/modules/events.js`**:
 - Async/await für Speichern-Funktion

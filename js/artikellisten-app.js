@@ -7,11 +7,11 @@ import { getRows } from './modules/state.js';
 let selectedFirmenId = null;
 let clickTimer = null;
 
-function renderPreview(firmenId) {
+async function renderPreview(firmenId) {
   const previewContainer = document.getElementById("artikellisten-preview");
   if (!previewContainer) return;
   
-  const artikellisten = getArtikellisten();
+  const artikellisten = await getArtikellisten();
   const artikelliste = artikellisten[firmenId];
   
   if (!artikelliste) {
@@ -81,13 +81,13 @@ function renderPreview(firmenId) {
   previewContainer.innerHTML = previewHTML;
 }
 
-function render() {
+async function render() {
   const tbody = document.getElementById("artikellisten-tbody");
   if (!tbody) return;
   
   tbody.innerHTML = "";
   
-  const artikellisten = getArtikellisten();
+  const artikellisten = await getArtikellisten();
   const firmenRows = getRows();
   
   // Create a map of Firmen_ID to company data for quick lookup
@@ -188,8 +188,8 @@ function render() {
 }
 
 // Initialize the application
-function init() {
-  render();
+async function init() {
+  await render();
 }
 
 // ES6 modules are deferred by default; at this point the DOM is ready, so start the application

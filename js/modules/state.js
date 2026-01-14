@@ -274,7 +274,7 @@ async function syncFirmenIds(rowsToSync) {
         row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
         // Create empty article list for new customer
         const firmenName = row.Firma || 'Unbekannt';
-        createEmptyArtikelliste(row.Firmen_ID, firmenName);
+        await createEmptyArtikelliste(row.Firmen_ID, firmenName);
         // Create customer account
         const email = row['E-mail'] || '';
         if (email) {
@@ -303,9 +303,10 @@ async function syncFirmenIds(rowsToSync) {
         }
       } else {
         // Customer already has ID - ensure article list and account exist
-        if (!artikellisteExists(idStr)) {
+        const articleListExists = await artikellisteExists(idStr);
+        if (!articleListExists) {
           const firmenName = row.Firma || 'Unbekannt';
-          createEmptyArtikelliste(idStr, firmenName);
+          await createEmptyArtikelliste(idStr, firmenName);
         }
         // Update or create customer account
         const email = row['E-mail'] || '';
@@ -322,7 +323,7 @@ async function syncFirmenIds(rowsToSync) {
       // If status is not "Kunde", remove any existing ID, article list, and customer account
       const oldId = row.Firmen_ID;
       if (oldId && typeof oldId === 'string' && oldId.trim() !== '') {
-        deleteArtikelliste(oldId);
+        await deleteArtikelliste(oldId);
         deleteCustomerAccount(oldId);
       }
       row.Firmen_ID = '';
