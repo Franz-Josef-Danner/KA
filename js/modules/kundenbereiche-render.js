@@ -51,10 +51,13 @@ export function render() {
 
     // Count orders in progress (Status: "in Arbeit" or empty)
     // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
-    const customerOrders = orders.filter(order => 
-      (order.Firmen_ID && order.Firmen_ID === customer.Firmen_ID) || 
-      (order.Firma && order.Firma === customer.Firma)
-    );
+    // Prefer Firmen_ID if available, fall back to Firma for legacy data
+    const customerOrders = orders.filter(order => {
+      if (order.Firmen_ID && customer.Firmen_ID) {
+        return order.Firmen_ID === customer.Firmen_ID;
+      }
+      return order.Firma === customer.Firma;
+    });
     const ordersInProgress = customerOrders.filter(order => 
       ACTIVE_ORDER_STATUSES.includes(order.Status)
     ).length;
@@ -62,10 +65,13 @@ export function render() {
     // Count unpaid invoices and calculate outstanding amount
     // Filter invoices by company and exclude paid invoices
     // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
-    const customerInvoices = invoices.filter(invoice => 
-      (invoice.Firmen_ID && invoice.Firmen_ID === customer.Firmen_ID) || 
-      (invoice.Firma && invoice.Firma === customer.Firma)
-    );
+    // Prefer Firmen_ID if available, fall back to Firma for legacy data
+    const customerInvoices = invoices.filter(invoice => {
+      if (invoice.Firmen_ID && customer.Firmen_ID) {
+        return invoice.Firmen_ID === customer.Firmen_ID;
+      }
+      return invoice.Firma === customer.Firma;
+    });
     
     // Filter out paid invoices (Bezahlt field with value "bezahlt")
     const unpaidCustomerInvoices = customerInvoices.filter(invoice => {

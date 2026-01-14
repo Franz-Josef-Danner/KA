@@ -80,10 +80,13 @@ function renderCompanyNotFound() {
 function renderOrders(firmenId, firmaName) {
   const orders = getOrders();
   // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
-  const customerOrders = orders.filter(order => 
-    (order.Firmen_ID && order.Firmen_ID === firmenId) || 
-    (order.Firma && order.Firma === firmaName)
-  );
+  // Prefer Firmen_ID if available, fall back to Firma for legacy data
+  const customerOrders = orders.filter(order => {
+    if (order.Firmen_ID && firmenId) {
+      return order.Firmen_ID === firmenId;
+    }
+    return order.Firma === firmaName;
+  });
   
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
@@ -163,10 +166,13 @@ function renderOrders(firmenId, firmaName) {
 function renderInvoices(firmenId, firmaName) {
   const invoices = getInvoices();
   // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
-  const customerInvoices = invoices.filter(invoice => 
-    (invoice.Firmen_ID && invoice.Firmen_ID === firmenId) || 
-    (invoice.Firma && invoice.Firma === firmaName)
-  );
+  // Prefer Firmen_ID if available, fall back to Firma for legacy data
+  const customerInvoices = invoices.filter(invoice => {
+    if (invoice.Firmen_ID && firmenId) {
+      return invoice.Firmen_ID === firmenId;
+    }
+    return invoice.Firma === firmaName;
+  });
   
   const tbody = document.getElementById('invoicesTableBody');
   if (!tbody) return;
