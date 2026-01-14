@@ -59,7 +59,7 @@ function getCustomerCompanies() {
 }
 
 // Function to get company data by company name
-function getCompanyByName(firmaName) {
+export function getCompanyByName(firmaName) {
   const companies = getCustomerCompanies();
   return companies.find(company => company.Firma === firmaName);
 }

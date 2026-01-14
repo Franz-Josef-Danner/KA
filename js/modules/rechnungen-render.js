@@ -6,7 +6,8 @@ import { getRows, setRows, newEmptyRow, save } from './rechnungen-state.js';
 import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './rechnungen-search.js';
-import { updateUndoRedoButtons } from './rechnungen-ui.js';
+import { updateUndoRedoButtons, getCompanyByName } from './rechnungen-ui.js';
+import { generatePDF, viewPDF } from './pdf-generator.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -122,6 +123,32 @@ export function render() {
     });
     act.appendChild(minus);
     
+    // PDF button - generate and view PDF
+    const pdfBtn = document.createElement("button");
+    pdfBtn.textContent = "📄";
+    pdfBtn.title = "PDF anzeigen";
+    pdfBtn.className = "btn-secondary";
+    pdfBtn.addEventListener("click", async (e) => {
+      e.stopPropagation(); // Prevent row double-click event
+      pdfBtn.disabled = true;
+      pdfBtn.textContent = "⏳";
+      try {
+        // Enrich invoice data with customer address
+        const enrichedInvoice = enrichInvoiceWithAddress(row);
+        const pdf = await generatePDF('invoice', enrichedInvoice, false, null, true);
+        if (pdf) {
+          viewPDF(pdf);
+        }
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+      } finally {
+        pdfBtn.disabled = false;
+        pdfBtn.textContent = "📄";
+      }
+    });
+    act.appendChild(pdfBtn);
+    
     tr.appendChild(act);
 
     tbody.appendChild(tr);
@@ -133,3 +160,21 @@ export function render() {
 
 // Create a debounced version of render to avoid multiple rapid re-renders
 export const debouncedRender = debounce(render, 300);
+
+// Helper function to enrich invoice data with customer address for PDF generation
+function enrichInvoiceWithAddress(invoice) {
+  const company = getCompanyByName(invoice.Firma);
+  
+  // Create enriched invoice data with customer address
+  return {
+    ...invoice,
+    Rechnungs_ID: invoice.Rechnungs_ID,
+    Rechnungsdatum: invoice.Rechnungsdatum,
+    Firma: invoice.Firma,
+    Ansprechpartner: invoice.Ansprechpartner,
+    Firmenadresse: company?.Adresse || '',
+    Projekt: invoice.Projekt || '',
+    items: invoice.items || [],
+    Rabatt: invoice.Rabatt || 0
+  };
+}
