@@ -16,3 +16,8 @@ test-*.html
 backend/config.json
 backend/email-queue.json
 backend/*.log
+
+# Data directory - exclude actual data files but keep structure
+data/*.json
+data/*.backup.json
+!data/.htaccess

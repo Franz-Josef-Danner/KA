@@ -29,9 +29,10 @@ export function initEventHandlers() {
   });
 
   // Save button
-  document.getElementById("saveBtn").addEventListener("click", () => {
-    if (save()) {
-      alert("Gespeichert (LocalStorage im Browser).");
+  document.getElementById("saveBtn").addEventListener("click", async () => {
+    const saved = await save();
+    if (saved) {
+      alert("Gespeichert im Webspace.");
     }
   });
 
@@ -47,23 +48,25 @@ export function initEventHandlers() {
   document.getElementById("search").addEventListener("input", () => render());
   
   // Undo button
-  document.getElementById("undoBtn").addEventListener("click", () => {
-    if (undo()) {
+  document.getElementById("undoBtn").addEventListener("click", async () => {
+    const success = await undo();
+    if (success) {
       render();
       updateUndoRedoButtons();
     }
   });
   
   // Redo button
-  document.getElementById("redoBtn").addEventListener("click", () => {
-    if (redo()) {
+  document.getElementById("redoBtn").addEventListener("click", async () => {
+    const success = await redo();
+    if (success) {
       render();
       updateUndoRedoButtons();
     }
   });
   
   // Keyboard shortcuts
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", async (e) => {
     // Skip if user is typing in contenteditable or input fields
     if (e.target.isContentEditable || 
         e.target.tagName === 'INPUT' || 
@@ -74,7 +77,8 @@ export function initEventHandlers() {
     // Ctrl+Z or Cmd+Z for undo
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
       e.preventDefault();
-      if (undo()) {
+      const success = await undo();
+      if (success) {
         render();
         updateUndoRedoButtons();
       }
@@ -83,7 +87,8 @@ export function initEventHandlers() {
     if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') || 
         ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
       e.preventDefault();
-      if (redo()) {
+      const success = await redo();
+      if (success) {
         render();
         updateUndoRedoButtons();
       }
@@ -105,7 +110,7 @@ async function importCSV(file, fileInput) {
       // Add imported rows to the beginning of the table
       const rows = getRows();
       await setRows([...importedRows, ...rows]);
-      const saved = save();
+      const saved = await save();
       render();
       
       // Always notify about import success, but only show alert when save succeeded

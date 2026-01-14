@@ -1,0 +1,8 @@
+# Allow PHP scripts to be executed
+<Files "*.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Prevent directory listing
+Options -Indexes

@@ -33,7 +33,7 @@ export function render() {
     addButton.title = "Erste Zeile zur Tabelle hinzufügen";
     addButton.addEventListener("click", async () => {
       await setRows([newEmptyRow()]);
-      save();
+      await save();
       render();
     });
     
@@ -128,7 +128,7 @@ export function render() {
           // If validation passed (and confirmation given if required), proceed with the change
           currentRows[idx][col] = newStatus;
           await setRows(currentRows);
-          save();
+          await save();
           // Re-render to update Firmen_ID based on new status
           render();
         });
@@ -192,7 +192,7 @@ export function render() {
     plus.addEventListener("click", async () => {
       rows.splice(idx + 1, 0, newEmptyRow());
       await setRows(rows);
-      save();
+      await save();
       render();
     });
     act.appendChild(plus);
@@ -207,7 +207,7 @@ export function render() {
       if (!ok) return;
       rows.splice(idx, 1);
       await setRows(rows);
-      save();
+      await save();
       render();
     });
     act.appendChild(minus);

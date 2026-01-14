@@ -10,7 +10,15 @@ import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js'
 import { notifyNewCustomer } from './email-notifications.js';
 import { isEmailConfigured } from './email-config.js';
 
-let rows = loadSync() ?? [];
+// API endpoints
+const API_BASE_URL = './api';
+const SAVE_ENDPOINT = `${API_BASE_URL}/save-firmenliste.php`;
+const LOAD_ENDPOINT = `${API_BASE_URL}/load-firmenliste.php`;
+
+// Flag to track if we're using API storage
+let usingApiStorage = true;
+
+let rows = await loadFromServerOrLocalStorage();
 
 // Initialize history with the loaded state
 pushState(rows);
@@ -109,6 +117,111 @@ function showNewCustomerPasswordNotification(firmenName, email, password) {
     });
   });
 }
+
+/**
+ * Save data to server via API
+ * @param {Array} data - Data to save
+ * @returns {Promise<boolean>} - True if successful, false otherwise
+ */
+async function saveToServer(data) {
+  try {
+    const response = await fetch(SAVE_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to save data to server:', error);
+    return false;
+  }
+}
+
+/**
+ * Load data from server via API
+ * @returns {Promise<Array|null>} - Data array or null if failed
+ */
+async function loadFromServer() {
+  try {
+    const response = await fetch(LOAD_ENDPOINT, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Failed to load data from server:', error);
+    return null;
+  }
+}
+
+/**
+ * Load data from server or localStorage as fallback
+ * Migrates data from localStorage to server if needed
+ * @returns {Promise<Array>} - Data array (empty array if no data found)
+ */
+async function loadFromServerOrLocalStorage() {
+  // Try to load from server first
+  const serverData = await loadFromServer();
+  
+  if (serverData !== null && serverData.length > 0) {
+    // Server has data, use it
+    console.log('Loaded company list from server');
+    usingApiStorage = true;
+    // Update localStorage cache
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serverData));
+    } catch (e) {
+      console.warn('Failed to update localStorage cache:', e);
+    }
+    return await normalizeAndSyncRows(serverData);
+  }
+  
+  // Check if we have data in localStorage that needs to be migrated
+  const localData = loadSync();
+  if (localData && localData.length > 0) {
+    console.log('Migrating company list from localStorage to server...');
+    // Save to server
+    const migrationSuccess = await saveToServer(localData);
+    if (migrationSuccess) {
+      console.log('✓ Successfully migrated data to server');
+      usingApiStorage = true;
+    } else {
+      console.warn('⚠ Failed to migrate data to server, will continue using localStorage');
+      usingApiStorage = false;
+    }
+    return localData;
+  }
+  
+  // No data found anywhere, return empty array
+  console.log('No existing company list found, starting fresh');
+  usingApiStorage = true; // Assume API is available for new data
+  return [];
+}
+
 
 
 /**
@@ -216,16 +329,41 @@ export function newEmptyRow() {
   return obj;
 }
 
-export function save() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
-    return true;
-  } catch (error) {
-    console.error('Failed to save data to localStorage:', error);
-    // Show user-friendly error message
-    alert('Fehler beim Speichern: Daten konnten nicht gespeichert werden. Bitte überprüfen Sie die Speichereinstellungen Ihres Browsers.');
-    return false;
+export async function save() {
+  let saveSuccess = false;
+  
+  // Try to save to server if using API storage
+  if (usingApiStorage) {
+    saveSuccess = await saveToServer(rows);
+    if (!saveSuccess) {
+      console.warn('Failed to save to server, falling back to localStorage');
+      usingApiStorage = false;
+    }
   }
+  
+  // If API failed or we're not using API storage, use localStorage
+  if (!usingApiStorage || !saveSuccess) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+      saveSuccess = true;
+    } catch (error) {
+      console.error('Failed to save data to localStorage:', error);
+      // Show user-friendly error message
+      alert('Fehler beim Speichern: Daten konnten nicht gespeichert werden. Bitte überprüfen Sie die Speichereinstellungen Ihres Browsers.');
+      return false;
+    }
+  }
+  
+  // Also update localStorage cache even when using API
+  if (usingApiStorage && saveSuccess) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    } catch (e) {
+      console.warn('Failed to update localStorage cache:', e);
+    }
+  }
+  
+  return saveSuccess;
 }
 
 // Synchronous load (doesn't update customer accounts)
@@ -236,27 +374,39 @@ function loadSync() {
     const data = JSON.parse(raw);
     if (!Array.isArray(data)) return null;
 
-    // Normalize: ensure all columns exist
-    const normalizedRows = data.map(r => {
-      const row = newEmptyRow();
-      for (const c of COLUMNS) {
-        row[c] = sanitizeText(r?.[c] ?? "");
-        // Normalize Status: trim whitespace and validate
-        if (c === "Status") {
-          row[c] = row[c].trim();
-          // If empty or not in STATUS_OPTIONS, default to "offen"
-          if (!row[c] || !STATUS_OPTIONS.includes(row[c])) {
-            row[c] = "offen";
-          }
-        }
-      }
-      return row;
-    });
-    
-    return normalizedRows;
+    return normalizeRows(data);
   } catch {
     return null;
   }
+}
+
+// Normalize rows: ensure all columns exist and validate data
+function normalizeRows(data) {
+  if (!Array.isArray(data)) return [];
+  
+  const normalizedRows = data.map(r => {
+    const row = newEmptyRow();
+    for (const c of COLUMNS) {
+      row[c] = sanitizeText(r?.[c] ?? "");
+      // Normalize Status: trim whitespace and validate
+      if (c === "Status") {
+        row[c] = row[c].trim();
+        // If empty or not in STATUS_OPTIONS, default to "offen"
+        if (!row[c] || !STATUS_OPTIONS.includes(row[c])) {
+          row[c] = "offen";
+        }
+      }
+    }
+    return row;
+  });
+  
+  return normalizedRows;
+}
+
+// Normalize and sync rows with customer accounts
+async function normalizeAndSyncRows(data) {
+  const normalized = normalizeRows(data);
+  return await syncFirmenIds(normalized);
 }
 
 export async function load() {
@@ -270,13 +420,13 @@ export async function load() {
 // Undo/Redo functions
 /**
  * Undo to previous state
- * @returns {boolean} - True if history operation succeeded (does NOT indicate save success)
+ * @returns {Promise<boolean>} - True if history operation succeeded (does NOT indicate save success)
  */
-export function undo() {
+export async function undo() {
   const previousState = historyUndo();
   if (previousState) {
-    setRows(previousState, true);
-    save(); // Best-effort save; user is notified via alert if it fails
+    await setRows(previousState, true);
+    await save(); // Best-effort save; user is notified via alert if it fails
     return true;
   }
   return false;
@@ -284,13 +434,13 @@ export function undo() {
 
 /**
  * Redo to next state
- * @returns {boolean} - True if history operation succeeded (does NOT indicate save success)
+ * @returns {Promise<boolean>} - True if history operation succeeded (does NOT indicate save success)
  */
-export function redo() {
+export async function redo() {
   const nextState = historyRedo();
   if (nextState) {
-    setRows(nextState, true);
-    save(); // Best-effort save; user is notified via alert if it fails
+    await setRows(nextState, true);
+    await save(); // Best-effort save; user is notified via alert if it fails
     return true;
   }
   return false;
