@@ -17,6 +17,9 @@ const PAYMENT_STATUS_CONFIG = {
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
+// Columns that are stored but not displayed in the table
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Rabatt'];
+
 export function render() {
   if (!tbody || !searchInput) {
     console.warn('Required DOM elements not found for rendering');
@@ -43,6 +46,11 @@ export function render() {
     tr.style.cursor = "pointer";
 
     for (const col of COLUMNS) {
+      // Skip columns that are stored but not displayed in the table
+      if (HIDDEN_COLUMNS.includes(col)) {
+        continue;
+      }
+      
       const td = document.createElement("td");
       td.dataset.row = String(idx);
       td.dataset.col = col;
@@ -57,9 +65,6 @@ export function render() {
         } else {
           td.innerHTML = `<span style="font-weight: 500;">${itemCount} Artikel</span>`;
         }
-      } else if (col === "Beschreibung") {
-        // Skip beschreibung column since it's now part of items
-        td.innerHTML = "";
       } else if (col === "Gesamtsumme") {
         // Calculate subtotal sum from invoice items
         let subtotal = 0;
@@ -76,9 +81,6 @@ export function render() {
         const totalSum = subtotal - discountAmount;
         
         td.innerHTML = `<span style="font-weight: 500;">${totalSum.toFixed(2).replace('.', ',')} €</span>`;
-      } else if (col === "Rabatt") {
-        // Skip Rabatt column - it's stored but not displayed in the table
-        continue;
       } else if (col === "Bezahlt") {
         // Display payment status with color coding
         const bezahlt = row[col] || "unbezahlt";
