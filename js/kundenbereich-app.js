@@ -3,11 +3,17 @@
 // -----------------------------
 import { render } from './modules/kundenbereich-render.js';
 import { ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
+import { ensureInitialized as ensureAuftraegeInitialized } from './modules/auftraege-state.js';
+import { ensureInitialized as ensureRechnungenInitialized } from './modules/rechnungen-state.js';
 
 // Initialize the application
 async function init() {
-  // Ensure company list is loaded before rendering
-  await ensureFirmenlisteInitialized();
+  // Ensure all data is loaded before rendering
+  await Promise.all([
+    ensureFirmenlisteInitialized(),
+    ensureAuftraegeInitialized(),
+    ensureRechnungenInitialized()
+  ]);
   render();
 }
 
