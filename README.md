@@ -136,9 +136,20 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - **Einstellungen**: Verwaltung der Firmendaten und Logo (NEU)
 4. Die Anwendung verwendet ES6-Module (type="module")
 5. **Datenspeicherung**:
-   - **Firmenliste**: Wird im Webspace (Server) gespeichert via PHP-API
-   - **Andere Daten**: Werden im LocalStorage des Browsers gespeichert
-   - Automatische Migration von LocalStorage zu Server bei Firmenliste
+   - **Server-Speicherung** (mit LocalStorage-Fallback):
+     - Firmenliste
+     - Aufträge
+     - Rechnungen
+     - Artikellisten
+     - Kundenkonten
+   - **Lokale Browser-Speicherung** (LocalStorage):
+     - Authentifizierung & Sessions (24h gültig)
+     - Firmeneinstellungen & Logo
+     - E-Mail-Konfiguration
+     - PDF-Layout-Vorlagen
+     - E-Mail-Warteschlange
+   - Automatische Migration von LocalStorage zu Server
+   - 📖 **Details**: Siehe [BROWSER_STORAGE_DOKUMENTATION.md](BROWSER_STORAGE_DOKUMENTATION.md)
 6. Sessions sind 24 Stunden gültig
 
 ### Kundenbereiche einrichten
@@ -276,3 +287,10 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 ## Deployment
 
 Siehe [FIRMENLISTE_WEBSPACE_DOKUMENTATION.md](FIRMENLISTE_WEBSPACE_DOKUMENTATION.md) für detaillierte Deployment-Anleitung.
+
+## Weitere Dokumentation
+
+- 📖 [BROWSER_STORAGE_DOKUMENTATION.md](BROWSER_STORAGE_DOKUMENTATION.md) - Detaillierte Übersicht über Browser-Speicherung
+- 📖 [EMAIL_CONFIGURATION.md](EMAIL_CONFIGURATION.md) - E-Mail-Konfiguration und -Benachrichtigungen
+- 📖 [FIRMENLISTE_WEBSPACE_DOKUMENTATION.md](FIRMENLISTE_WEBSPACE_DOKUMENTATION.md) - Server-Deployment
+- 📖 [MANUAL_TESTING_GUIDE.md](MANUAL_TESTING_GUIDE.md) - Anleitung für manuelle Tests
