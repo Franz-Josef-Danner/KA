@@ -312,14 +312,16 @@ export function getSampleDocumentData(documentType) {
       ...baseData,
       orderId: 'AUF-2024-001',
       orderDate: baseData.date,
-      deliveryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE')
+      deliveryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE'),
+      Projekt: 'Website Relaunch'
     };
   } else if (documentType === 'invoice' || documentType === 'rechnung') {
     return {
       ...baseData,
       invoiceId: 'RE-2024-001',
       invoiceDate: baseData.date,
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE')
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE'),
+      Projekt: 'Website Relaunch'
     };
   }
   

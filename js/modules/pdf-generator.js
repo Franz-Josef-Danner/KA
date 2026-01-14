@@ -589,6 +589,16 @@ function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
     lineCount++;
   }
   
+  // Render project name if available
+  const projektName = documentData.Projekt || documentData.projektName;
+  if (projektName) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Projekt: ${projektName}`, x, offsetY);
+    offsetY += 4;
+    lineCount++;
+  }
+  
   // Return actual height: initial offset + (line count * average line height)
   return 4 + (lineCount * 5); // Consistent with other text elements
 }
