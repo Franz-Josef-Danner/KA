@@ -160,7 +160,7 @@ async function render() {
     // Add click handler to show preview with delay to avoid race condition with double-click
     tr.addEventListener("click", (e) => {
       clearTimeout(clickTimer);
-      clickTimer = setTimeout(() => {
+      clickTimer = setTimeout(async () => {
         // Remove 'selected' class from all rows
         document.querySelectorAll('.artikellisten-row').forEach(row => {
           row.classList.remove('selected');
@@ -170,7 +170,7 @@ async function render() {
         tr.classList.add('selected');
         
         selectedFirmenId = artikelliste.firmenId;
-        renderPreview(artikelliste.firmenId);
+        await renderPreview(artikelliste.firmenId);
       }, 250); // Wait 250ms to see if it's a double-click
     });
     
