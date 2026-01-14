@@ -80,9 +80,9 @@ function renderCompanyNotFound() {
 function renderOrders(firmenId, firmaName) {
   const orders = getOrders();
   // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
-  // Prefer Firmen_ID if available, fall back to Firma for legacy data
+  // Prefer Firmen_ID if available in the order, fall back to Firma for legacy data
   const customerOrders = orders.filter(order => {
-    if (order.Firmen_ID && firmenId) {
+    if (order.Firmen_ID) {
       return order.Firmen_ID === firmenId;
     }
     return order.Firma === firmaName;
@@ -166,9 +166,9 @@ function renderOrders(firmenId, firmaName) {
 function renderInvoices(firmenId, firmaName) {
   const invoices = getInvoices();
   // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
-  // Prefer Firmen_ID if available, fall back to Firma for legacy data
+  // Prefer Firmen_ID if available in the invoice, fall back to Firma for legacy data
   const customerInvoices = invoices.filter(invoice => {
-    if (invoice.Firmen_ID && firmenId) {
+    if (invoice.Firmen_ID) {
       return invoice.Firmen_ID === firmenId;
     }
     return invoice.Firma === firmaName;
