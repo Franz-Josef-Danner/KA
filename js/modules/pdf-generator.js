@@ -178,6 +178,13 @@ function loadQRCodeLibrary() {
 
 // Render PDF document based on layout template
 function renderPDFDocument(doc, documentType, documentData, companySettings, layoutTemplate, paymentQRCode = null) {
+  console.log('=== renderPDFDocument called ===');
+  console.log('documentType:', documentType);
+  console.log('documentData:', documentData);
+  console.log('documentData.Firmenadresse:', documentData.Firmenadresse);
+  console.log('documentData.Projekt:', documentData.Projekt);
+  console.log('layoutTemplate:', layoutTemplate);
+  
   // Set default font
   doc.setFont('helvetica');
 
@@ -352,6 +359,8 @@ function adjustElementPosition(element, renderedHeights, allElements) {
 // Other elements have fixed alignment or don't support text alignment.
 // Returns the actual height consumed by the element in mm (or null if not applicable).
 function renderElement(doc, element, documentType, documentData, companySettings) {
+  console.log('renderElement called for type:', element.type);
+  
   // Convert px to mm (600px = 210mm) and add PDF margin to ensure 1cm border
   const x = element.x * 0.352778 + PDF_MARGIN;
   const y = element.y * 0.352778 + PDF_MARGIN;
@@ -370,6 +379,7 @@ function renderElement(doc, element, documentType, documentData, companySettings
     case 'company-contact':
       return renderCompanyContact(doc, x, y, width, companySettings, textAlign);
     case 'customer-info':
+      console.log('About to call renderCustomerInfo with documentData:', documentData);
       return renderCustomerInfo(doc, x, y, width, documentData);
     case 'document-number':
       return renderDocumentNumber(doc, x, y, width, documentType, documentData);

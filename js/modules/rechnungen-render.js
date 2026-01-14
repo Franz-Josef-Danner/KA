@@ -134,15 +134,22 @@ export function render() {
     pdfBtn.style.cursor = "pointer";
     pdfBtn.style.borderRadius = "4px";
     pdfBtn.addEventListener("click", async (e) => {
+      console.log('=== PDF BUTTON CLICKED ===');
+      console.log('Invoice row data:', row);
+      
       e.stopPropagation(); // Prevent row double-click event
       pdfBtn.disabled = true;
       const originalText = pdfBtn.textContent;
       pdfBtn.textContent = "⏳ Lädt...";
       pdfBtn.style.backgroundColor = "#9ca3af";
       try {
+        console.log('About to enrich invoice...');
         // Enrich invoice data with customer address
         const enrichedInvoice = enrichInvoiceWithAddress(row);
+        console.log('Enriched invoice:', enrichedInvoice);
+        console.log('About to generate PDF...');
         const pdf = await generatePDF('invoice', enrichedInvoice, false, null, true);
+        console.log('PDF generated:', pdf);
         if (pdf) {
           viewPDF(pdf);
         }
