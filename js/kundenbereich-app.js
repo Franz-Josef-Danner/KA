@@ -2,9 +2,12 @@
 // Kundenbereich Application Entry Point
 // -----------------------------
 import { render } from './modules/kundenbereich-render.js';
+import { ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
 
 // Initialize the application
-function init() {
+async function init() {
+  // Ensure company list is loaded before rendering
+  await ensureFirmenlisteInitialized();
   render();
 }
 
