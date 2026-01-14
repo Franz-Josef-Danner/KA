@@ -750,7 +750,7 @@ function calculateRowHeight(doc, beschreibung, beschreibungWidth, baseRowHeight)
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   
-  // Split text to fit within column width (subtract padding)
+  // Split text to fit within column width (subtract padding to account for left/right cell margins)
   const lines = doc.splitTextToSize(beschreibung, beschreibungWidth - CELL_PADDING);
   
   // Calculate height: base height for single line + extra height for additional lines
@@ -881,6 +881,7 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
     colX += colWidths.pos;
     
     // Description (with text wrapping if needed)
+    // Subtract CELL_PADDING to account for left/right margins within the cell
     if (beschreibung) {
       const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - CELL_PADDING);
       let textY = rowY + 5.5;
@@ -1041,6 +1042,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     colX += colWidths.pos;
     
     // Description (with text wrapping if needed)
+    // Subtract CELL_PADDING to account for left/right margins within the cell
     if (beschreibung) {
       const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - CELL_PADDING);
       let textY = rowY + 5.5;
