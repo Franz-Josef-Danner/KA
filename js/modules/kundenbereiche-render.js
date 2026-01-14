@@ -50,14 +50,22 @@ export function render() {
     const email = escapeHtml(customer['E-mail'] || 'Keine E-Mail');
 
     // Count orders in progress (Status: "in Arbeit" or empty)
-    const customerOrders = orders.filter(order => order.Firmen_ID === customer.Firmen_ID);
+    // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
+    const customerOrders = orders.filter(order => 
+      (order.Firmen_ID && order.Firmen_ID === customer.Firmen_ID) || 
+      (order.Firma && order.Firma === customer.Firma)
+    );
     const ordersInProgress = customerOrders.filter(order => 
       ACTIVE_ORDER_STATUSES.includes(order.Status)
     ).length;
 
     // Count unpaid invoices and calculate outstanding amount
     // Filter invoices by company and exclude paid invoices
-    const customerInvoices = invoices.filter(invoice => invoice.Firmen_ID === customer.Firmen_ID);
+    // Support both Firmen_ID (new) and Firma (legacy) for backward compatibility
+    const customerInvoices = invoices.filter(invoice => 
+      (invoice.Firmen_ID && invoice.Firmen_ID === customer.Firmen_ID) || 
+      (invoice.Firma && invoice.Firma === customer.Firma)
+    );
     
     // Filter out paid invoices (Bezahlt field with value "bezahlt")
     const unpaidCustomerInvoices = customerInvoices.filter(invoice => {
