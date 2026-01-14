@@ -103,7 +103,7 @@ Die folgenden Daten werden **ausschließlich** im LocalStorage des Browsers gesp
 - ✅ E-Mail-Einstellungen
 
 ### Sicherheitshinweise
-- **Passwörter**: Werden verschlüsselt (gehasht) gespeichert
+- **Passwörter**: Werden gehasht (nicht reversibel) gespeichert
 - **Session-Tokens**: Ablauf nach 24 Stunden
 - **LocalStorage**: Daten sind nur im Browser zugänglich, nicht zwischen Geräten synchronisiert
 - **Server-Daten**: Bei Verwendung der PHP-API werden Daten zusätzlich auf dem Server gesichert
@@ -171,12 +171,14 @@ Bei der ersten Verwendung der Server-API werden LocalStorage-Daten automatisch z
 
 ### Storage-Keys Referenz
 ```javascript
-// Authentifizierung
+// Authentifizierung (nur LocalStorage)
 'ka_auth_session'        // Session-Daten
-'ka_users'               // Benutzerkonten
-'ka_customer_accounts'   // Kundenkonten (Server + LocalStorage)
+'ka_users'               // Admin-Benutzerkonten
 
-// Geschäftsdaten (Server + LocalStorage Fallback)
+// Kundenkonten (Server-First mit LocalStorage Fallback)
+'ka_customer_accounts'   // Kundenkonten
+
+// Geschäftsdaten (Server-First mit LocalStorage Fallback)
 'firmen_tabelle_v1'      // Firmenliste
 'auftraege_tabelle_v1'   // Aufträge
 'rechnungen_tabelle_v1'  // Rechnungen
