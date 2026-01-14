@@ -7,6 +7,7 @@ export const COLUMNS = [
   "Rechnungs_ID",
   "Rechnungsdatum",
   "Firma",
+  "Firmenadresse",
   "Firmen_Email",
   "Ansprechpartner",
   "Artikel",

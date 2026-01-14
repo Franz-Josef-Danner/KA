@@ -589,6 +589,16 @@ function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
     lineCount++;
   }
   
+  // Render project name if available
+  const projektName = documentData.Projekt || documentData.projektName;
+  if (projektName) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Projekt: ${projektName}`, x, offsetY);
+    offsetY += 4;
+    lineCount++;
+  }
+  
   // Return actual height: initial offset + (line count * average line height)
   return 4 + (lineCount * 5); // Consistent with other text elements
 }
@@ -631,10 +641,21 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
     doc.text(`Datum:`, x, offsetY);
     doc.setFont('helvetica', 'normal');
     doc.text(docDate, x + 20, offsetY);
+    offsetY += 5;
+  }
+  
+  // Render project name if available
+  const projektName = documentData.Projekt || documentData.projektName;
+  if (projektName) {
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Projekt:`, x, offsetY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(projektName, x + 20, offsetY);
+    offsetY += 5;
   }
   
   // Return actual height: title height + extra info
-  return 30; // ~30mm for document header
+  return 35; // ~35mm for document header (increased to accommodate project name)
 }
 
 // Render items table with footer collision detection
