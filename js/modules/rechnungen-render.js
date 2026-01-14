@@ -168,8 +168,33 @@ function enrichInvoiceWithAddress(invoice) {
   console.log('enrichInvoiceWithAddress - invoice.Projekt:', invoice.Projekt);
   
   const company = getCompanyByName(invoice.Firma);
-  console.log('enrichInvoiceWithAddress - company:', company);
-  console.log('enrichInvoiceWithAddress - company.Adresse:', company?.Adresse);
+  console.log('enrichInvoiceWithAddress - company found:', company);
+  
+  if (!company) {
+    console.warn(`Company "${invoice.Firma}" not found in firmenliste. Checking all companies...`);
+    // Try to find company in all companies, not just customers
+    try {
+      const allFirmenData = localStorage.getItem("firmen_tabelle_v1");
+      if (allFirmenData) {
+        const allCompanies = JSON.parse(allFirmenData);
+        const foundCompany = allCompanies.find(c => c.Firma === invoice.Firma);
+        console.log('enrichInvoiceWithAddress - company in all companies:', foundCompany);
+        if (foundCompany) {
+          console.log('enrichInvoiceWithAddress - company.Adresse:', foundCompany.Adresse);
+          const enriched = {
+            ...invoice,
+            Firmenadresse: foundCompany.Adresse || ''
+          };
+          console.log('enrichInvoiceWithAddress - enriched invoice (from all companies):', enriched);
+          return enriched;
+        }
+      }
+    } catch (error) {
+      console.error('Error finding company in all companies:', error);
+    }
+  } else {
+    console.log('enrichInvoiceWithAddress - company.Adresse:', company.Adresse);
+  }
   
   // Create enriched invoice data with customer address
   const enriched = {
