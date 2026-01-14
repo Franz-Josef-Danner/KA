@@ -4,7 +4,7 @@
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
 import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
-import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
+import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 
@@ -829,7 +829,7 @@ function saveOrder() {
 }
 
 // Function to convert current order to invoice
-function convertToInvoice() {
+async function convertToInvoice() {
   // Validate form before converting
   if (!validateForm()) {
     return false;
@@ -843,19 +843,8 @@ function convertToInvoice() {
   
   const formData = getFormData();
   
-  // Load invoices from localStorage
-  let invoices = [];
-  try {
-    const raw = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (Array.isArray(data)) {
-        invoices = data;
-      }
-    }
-  } catch (error) {
-    console.error('Error loading invoices:', error);
-  }
+  // Load invoices using the rechnungen-state module to ensure we have the latest data
+  const invoices = getRechnungenRows();
   
   // Create new invoice from order data
   const newInvoice = {
@@ -873,7 +862,8 @@ function convertToInvoice() {
     Kommentare: formData.Kommentare,
     Auftrags_ID: formData.Auftrags_ID, // Reference to the order
     items: formData.items, // Copy all items from order
-    Rabatt: formData.Rabatt || "" // Copy discount from order
+    Rabatt: formData.Rabatt || "", // Copy discount from order
+    Bezahlt: "unbezahlt" // Set default payment status
   };
   
   // Generate invoice ID
@@ -910,11 +900,12 @@ function convertToInvoice() {
   }
   
   // Add invoice to the beginning of the list
-  invoices.unshift(newInvoice);
+  const updatedInvoices = [newInvoice, ...invoices];
   
-  // Save invoices back to localStorage
+  // Save invoices using the rechnungen-state module to ensure proper API/server sync
   try {
-    localStorage.setItem(RECHNUNGEN_STORAGE_KEY, JSON.stringify(invoices));
+    setRechnungenRows(updatedInvoices);
+    await saveRechnungen();
     
     // Update the order status to "abgeschlossen" (completed)
     formData.Status = COMPLETED_STATUS;
@@ -923,7 +914,7 @@ function convertToInvoice() {
     const rows = getRows();
     rows[currentEditingRowIndex] = formData;
     setRows(rows);
-    save();
+    await save();
     
     // Trigger render event
     window.dispatchEvent(new Event('ordersChanged'));
