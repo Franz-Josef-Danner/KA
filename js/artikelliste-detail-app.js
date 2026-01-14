@@ -167,14 +167,14 @@ function findNextCell(currentCell) {
   return null;
 }
 
-function save() {
+async function save() {
   if (!currentFirmenId || !currentArtikelliste) {
     alert("Fehler: Keine Artikelliste geladen.");
     return;
   }
   
-  updateArtikelliste(currentFirmenId, currentArtikelliste);
-  alert("Artikelliste gespeichert.");
+  await updateArtikelliste(currentFirmenId, currentArtikelliste);
+  alert("Artikelliste gespeichert im Webspace.");
   // Redirect back to overview page
   window.location.href = "artikellisten.html";
 }
@@ -185,16 +185,16 @@ function addItem() {
   render();
 }
 
-function deleteCurrentArtikelliste() {
+async function deleteCurrentArtikelliste() {
   const ok = confirm("Sind Sie sicher, dass Sie diese Artikelliste löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.");
   if (!ok) return;
   
-  deleteArtikelliste(currentFirmenId);
+  await deleteArtikelliste(currentFirmenId);
   alert("Artikelliste gelöscht.");
   window.location.href = "artikellisten.html";
 }
 
-function init() {
+async function init() {
   // Get firmenId from URL parameter
   currentFirmenId = getUrlParameter('firmenId');
   
@@ -205,7 +205,7 @@ function init() {
   }
   
   // Load article list
-  currentArtikelliste = getArtikelliste(currentFirmenId);
+  currentArtikelliste = await getArtikelliste(currentFirmenId);
   
   if (!currentArtikelliste) {
     alert("Fehler: Artikelliste nicht gefunden.");

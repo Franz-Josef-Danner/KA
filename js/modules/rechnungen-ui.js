@@ -664,6 +664,19 @@ function getFormData() {
     }
   }
   
+  // Add Firmen_ID from the selected company
+  const firmaInput = document.getElementById("edit_Firma");
+  if (firmaInput && firmaInput.value) {
+    const company = getCompanyByName(firmaInput.value);
+    if (company && company.Firmen_ID) {
+      formData.Firmen_ID = company.Firmen_ID;
+    } else {
+      formData.Firmen_ID = "";
+    }
+  } else {
+    formData.Firmen_ID = "";
+  }
+  
   // Add invoice items to formData with all fields
   formData.items = currentInvoiceItems.map(item => ({
     Artikel: sanitizeText(item.Artikel || ""),

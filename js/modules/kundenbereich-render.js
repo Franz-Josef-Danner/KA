@@ -79,7 +79,7 @@ function renderCompanyNotFound() {
 
 function renderOrders(firmenId) {
   const orders = getOrders();
-  const customerOrders = orders.filter(order => order.Firma === getCompanyNameByFirmenId(firmenId));
+  const customerOrders = orders.filter(order => order.Firmen_ID === firmenId);
   
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
@@ -158,7 +158,7 @@ function renderOrders(firmenId) {
 
 function renderInvoices(firmenId) {
   const invoices = getInvoices();
-  const customerInvoices = invoices.filter(invoice => invoice.Firma === getCompanyNameByFirmenId(firmenId));
+  const customerInvoices = invoices.filter(invoice => invoice.Firmen_ID === firmenId);
   
   const tbody = document.getElementById('invoicesTableBody');
   if (!tbody) return;

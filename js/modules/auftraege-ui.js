@@ -723,6 +723,19 @@ function getFormData() {
     }
   }
   
+  // Add Firmen_ID from the selected company
+  const firmaInput = document.getElementById("edit_Firma");
+  if (firmaInput && firmaInput.value) {
+    const company = getCompanyByName(firmaInput.value);
+    if (company && company.Firmen_ID) {
+      formData.Firmen_ID = company.Firmen_ID;
+    } else {
+      formData.Firmen_ID = "";
+    }
+  } else {
+    formData.Firmen_ID = "";
+  }
+  
   // Add order items to formData with all fields
   formData.items = currentOrderItems.map(item => ({
     Artikel: sanitizeText(item.Artikel || ""),
@@ -849,6 +862,7 @@ function convertToInvoice() {
     Rechnungs_ID: "", // Will be auto-generated
     Rechnungsdatum: new Date().toISOString().split('T')[0],
     Firma: formData.Firma,
+    Firmen_ID: formData.Firmen_ID || "", // Include Firmen_ID
     Firmenadresse: formData.Firmenadresse || "",
     Firmen_Email: formData.Firmen_Email || "",
     Ansprechpartner: formData.Ansprechpartner,

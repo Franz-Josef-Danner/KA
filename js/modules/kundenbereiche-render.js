@@ -152,13 +152,13 @@ function attachEventHandlers() {
   
   // Click handler for credentials buttons
   document.querySelectorAll('.credentials-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation(); // Prevent row click
       const firmenId = btn.dataset.firmenId;
       const email = btn.dataset.email;
       const firma = btn.dataset.firma; // Browser auto-decodes HTML entities from data attributes
       if (firmenId) {
-        showCredentialsModal(firmenId, email, firma);
+        await showCredentialsModal(firmenId, email, firma);
       }
     });
   });
@@ -175,8 +175,8 @@ function viewCustomerPortal(firmenId) {
   }
 }
 
-function showCredentialsModal(firmenId, email, firma) {
-  const account = getCustomerAccountByFirmenId(firmenId);
+async function showCredentialsModal(firmenId, email, firma) {
+  const account = await getCustomerAccountByFirmenId(firmenId);
   
   if (!account) {
     alert('Kundenkonto nicht gefunden. Bitte stellen Sie sicher, dass für diesen Kunden ein Kundenkonto erstellt wurde.');

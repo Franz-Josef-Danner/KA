@@ -2,16 +2,16 @@
 // Artikellisten Application
 // -----------------------------
 import { getArtikellisten } from './modules/artikellisten-state.js';
-import { getRows } from './modules/state.js';
+import { getRows, ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
 
 let selectedFirmenId = null;
 let clickTimer = null;
 
-function renderPreview(firmenId) {
+async function renderPreview(firmenId) {
   const previewContainer = document.getElementById("artikellisten-preview");
   if (!previewContainer) return;
   
-  const artikellisten = getArtikellisten();
+  const artikellisten = await getArtikellisten();
   const artikelliste = artikellisten[firmenId];
   
   if (!artikelliste) {
@@ -81,13 +81,13 @@ function renderPreview(firmenId) {
   previewContainer.innerHTML = previewHTML;
 }
 
-function render() {
+async function render() {
   const tbody = document.getElementById("artikellisten-tbody");
   if (!tbody) return;
   
   tbody.innerHTML = "";
   
-  const artikellisten = getArtikellisten();
+  const artikellisten = await getArtikellisten();
   const firmenRows = getRows();
   
   // Create a map of Firmen_ID to company data for quick lookup
@@ -160,7 +160,7 @@ function render() {
     // Add click handler to show preview with delay to avoid race condition with double-click
     tr.addEventListener("click", (e) => {
       clearTimeout(clickTimer);
-      clickTimer = setTimeout(() => {
+      clickTimer = setTimeout(async () => {
         // Remove 'selected' class from all rows
         document.querySelectorAll('.artikellisten-row').forEach(row => {
           row.classList.remove('selected');
@@ -170,7 +170,7 @@ function render() {
         tr.classList.add('selected');
         
         selectedFirmenId = artikelliste.firmenId;
-        renderPreview(artikelliste.firmenId);
+        await renderPreview(artikelliste.firmenId);
       }, 250); // Wait 250ms to see if it's a double-click
     });
     
@@ -188,8 +188,10 @@ function render() {
 }
 
 // Initialize the application
-function init() {
-  render();
+async function init() {
+  // Ensure both company list and article lists are loaded
+  await ensureFirmenlisteInitialized();
+  await render();
 }
 
 // ES6 modules are deferred by default; at this point the DOM is ready, so start the application
