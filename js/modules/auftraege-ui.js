@@ -4,7 +4,7 @@
 import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyOrderItem } from './auftraege-state.js';
 import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
-import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
+import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen, ensureInitialized as ensureRechnungenInitialized } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 
@@ -774,7 +774,7 @@ function closeModal() {
   currentEditingRowIndex = null;
 }
 
-function saveOrder() {
+async function saveOrder() {
   // Validate form before saving
   if (!validateForm()) {
     return false;
@@ -794,7 +794,7 @@ function saveOrder() {
   }
   
   setRows(rows);
-  save();
+  await save();
   
   // Send email notification for new orders
   if (isNewOrder) {
@@ -829,7 +829,7 @@ function saveOrder() {
 }
 
 // Function to convert current order to invoice
-function convertToInvoice() {
+async function convertToInvoice() {
   // Validate form before converting
   if (!validateForm()) {
     return false;
@@ -843,78 +843,72 @@ function convertToInvoice() {
   
   const formData = getFormData();
   
-  // Load invoices from localStorage
-  let invoices = [];
   try {
-    const raw = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (Array.isArray(data)) {
-        invoices = data;
-      }
-    }
-  } catch (error) {
-    console.error('Error loading invoices:', error);
-  }
-  
-  // Create new invoice from order data
-  const newInvoice = {
-    Rechnungs_ID: "", // Will be auto-generated
-    Rechnungsdatum: new Date().toISOString().split('T')[0],
-    Firma: formData.Firma,
-    Firmen_ID: formData.Firmen_ID || "", // Include Firmen_ID
-    Firmenadresse: formData.Firmenadresse || "",
-    Firmen_Email: formData.Firmen_Email || "",
-    Ansprechpartner: formData.Ansprechpartner,
-    Artikel: "", // Kept for backward compatibility
-    Beschreibung: "", // Kept for backward compatibility
-    Budget: formData.Budget,
-    Projekt: formData.Projekt,
-    Kommentare: formData.Kommentare,
-    Auftrags_ID: formData.Auftrags_ID, // Reference to the order
-    items: formData.items, // Copy all items from order
-    Rabatt: formData.Rabatt || "" // Copy discount from order
-  };
-  
-  // Generate invoice ID
-  if (formData.Firma) {
-    // Use similar logic as in rechnungen-ui.js
-    const firmenData = localStorage.getItem("firmen_tabelle_v1");
-    if (firmenData) {
-      try {
-        const companies = JSON.parse(firmenData);
-        const company = companies.find(c => c.Firma === formData.Firma);
-        if (company && company.Firmen_ID) {
-          const now = new Date();
-          const dateStr = now.getFullYear().toString() + 
-                          (now.getMonth() + 1).toString().padStart(2, '0') + 
-                          now.getDate().toString().padStart(2, '0');
-          
-          const todayPrefix = company.Firmen_ID + "-" + dateStr + "-";
-          const existingInvoicesToday = invoices.filter(inv => 
-            inv.Rechnungs_ID && inv.Rechnungs_ID.startsWith(todayPrefix)
-          );
-          const sequenceNumber = (existingInvoicesToday.length + 1).toString().padStart(3, '0');
-          
-          newInvoice.Rechnungs_ID = `${company.Firmen_ID}-${dateStr}-${sequenceNumber}`;
+    // Ensure rechnungen state is initialized before accessing it
+    await ensureRechnungenInitialized();
+    
+    // Load invoices using the rechnungen-state module to ensure we have the latest data
+    const invoices = getRechnungenRows();
+    
+    // Create new invoice from order data
+    const newInvoice = {
+      Rechnungs_ID: "", // Will be auto-generated
+      Rechnungsdatum: new Date().toISOString().split('T')[0],
+      Firma: formData.Firma,
+      Firmen_ID: formData.Firmen_ID || "", // Include Firmen_ID
+      Firmenadresse: formData.Firmenadresse || "",
+      Firmen_Email: formData.Firmen_Email || "",
+      Ansprechpartner: formData.Ansprechpartner,
+      Artikel: "", // Kept for backward compatibility
+      Beschreibung: "", // Kept for backward compatibility
+      Budget: formData.Budget,
+      Projekt: formData.Projekt,
+      Kommentare: formData.Kommentare,
+      Auftrags_ID: formData.Auftrags_ID, // Reference to the order
+      items: formData.items, // Copy all items from order
+      Rabatt: formData.Rabatt || "", // Copy discount from order
+      Bezahlt: "unbezahlt" // Set default payment status
+    };
+    
+    // Generate invoice ID
+    if (formData.Firma) {
+      // Use similar logic as in rechnungen-ui.js
+      const firmenData = localStorage.getItem("firmen_tabelle_v1");
+      if (firmenData) {
+        try {
+          const companies = JSON.parse(firmenData);
+          const company = companies.find(c => c.Firma === formData.Firma);
+          if (company && company.Firmen_ID) {
+            const now = new Date();
+            const dateStr = now.getFullYear().toString() + 
+                            (now.getMonth() + 1).toString().padStart(2, '0') + 
+                            now.getDate().toString().padStart(2, '0');
+            
+            const todayPrefix = company.Firmen_ID + "-" + dateStr + "-";
+            const existingInvoicesToday = invoices.filter(inv => 
+              inv.Rechnungs_ID && inv.Rechnungs_ID.startsWith(todayPrefix)
+            );
+            const sequenceNumber = (existingInvoicesToday.length + 1).toString().padStart(3, '0');
+            
+            newInvoice.Rechnungs_ID = `${company.Firmen_ID}-${dateStr}-${sequenceNumber}`;
+          }
+        } catch (error) {
+          console.error('Error generating invoice ID:', error);
         }
-      } catch (error) {
-        console.error('Error generating invoice ID:', error);
       }
     }
-  }
-  
-  // Fallback if invoice ID wasn't generated
-  if (!newInvoice.Rechnungs_ID) {
-    newInvoice.Rechnungs_ID = "RE-" + Date.now();
-  }
-  
-  // Add invoice to the beginning of the list
-  invoices.unshift(newInvoice);
-  
-  // Save invoices back to localStorage
-  try {
-    localStorage.setItem(RECHNUNGEN_STORAGE_KEY, JSON.stringify(invoices));
+    
+    // Fallback if invoice ID wasn't generated
+    if (!newInvoice.Rechnungs_ID) {
+      newInvoice.Rechnungs_ID = "RE-" + Date.now();
+    }
+    
+    // Add invoice to the beginning of the list
+    const updatedInvoices = [newInvoice, ...invoices];
+    
+    // Save invoices using the rechnungen-state module to ensure proper API/server sync
+    setRechnungenRows(updatedInvoices);
+    await saveRechnungen();
     
     // Update the order status to "abgeschlossen" (completed)
     formData.Status = COMPLETED_STATUS;
@@ -923,7 +917,7 @@ function convertToInvoice() {
     const rows = getRows();
     rows[currentEditingRowIndex] = formData;
     setRows(rows);
-    save();
+    await save();
     
     // Trigger render event
     window.dispatchEvent(new Event('ordersChanged'));
@@ -940,7 +934,7 @@ function convertToInvoice() {
     
     return true;
   } catch (error) {
-    console.error('Error saving invoice:', error);
+    console.error('Error converting order to invoice:', error);
     alert('Fehler beim Erstellen der Rechnung. Bitte versuchen Sie es erneut.');
     return false;
   }
@@ -966,15 +960,15 @@ function initModalHandlers() {
   
   // Save button
   if (modalSave) {
-    modalSave.addEventListener("click", () => {
-      saveOrder();
+    modalSave.addEventListener("click", async () => {
+      await saveOrder();
     });
   }
   
   // Convert to Invoice button
   if (convertToInvoiceBtn) {
-    convertToInvoiceBtn.addEventListener("click", () => {
-      convertToInvoice();
+    convertToInvoiceBtn.addEventListener("click", async () => {
+      await convertToInvoice();
     });
   }
   
@@ -990,10 +984,10 @@ function initModalHandlers() {
   // Handle Enter key in form inputs (except textarea)
   const form = document.getElementById("orderForm");
   if (form) {
-    form.addEventListener("keydown", (e) => {
+    form.addEventListener("keydown", async (e) => {
       if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
         e.preventDefault();
-        saveOrder();
+        await saveOrder();
       }
     });
   }
