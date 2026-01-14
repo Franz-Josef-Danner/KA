@@ -51,7 +51,10 @@ if (!is_dir($dataDir)) {
 // Create a backup of the existing file before saving
 if (file_exists($dataFile)) {
     $backupFile = $dataDir . '/firmenliste.backup.json';
-    copy($dataFile, $backupFile);
+    if (!copy($dataFile, $backupFile)) {
+        // Log backup failure but continue with save
+        error_log("Warning: Failed to create backup of firmenliste.json");
+    }
 }
 
 // Save the data to the file

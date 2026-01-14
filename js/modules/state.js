@@ -20,24 +20,28 @@ let usingApiStorage = true;
 
 // Initialize rows - will be loaded asynchronously
 let rows = [];
-let isInitialized = false;
-
-// Initialize the state
-async function initState() {
-  if (rows.length === 0) {
-    rows = await loadFromServerOrLocalStorage();
-    // Initialize history with the loaded state
-    pushState(rows);
-  }
-  return rows;
-}
+let initializationPromise = null;
 
 // Ensure state is initialized before use
 export async function ensureInitialized() {
-  if (rows.length === 0) {
+  // If already initializing, return the existing promise
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+  
+  // If already initialized (rows not empty), return immediately
+  if (rows.length > 0) {
+    return;
+  }
+  
+  // Start initialization and store the promise
+  initializationPromise = (async () => {
     rows = await loadFromServerOrLocalStorage();
     pushState(rows);
-  }
+  })();
+  
+  await initializationPromise;
+  initializationPromise = null; // Clear after completion
 }
 
 export function getRows() {
@@ -204,8 +208,8 @@ async function loadFromServerOrLocalStorage() {
   // Try to load from server first
   const serverData = await loadFromServer();
   
-  if (serverData !== null && serverData.length > 0) {
-    // Server has data, use it
+  if (serverData !== null) {
+    // Server responded (even if with empty data), use it
     console.log('Loaded company list from server');
     usingApiStorage = true;
     // Update localStorage cache
@@ -217,11 +221,11 @@ async function loadFromServerOrLocalStorage() {
     return await normalizeAndSyncRows(serverData);
   }
   
-  // Check if we have data in localStorage that needs to be migrated
+  // Server failed to respond, check if we have data in localStorage
   const localData = loadSync();
   if (localData && localData.length > 0) {
     console.log('Migrating company list from localStorage to server...');
-    // Save to server
+    // Try to save to server
     const migrationSuccess = await saveToServer(localData);
     if (migrationSuccess) {
       console.log('✓ Successfully migrated data to server');
