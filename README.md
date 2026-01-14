@@ -142,11 +142,11 @@ Die Anwendung kann direkt im Browser geöffnet werden:
      - Rechnungen
      - Artikellisten
      - Kundenkonten
+     - Firmeneinstellungen & Logo
+     - PDF-Layout-Vorlagen
    - **Lokale Browser-Speicherung** (LocalStorage):
      - Authentifizierung & Sessions (24h gültig)
-     - Firmeneinstellungen & Logo
      - E-Mail-Konfiguration
-     - PDF-Layout-Vorlagen
      - E-Mail-Warteschlange
    - Automatische Migration von LocalStorage zu Server
    - 📖 **Details**: Siehe [BROWSER_STORAGE_DOKUMENTATION.md](BROWSER_STORAGE_DOKUMENTATION.md)

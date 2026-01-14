@@ -28,6 +28,18 @@ Die folgenden Daten werden primär auf dem Server gespeichert, mit automatischem
    - Zugangsdaten für Kundenbereiche
    - Server-First-Strategie mit LocalStorage-Fallback
 
+6. **Firmeneinstellungen** (`ka_company_settings`)
+   - Firmendaten und Einstellungen
+   - Daten: Firmenname, Adresse, E-Mail, Telefon, Logo (Base64), Fußzeilen-Texte, Bankverbindung
+   - Server-First-Strategie mit LocalStorage-Fallback
+   - Zweck: Anzeige auf PDFs und in der Anwendung
+
+7. **PDF-Layout-Vorlagen** (`ka_pdf_layout_template`, `ka_document_layout`)
+   - PDF-Layout-Konfiguration und Grid-basierter Layout-Editor-Status
+   - Daten: Positionierung und Formatierung von PDF-Elementen, Raster-Dimensionen, Box-Positionen
+   - Server-First-Strategie mit LocalStorage-Fallback
+   - Zweck: Anpassung des PDF-Layouts für Aufträge und Rechnungen
+
 ### Daten im lokalen Browser-Speicher (LocalStorage)
 
 Die folgenden Daten werden **ausschließlich** im LocalStorage des Browsers gespeichert:
@@ -45,34 +57,7 @@ Die folgenden Daten werden **ausschließlich** im LocalStorage des Browsers gesp
   - **Daten**: E-Mail, gehashtes Passwort, Benutzer-ID, Rolle
   - **Zweck**: Verwaltung von Admin-Benutzerkonten
 
-#### 2. Firmeneinstellungen
-
-- **`ka_company_settings`**
-  - **Inhalt**: Firmendaten und Einstellungen
-  - **Daten**:
-    - Firmenname
-    - Adresse
-    - E-Mail-Adresse
-    - Telefonnummer
-    - Firmenlogo (Base64-kodiert)
-    - Fußzeilen-Text für Aufträge
-    - Fußzeilen-Text für Rechnungen
-    - Bankverbindung (Bankname, Kontoinhaber, IBAN, BIC)
-  - **Zweck**: Anzeige auf PDFs und in der Anwendung
-
-#### 3. PDF-Layout & Dokumentengestaltung
-
-- **`ka_pdf_layout_template`**
-  - **Inhalt**: PDF-Layout-Vorlage
-  - **Daten**: Positionierung und Formatierung von PDF-Elementen
-  - **Zweck**: Anpassung des PDF-Layouts für Aufträge und Rechnungen
-
-- **`ka_document_layout`**
-  - **Inhalt**: Grid-basierter Layout-Editor-Status
-  - **Daten**: Raster-Dimensionen, Box-Positionen und -Typen
-  - **Zweck**: Verwaltung des visuellen Layouts im Layout-Editor
-
-#### 4. E-Mail-Konfiguration & Benachrichtigungen
+#### 2. E-Mail-Konfiguration & Benachrichtigungen
 
 - **`ka_email_config`**
   - **Inhalt**: E-Mail-Konfiguration und Benachrichtigungseinstellungen
@@ -184,14 +169,14 @@ Bei der ersten Verwendung der Server-API werden LocalStorage-Daten automatisch z
 'rechnungen_tabelle_v1'  // Rechnungen
 'artikellisten_v1'       // Artikellisten
 
-// Einstellungen (nur LocalStorage)
+// Firmeneinstellungen & PDF-Layout (Server-First mit LocalStorage Fallback)
 'ka_company_settings'    // Firmeneinstellungen
-'ka_email_config'        // E-Mail-Konfiguration
-'ka_email_queue'         // E-Mail-Warteschlange
-
-// Layout (nur LocalStorage)
 'ka_pdf_layout_template' // PDF-Layout-Vorlage
 'ka_document_layout'     // Layout-Editor-Status
+
+// E-Mail-Konfiguration (nur LocalStorage)
+'ka_email_config'        // E-Mail-Konfiguration
+'ka_email_queue'         // E-Mail-Warteschlange
 ```
 
 ### Browser-Kompatibilität
