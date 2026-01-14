@@ -651,10 +651,11 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
     doc.text(`Projekt:`, x, offsetY);
     doc.setFont('helvetica', 'normal');
     doc.text(projektName, x + 20, offsetY);
+    offsetY += 5;
   }
   
   // Return actual height: title height + extra info
-  return 30; // ~30mm for document header
+  return 35; // ~35mm for document header (increased to accommodate project name)
 }
 
 // Render items table with footer collision detection
