@@ -2,7 +2,7 @@
 // Artikellisten Application
 // -----------------------------
 import { getArtikellisten } from './modules/artikellisten-state.js';
-import { getRows } from './modules/state.js';
+import { getRows, ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
 
 let selectedFirmenId = null;
 let clickTimer = null;
@@ -189,6 +189,8 @@ async function render() {
 
 // Initialize the application
 async function init() {
+  // Ensure both company list and article lists are loaded
+  await ensureFirmenlisteInitialized();
   await render();
 }
 
