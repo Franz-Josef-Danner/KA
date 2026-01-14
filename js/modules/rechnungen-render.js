@@ -168,13 +168,6 @@ function enrichInvoiceWithAddress(invoice) {
   // Create enriched invoice data with customer address
   return {
     ...invoice,
-    Rechnungs_ID: invoice.Rechnungs_ID,
-    Rechnungsdatum: invoice.Rechnungsdatum,
-    Firma: invoice.Firma,
-    Ansprechpartner: invoice.Ansprechpartner,
-    Firmenadresse: company?.Adresse || '',
-    Projekt: invoice.Projekt || '',
-    items: invoice.items || [],
-    Rabatt: invoice.Rabatt || 0
+    Firmenadresse: company?.Adresse || ''
   };
 }
