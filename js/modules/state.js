@@ -18,10 +18,27 @@ const LOAD_ENDPOINT = `${API_BASE_URL}/load-firmenliste.php`;
 // Flag to track if we're using API storage
 let usingApiStorage = true;
 
-let rows = await loadFromServerOrLocalStorage();
+// Initialize rows - will be loaded asynchronously
+let rows = [];
+let isInitialized = false;
 
-// Initialize history with the loaded state
-pushState(rows);
+// Initialize the state
+async function initState() {
+  if (rows.length === 0) {
+    rows = await loadFromServerOrLocalStorage();
+    // Initialize history with the loaded state
+    pushState(rows);
+  }
+  return rows;
+}
+
+// Ensure state is initialized before use
+export async function ensureInitialized() {
+  if (rows.length === 0) {
+    rows = await loadFromServerOrLocalStorage();
+    pushState(rows);
+  }
+}
 
 export function getRows() {
   return rows;

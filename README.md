@@ -135,7 +135,10 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - **Kundenbereiche**: Verwaltung von Kundenzugängen (NEU)
    - **Einstellungen**: Verwaltung der Firmendaten und Logo (NEU)
 4. Die Anwendung verwendet ES6-Module (type="module")
-5. Alle Daten werden im LocalStorage des Browsers gespeichert
+5. **Datenspeicherung**:
+   - **Firmenliste**: Wird im Webspace (Server) gespeichert via PHP-API
+   - **Andere Daten**: Werden im LocalStorage des Browsers gespeichert
+   - Automatische Migration von LocalStorage zu Server bei Firmenliste
 6. Sessions sind 24 Stunden gültig
 
 ### Kundenbereiche einrichten
@@ -209,6 +212,10 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Automatische Link-Formatierung für E-Mails und Websites
 - ✅ Rückgängig/Wiederholen mit bis zu 100 Schritten (Strg+Z / Strg+Y)
 - ✅ Statusvalidierung: Verhindert Statusänderung von "Kunde" zu einem anderen Status, wenn noch aktive Aufträge oder unbezahlte Rechnungen existieren
+- ✅ **Server-seitige Speicherung**: Daten werden im Webspace via PHP-API gespeichert
+- ✅ **Automatische Datenmigration**: LocalStorage-Daten werden automatisch zum Server migriert
+- ✅ **Fallback-Mechanismus**: Bei Serverproblemen wird automatisch LocalStorage verwendet
+- ✅ **Automatische Backups**: Vor jedem Speichern wird ein Backup erstellt
 
 ### Weitere Module (Platzhalter)
 - 🚧 Artikellisten
@@ -251,6 +258,21 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 ## Technologie
 
 - Vanilla JavaScript (ES6-Module)
-- LocalStorage für Datenpersistenz
+- PHP 7.0+ für Server-API (Firmenliste)
+- LocalStorage für Datenpersistenz (außer Firmenliste)
 - jsPDF (via CDN) für PDF-Generierung
+- Apache Webserver mit .htaccess-Unterstützung
 - Keine Build-Tools erforderlich
+
+## Anforderungen
+
+- **Browser**: Moderner Browser mit ES6-Modulunterstützung
+- **Server**: 
+  - PHP 7.0 oder höher
+  - Apache Webserver mit .htaccess
+  - Schreibrechte für `data/` Verzeichnis
+- **Empfohlen**: HTTPS für sichere Datenübertragung
+
+## Deployment
+
+Siehe [FIRMENLISTE_WEBSPACE_DOKUMENTATION.md](FIRMENLISTE_WEBSPACE_DOKUMENTATION.md) für detaillierte Deployment-Anleitung.
