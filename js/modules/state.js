@@ -324,7 +324,7 @@ async function syncFirmenIds(rowsToSync) {
       const oldId = row.Firmen_ID;
       if (oldId && typeof oldId === 'string' && oldId.trim() !== '') {
         await deleteArtikelliste(oldId);
-        deleteCustomerAccount(oldId);
+        await deleteCustomerAccount(oldId);
       }
       row.Firmen_ID = '';
     }

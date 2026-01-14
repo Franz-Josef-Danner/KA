@@ -6,6 +6,157 @@ const AUTH_KEY = 'ka_auth_session';
 const USERS_KEY = 'ka_users';
 const CUSTOMER_ACCOUNTS_KEY = 'ka_customer_accounts';
 
+// API endpoints for customer accounts
+const API_BASE_URL = './api';
+const SAVE_CUSTOMER_ACCOUNTS_ENDPOINT = `${API_BASE_URL}/save-customer-accounts.php`;
+const LOAD_CUSTOMER_ACCOUNTS_ENDPOINT = `${API_BASE_URL}/load-customer-accounts.php`;
+
+// Flag to track if we're using API storage
+let usingApiStorage = true;
+
+// Initialize customer accounts - will be loaded asynchronously
+let customerAccountsCache = null;
+let initializationPromise = null;
+let isInitialized = false;
+
+/**
+ * Ensure customer accounts are initialized before use
+ */
+async function ensureCustomerAccountsInitialized() {
+  // If already initializing, return the existing promise
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+  
+  // If already initialized, return immediately
+  if (isInitialized) {
+    return;
+  }
+  
+  // Start initialization and store the promise
+  initializationPromise = (async () => {
+    customerAccountsCache = await loadCustomerAccountsFromServerOrLocalStorage();
+    isInitialized = true;
+  })();
+  
+  await initializationPromise;
+  initializationPromise = null; // Clear after completion
+}
+
+/**
+ * Save customer accounts to server via API
+ * @param {Array} accounts - Customer accounts array
+ * @returns {Promise<boolean>} - True if successful, false otherwise
+ */
+async function saveCustomerAccountsToServer(accounts) {
+  try {
+    const response = await fetch(SAVE_CUSTOMER_ACCOUNTS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(accounts),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to save customer accounts to server:', error);
+    return false;
+  }
+}
+
+/**
+ * Load customer accounts from server via API
+ * @returns {Promise<Array|null>} - Customer accounts array or null if failed
+ */
+async function loadCustomerAccountsFromServer() {
+  try {
+    const response = await fetch(LOAD_CUSTOMER_ACCOUNTS_ENDPOINT, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Failed to load customer accounts from server:', error);
+    return null;
+  }
+}
+
+/**
+ * Load customer accounts from server or localStorage as fallback
+ * Migrates data from localStorage to server if needed
+ * @returns {Promise<Array>} - Customer accounts array (empty array if no data found)
+ */
+async function loadCustomerAccountsFromServerOrLocalStorage() {
+  // Try to load from server first
+  const serverData = await loadCustomerAccountsFromServer();
+  
+  if (serverData !== null) {
+    // Server responded (even if with empty data), use it
+    console.log('Loaded customer accounts from server');
+    usingApiStorage = true;
+    // Update localStorage cache
+    try {
+      localStorage.setItem(CUSTOMER_ACCOUNTS_KEY, JSON.stringify(serverData));
+    } catch (e) {
+      console.warn('Failed to update localStorage cache:', e);
+    }
+    return serverData;
+  }
+  
+  // Server failed to respond, check if we have data in localStorage
+  const localData = getCustomerAccountsSync();
+  if (localData && localData.length > 0) {
+    console.log('Migrating customer accounts from localStorage to server...');
+    // Try to save to server
+    const migrationSuccess = await saveCustomerAccountsToServer(localData);
+    if (migrationSuccess) {
+      console.log('✓ Successfully migrated customer accounts to server');
+      usingApiStorage = true;
+    } else {
+      console.warn('⚠ Failed to migrate customer accounts to server, will continue using localStorage');
+      usingApiStorage = false;
+    }
+    return localData;
+  }
+  
+  // No data found anywhere, return empty array
+  console.log('No existing customer accounts found, starting fresh');
+  usingApiStorage = true; // Assume API is available for new data
+  return [];
+}
+
+/**
+ * Synchronous load from localStorage (doesn't update from server)
+ */
+function getCustomerAccountsSync() {
+  try {
+    const raw = localStorage.getItem(CUSTOMER_ACCOUNTS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
 // Simple hash function for password storage
 // Note: This is NOT cryptographically secure, but better than plaintext
 // In production, use proper backend authentication with bcrypt or similar
@@ -50,30 +201,52 @@ function getUsers() {
 
 // Customer Account Management Functions
 
-function getCustomerAccounts() {
-  try {
-    const raw = localStorage.getItem(CUSTOMER_ACCOUNTS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
+async function getCustomerAccounts() {
+  await ensureCustomerAccountsInitialized();
+  return customerAccountsCache || [];
 }
 
-function saveCustomerAccounts(accounts) {
-  try {
-    localStorage.setItem(CUSTOMER_ACCOUNTS_KEY, JSON.stringify(accounts));
-    return true;
-  } catch (error) {
-    console.error('Failed to save customer accounts:', error);
-    return false;
+async function saveCustomerAccounts(accounts) {
+  customerAccountsCache = accounts;
+  
+  let saveSuccess = false;
+  
+  // Try to save to server if using API storage
+  if (usingApiStorage) {
+    saveSuccess = await saveCustomerAccountsToServer(accounts);
+    if (!saveSuccess) {
+      console.warn('Failed to save customer accounts to server, falling back to localStorage');
+      usingApiStorage = false;
+    }
   }
+  
+  // If API failed or we're not using API storage, use localStorage
+  if (!usingApiStorage || !saveSuccess) {
+    try {
+      localStorage.setItem(CUSTOMER_ACCOUNTS_KEY, JSON.stringify(accounts));
+      saveSuccess = true;
+    } catch (error) {
+      console.error('Failed to save customer accounts to localStorage:', error);
+      return false;
+    }
+  }
+  
+  // Also update localStorage cache even when using API
+  if (usingApiStorage && saveSuccess) {
+    try {
+      localStorage.setItem(CUSTOMER_ACCOUNTS_KEY, JSON.stringify(accounts));
+    } catch (e) {
+      console.warn('Failed to update localStorage cache:', e);
+    }
+  }
+  
+  return saveSuccess;
 }
 
 export async function login(email, password) {
   await initializeUsers();
   const users = getUsers();
-  const customerAccounts = getCustomerAccounts();
+  const customerAccounts = await getCustomerAccounts();
   const passwordHash = await simpleHash(password);
   
   // Check admin users first
@@ -201,7 +374,7 @@ export async function createOrUpdateCustomerAccount(firmenId, email, firmenName)
     return null;
   }
   
-  const accounts = getCustomerAccounts();
+  const accounts = await getCustomerAccounts();
   const existingIndex = accounts.findIndex(a => a.firmenId === firmenId);
   
   let password;
@@ -241,7 +414,7 @@ export async function createOrUpdateCustomerAccount(firmenId, email, firmenName)
     });
   }
   
-  if (saveCustomerAccounts(accounts)) {
+  if (await saveCustomerAccounts(accounts)) {
     // Return password only for new/updated accounts
     return isNewAccount ? password : null;
   }
@@ -250,21 +423,21 @@ export async function createOrUpdateCustomerAccount(firmenId, email, firmenName)
 }
 
 // Delete a customer account
-export function deleteCustomerAccount(firmenId) {
-  const accounts = getCustomerAccounts();
+export async function deleteCustomerAccount(firmenId) {
+  const accounts = await getCustomerAccounts();
   const filtered = accounts.filter(a => a.firmenId !== firmenId);
-  return saveCustomerAccounts(filtered);
+  return await saveCustomerAccounts(filtered);
 }
 
 // Get customer account by Firmen ID
-export function getCustomerAccountByFirmenId(firmenId) {
-  const accounts = getCustomerAccounts();
+export async function getCustomerAccountByFirmenId(firmenId) {
+  const accounts = await getCustomerAccounts();
   return accounts.find(a => a.firmenId === firmenId);
 }
 
 // Reset password for a customer account
 export async function resetCustomerPassword(firmenId) {
-  const accounts = getCustomerAccounts();
+  const accounts = await getCustomerAccounts();
   const accountIndex = accounts.findIndex(a => a.firmenId === firmenId);
   
   if (accountIndex < 0) {
@@ -279,7 +452,7 @@ export async function resetCustomerPassword(firmenId) {
   accounts[accountIndex].password = await simpleHash(newPassword);
   accounts[accountIndex].updatedAt = new Date().toISOString();
   
-  if (saveCustomerAccounts(accounts)) {
+  if (await saveCustomerAccounts(accounts)) {
     return newPassword;
   }
   

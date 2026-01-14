@@ -108,6 +108,58 @@ Loads the article lists data from the server. Returns an object with Firmen_ID a
 }
 ```
 
+### Save Customer Accounts
+**Endpoint:** `POST /api/save-customer-accounts.php`
+
+Saves customer account data to the server. Customer accounts are used for customer login to their Kundenbereich.
+
+**Request:**
+- Method: POST
+- Content-Type: application/json
+- Body: Array of customer account objects
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Data saved successfully",
+  "timestamp": "2026-01-14T02:00:00+00:00"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Error message"
+}
+```
+
+### Load Customer Accounts
+**Endpoint:** `GET /api/load-customer-accounts.php`
+
+Loads customer account data from the server. Returns accounts for all customers.
+
+**Request:**
+- Method: GET
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [ /* array of customer account objects */ ],
+  "timestamp": "2026-01-14T02:00:00+00:00"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Error message"
+}
+```
+
 ## Security
 
 - The API uses CORS headers to allow cross-origin requests
@@ -122,6 +174,8 @@ Data is stored in the `/data` directory as JSON files:
 - `firmenliste.backup.json` - Backup of the previous company list state
 - `artikellisten.json` - Article lists data (object keyed by Firmen_ID)
 - `artikellisten.backup.json` - Backup of the previous article lists state
+- `customer-accounts.json` - Customer account data (array of account objects)
+- `customer-accounts.backup.json` - Backup of the previous customer accounts state
 
 Article lists reference the company list via Firmen_ID. Each article list contains:
 - `firmenId` - Reference to company in firmenliste
@@ -129,6 +183,14 @@ Article lists reference the company list via Firmen_ID. Each article list contai
 - `created` - ISO timestamp of creation
 - `modified` - ISO timestamp of last modification
 - `items` - Array of article items
+
+Customer accounts contain:
+- `firmenId` - Reference to company in firmenliste
+- `email` - Login email for the customer
+- `firmenName` - Company name (for convenience)
+- `password` - Hashed password (SHA-256)
+- `createdAt` - ISO timestamp of account creation
+- `updatedAt` - ISO timestamp of last update
 
 ## Requirements
 

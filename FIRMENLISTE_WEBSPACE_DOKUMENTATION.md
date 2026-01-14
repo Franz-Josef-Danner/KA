@@ -37,20 +37,34 @@ Neue Dateien im Verzeichnis `api/`:
   - Gibt JSON-Daten zurück (Objekt mit Firmen_ID als Keys)
   - Gibt leeres Objekt zurück, wenn keine Daten vorhanden
 
+**Kundenkonten:**
+- **`api/save-customer-accounts.php`**: Speichert die Kundenkonten als JSON-Datei
+  - Empfängt POST-Anfragen mit JSON-Daten (Array von Konto-Objekten)
+  - Speichert Daten in `data/customer-accounts.json`
+  - Erstellt automatisch Backups (`data/customer-accounts.backup.json`)
+
+- **`api/load-customer-accounts.php`**: Lädt die Kundenkonten vom Server
+  - Empfängt GET-Anfragen
+  - Gibt JSON-Daten zurück (Array von Konto-Objekten)
+  - Gibt leeres Array zurück, wenn keine Daten vorhanden
+
 ### 2. Datenspeicherung
 
 Neues Verzeichnis `data/`:
 
-- Enthält die JSON-Dateien mit den Firmen- und Artikellistendaten
+- Enthält die JSON-Dateien mit den Firmen-, Artikellisten- und Kundenkontendaten
 - Geschützt durch `.htaccess` (kein direkter Zugriff)
 - Dateien werden NICHT in Git eingecheckt (siehe `.gitignore`)
 - Artikellisten referenzieren Firmenliste via `Firmen_ID`
+- Kundenkonten referenzieren Firmenliste via `Firmen_ID`
 
 Gespeicherte Dateien:
 - `firmenliste.json` - Firmenliste (Array von Firmen-Objekten)
 - `firmenliste.backup.json` - Backup der Firmenliste
 - `artikellisten.json` - Artikellisten (Objekt mit Firmen_ID als Keys)
 - `artikellisten.backup.json` - Backup der Artikellisten
+- `customer-accounts.json` - Kundenkonten (Array von Konto-Objekten)
+- `customer-accounts.backup.json` - Backup der Kundenkonten
 
 ### 3. Frontend-Änderungen
 
@@ -67,12 +81,22 @@ Gespeicherte Dateien:
 - LocalStorage dient als Cache
 - Alle Funktionen sind jetzt async
 
+**`js/modules/auth.js`**:
+- Neue Funktionen für API-Kommunikation (Kundenkonten)
+- Automatische Migration von LocalStorage zu Server
+- Fallback auf LocalStorage bei Serverproblemen
+- LocalStorage dient als Cache
+- Alle Kundenkonto-Funktionen sind jetzt async
+
 **`js/artikellisten-app.js`**:
 - Async/await für Artikellisten-Funktionen
 
 **`js/artikelliste-detail-app.js`**:
 - Async/await für Artikellisten-Funktionen
 - Angepasste Speichern-Meldung ("im Webspace")
+
+**`js/modules/kundenbereiche-render.js`**:
+- Async/await für Kundenkonto-Funktionen
 
 **`js/modules/events.js`**:
 - Async/await für Speichern-Funktion
