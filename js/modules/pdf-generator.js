@@ -658,6 +658,105 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
   return 35; // ~35mm for document header (increased to accommodate project name)
 }
 
+// Calculate dynamic column widths based on content
+// Returns an object with optimized column widths that fit the content
+function calculateColumnWidths(doc, items, tableWidth) {
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  
+  // Define minimum and maximum widths for each column (in percentage of table width)
+  const minWidths = {
+    pos: tableWidth * 0.06,        // Min 6% for position
+    menge: tableWidth * 0.08,      // Min 8% for quantity
+    einheit: tableWidth * 0.08,    // Min 8% for unit
+    einzelpreis: tableWidth * 0.14, // Min 14% for unit price
+    gesamtpreis: tableWidth * 0.14  // Min 14% for total price
+  };
+  
+  const maxWidths = {
+    pos: tableWidth * 0.10,        // Max 10% for position
+    menge: tableWidth * 0.12,      // Max 12% for quantity
+    einheit: tableWidth * 0.12,    // Max 12% for unit
+    einzelpreis: tableWidth * 0.18, // Max 18% for unit price
+    gesamtpreis: tableWidth * 0.18  // Max 18% for total price
+  };
+  
+  // Measure content widths for each column
+  let maxPos = minWidths.pos;
+  let maxMenge = minWidths.menge;
+  let maxEinheit = minWidths.einheit;
+  let maxEinzelpreis = minWidths.einzelpreis;
+  let maxGesamtpreis = minWidths.gesamtpreis;
+  
+  // Also measure header text
+  doc.setFont('helvetica', 'bold');
+  maxPos = Math.max(maxPos, doc.getTextWidth('Pos.') + 4); // +4mm padding
+  maxMenge = Math.max(maxMenge, doc.getTextWidth('Menge') + 4);
+  maxEinheit = Math.max(maxEinheit, doc.getTextWidth('Einheit') + 4);
+  maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth('Einzelpreis') + 4);
+  maxGesamtpreis = Math.max(maxGesamtpreis, doc.getTextWidth('Gesamt') + 4);
+  
+  doc.setFont('helvetica', 'normal');
+  
+  // Measure each item's content
+  items.forEach((item, index) => {
+    const posText = String(item.position || index + 1);
+    const mengeText = String(item.menge || '1');
+    const einheitText = item.einheit || 'Stk';
+    const einzelpreisText = formatCurrency(item.einzelpreis);
+    const gesamtpreisText = formatCurrency(item.gesamtpreis);
+    
+    maxPos = Math.max(maxPos, doc.getTextWidth(posText) + 4);
+    maxMenge = Math.max(maxMenge, doc.getTextWidth(mengeText) + 4);
+    maxEinheit = Math.max(maxEinheit, doc.getTextWidth(einheitText) + 4);
+    maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth(einzelpreisText) + 4);
+    maxGesamtpreis = Math.max(maxGesamtpreis, doc.getTextWidth(gesamtpreisText) + 4);
+  });
+  
+  // Apply maximum width constraints
+  maxPos = Math.min(maxPos, maxWidths.pos);
+  maxMenge = Math.min(maxMenge, maxWidths.menge);
+  maxEinheit = Math.min(maxEinheit, maxWidths.einheit);
+  maxEinzelpreis = Math.min(maxEinzelpreis, maxWidths.einzelpreis);
+  maxGesamtpreis = Math.min(maxGesamtpreis, maxWidths.gesamtpreis);
+  
+  // Calculate remaining width for description column
+  const usedWidth = maxPos + maxMenge + maxEinheit + maxEinzelpreis + maxGesamtpreis;
+  const beschreibungWidth = tableWidth - usedWidth;
+  
+  return {
+    pos: maxPos,
+    beschreibung: beschreibungWidth,
+    menge: maxMenge,
+    einheit: maxEinheit,
+    einzelpreis: maxEinzelpreis,
+    gesamtpreis: maxGesamtpreis
+  };
+}
+
+// Calculate row height based on wrapped text in description
+// Returns the height needed for this row in mm
+function calculateRowHeight(doc, beschreibung, beschreibungWidth, baseRowHeight) {
+  if (!beschreibung || beschreibung.trim() === '') {
+    return baseRowHeight;
+  }
+  
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  
+  // Split text to fit within column width (subtract padding)
+  const lines = doc.splitTextToSize(beschreibung, beschreibungWidth - 4);
+  
+  // Calculate height: base height for single line + extra height for additional lines
+  const lineHeight = 4; // mm per line
+  if (lines.length <= 1) {
+    return baseRowHeight;
+  } else {
+    // Need more height for multiple lines
+    return Math.max(baseRowHeight, 4 + (lines.length * lineHeight) + 2); // 4mm top padding + lines + 2mm bottom padding
+  }
+}
+
 // Render items table with footer collision detection
 // Returns the Y position where the table ends
 function renderItemsTableWithFooter(doc, x, y, width, height, documentData, footerY) {
@@ -695,19 +794,12 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
     }
   }
 
-  // Column widths configuration - optimized for better readability
-  const colWidths = {
-    pos: width * 0.08,
-    beschreibung: width * 0.38,
-    menge: width * 0.10,
-    einheit: width * 0.10,
-    einzelpreis: width * 0.17,
-    gesamtpreis: width * 0.17
-  };
+  // Calculate dynamic column widths based on content
+  const colWidths = calculateColumnWidths(doc, items, width);
   
   // Table dimensions
   const headerHeight = 9; // Height of table header in mm
-  const rowHeight = 8; // Height of each table row in mm
+  const baseRowHeight = 8; // Base height of each table row in mm
   const newPageStartY = 20; // Starting Y position for content on new pages
   const minSpacingBeforeFooter = 10; // Minimum space to keep before footer (mm)
   
@@ -747,6 +839,10 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
   let colX; // Will be reset for each row
   
   items.forEach((item, index) => {
+    // Calculate row height based on description text wrapping
+    const beschreibung = item.beschreibung || item.artikel || '';
+    const rowHeight = calculateRowHeight(doc, beschreibung, colWidths.beschreibung, baseRowHeight);
+    
     // Check if there's enough space for this row before the footer
     // Include the minimum spacing before footer
     if (rowY + rowHeight + minSpacingBeforeFooter > footerY) {
@@ -769,17 +865,40 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
     doc.setLineWidth(0.1);
     doc.line(x, rowY, x + width, rowY);
     
+    // Render cell content
     colX = x;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
+    
+    // Position number (single line, vertically centered)
     doc.text(String(item.position || index + 1), colX + 2, rowY + 5.5);
     colX += colWidths.pos;
-    doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5.5);
+    
+    // Description (with text wrapping if needed)
+    if (beschreibung) {
+      const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - 4);
+      let textY = rowY + 5.5;
+      lines.forEach((line, lineIndex) => {
+        doc.text(line, colX + 2, textY);
+        textY += 4; // Line height in mm
+      });
+    }
     colX += colWidths.beschreibung;
+    
+    // Quantity (single line, vertically centered)
     doc.text(String(item.menge || '1'), colX + 2, rowY + 5.5);
     colX += colWidths.menge;
+    
+    // Unit (single line, vertically centered)
     doc.text(item.einheit || 'Stk', colX + 2, rowY + 5.5);
     colX += colWidths.einheit;
+    
+    // Unit price (single line, vertically centered)
     doc.text(formatCurrency(item.einzelpreis), colX + 2, rowY + 5.5);
     colX += colWidths.einzelpreis;
+    
+    // Total price (single line, vertically centered)
     doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5.5);
     
     rowY += rowHeight;
@@ -834,19 +953,12 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     }
   }
 
-  // Column widths configuration - optimized for better readability
-  const colWidths = {
-    pos: width * 0.08,
-    beschreibung: width * 0.38,
-    menge: width * 0.10,
-    einheit: width * 0.10,
-    einzelpreis: width * 0.17,
-    gesamtpreis: width * 0.17
-  };
+  // Calculate dynamic column widths based on content
+  const colWidths = calculateColumnWidths(doc, items, width);
   
   // Table dimensions
   const headerHeight = 9; // Height of table header in mm
-  const rowHeight = 8; // Height of each table row in mm
+  const baseRowHeight = 8; // Base height of each table row in mm
   const newPageStartY = 20; // Starting Y position for content on new pages
   
   // Helper function to render table header
@@ -886,6 +998,10 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   const pageBottomMargin = doc.internal.pageSize.height - PDF_MARGIN;
   
   items.forEach((item, index) => {
+    // Calculate row height based on description text wrapping
+    const beschreibung = item.beschreibung || item.artikel || '';
+    const rowHeight = calculateRowHeight(doc, beschreibung, colWidths.beschreibung, baseRowHeight);
+    
     // Check if there's enough space for this row on the current page
     // We check against the page boundary to allow the table to grow dynamically
     // beyond the box height set in the layout editor
@@ -909,17 +1025,40 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     doc.setLineWidth(0.1);
     doc.line(x, rowY, x + width, rowY);
     
+    // Render cell content
     colX = x;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
+    
+    // Position number (single line, vertically centered)
     doc.text(String(item.position || index + 1), colX + 2, rowY + 5.5);
     colX += colWidths.pos;
-    doc.text(item.beschreibung || item.artikel || '', colX + 2, rowY + 5.5);
+    
+    // Description (with text wrapping if needed)
+    if (beschreibung) {
+      const lines = doc.splitTextToSize(beschreibung, colWidths.beschreibung - 4);
+      let textY = rowY + 5.5;
+      lines.forEach((line, lineIndex) => {
+        doc.text(line, colX + 2, textY);
+        textY += 4; // Line height in mm
+      });
+    }
     colX += colWidths.beschreibung;
+    
+    // Quantity (single line, vertically centered)
     doc.text(String(item.menge || '1'), colX + 2, rowY + 5.5);
     colX += colWidths.menge;
+    
+    // Unit (single line, vertically centered)
     doc.text(item.einheit || 'Stk', colX + 2, rowY + 5.5);
     colX += colWidths.einheit;
+    
+    // Unit price (single line, vertically centered)
     doc.text(formatCurrency(item.einzelpreis), colX + 2, rowY + 5.5);
     colX += colWidths.einzelpreis;
+    
+    // Total price (single line, vertically centered)
     doc.text(formatCurrency(item.gesamtpreis), colX + 2, rowY + 5.5);
     
     rowY += rowHeight;
