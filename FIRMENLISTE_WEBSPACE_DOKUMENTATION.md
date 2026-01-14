@@ -1,13 +1,13 @@
-# Firmenliste und Artikellisten im Webspace speichern - Implementierungsdokumentation
+# Webspace-Speicherung für KA-System - Implementierungsdokumentation
 
 ## Übersicht
 
-Die Firmenliste und Artikellisten werden jetzt im Webspace (Server) statt im Browser-LocalStorage gespeichert. Dies ermöglicht:
+Das KA-System speichert jetzt wichtige Daten im Webspace (Server) statt im Browser-LocalStorage. Dies ermöglicht:
 - ✅ Zentrale Datenspeicherung auf dem Server
 - ✅ Zugriff von mehreren Geräten/Browsern
 - ✅ Automatische Datensicherung auf dem Server
 - ✅ Automatische Migration von bestehenden LocalStorage-Daten
-- ✅ Artikellisten referenzieren die Firmenliste via Firmen_ID
+- ✅ Daten referenzieren einander via Firmen_ID
 
 ## Änderungen
 
@@ -48,15 +48,36 @@ Neue Dateien im Verzeichnis `api/`:
   - Gibt JSON-Daten zurück (Array von Konto-Objekten)
   - Gibt leeres Array zurück, wenn keine Daten vorhanden
 
+**Aufträge (Orders):**
+- **`api/save-auftraege.php`**: Speichert die Aufträge als JSON-Datei
+  - Empfängt POST-Anfragen mit JSON-Daten (Array von Auftrags-Objekten)
+  - Speichert Daten in `data/auftraege.json`
+  - Erstellt automatisch Backups (`data/auftraege.backup.json`)
+
+- **`api/load-auftraege.php`**: Lädt die Aufträge vom Server
+  - Empfängt GET-Anfragen
+  - Gibt JSON-Daten zurück (Array von Auftrags-Objekten)
+  - Gibt leeres Array zurück, wenn keine Daten vorhanden
+
+**Rechnungen (Invoices):**
+- **`api/save-rechnungen.php`**: Speichert die Rechnungen als JSON-Datei
+  - Empfängt POST-Anfragen mit JSON-Daten (Array von Rechnungs-Objekten)
+  - Speichert Daten in `data/rechnungen.json`
+  - Erstellt automatisch Backups (`data/rechnungen.backup.json`)
+
+- **`api/load-rechnungen.php`**: Lädt die Rechnungen vom Server
+  - Empfängt GET-Anfragen
+  - Gibt JSON-Daten zurück (Array von Rechnungs-Objekten)
+  - Gibt leeres Array zurück, wenn keine Daten vorhanden
+
 ### 2. Datenspeicherung
 
 Neues Verzeichnis `data/`:
 
-- Enthält die JSON-Dateien mit den Firmen-, Artikellisten- und Kundenkontendaten
+- Enthält die JSON-Dateien mit allen wichtigen Daten
 - Geschützt durch `.htaccess` (kein direkter Zugriff)
 - Dateien werden NICHT in Git eingecheckt (siehe `.gitignore`)
-- Artikellisten referenzieren Firmenliste via `Firmen_ID`
-- Kundenkonten referenzieren Firmenliste via `Firmen_ID`
+- Daten referenzieren einander via `Firmen_ID`
 
 Gespeicherte Dateien:
 - `firmenliste.json` - Firmenliste (Array von Firmen-Objekten)
@@ -65,6 +86,10 @@ Gespeicherte Dateien:
 - `artikellisten.backup.json` - Backup der Artikellisten
 - `customer-accounts.json` - Kundenkonten (Array von Konto-Objekten)
 - `customer-accounts.backup.json` - Backup der Kundenkonten
+- `auftraege.json` - Aufträge (Array von Auftrags-Objekten)
+- `auftraege.backup.json` - Backup der Aufträge
+- `rechnungen.json` - Rechnungen (Array von Rechnungs-Objekten)
+- `rechnungen.backup.json` - Backup der Rechnungen
 
 ### 3. Frontend-Änderungen
 
@@ -88,11 +113,31 @@ Gespeicherte Dateien:
 - LocalStorage dient als Cache
 - Alle Kundenkonto-Funktionen sind jetzt async
 
+**`js/modules/auftraege-state.js`**:
+- Neue Funktionen für API-Kommunikation (Aufträge)
+- Automatische Migration von LocalStorage zu Server
+- Fallback auf LocalStorage bei Serverproblemen
+- LocalStorage dient als Cache
+- Alle Funktionen sind jetzt async
+
+**`js/modules/rechnungen-state.js`**:
+- Neue Funktionen für API-Kommunikation (Rechnungen)
+- Automatische Migration von LocalStorage zu Server
+- Fallback auf LocalStorage bei Serverproblemen
+- LocalStorage dient als Cache
+- Alle Funktionen sind jetzt async
+
 **`js/artikellisten-app.js`**:
 - Async/await für Artikellisten-Funktionen
 
 **`js/artikelliste-detail-app.js`**:
 - Async/await für Artikellisten-Funktionen
+
+**`js/auftraege-app.js`**:
+- Async/await für Aufträge-Initialisierung
+
+**`js/rechnungen-app.js`**:
+- Async/await für Rechnungen-Initialisierung
 - Angepasste Speichern-Meldung ("im Webspace")
 
 **`js/modules/kundenbereiche-render.js`**:

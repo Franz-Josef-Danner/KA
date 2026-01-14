@@ -3,9 +3,12 @@
 // -----------------------------
 import { render } from './modules/rechnungen-render.js';
 import { initEventHandlers } from './modules/rechnungen-events.js';
+import { ensureInitialized } from './modules/rechnungen-state.js';
 
 // Initialize the application
-function init() {
+async function init() {
+  // Ensure invoices are loaded before rendering
+  await ensureInitialized();
   initEventHandlers();
   render();
 }

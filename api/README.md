@@ -160,6 +160,110 @@ Loads customer account data from the server. Returns accounts for all customers.
 }
 ```
 
+### Save Orders (Aufträge)
+**Endpoint:** `POST /api/save-auftraege.php`
+
+Saves orders data to the server.
+
+**Request:**
+- Method: POST
+- Content-Type: application/json
+- Body: Array of order objects
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Data saved successfully",
+  "timestamp": "2026-01-14T03:00:00+00:00"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Error message"
+}
+```
+
+### Load Orders (Aufträge)
+**Endpoint:** `GET /api/load-auftraege.php`
+
+Loads orders data from the server.
+
+**Request:**
+- Method: GET
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [ /* array of order objects */ ],
+  "timestamp": "2026-01-14T03:00:00+00:00"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Error message"
+}
+```
+
+### Save Invoices (Rechnungen)
+**Endpoint:** `POST /api/save-rechnungen.php`
+
+Saves invoices data to the server.
+
+**Request:**
+- Method: POST
+- Content-Type: application/json
+- Body: Array of invoice objects
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Data saved successfully",
+  "timestamp": "2026-01-14T03:00:00+00:00"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Error message"
+}
+```
+
+### Load Invoices (Rechnungen)
+**Endpoint:** `GET /api/load-rechnungen.php`
+
+Loads invoices data from the server.
+
+**Request:**
+- Method: GET
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [ /* array of invoice objects */ ],
+  "timestamp": "2026-01-14T03:00:00+00:00"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Error message"
+}
+```
+
 ## Security
 
 - The API uses CORS headers to allow cross-origin requests
@@ -176,6 +280,10 @@ Data is stored in the `/data` directory as JSON files:
 - `artikellisten.backup.json` - Backup of the previous article lists state
 - `customer-accounts.json` - Customer account data (array of account objects)
 - `customer-accounts.backup.json` - Backup of the previous customer accounts state
+- `auftraege.json` - Orders data (array of order objects)
+- `auftraege.backup.json` - Backup of the previous orders state
+- `rechnungen.json` - Invoices data (array of invoice objects)
+- `rechnungen.backup.json` - Backup of the previous invoices state
 
 Article lists reference the company list via Firmen_ID. Each article list contains:
 - `firmenId` - Reference to company in firmenliste
@@ -191,6 +299,22 @@ Customer accounts contain:
 - `password` - Hashed password (SHA-256)
 - `createdAt` - ISO timestamp of account creation
 - `updatedAt` - ISO timestamp of last update
+
+Orders contain:
+- `Auftrags_ID` - Unique order ID
+- `Firmen_ID` - Reference to company in firmenliste
+- `Firma` - Company name
+- `Auftragsdatum` - Order date
+- `Status` - Order status (e.g., "in Arbeit", "Abgeschlossen")
+- `items` - Array of order items (Positionen)
+
+Invoices contain:
+- `Rechnungs_ID` - Unique invoice ID
+- `Firmen_ID` - Reference to company in firmenliste
+- `Firma` - Company name
+- `Rechnungsdatum` - Invoice date
+- `Bezahlt` - Payment status (e.g., "bezahlt", "unbezahlt")
+- `items` - Array of invoice items (Positionen)
 
 ## Requirements
 

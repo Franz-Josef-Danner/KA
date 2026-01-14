@@ -3,9 +3,12 @@
 // -----------------------------
 import { render } from './modules/auftraege-render.js';
 import { initEventHandlers } from './modules/auftraege-events.js';
+import { ensureInitialized } from './modules/auftraege-state.js';
 
 // Initialize the application
-function init() {
+async function init() {
+  // Ensure orders are loaded before rendering
+  await ensureInitialized();
   initEventHandlers();
   render();
 }
