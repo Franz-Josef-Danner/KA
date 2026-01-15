@@ -1477,16 +1477,85 @@ function formatCurrency(value) {
   }).format(num);
 }
 
+// Generate PDF filename based on document type and data
+// Format for orders: A_"Projektname"_"Firmenname"_"erstellungsdatum"
+// Format for invoices: R_"Projektname"_"Firmenname"_"erstellungsdatum"
+export function generatePDFFilename(documentType, documentData) {
+  // Determine prefix based on document type
+  let prefix = '';
+  if (documentType === 'order' || documentType === 'auftrag') {
+    prefix = 'A';
+  } else if (documentType === 'invoice' || documentType === 'rechnung') {
+    prefix = 'R';
+  } else {
+    prefix = 'DOC';
+  }
+  
+  // Extract project name (Projekt)
+  const projektName = documentData.Projekt || documentData.projektName || 'Unbekannt';
+  
+  // Extract company name (Firma)
+  const firmaName = documentData.Firma || documentData.customer?.company || 'Unbekannt';
+  
+  // Extract creation date
+  let dateStr = '';
+  if (documentType === 'order' || documentType === 'auftrag') {
+    dateStr = documentData.Auftragsdatum || documentData.orderDate || '';
+  } else {
+    dateStr = documentData.Rechnungsdatum || documentData.invoiceDate || '';
+  }
+  
+  // If no date found, use current date
+  if (!dateStr) {
+    const now = new Date();
+    dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+  }
+  
+  // Clean up strings to make them filesystem-safe
+  // Remove or replace characters that are not allowed in filenames
+  const cleanString = (str) => {
+    return String(str)
+      .replace(/[<>:"/\\|?*\x00-\x1f]/g, '') // Remove invalid filename characters
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .trim();
+  };
+  
+  const cleanProjekt = cleanString(projektName);
+  const cleanFirma = cleanString(firmaName);
+  const cleanDate = cleanString(dateStr);
+  
+  // Build filename: PREFIX_Projektname_Firmenname_Datum.pdf
+  return `${prefix}_${cleanProjekt}_${cleanFirma}_${cleanDate}.pdf`;
+}
+
 // Export PDF to download
 export function downloadPDF(doc, filename) {
   if (!doc) return;
   doc.save(filename);
 }
 
-// Open PDF in new window
-export function viewPDF(doc) {
+// Open PDF in new window with optional filename for save
+export function viewPDF(doc, filename = null) {
   if (!doc) return;
   const pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
-  window.open(url, '_blank');
+  
+  // If filename is provided, try to set it for the download
+  // Note: This works when the PDF is downloaded from the browser
+  if (filename) {
+    // Create a temporary link to trigger download with specific filename
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the URL after a short delay
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  } else {
+    // Original behavior: just open in new window
+    window.open(url, '_blank');
+  }
 }

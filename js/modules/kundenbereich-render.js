@@ -6,7 +6,7 @@ import { getRows as getOrders } from './auftraege-state.js';
 import { getRows as getInvoices } from './rechnungen-state.js';
 import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
-import { generatePDF, viewPDF } from './pdf-generator.js';
+import { generatePDF, viewPDF, generatePDFFilename } from './pdf-generator.js';
 
 export function render() {
   const user = getCurrentUser();
@@ -149,7 +149,8 @@ function renderOrders(firmenId, firmaName) {
           // Use standard template for customer-facing PDFs (5th parameter = true)
           const pdf = await generatePDF('order', order, false, null, true);
           if (pdf) {
-            viewPDF(pdf);
+            const filename = generatePDFFilename('order', order);
+            viewPDF(pdf, filename);
           }
         } catch (error) {
           console.error('Error generating PDF:', error);
@@ -235,7 +236,8 @@ function renderInvoices(firmenId, firmaName) {
           // Use standard template for customer-facing PDFs (5th parameter = true)
           const pdf = await generatePDF('invoice', invoice, false, null, true);
           if (pdf) {
-            viewPDF(pdf);
+            const filename = generatePDFFilename('invoice', invoice);
+            viewPDF(pdf, filename);
           }
         } catch (error) {
           console.error('Error generating PDF:', error);
