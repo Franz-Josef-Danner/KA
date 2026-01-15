@@ -6,7 +6,7 @@ import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewInvoice, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
-import { generatePDF, viewPDF } from './pdf-generator.js';
+import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/filename.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
@@ -797,18 +797,50 @@ async function viewInvoicePdf() {
     // Generate PDF
     const pdf = await generatePDF('invoice', invoiceData);
     if (pdf) {
-      // Generate filename using shared utility
-      const filename = generatePdfFilename('invoice', invoiceData);
-      
-      // Open PDF in new window (filename is logged for reference)
-      viewPDF(pdf, filename);
-      
-      // Log the generated filename for debugging
-      console.log(`PDF generated with filename: ${filename}`);
+      // Open PDF in new window for viewing
+      viewPDF(pdf);
     }
   } catch (error) {
     console.error('Error generating invoice PDF:', error);
     alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+  }
+}
+
+// Download invoice PDF with correct filename
+async function downloadInvoicePdf() {
+  try {
+    // Collect current form data
+    const invoiceData = getFormData();
+    
+    // Validate required fields
+    if (!invoiceData.Rechnungs_ID) {
+      alert('Bitte geben Sie eine Rechnungs-ID ein, bevor Sie das PDF herunterladen.');
+      return;
+    }
+    
+    if (!invoiceData.Firma) {
+      alert('Bitte wählen Sie eine Firma aus, bevor Sie das PDF herunterladen.');
+      return;
+    }
+    
+    // Add items to invoiceData
+    invoiceData.items = currentInvoiceItems;
+    
+    // Generate PDF
+    const pdf = await generatePDF('invoice', invoiceData);
+    if (pdf) {
+      // Generate filename using shared utility
+      const filename = generatePdfFilename('invoice', invoiceData);
+      
+      // Download PDF with correct filename
+      downloadPDF(pdf, filename);
+      
+      // Log the generated filename for debugging
+      console.log(`PDF downloaded with filename: ${filename}`);
+    }
+  } catch (error) {
+    console.error('Error downloading invoice PDF:', error);
+    alert('Fehler beim Herunterladen der PDF. Bitte versuchen Sie es erneut.');
   }
 }
 
@@ -879,6 +911,15 @@ function initModalHandlers() {
     viewInvoicePdfBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       await viewInvoicePdf();
+    });
+  }
+  
+  // Download PDF button
+  const downloadInvoicePdfBtn = document.getElementById("downloadInvoicePdfBtn");
+  if (downloadInvoicePdfBtn) {
+    downloadInvoicePdfBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await downloadInvoicePdf();
     });
   }
 }

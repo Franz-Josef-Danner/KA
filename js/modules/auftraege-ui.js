@@ -7,7 +7,7 @@ import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen, ensureInitialized as ensureRechnungenInitialized } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
-import { generatePDF, viewPDF } from './pdf-generator.js';
+import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/filename.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
@@ -965,20 +965,53 @@ async function viewOrderPdf() {
     // Generate PDF
     const pdf = await generatePDF('order', orderData);
     if (pdf) {
-      // Generate filename using shared utility
-      const filename = generatePdfFilename('order', orderData);
-      
-      // Open PDF in new window (filename is logged for reference)
-      viewPDF(pdf, filename);
-      
-      // Log the generated filename for debugging
-      console.log(`PDF generated with filename: ${filename}`);
+      // Open PDF in new window for viewing
+      viewPDF(pdf);
     }
   } catch (error) {
     console.error('Error generating order PDF:', error);
     alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
   }
 }
+
+// Download order PDF with correct filename
+async function downloadOrderPdf() {
+  try {
+    // Collect current form data
+    const orderData = getFormData();
+    
+    // Validate required fields
+    if (!orderData.Auftrags_ID) {
+      alert('Bitte geben Sie eine Auftrags-ID ein, bevor Sie das PDF herunterladen.');
+      return;
+    }
+    
+    if (!orderData.Firma) {
+      alert('Bitte wählen Sie eine Firma aus, bevor Sie das PDF herunterladen.');
+      return;
+    }
+    
+    // Add items to orderData
+    orderData.items = currentOrderItems;
+    
+    // Generate PDF
+    const pdf = await generatePDF('order', orderData);
+    if (pdf) {
+      // Generate filename using shared utility
+      const filename = generatePdfFilename('order', orderData);
+      
+      // Download PDF with correct filename
+      downloadPDF(pdf, filename);
+      
+      // Log the generated filename for debugging
+      console.log(`PDF downloaded with filename: ${filename}`);
+    }
+  } catch (error) {
+    console.error('Error downloading order PDF:', error);
+    alert('Fehler beim Herunterladen der PDF. Bitte versuchen Sie es erneut.');
+  }
+}
+
 
 // Initialize modal event handlers
 function initModalHandlers() {
@@ -1055,6 +1088,15 @@ function initModalHandlers() {
     viewOrderPdfBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       await viewOrderPdf();
+    });
+  }
+  
+  // Download PDF button
+  const downloadOrderPdfBtn = document.getElementById("downloadOrderPdfBtn");
+  if (downloadOrderPdfBtn) {
+    downloadOrderPdfBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await downloadOrderPdf();
     });
   }
 }
