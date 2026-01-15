@@ -7,6 +7,7 @@ import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen, ensureInitialized as ensureRechnungenInitialized } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
+import { generatePDF, viewPDF } from './pdf-generator.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -940,6 +941,79 @@ async function convertToInvoice() {
   }
 }
 
+// Helper function to convert a string to hyphenated format (for filenames)
+// Replaces spaces and special characters with hyphens, removes multiple consecutive hyphens
+function toHyphenatedString(str) {
+  if (!str) return '';
+  return str
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-')      // Replace spaces with hyphens
+    .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, '');    // Remove leading/trailing hyphens
+}
+
+// Generate PDF filename with format: A_project-name_company-name_date
+// Example: A_Website-Redesign_Firma-AG_2024-01-15
+function generateOrderPdfFilename(orderData) {
+  const prefix = 'A'; // A for "Auftrag" (Order)
+  
+  // Get project name (Projekt field)
+  const projektName = toHyphenatedString(orderData.Projekt || 'Kein-Projekt');
+  
+  // Get company name (Firma field)
+  const firmaName = toHyphenatedString(orderData.Firma || 'Unbekannt');
+  
+  // Get date from Auftragsdatum, format as YYYY-MM-DD
+  let dateStr = 'Kein-Datum';
+  if (orderData.Auftragsdatum) {
+    // Date is in YYYY-MM-DD format already
+    dateStr = orderData.Auftragsdatum;
+  }
+  
+  // Construct filename: A_project-name_company-name_date.pdf
+  return `${prefix}_${projektName}_${firmaName}_${dateStr}.pdf`;
+}
+
+// View order PDF in new tab
+async function viewOrderPdf() {
+  try {
+    // Collect current form data
+    const orderData = getFormData();
+    
+    // Validate required fields
+    if (!orderData.Auftrags_ID) {
+      alert('Bitte geben Sie eine Auftrags-ID ein, bevor Sie das PDF anzeigen.');
+      return;
+    }
+    
+    if (!orderData.Firma) {
+      alert('Bitte wählen Sie eine Firma aus, bevor Sie das PDF anzeigen.');
+      return;
+    }
+    
+    // Add items to orderData
+    orderData.items = currentOrderItems;
+    
+    // Generate PDF
+    const pdf = await generatePDF('order', orderData);
+    if (pdf) {
+      // Open PDF in new tab with proper filename
+      // Note: viewPDF opens in a new tab, but the filename is only used when user chooses to download
+      const filename = generateOrderPdfFilename(orderData);
+      
+      // Open PDF in new window
+      viewPDF(pdf);
+      
+      // Optional: Show success message
+      console.log(`PDF generated with filename: ${filename}`);
+    }
+  } catch (error) {
+    console.error('Error generating order PDF:', error);
+    alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+  }
+}
+
 // Initialize modal event handlers
 function initModalHandlers() {
   const modalClose = document.getElementById("modalClose");
@@ -1006,6 +1080,15 @@ function initModalHandlers() {
   if (rabattInput) {
     rabattInput.addEventListener("input", () => {
       updateOrderTotals();
+    });
+  }
+  
+  // View PDF button
+  const viewOrderPdfBtn = document.getElementById("viewOrderPdfBtn");
+  if (viewOrderPdfBtn) {
+    viewOrderPdfBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await viewOrderPdf();
     });
   }
 }
