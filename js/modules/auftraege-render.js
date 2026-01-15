@@ -7,6 +7,8 @@ import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './auftraege-search.js';
 import { updateUndoRedoButtons } from './auftraege-ui.js';
+import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
+import { generatePdfFilename } from '../utils/pdf-helpers.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -100,6 +102,55 @@ export function render() {
 
     const act = document.createElement("td");
     act.className = "actions";
+    
+    // PDF View button
+    const viewPdfBtn = document.createElement("button");
+    viewPdfBtn.textContent = "PDF anzeigen";
+    viewPdfBtn.className = "btn-secondary";
+    viewPdfBtn.title = "PDF anzeigen";
+    viewPdfBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      viewPdfBtn.disabled = true;
+      viewPdfBtn.textContent = 'PDF wird erstellt...';
+      try {
+        const pdf = await generatePDF('order', row, false, null, true);
+        if (pdf) {
+          viewPDF(pdf);
+        }
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+      } finally {
+        viewPdfBtn.disabled = false;
+        viewPdfBtn.textContent = 'PDF anzeigen';
+      }
+    });
+    act.appendChild(viewPdfBtn);
+    
+    // PDF Download button
+    const downloadPdfBtn = document.createElement("button");
+    downloadPdfBtn.textContent = "PDF herunterladen";
+    downloadPdfBtn.className = "btn-primary";
+    downloadPdfBtn.title = "PDF herunterladen";
+    downloadPdfBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      downloadPdfBtn.disabled = true;
+      downloadPdfBtn.textContent = 'PDF wird erstellt...';
+      try {
+        const pdf = await generatePDF('order', row, false, null, true);
+        if (pdf) {
+          const filename = generatePdfFilename('A', row.Projekt, row.Firma, row.Auftragsdatum);
+          downloadPDF(pdf, filename);
+        }
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+      } finally {
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.textContent = 'PDF herunterladen';
+      }
+    });
+    act.appendChild(downloadPdfBtn);
     
     // Plus button - add row below
     const plus = document.createElement("button");
