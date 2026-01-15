@@ -7,6 +7,7 @@ import { getRows as getInvoices } from './rechnungen-state.js';
 import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
+import { generatePdfFilename } from '../utils/pdf-helpers.js';
 
 export function render() {
   const user = getCurrentUser();
@@ -309,25 +310,4 @@ function getCompanyNameByFirmenId(firmenId) {
   const companies = getCompanies();
   const company = companies.find(c => c.Firmen_ID === firmenId);
   return company ? company.Firma : '';
-}
-
-// Helper function to sanitize and format filename components
-function sanitizeFilenameComponent(text) {
-  if (!text) return 'unbekannt';
-  // Replace spaces and special characters with hyphens, remove multiple hyphens
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9äöüß]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-// Generate filename for PDF download
-// prefix: 'A' for Aufträge, 'R' for Rechnungen
-function generatePdfFilename(prefix, projektName, firmaName, datum) {
-  const sanitizedProjekt = sanitizeFilenameComponent(projektName);
-  const sanitizedFirma = sanitizeFilenameComponent(firmaName);
-  const sanitizedDatum = sanitizeFilenameComponent(datum);
-  
-  return `${prefix}_${sanitizedProjekt}_${sanitizedFirma}_${sanitizedDatum}.pdf`;
 }
