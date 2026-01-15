@@ -1528,7 +1528,7 @@ export function generatePDFFilename(documentType, documentData) {
   const cleanString = (str) => {
     return String(str)
       .replace(INVALID_FILENAME_CHARS, '') // Remove invalid filename characters
-      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
       .trim();
   };
   
@@ -1536,7 +1536,7 @@ export function generatePDFFilename(documentType, documentData) {
   const cleanFirma = cleanString(firmaName);
   const cleanDate = cleanString(dateStr);
   
-  // Build filename: PREFIX_Projektname_Firmenname_Datum.pdf
+  // Build filename: PREFIX_projekt-name_firmen-name_datum
   return `${prefix}_${cleanProjekt}_${cleanFirma}_${cleanDate}.pdf`;
 }
 
@@ -1551,25 +1551,59 @@ export function viewPDF(doc, filename = null) {
   if (!doc) return;
   const pdfBlob = doc.output('blob');
   
-  // If filename is provided, trigger download with proper filename
+  // If filename is provided, open in new tab with proper filename
   if (filename) {
-    // Create a download link with the specified filename
+    // Create a blob URL
     const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
     
-    // Clean up URL after download is triggered
-    setTimeout(() => {
-      try {
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.warn('Error revoking PDF URL:', error);
-      }
-    }, URL_CLEANUP_DELAY_STANDARD);
+    // Open in a new window/tab
+    const newWindow = window.open('', '_blank');
+    
+    if (newWindow) {
+      // Create an HTML page that embeds the PDF and sets the title to the filename
+      // This helps some browsers suggest the correct filename when saving
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${filename}</title>
+          <style>
+            body { margin: 0; padding: 0; overflow: hidden; }
+            iframe { border: none; width: 100vw; height: 100vh; }
+          </style>
+        </head>
+        <body>
+          <iframe src="${url}" type="application/pdf"></iframe>
+        </body>
+        </html>
+      `);
+      newWindow.document.close();
+      
+      // Clean up URL after the window loads
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.warn('Error revoking PDF URL:', error);
+        }
+      }, URL_CLEANUP_DELAY_FALLBACK);
+    } else {
+      // If popup was blocked, fallback to download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.warn('Error revoking PDF URL:', error);
+        }
+      }, URL_CLEANUP_DELAY_STANDARD);
+    }
   } else {
     // Original behavior: just open in new window
     const url = URL.createObjectURL(pdfBlob);
