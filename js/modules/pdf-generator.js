@@ -1514,7 +1514,7 @@ export function generatePDFFilename(documentType, documentData) {
   const sanitize = (str) => {
     return str
       .replace(/\s+/g, '-')           // Replace spaces with hyphens
-      .replace(/[^\w\u00C0-\u017F-]/g, '-')  // Replace special chars (keeping umlauts and hyphens)
+      .replace(/[^\w\u00C0-\u017F\-]/g, '-')  // Replace special chars (keeping umlauts and hyphens)
       .replace(/-+/g, '-')            // Replace multiple consecutive hyphens with single hyphen
       .replace(/^-|-$/g, '')          // Remove leading/trailing hyphens
       .toLowerCase();
@@ -1549,25 +1549,18 @@ export function viewPDF(doc, documentType = null, documentData = null, download 
     // Download with proper filename
     doc.save(filename);
   } else {
-    // Open in new window with proper filename suggestion
+    // Open in new window
     // Create a blob with the PDF data
     const pdfBlob = doc.output('blob');
     
     // Create a blob URL
     const url = URL.createObjectURL(pdfBlob);
     
-    // Create a temporary anchor element to trigger download with proper filename
-    // This allows the browser to suggest the correct filename when the user saves
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.target = '_blank';
-    
-    // For viewing in new window, we need to open the blob URL directly
-    // The filename will be suggested when user tries to save from the browser
+    // Open the PDF in a new window
     window.open(url, '_blank');
     
-    // Clean up the blob URL after a delay
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    // Clean up the blob URL after a delay to ensure the PDF has loaded
+    // Using 2 seconds to accommodate slower browsers/networks
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 }
