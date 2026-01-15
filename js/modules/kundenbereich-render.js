@@ -6,7 +6,7 @@ import { getRows as getOrders } from './auftraege-state.js';
 import { getRows as getInvoices } from './rechnungen-state.js';
 import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
-import { generatePDF, viewPDF } from './pdf-generator.js';
+import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 
 export function render() {
   const user = getCurrentUser();
@@ -132,6 +132,7 @@ function renderOrders(firmenId, firmaName) {
         <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-order-pdf" data-order-id="${auftragId}">PDF anzeigen</button>
+          <button class="btn-primary download-order-pdf" data-order-id="${auftragId}">PDF herunterladen</button>
         </td>
       </tr>
     `;
@@ -157,6 +158,33 @@ function renderOrders(firmenId, firmaName) {
         } finally {
           btn.disabled = false;
           btn.textContent = 'PDF anzeigen';
+        }
+      }
+    });
+  });
+
+  // Attach event listeners to download buttons
+  document.querySelectorAll('.download-order-pdf').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const orderId = btn.dataset.orderId;
+      const order = customerOrders.find(o => o.Auftrags_ID === orderId);
+      if (order) {
+        btn.disabled = true;
+        btn.textContent = 'PDF wird erstellt...';
+        try {
+          // Use standard template for customer-facing PDFs (5th parameter = true)
+          const pdf = await generatePDF('order', order, false, null, true);
+          if (pdf) {
+            // Generate filename: A_projekt_firma_datum
+            const filename = generatePdfFilename('A', order.Projekt, firmaName, order.Auftragsdatum);
+            downloadPDF(pdf, filename);
+          }
+        } catch (error) {
+          console.error('Error generating PDF:', error);
+          alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'PDF herunterladen';
         }
       }
     });
@@ -218,6 +246,7 @@ function renderInvoices(firmenId, firmaName) {
         <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-invoice-pdf" data-invoice-id="${rechnungId}">PDF anzeigen</button>
+          <button class="btn-primary download-invoice-pdf" data-invoice-id="${rechnungId}">PDF herunterladen</button>
         </td>
       </tr>
     `;
@@ -247,10 +276,58 @@ function renderInvoices(firmenId, firmaName) {
       }
     });
   });
+
+  // Attach event listeners to download buttons
+  document.querySelectorAll('.download-invoice-pdf').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const invoiceId = btn.dataset.invoiceId;
+      const invoice = customerInvoices.find(i => i.Rechnungs_ID === invoiceId);
+      if (invoice) {
+        btn.disabled = true;
+        btn.textContent = 'PDF wird erstellt...';
+        try {
+          // Use standard template for customer-facing PDFs (5th parameter = true)
+          const pdf = await generatePDF('invoice', invoice, false, null, true);
+          if (pdf) {
+            // Generate filename: R_projekt_firma_datum
+            const filename = generatePdfFilename('R', invoice.Projekt, firmaName, invoice.Rechnungsdatum);
+            downloadPDF(pdf, filename);
+          }
+        } catch (error) {
+          console.error('Error generating PDF:', error);
+          alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'PDF herunterladen';
+        }
+      }
+    });
+  });
 }
 
 function getCompanyNameByFirmenId(firmenId) {
   const companies = getCompanies();
   const company = companies.find(c => c.Firmen_ID === firmenId);
   return company ? company.Firma : '';
+}
+
+// Helper function to sanitize and format filename components
+function sanitizeFilenameComponent(text) {
+  if (!text) return 'unbekannt';
+  // Replace spaces and special characters with hyphens, remove multiple hyphens
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9äöüß]/gi, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// Generate filename for PDF download
+// prefix: 'A' for Aufträge, 'R' for Rechnungen
+function generatePdfFilename(prefix, projektName, firmaName, datum) {
+  const sanitizedProjekt = sanitizeFilenameComponent(projektName);
+  const sanitizedFirma = sanitizeFilenameComponent(firmaName);
+  const sanitizedDatum = sanitizeFilenameComponent(datum);
+  
+  return `${prefix}_${sanitizedProjekt}_${sanitizedFirma}_${sanitizedDatum}.pdf`;
 }
