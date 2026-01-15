@@ -32,3 +32,49 @@ export function generatePdfFilename(prefix, projektName, firmaName, datum) {
   
   return `${prefix}_${sanitizedProjekt}_${sanitizedFirma}_${sanitizedDatum}.pdf`;
 }
+
+/**
+ * Enrich document (order/invoice) data with full company information for PDF generation
+ * @param {Object} document - The order or invoice document
+ * @param {Function} getCompaniesFunc - Function to get companies list
+ * @returns {Object} Enriched document with company data
+ */
+export function enrichDocumentWithCompanyData(document, getCompaniesFunc) {
+  // Create a copy of the document to avoid modifying the original
+  const enrichedDoc = { ...document };
+  
+  // If document already has company address (legacy format), return as-is
+  if (enrichedDoc.Firmenadresse) {
+    return enrichedDoc;
+  }
+  
+  // Look up company information
+  const companies = getCompaniesFunc();
+  let company = null;
+  
+  // Try to find company by Firmen_ID first (new format)
+  if (enrichedDoc.Firmen_ID) {
+    company = companies.find(c => c.Firmen_ID === enrichedDoc.Firmen_ID);
+  }
+  
+  // Fall back to finding by Firma name (legacy format)
+  if (!company && enrichedDoc.Firma) {
+    company = companies.find(c => c.Firma === enrichedDoc.Firma);
+  }
+  
+  // Enrich document with company data if found
+  if (company) {
+    // Add company name if not present
+    if (!enrichedDoc.Firma) {
+      enrichedDoc.Firma = company.Firma;
+    }
+    // Add company address
+    enrichedDoc.Firmenadresse = company.Firmenadresse || company.Adresse || '';
+    // Add company email if not already present
+    if (!enrichedDoc.Firmen_Email) {
+      enrichedDoc.Firmen_Email = company.Firmen_Email || company.Email || '';
+    }
+  }
+  
+  return enrichedDoc;
+}

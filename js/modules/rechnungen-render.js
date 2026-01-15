@@ -9,7 +9,7 @@ import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
-import { generatePdfFilename } from '../utils/pdf-helpers.js';
+import { generatePdfFilename, enrichDocumentWithCompanyData } from '../utils/pdf-helpers.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -111,7 +111,7 @@ export function render() {
       pdfViewBtn.textContent = 'PDF wird erstellt...';
       try {
         // Enrich invoice data with full company information
-        const enrichedInvoice = enrichInvoiceWithCompanyData(row);
+        const enrichedInvoice = enrichDocumentWithCompanyData(row, getCompanies);
         // Use custom template for admin view (5th parameter = false)
         // This allows admins to see PDFs with their custom layout from the PDF editor
         const pdf = await generatePDF('invoice', enrichedInvoice, false, null, false);
@@ -139,7 +139,7 @@ export function render() {
       pdfDownloadBtn.textContent = 'PDF wird erstellt...';
       try {
         // Enrich invoice data with full company information
-        const enrichedInvoice = enrichInvoiceWithCompanyData(row);
+        const enrichedInvoice = enrichDocumentWithCompanyData(row, getCompanies);
         // Use custom template for admin view (5th parameter = false)
         // This allows admins to see PDFs with their custom layout from the PDF editor
         const pdf = await generatePDF('invoice', enrichedInvoice, false, null, false);
@@ -195,44 +195,3 @@ export function render() {
 
 // Create a debounced version of render to avoid multiple rapid re-renders
 export const debouncedRender = debounce(render, 300);
-
-// Helper function to enrich invoice data with full company information for PDF generation
-function enrichInvoiceWithCompanyData(invoice) {
-  // Create a copy of the invoice to avoid modifying the original
-  const enrichedInvoice = { ...invoice };
-  
-  // If invoice already has company details (legacy format), return as-is
-  if (enrichedInvoice.Firmenadresse) {
-    return enrichedInvoice;
-  }
-  
-  // Look up company information
-  const companies = getCompanies();
-  let company = null;
-  
-  // Try to find company by Firmen_ID first (new format)
-  if (enrichedInvoice.Firmen_ID) {
-    company = companies.find(c => c.Firmen_ID === enrichedInvoice.Firmen_ID);
-  }
-  
-  // Fall back to finding by Firma name (legacy format)
-  if (!company && enrichedInvoice.Firma) {
-    company = companies.find(c => c.Firma === enrichedInvoice.Firma);
-  }
-  
-  // Enrich invoice with company data if found
-  if (company) {
-    // Add company name if not present
-    if (!enrichedInvoice.Firma) {
-      enrichedInvoice.Firma = company.Firma;
-    }
-    // Add company address
-    enrichedInvoice.Firmenadresse = company.Firmenadresse || company.Adresse || '';
-    // Add company email if not already present
-    if (!enrichedInvoice.Firmen_Email) {
-      enrichedInvoice.Firmen_Email = company.Firmen_Email || company.Email || '';
-    }
-  }
-  
-  return enrichedInvoice;
-}
