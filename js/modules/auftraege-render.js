@@ -8,6 +8,7 @@ import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './auftraege-search.js';
 import { updateUndoRedoButtons } from './auftraege-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
+import { generatePdfFilename } from '../utils/pdf-helpers.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -189,24 +190,3 @@ export function render() {
 
 // Create a debounced version of render to avoid multiple rapid re-renders
 export const debouncedRender = debounce(render, 300);
-
-// Helper function to sanitize and format filename components
-function sanitizeFilenameComponent(text) {
-  if (!text) return 'unbekannt';
-  // Replace spaces and special characters with hyphens, remove multiple hyphens
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9äöüß]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-// Generate filename for PDF download
-// prefix: 'A' for Aufträge, 'R' for Rechnungen
-function generatePdfFilename(prefix, projektName, firmaName, datum) {
-  const sanitizedProjekt = sanitizeFilenameComponent(projektName);
-  const sanitizedFirma = sanitizeFilenameComponent(firmaName);
-  const sanitizedDatum = sanitizeFilenameComponent(datum);
-  
-  return `${prefix}_${sanitizedProjekt}_${sanitizedFirma}_${sanitizedDatum}.pdf`;
-}
