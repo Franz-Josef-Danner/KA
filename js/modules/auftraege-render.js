@@ -3,6 +3,7 @@
 // -----------------------------
 import { COLUMNS } from './auftraege-config.js';
 import { getRows, setRows, newEmptyRow, save } from './auftraege-state.js';
+import { getRows as getCompanies } from './state.js';
 import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './auftraege-search.js';
@@ -113,9 +114,11 @@ export function render() {
       pdfViewBtn.disabled = true;
       pdfViewBtn.textContent = 'PDF wird erstellt...';
       try {
+        // Enrich order data with full company information
+        const enrichedOrder = enrichOrderWithCompanyData(row);
         // Use custom template for admin view (5th parameter = false)
         // This allows admins to see PDFs with their custom layout from the PDF editor
-        const pdf = await generatePDF('order', row, false, null, false);
+        const pdf = await generatePDF('order', enrichedOrder, false, null, false);
         if (pdf) {
           viewPDF(pdf);
         }
@@ -139,9 +142,11 @@ export function render() {
       pdfDownloadBtn.disabled = true;
       pdfDownloadBtn.textContent = 'PDF wird erstellt...';
       try {
+        // Enrich order data with full company information
+        const enrichedOrder = enrichOrderWithCompanyData(row);
         // Use custom template for admin view (5th parameter = false)
         // This allows admins to see PDFs with their custom layout from the PDF editor
-        const pdf = await generatePDF('order', row, false, null, false);
+        const pdf = await generatePDF('order', enrichedOrder, false, null, false);
         if (pdf) {
           const filename = generatePdfFilename('A', row.Projekt, row.Firma, row.Auftragsdatum);
           downloadPDF(pdf, filename);
@@ -194,3 +199,42 @@ export function render() {
 
 // Create a debounced version of render to avoid multiple rapid re-renders
 export const debouncedRender = debounce(render, 300);
+
+// Helper function to enrich order data with full company information for PDF generation
+function enrichOrderWithCompanyData(order) {
+  // Create a copy of the order to avoid modifying the original
+  const enrichedOrder = { ...order };
+  
+  // If order already has company details (legacy format), return as-is
+  if (enrichedOrder.Firmenadresse) {
+    return enrichedOrder;
+  }
+  
+  // Look up company information
+  const companies = getCompanies();
+  let company = null;
+  
+  // Try to find company by Firmen_ID first (new format)
+  if (enrichedOrder.Firmen_ID) {
+    company = companies.find(c => c.Firmen_ID === enrichedOrder.Firmen_ID);
+  }
+  
+  // Fall back to finding by Firma name (legacy format)
+  if (!company && enrichedOrder.Firma) {
+    company = companies.find(c => c.Firma === enrichedOrder.Firma);
+  }
+  
+  // Enrich order with company data if found
+  if (company) {
+    // Add company name if not present
+    if (!enrichedOrder.Firma) {
+      enrichedOrder.Firma = company.Firma;
+    }
+    // Add company address
+    enrichedOrder.Firmenadresse = company.Firmenadresse || company.Adresse || '';
+    // Add company email
+    enrichedOrder.Firmen_Email = company.Firmen_Email || company.Email || '';
+  }
+  
+  return enrichedOrder;
+}
