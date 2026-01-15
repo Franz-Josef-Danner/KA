@@ -1483,16 +1483,12 @@ export function downloadPDF(doc, filename) {
   doc.save(filename);
 }
 
-// Open PDF in new window
-// The filename parameter is currently unused but kept for future enhancements
-// Note: When opening a blob URL in a new tab, the browser typically uses a generic name
-// Users can still save the PDF with any name they choose from the browser's save dialog
-export function viewPDF(doc, filename = null) {
+// Open PDF in new window with proper filename
+// Uses jsPDF's save method which opens/downloads the PDF with the correct filename
+export function viewPDF(doc, filename = 'document.pdf') {
   if (!doc) return;
-  const pdfBlob = doc.output('blob');
-  const url = URL.createObjectURL(pdfBlob);
-  window.open(url, '_blank');
-  // Note: We could potentially set the filename if we used a download link,
-  // but that would force download instead of viewing in a new tab.
-  // The current implementation keeps the PDF viewing experience as requested.
+  
+  // Use the save method which will prompt download with the correct filename
+  // Modern browsers often show a preview before saving
+  doc.save(filename);
 }
