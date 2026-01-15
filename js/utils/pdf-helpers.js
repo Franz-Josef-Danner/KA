@@ -70,9 +70,9 @@ export function enrichDocumentWithCompanyData(document, getCompanies) {
     }
     // Add company address (support both Firmenadresse and Adresse field names)
     enrichedDoc.Firmenadresse = company.Firmenadresse || company.Adresse || '';
-    // Add company email if not already present (support both Firmen_Email and Email field names)
+    // Add company email if not already present (support multiple field name variations)
     if (!enrichedDoc.Firmen_Email) {
-      enrichedDoc.Firmen_Email = company.Firmen_Email || company.Email || '';
+      enrichedDoc.Firmen_Email = company.Firmen_Email || company['E-mail'] || company.Email || '';
     }
   }
   
