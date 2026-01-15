@@ -7,6 +7,7 @@ import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewInvoice, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 import { generatePDF, viewPDF } from './pdf-generator.js';
+import { generatePdfFilename } from '../utils/filename.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -773,41 +774,6 @@ function saveInvoice() {
   return true;
 }
 
-// Helper function to convert a string to hyphenated format (for filenames)
-// Replaces spaces and special characters with hyphens, removes multiple consecutive hyphens
-function toHyphenatedString(str) {
-  if (!str) return '';
-  return str
-    .trim()
-    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, '-')      // Replace spaces with hyphens
-    .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
-    .replace(/^-|-$/g, '');    // Remove leading/trailing hyphens
-}
-
-// Generate PDF filename with format: A_project-name_company-name_date
-// Example: A_Website-Redesign_Firma-AG_2024-01-15
-// Note: Uses "A" prefix for both orders and invoices as per requirement
-function generateInvoicePdfFilename(invoiceData) {
-  const prefix = 'A'; // A for both "Auftrag" (Order) and "Rechnung" (Invoice)
-  
-  // Get project name (Projekt field)
-  const projektName = toHyphenatedString(invoiceData.Projekt || 'Kein-Projekt');
-  
-  // Get company name (Firma field)
-  const firmaName = toHyphenatedString(invoiceData.Firma || 'Unbekannt');
-  
-  // Get date from Rechnungsdatum, format as YYYY-MM-DD
-  let dateStr = 'Kein-Datum';
-  if (invoiceData.Rechnungsdatum) {
-    // Date is in YYYY-MM-DD format already
-    dateStr = invoiceData.Rechnungsdatum;
-  }
-  
-  // Construct filename: A_project-name_company-name_date.pdf
-  return `${prefix}_${projektName}_${firmaName}_${dateStr}.pdf`;
-}
-
 // View invoice PDF in new tab
 async function viewInvoicePdf() {
   try {
@@ -831,8 +797,8 @@ async function viewInvoicePdf() {
     // Generate PDF
     const pdf = await generatePDF('invoice', invoiceData);
     if (pdf) {
-      // Open PDF in new tab with proper filename
-      const filename = generateInvoicePdfFilename(invoiceData);
+      // Generate filename using shared utility
+      const filename = generatePdfFilename('invoice', invoiceData);
       
       // Open PDF in new window (filename is logged for reference)
       viewPDF(pdf, filename);

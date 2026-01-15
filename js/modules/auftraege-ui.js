@@ -8,6 +8,7 @@ import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as sav
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 import { generatePDF, viewPDF } from './pdf-generator.js';
+import { generatePdfFilename } from '../utils/filename.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -941,40 +942,6 @@ async function convertToInvoice() {
   }
 }
 
-// Helper function to convert a string to hyphenated format (for filenames)
-// Replaces spaces and special characters with hyphens, removes multiple consecutive hyphens
-function toHyphenatedString(str) {
-  if (!str) return '';
-  return str
-    .trim()
-    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, '-')      // Replace spaces with hyphens
-    .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
-    .replace(/^-|-$/g, '');    // Remove leading/trailing hyphens
-}
-
-// Generate PDF filename with format: A_project-name_company-name_date
-// Example: A_Website-Redesign_Firma-AG_2024-01-15
-function generateOrderPdfFilename(orderData) {
-  const prefix = 'A'; // A for "Auftrag" (Order)
-  
-  // Get project name (Projekt field)
-  const projektName = toHyphenatedString(orderData.Projekt || 'Kein-Projekt');
-  
-  // Get company name (Firma field)
-  const firmaName = toHyphenatedString(orderData.Firma || 'Unbekannt');
-  
-  // Get date from Auftragsdatum, format as YYYY-MM-DD
-  let dateStr = 'Kein-Datum';
-  if (orderData.Auftragsdatum) {
-    // Date is in YYYY-MM-DD format already
-    dateStr = orderData.Auftragsdatum;
-  }
-  
-  // Construct filename: A_project-name_company-name_date.pdf
-  return `${prefix}_${projektName}_${firmaName}_${dateStr}.pdf`;
-}
-
 // View order PDF in new tab
 async function viewOrderPdf() {
   try {
@@ -998,8 +965,8 @@ async function viewOrderPdf() {
     // Generate PDF
     const pdf = await generatePDF('order', orderData);
     if (pdf) {
-      // Open PDF in new tab with proper filename
-      const filename = generateOrderPdfFilename(orderData);
+      // Generate filename using shared utility
+      const filename = generatePdfFilename('order', orderData);
       
       // Open PDF in new window (filename is logged for reference)
       viewPDF(pdf, filename);
