@@ -1569,7 +1569,7 @@ export function viewPDF(doc, filename = null) {
       } catch (error) {
         console.warn('Error revoking PDF URL:', error);
       }
-    }, URL_CLEANUP_DELAY_FALLBACK);
+    }, URL_CLEANUP_DELAY_STANDARD);
   } else {
     // Original behavior: just open in new window
     const url = URL.createObjectURL(pdfBlob);
