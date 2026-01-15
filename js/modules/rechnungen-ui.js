@@ -832,13 +832,12 @@ async function viewInvoicePdf() {
     const pdf = await generatePDF('invoice', invoiceData);
     if (pdf) {
       // Open PDF in new tab with proper filename
-      // Note: viewPDF opens in a new tab, but the filename is only used when user chooses to download
       const filename = generateInvoicePdfFilename(invoiceData);
       
-      // Open PDF in new window
-      viewPDF(pdf);
+      // Open PDF in new window (filename is logged for reference)
+      viewPDF(pdf, filename);
       
-      // Optional: Show success message
+      // Log the generated filename for debugging
       console.log(`PDF generated with filename: ${filename}`);
     }
   } catch (error) {
