@@ -1558,18 +1558,19 @@ export function viewPDF(doc, filename = null) {
     const newWindow = window.open(fileUrl, '_blank');
     
     // Clean up the URL to prevent memory leaks
+    // We use a fallback timeout as the primary cleanup mechanism since
+    // adding event listeners to newly opened windows can fail due to
+    // cross-origin restrictions or timing issues
     if (newWindow) {
-      // Try to revoke URL after window loads, with fallback timeout
-      try {
-        newWindow.addEventListener('load', () => {
-          setTimeout(() => URL.revokeObjectURL(fileUrl), URL_CLEANUP_DELAY_SHORT);
-        });
-      } catch (error) {
-        // If event listener fails, use timeout as fallback
-        console.warn('Could not add load event listener, using timeout fallback');
-      }
-      // Fallback: Always revoke after a reasonable time even if load event doesn't fire
-      setTimeout(() => URL.revokeObjectURL(fileUrl), URL_CLEANUP_DELAY_FALLBACK);
+      // Primary cleanup: Revoke URL after sufficient time for window to load
+      // 5 seconds should be enough for the browser to load and cache the PDF
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(fileUrl);
+        } catch (error) {
+          console.warn('Error revoking PDF URL:', error);
+        }
+      }, URL_CLEANUP_DELAY_FALLBACK);
     } else {
       // If popup was blocked, fallback to direct download
       const link = document.createElement('a');
@@ -1579,13 +1580,25 @@ export function viewPDF(doc, filename = null) {
       link.click();
       document.body.removeChild(link);
       // Use longer delay for download to complete
-      setTimeout(() => URL.revokeObjectURL(fileUrl), URL_CLEANUP_DELAY_STANDARD);
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(fileUrl);
+        } catch (error) {
+          console.warn('Error revoking PDF URL:', error);
+        }
+      }, URL_CLEANUP_DELAY_STANDARD);
     }
   } else {
     // Original behavior: just open in new window
     const url = URL.createObjectURL(pdfBlob);
     window.open(url, '_blank');
     // Clean up URL after a delay to prevent memory leaks
-    setTimeout(() => URL.revokeObjectURL(url), URL_CLEANUP_DELAY_STANDARD);
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.warn('Error revoking PDF URL:', error);
+      }
+    }, URL_CLEANUP_DELAY_STANDARD);
   }
 }
