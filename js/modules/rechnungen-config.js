@@ -7,17 +7,18 @@ export const COLUMNS = [
   "Rechnungs_ID",
   "Rechnungsdatum",
   "Firma",
-  "Firmenadresse",
   "Firmen_Email",
   "Ansprechpartner",
   "Artikel",
-  "Beschreibung",
   "Gesamtsumme",
   "Projekt",
   "Kommentare",
   "Auftrags_ID", // Reference to original order
-  "Rabatt",
-  "Bezahlt" // Payment status: "unbezahlt" or "bezahlt"
+  "Bezahlt", // Payment status: "unbezahlt" or "bezahlt"
+  // Hidden columns (stored but not displayed in table)
+  "Firmenadresse",
+  "Beschreibung",
+  "Rabatt"
 ];
 
 // Columns for invoice items (Positionen)

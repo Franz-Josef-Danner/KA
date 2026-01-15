@@ -9,7 +9,6 @@ export function rowMatchesSearch(row, query) {
   const searchableFields = [
     row.Rechnungs_ID,
     row.Firma,
-    row.Beschreibung,
     row.Projekt,
     row.Ansprechpartner,
     row.Kommentare,
