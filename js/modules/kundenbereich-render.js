@@ -149,7 +149,8 @@ function renderOrders(firmenId, firmaName) {
           // Use standard template for customer-facing PDFs (5th parameter = true)
           const pdf = await generatePDF('order', order, false, null, true);
           if (pdf) {
-            viewPDF(pdf);
+            // Download PDF with proper filename
+            viewPDF(pdf, 'order', order, true);
           }
         } catch (error) {
           console.error('Error generating PDF:', error);
@@ -235,7 +236,8 @@ function renderInvoices(firmenId, firmaName) {
           // Use standard template for customer-facing PDFs (5th parameter = true)
           const pdf = await generatePDF('invoice', invoice, false, null, true);
           if (pdf) {
-            viewPDF(pdf);
+            // Download PDF with proper filename
+            viewPDF(pdf, 'invoice', invoice, true);
           }
         } catch (error) {
           console.error('Error generating PDF:', error);

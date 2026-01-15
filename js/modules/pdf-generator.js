@@ -1477,16 +1477,97 @@ function formatCurrency(value) {
   }).format(num);
 }
 
+// Generate PDF filename according to the naming convention
+// Format: {A|R}_{project-name}_{company-name}_{date}.pdf
+// - Aufträge (Orders): A_
+// - Rechnungen (Invoices): R_
+// - Spaces and special characters in project/company names are replaced with hyphens
+// - Date format: YYYY-MM-DD with hyphens
+export function generatePDFFilename(documentType, documentData) {
+  // Determine prefix based on document type
+  const prefix = (documentType === 'order' || documentType === 'auftrag') ? 'A' : 'R';
+  
+  // Extract project name (Projekt)
+  const projektName = documentData.Projekt || documentData.projektName || 'unbekannt';
+  
+  // Extract company name (Firma)
+  // Support both direct field and nested customer object
+  const customer = documentData.customer || documentData;
+  const firmaName = customer.Firma || customer.company || 'unbekannt';
+  
+  // Extract date
+  let datum = '';
+  if (documentType === 'order' || documentType === 'auftrag') {
+    datum = documentData.Auftragsdatum || documentData.orderDate || '';
+  } else {
+    datum = documentData.Rechnungsdatum || documentData.invoiceDate || '';
+  }
+  
+  // If no date found, use current date
+  if (!datum) {
+    const now = new Date();
+    datum = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+  }
+  
+  // Sanitize strings: replace spaces and special characters with hyphens
+  // Keep alphanumeric, umlauts, and convert everything else to hyphens
+  const sanitize = (str) => {
+    return str
+      .replace(/\s+/g, '-')           // Replace spaces with hyphens
+      .replace(/[^\w\u00C0-\u017F-]/g, '-')  // Replace special chars (keeping umlauts and hyphens)
+      .replace(/-+/g, '-')            // Replace multiple consecutive hyphens with single hyphen
+      .replace(/^-|-$/g, '')          // Remove leading/trailing hyphens
+      .toLowerCase();
+  };
+  
+  const sanitizedProjekt = sanitize(projektName);
+  const sanitizedFirma = sanitize(firmaName);
+  const sanitizedDatum = datum.replace(/\//g, '-'); // Replace slashes with hyphens if any
+  
+  return `${prefix}_${sanitizedProjekt}_${sanitizedFirma}_${sanitizedDatum}.pdf`;
+}
+
 // Export PDF to download
 export function downloadPDF(doc, filename) {
   if (!doc) return;
   doc.save(filename);
 }
 
-// Open PDF in new window
-export function viewPDF(doc) {
+// Open PDF in new window or download with proper filename
+// Parameters:
+// - doc: The jsPDF document object
+// - documentType: 'order'/'auftrag' or 'invoice'/'rechnung' (optional, for filename generation)
+// - documentData: The document data object (optional, for filename generation)
+// - download: If true, downloads the PDF instead of opening in new window (default: false)
+export function viewPDF(doc, documentType = null, documentData = null, download = false) {
   if (!doc) return;
-  const pdfBlob = doc.output('blob');
-  const url = URL.createObjectURL(pdfBlob);
-  window.open(url, '_blank');
+  
+  // Generate filename if document type and data are provided
+  const filename = (documentType && documentData) ? generatePDFFilename(documentType, documentData) : 'document.pdf';
+  
+  if (download) {
+    // Download with proper filename
+    doc.save(filename);
+  } else {
+    // Open in new window with proper filename suggestion
+    // Create a blob with the PDF data
+    const pdfBlob = doc.output('blob');
+    
+    // Create a blob URL
+    const url = URL.createObjectURL(pdfBlob);
+    
+    // Create a temporary anchor element to trigger download with proper filename
+    // This allows the browser to suggest the correct filename when the user saves
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.target = '_blank';
+    
+    // For viewing in new window, we need to open the blob URL directly
+    // The filename will be suggested when user tries to save from the browser
+    window.open(url, '_blank');
+    
+    // Clean up the blob URL after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  }
 }
