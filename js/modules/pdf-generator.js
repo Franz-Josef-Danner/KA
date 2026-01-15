@@ -673,18 +673,17 @@ function calculateColumnWidths(doc, items, tableWidth) {
   // Minimum column widths based on padding and minimum usability
   const minColumnWidth = CELL_PADDING * 2; // Minimum: padding on both sides
   
-  // Measure content widths for each column
-  // Note: We measure Description content for reference, but it will be adjusted to fill remaining space
+  // Measure content widths for each column (except Description)
+  // Description column will be flexible and fill remaining space
   let maxPos = 0;
   let maxMenge = 0;
   let maxEinheit = 0;
   let maxEinzelpreis = 0;
   let maxGesamtpreis = 0;
   
-  // Measure header text
+  // Measure header text for all columns except Description
   doc.setFont('helvetica', 'bold');
   maxPos = Math.max(maxPos, doc.getTextWidth('Pos.') + CELL_PADDING);
-  // Skip measuring 'Beschreibung' header as this column will be flexible
   maxMenge = Math.max(maxMenge, doc.getTextWidth('Menge') + CELL_PADDING);
   maxEinheit = Math.max(maxEinheit, doc.getTextWidth('Einheit') + CELL_PADDING);
   maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth('Einzelpreis') + CELL_PADDING);
@@ -692,17 +691,15 @@ function calculateColumnWidths(doc, items, tableWidth) {
   
   doc.setFont('helvetica', 'normal');
   
-  // Measure each item's content
+  // Measure each item's content for all columns except Description
   items.forEach((item, index) => {
     const posText = String(item.position || index + 1);
-    // Skip measuring beschreibung content as this column will be flexible
     const mengeText = String(item.menge || '1');
     const einheitText = item.einheit || 'Stk';
     const einzelpreisText = formatCurrency(item.einzelpreis);
     const gesamtpreisText = formatCurrency(item.gesamtpreis);
     
     maxPos = Math.max(maxPos, doc.getTextWidth(posText) + CELL_PADDING);
-    // Skip measuring beschreibung width
     maxMenge = Math.max(maxMenge, doc.getTextWidth(mengeText) + CELL_PADDING);
     maxEinheit = Math.max(maxEinheit, doc.getTextWidth(einheitText) + CELL_PADDING);
     maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth(einzelpreisText) + CELL_PADDING);
