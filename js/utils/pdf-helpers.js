@@ -36,10 +36,10 @@ export function generatePdfFilename(prefix, projektName, firmaName, datum) {
 /**
  * Enrich document (order/invoice) data with full company information for PDF generation
  * @param {Object} document - The order or invoice document
- * @param {Function} getCompaniesFunc - Function to get companies list
+ * @param {Function} getCompanies - Function to get companies list
  * @returns {Object} Enriched document with company data
  */
-export function enrichDocumentWithCompanyData(document, getCompaniesFunc) {
+export function enrichDocumentWithCompanyData(document, getCompanies) {
   // Create a copy of the document to avoid modifying the original
   const enrichedDoc = { ...document };
   
@@ -49,7 +49,7 @@ export function enrichDocumentWithCompanyData(document, getCompaniesFunc) {
   }
   
   // Look up company information
-  const companies = getCompaniesFunc();
+  const companies = getCompanies();
   let company = null;
   
   // Try to find company by Firmen_ID first (new format)
@@ -68,9 +68,9 @@ export function enrichDocumentWithCompanyData(document, getCompaniesFunc) {
     if (!enrichedDoc.Firma) {
       enrichedDoc.Firma = company.Firma;
     }
-    // Add company address
+    // Add company address (support both Firmenadresse and Adresse field names)
     enrichedDoc.Firmenadresse = company.Firmenadresse || company.Adresse || '';
-    // Add company email if not already present
+    // Add company email if not already present (support both Firmen_Email and Email field names)
     if (!enrichedDoc.Firmen_Email) {
       enrichedDoc.Firmen_Email = company.Firmen_Email || company.Email || '';
     }
