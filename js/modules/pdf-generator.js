@@ -1540,20 +1540,32 @@ export function viewPDF(doc, filename = null) {
   const pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
   
-  // If filename is provided, try to set it for the download
-  // Note: This works when the PDF is downloaded from the browser
+  // If filename is provided, create a blob with proper filename
+  // This allows the browser to suggest the filename when user tries to save
   if (filename) {
-    // Create a temporary link to trigger download with specific filename
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Create a File object with the specified name
+    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+    const fileUrl = URL.createObjectURL(file);
     
-    // Clean up the URL after a short delay
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    // Open in new window - browser will use the filename when saving
+    const newWindow = window.open(fileUrl, '_blank');
+    
+    // Clean up the URL after opening
+    if (newWindow) {
+      // Revoke URL after window is loaded to free up memory
+      newWindow.addEventListener('load', () => {
+        setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
+      });
+    } else {
+      // If popup was blocked, fallback to direct download
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
+    }
   } else {
     // Original behavior: just open in new window
     window.open(url, '_blank');
