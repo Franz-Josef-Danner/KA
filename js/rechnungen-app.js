@@ -4,11 +4,16 @@
 import { render } from './modules/rechnungen-render.js';
 import { initEventHandlers } from './modules/rechnungen-events.js';
 import { ensureInitialized } from './modules/rechnungen-state.js';
+import { ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
 
 // Initialize the application
 async function init() {
-  // Ensure invoices are loaded before rendering
-  await ensureInitialized();
+  // Ensure invoices and companies are loaded before rendering
+  // Companies are needed for PDF generation (to enrich invoice data with company details)
+  await Promise.all([
+    ensureInitialized(),
+    ensureFirmenlisteInitialized()
+  ]);
   initEventHandlers();
   render();
 }
