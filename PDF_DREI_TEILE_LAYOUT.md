@@ -173,4 +173,34 @@ Um die Implementierung zu testen:
 ## Bekannte Einschränkungen
 
 - Die Höhe des Summenbereichs wird auf 25mm geschätzt. Bei sehr langen Rabatt-Texten könnte eine Anpassung nötig sein.
-- Mehrzeilige Artikelbeschreibungen werden derzeit nicht unterstützt (jeder Artikel = 1 Zeile).
+
+## Dynamische Spaltenbreiten und Textumbruch (Neu)
+
+### Übersicht
+Die Tabelle nutzt immer die volle verfügbare Breite. Alle Spalten außer Beschreibung sind so breit wie ihr Inhalt. Die Beschreibungsspalte ist flexibel und gleicht die Gesamtbreite aus.
+
+### Regel 1: Beschreibungsspalte als flexible Ausgleichsspalte
+- **Alle Spalten außer Beschreibung**: Breite basiert auf tatsächlichem Inhalt (Position, Menge, Einheit, Einzelpreis, Gesamtpreis)
+- **Beschreibungsspalte**: Füllt **immer** den verbleibenden Platz aus, um die Tabelle auf volle Breite zu bringen
+- Die Tabelle nutzt **immer 100% der verfügbaren Breite**
+- Keine künstlichen Beschränkungen für feste Spalten - sie sind exakt so breit wie ihr Inhalt
+
+### Regel 2: Dynamische Anpassung der Beschreibungsspalte
+- Wenn andere Spalten wenig Platz brauchen: Beschreibung wird breiter (mehr Platz für Text)
+- Wenn andere Spalten viel Platz brauchen: Beschreibung wird schmaler
+- Wenn Beschreibung zu schmal wird: Text wird automatisch auf mehrere Zeilen umgebrochen
+- Die Zeilenhöhe passt sich dynamisch an die Anzahl der Textzeilen an
+- Andere Spalten bleiben vertikal zentriert in der Zeile
+- Zeilenabstand: 4mm pro Zeile
+
+### Vorteile
+- ✅ Tabelle nutzt **immer die volle verfügbare Breite**
+- ✅ Professionelles, ausgeglichenes Erscheinungsbild
+- ✅ Keine abgeschnittenen Texte in Beschreibungen
+- ✅ Präzise Spaltenbreiten für Zahlen und kurze Texte
+- ✅ Maximale Flexibilität für Beschreibungen
+
+### Technische Details
+- Neue Funktion `calculateColumnWidths()`: Misst Inhaltsbreiten (außer Beschreibung) und berechnet Beschreibungsbreite als Rest
+- Neue Funktion `calculateRowHeight()`: Berechnet benötigte Zeilenhöhe basierend auf umgebrochenem Text
+- Beide Rendering-Funktionen (`renderItemsTable` und `renderItemsTableWithFooter`) verwenden diese Logik

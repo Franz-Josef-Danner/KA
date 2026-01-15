@@ -157,8 +157,6 @@ Für jeden Test, notieren Sie:
 ## Bekannte Einschränkungen
 
 Diese Aspekte sind **nicht** Teil der aktuellen Implementierung:
-- Mehrzeilige Artikelbeschreibungen (jeder Artikel = 1 Zeile)
-- Dynamische Anpassung der Tabellen-Spaltenbreiten basierend auf Inhalt
 - Artikel-Bilder in der Tabelle
 
 Bei Fragen oder Problemen, siehe: `PDF_DREI_TEILE_LAYOUT.md`
