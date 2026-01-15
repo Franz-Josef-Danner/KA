@@ -1477,6 +1477,14 @@ function formatCurrency(value) {
   }).format(num);
 }
 
+// Constants for URL cleanup timeouts
+const URL_CLEANUP_DELAY_SHORT = 500; // Short delay for load event cleanup (ms)
+const URL_CLEANUP_DELAY_STANDARD = 1000; // Standard delay for simple window open (ms)
+const URL_CLEANUP_DELAY_FALLBACK = 5000; // Fallback delay if load event doesn't fire (ms)
+
+// Invalid filename characters pattern
+const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
+
 // Generate PDF filename based on document type and data
 // Format for orders: A_"Projektname"_"Firmenname"_"erstellungsdatum"
 // Format for invoices: R_"Projektname"_"Firmenname"_"erstellungsdatum"
@@ -1515,7 +1523,7 @@ export function generatePDFFilename(documentType, documentData) {
   // Remove or replace characters that are not allowed in filenames
   const cleanString = (str) => {
     return String(str)
-      .replace(/[<>:"/\\|?*\x00-\x1f]/g, '') // Remove invalid filename characters
+      .replace(INVALID_FILENAME_CHARS, '') // Remove invalid filename characters
       .replace(/\s+/g, '_') // Replace spaces with underscores
       .trim();
   };
@@ -1554,14 +1562,14 @@ export function viewPDF(doc, filename = null) {
       // Try to revoke URL after window loads, with fallback timeout
       try {
         newWindow.addEventListener('load', () => {
-          setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
+          setTimeout(() => URL.revokeObjectURL(fileUrl), URL_CLEANUP_DELAY_SHORT);
         });
       } catch (error) {
         // If event listener fails, use timeout as fallback
         console.warn('Could not add load event listener, using timeout fallback');
       }
       // Fallback: Always revoke after a reasonable time even if load event doesn't fire
-      setTimeout(() => URL.revokeObjectURL(fileUrl), 5000);
+      setTimeout(() => URL.revokeObjectURL(fileUrl), URL_CLEANUP_DELAY_FALLBACK);
     } else {
       // If popup was blocked, fallback to direct download
       const link = document.createElement('a');
@@ -1570,13 +1578,14 @@ export function viewPDF(doc, filename = null) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
+      // Use longer delay for download to complete
+      setTimeout(() => URL.revokeObjectURL(fileUrl), URL_CLEANUP_DELAY_STANDARD);
     }
   } else {
     // Original behavior: just open in new window
     const url = URL.createObjectURL(pdfBlob);
     window.open(url, '_blank');
     // Clean up URL after a delay to prevent memory leaks
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), URL_CLEANUP_DELAY_STANDARD);
   }
 }
