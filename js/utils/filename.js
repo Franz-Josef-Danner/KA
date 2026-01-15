@@ -45,6 +45,7 @@ export function generatePdfFilename(documentType, documentData) {
   const firmaName = toHyphenatedString(documentData.Firma || 'Unbekannt');
   
   // Get date from appropriate field based on document type
+  // Date is already in YYYY-MM-DD format from HTML date input, no need to hyphenate
   let dateStr = 'Kein-Datum';
   if (documentType === 'order' && documentData.Auftragsdatum) {
     dateStr = documentData.Auftragsdatum;

@@ -133,8 +133,7 @@ Test in multiple browsers to ensure consistent behavior:
 - `js/modules/pdf-generator.js` - Updated viewPDF to accept optional filename parameter
 
 ### Functions Added
-- `toHyphenatedString(str)` - Converts strings to hyphenated format
-- `generateOrderPdfFilename(orderData)` - Generates filename for orders
-- `generateInvoicePdfFilename(invoiceData)` - Generates filename for invoices
-- `viewOrderPdf()` - Handles order PDF generation and viewing
-- `viewInvoicePdf()` - Handles invoice PDF generation and viewing
+- `toHyphenatedString(str)` - Utility to convert strings to hyphenated format (in utils/filename.js)
+- `generatePdfFilename(documentType, documentData)` - Unified function to generate filenames for orders and invoices (in utils/filename.js)
+- `viewOrderPdf()` - Handles order PDF generation and viewing (in auftraege-ui.js)
+- `viewInvoicePdf()` - Handles invoice PDF generation and viewing (in rechnungen-ui.js)
