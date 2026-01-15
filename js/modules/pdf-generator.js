@@ -1484,11 +1484,67 @@ export function downloadPDF(doc, filename) {
 }
 
 // Open PDF in new window with proper filename
-// Uses jsPDF's save method which opens/downloads the PDF with the correct filename
+// Creates a blob URL and opens it in a new window with an HTML wrapper that sets the document title
+// This allows viewing in the browser while providing a suggested filename when saving
 export function viewPDF(doc, filename = 'document.pdf') {
   if (!doc) return;
   
-  // Use the save method which will prompt download with the correct filename
-  // Modern browsers often show a preview before saving
-  doc.save(filename);
+  // Generate PDF as array buffer for better control
+  const pdfData = doc.output('arraybuffer');
+  const blob = new Blob([pdfData], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  
+  // Open in a new window with custom HTML that embeds the PDF
+  // This approach sets the document title which browsers use as the default filename
+  const newWindow = window.open('', '_blank');
+  
+  if (newWindow) {
+    // Extract filename without extension for the title
+    const titleName = filename.replace('.pdf', '');
+    
+    newWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${titleName}</title>
+        <style>
+          body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+          }
+          object, embed {
+            width: 100%;
+            height: 100%;
+          }
+        </style>
+      </head>
+      <body>
+        <object data="${url}" type="application/pdf" width="100%" height="100%">
+          <embed src="${url}" type="application/pdf" width="100%" height="100%" />
+        </object>
+      </body>
+      </html>
+    `);
+    newWindow.document.close();
+    
+    // Clean up blob URL after a delay
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000); // Keep URL valid for 1 minute
+  } else {
+    // Fallback: If popup blocked, download with correct filename
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
 }
