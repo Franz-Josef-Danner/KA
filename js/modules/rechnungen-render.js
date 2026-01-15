@@ -8,7 +8,7 @@ import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
-import { getRows as getCompanies } from './state.js';
+import { generatePdfFilename } from '../utils/pdf-helpers.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -186,24 +186,3 @@ export function render() {
 
 // Create a debounced version of render to avoid multiple rapid re-renders
 export const debouncedRender = debounce(render, 300);
-
-// Helper function to sanitize and format filename components
-function sanitizeFilenameComponent(text) {
-  if (!text) return 'unbekannt';
-  // Replace spaces and special characters with hyphens, remove multiple hyphens
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9äöüß]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-// Generate filename for PDF download
-// prefix: 'A' for Aufträge, 'R' for Rechnungen
-function generatePdfFilename(prefix, projektName, firmaName, datum) {
-  const sanitizedProjekt = sanitizeFilenameComponent(projektName);
-  const sanitizedFirma = sanitizeFilenameComponent(firmaName);
-  const sanitizedDatum = sanitizeFilenameComponent(datum);
-  
-  return `${prefix}_${sanitizedProjekt}_${sanitizedFirma}_${sanitizedDatum}.pdf`;
-}
