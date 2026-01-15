@@ -177,30 +177,30 @@ Um die Implementierung zu testen:
 ## Dynamische Spaltenbreiten und Textumbruch (Neu)
 
 ### Übersicht
-Die Tabellenspalten passen sich nun automatisch an den Inhalt an, und lange Beschreibungen werden automatisch auf mehrere Zeilen umgebrochen.
+Die Tabelle nutzt immer die volle verfügbare Breite. Alle Spalten außer Beschreibung sind so breit wie ihr Inhalt. Die Beschreibungsspalte ist flexibel und gleicht die Gesamtbreite aus.
 
-### Regel 1: Spaltenbreiten basierend auf Inhalt
-- Spaltenbreiten werden dynamisch berechnet basierend auf dem tatsächlichen Inhalt der Zellen
-- **Jede Spalte** (einschließlich Beschreibung) erhält die minimale Breite, die benötigt wird, um ihren Inhalt anzuzeigen
-- Keine künstlichen Beschränkungen - Spalten sind so breit wie ihr Inhalt
-- Wenn alle Spalten gemeinsam in die Tabellenbreite passen, verwenden alle ihre natürliche Größe
+### Regel 1: Beschreibungsspalte als flexible Ausgleichsspalte
+- **Alle Spalten außer Beschreibung**: Breite basiert auf tatsächlichem Inhalt (Position, Menge, Einheit, Einzelpreis, Gesamtpreis)
+- **Beschreibungsspalte**: Füllt **immer** den verbleibenden Platz aus, um die Tabelle auf volle Breite zu bringen
+- Die Tabelle nutzt **immer 100% der verfügbaren Breite**
+- Keine künstlichen Beschränkungen für feste Spalten - sie sind exakt so breit wie ihr Inhalt
 
-### Regel 2: Textumbruch in der Beschreibungsspalte
-- Nur wenn alle Spalten nicht in die Tabellenbreite passen, wird die Beschreibungsspalte komprimiert
-- Die Beschreibungsspalte erhält dann den verbleibenden Platz nach allen anderen Spalten
-- Wenn eine Beschreibung nicht in die Spaltenbreite passt, wird sie automatisch auf mehrere Zeilen umgebrochen
-- Die Zeilenhöhe wird dynamisch angepasst, um allen Text anzuzeigen
+### Regel 2: Dynamische Anpassung der Beschreibungsspalte
+- Wenn andere Spalten wenig Platz brauchen: Beschreibung wird breiter (mehr Platz für Text)
+- Wenn andere Spalten viel Platz brauchen: Beschreibung wird schmaler
+- Wenn Beschreibung zu schmal wird: Text wird automatisch auf mehrere Zeilen umgebrochen
+- Die Zeilenhöhe passt sich dynamisch an die Anzahl der Textzeilen an
 - Andere Spalten bleiben vertikal zentriert in der Zeile
 - Zeilenabstand: 4mm pro Zeile
 
 ### Vorteile
-- ✅ Effizientere Nutzung des verfügbaren Platzes
+- ✅ Tabelle nutzt **immer die volle verfügbare Breite**
+- ✅ Professionelles, ausgeglichenes Erscheinungsbild
 - ✅ Keine abgeschnittenen Texte in Beschreibungen
-- ✅ Schmale Spalten für kurze Inhalte (z.B. "1", "Stk")
-- ✅ Maximaler Platz für Beschreibungen
-- ✅ Professionelles Erscheinungsbild bei allen Inhaltstypen
+- ✅ Präzise Spaltenbreiten für Zahlen und kurze Texte
+- ✅ Maximale Flexibilität für Beschreibungen
 
 ### Technische Details
-- Neue Funktion `calculateColumnWidths()`: Misst Inhaltsbreiten und berechnet optimale Spaltenbreiten
+- Neue Funktion `calculateColumnWidths()`: Misst Inhaltsbreiten (außer Beschreibung) und berechnet Beschreibungsbreite als Rest
 - Neue Funktion `calculateRowHeight()`: Berechnet benötigte Zeilenhöhe basierend auf umgebrochenem Text
 - Beide Rendering-Funktionen (`renderItemsTable` und `renderItemsTableWithFooter`) verwenden diese Logik

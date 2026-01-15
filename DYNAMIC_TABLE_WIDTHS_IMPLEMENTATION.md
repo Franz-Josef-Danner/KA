@@ -7,20 +7,21 @@ Diese Implementierung erfüllt die Anforderung, dass Tabellenspalten in PDF-Rech
 ## Anforderungen
 
 ### 1. Spaltenbreiten basierend auf Inhalt
-**Regel:** Der Inhalt der Zellen definiert die Breite der Spalte, die Spalte ist nie größer als der Inhalt der einzelnen Zellen.
+**Regel:** Alle Spalten (außer Beschreibung) sind so breit wie ihr Inhalt. Die Beschreibungsspalte gleicht die Gesamtbreite aus.
 
 **Implementierung:**
-- Neue Funktion `calculateColumnWidths()` misst die tatsächliche Breite aller Zelleninhalte
-- **Jede Spalte** (einschließlich Beschreibung) erhält die minimale Breite, die für ihren Inhalt benötigt wird
-- Keine künstlichen Min/Max-Beschränkungen mehr - Spalten sind so breit wie ihr Inhalt
-- Wenn alle Spalten gemeinsam passen, verwenden alle ihre natürliche Größe
+- Neue Funktion `calculateColumnWidths()` misst die tatsächliche Breite aller Zelleninhalte (außer Beschreibung)
+- **Position, Menge, Einheit, Einzelpreis, Gesamtpreis**: Erhalten die minimale Breite für ihren Inhalt
+- **Beschreibungsspalte**: Ist die flexible Spalte und füllt immer die verbleibende Breite aus
+- Die Tabelle nutzt **immer die volle verfügbare Breite**
 
-### 2. Textumbruch in der Beschreibungsspalte
-**Regel:** Wenn die Spalten keinen Platz mehr zum Ausdehnen haben, wird in der Spalte Beschreibung der Inhalt auf zwei Zeilen in derselben Zelle aufgeteilt.
+### 2. Beschreibungsspalte als Ausgleichsspalte
+**Regel:** Die Beschreibungsspalte passt sich dynamisch an, um die Tabelle auf volle Breite zu bringen.
 
 **Implementierung:**
-- Nur wenn alle Spalten **nicht** in die Tabellenbreite passen, wird die Beschreibungsspalte komprimiert
-- Beschreibungsspalte erhält dann den verbleibenden Platz nach allen anderen Spalten
+- Wenn andere Spalten wenig Platz benötigen: Beschreibung wird breiter (mehr Platz für Text)
+- Wenn andere Spalten viel Platz benötigen: Beschreibung wird schmaler
+- Wenn Beschreibung zu schmal für Inhalt wird: Text wird automatisch umgebrochen
 - Neue Funktion `calculateRowHeight()` erkennt, wann Text umgebrochen werden muss
 - Text wird automatisch auf mehrere Zeilen aufgeteilt
 - Zeilenhöhe passt sich dynamisch an die Anzahl der Zeilen an
@@ -36,7 +37,7 @@ Diese Implementierung erfüllt die Anforderung, dass Tabellenspalten in PDF-Rech
 // Rückgabe: Objekt mit Breiten für jede Spalte
 {
   pos: number,         // Positionsnummer (basierend auf Inhalt)
-  beschreibung: number, // Beschreibung (basierend auf Inhalt, oder verbleibender Platz wenn zu groß)
+  beschreibung: number, // Beschreibung (verbleibender Platz - flexible Spalte)
   menge: number,       // Menge (basierend auf Inhalt)
   einheit: number,     // Einheit (basierend auf Inhalt)
   einzelpreis: number, // Einzelpreis (basierend auf Inhalt)
@@ -45,11 +46,11 @@ Diese Implementierung erfüllt die Anforderung, dass Tabellenspalten in PDF-Rech
 ```
 
 **Ablauf:**
-1. Misst Kopfzeilen-Text mit `doc.getTextWidth()` für alle Spalten
-2. Misst alle Datenzeilen für jede Spalte einschließlich Beschreibung
-3. Berechnet benötigte Breite für jede Spalte basierend auf Inhalt
-4. Wenn alle Spalten in die Tabellenbreite passen: Verwendet natürliche Größen
-5. Wenn nicht genug Platz: Beschreibungsspalte erhält verbleibenden Platz (mit Textumbruch)
+1. Misst Kopfzeilen-Text mit `doc.getTextWidth()` für alle Spalten außer Beschreibung
+2. Misst alle Datenzeilen für jede Spalte außer Beschreibung
+3. Berechnet benötigte Breite für Position, Menge, Einheit, Einzelpreis, Gesamtpreis
+4. Beschreibungsspalte erhält **immer** den verbleibenden Platz (tableWidth - andere Spalten)
+5. Tabelle nutzt **immer die volle verfügbare Breite**
 
 #### `calculateRowHeight(doc, beschreibung, beschreibungWidth, baseRowHeight)`
 ```javascript
@@ -92,41 +93,48 @@ Diese Konstanten gewährleisten:
 
 ## Beispiele
 
-### Beispiel 1: Kurze Beschreibungen
+### Beispiel 1: Kurze Beschreibungen mit wenigen anderen Spalten
 ```
 Artikel mit kurzen Beschreibungen wie "Beratung" oder "Entwicklung":
-- Spalten nutzen minimal benötigte Breite
-- Beschreibungsspalte erhält viel Platz
+- Position, Menge, Einheit, Preise nutzen minimal benötigte Breite
+- Beschreibungsspalte füllt den Rest der Tabellenbreite aus (wird breiter)
+- Tabelle nutzt immer 100% der verfügbaren Breite
 - Standard-Zeilenhöhe (8mm)
 ```
 
-### Beispiel 2: Lange Beschreibungen
+### Beispiel 2: Lange Beschreibungen mit breiten Preisspalten
 ```
-"Entwicklung einer komplexen Webanwendung mit React und Node.js inkl. Datenbankintegration":
-- Text wird auf 2-3 Zeilen umgebrochen
+Große Beträge wie "1.234.567,89 €" in Preisspalten:
+- Preisspalten werden breiter für die Zahlen
+- Beschreibungsspalte wird automatisch schmaler
+- Text in Beschreibung wird auf 2-3 Zeilen umgebrochen
 - Zeilenhöhe wächst auf z.B. 14mm
 - Andere Spalten bleiben zentriert
+- Tabelle nutzt immer 100% der verfügbaren Breite
 ```
 
 ### Beispiel 3: Gemischte Inhalte
 ```
 Einige Artikel mit kurzen, andere mit langen Beschreibungen:
-- Jede Zeile hat individuelle Höhe
+- Jede Zeile hat individuelle Höhe je nach Textumbruch
 - Spaltenbreiten sind für alle Zeilen gleich
-- Optimale Platznutzung
+- Beschreibung passt sich an, um Tabelle auf volle Breite zu bringen
+- Optimale und konsistente Platznutzung
 ```
 
 ## Vorteile der Implementierung
 
-### 1. Effizienter Platzverbrauch
-- ✅ Keine verschwendete Breite bei schmalen Spalten
-- ✅ Maximaler Platz für wichtige Informationen (Beschreibung)
-- ✅ Automatische Anpassung an verschiedene Inhalte
+### 1. Volle Breitennutzung
+- ✅ Tabelle nutzt **immer die volle verfügbare Breite**
+- ✅ Keine verschwendete Breite rechts der Tabelle
+- ✅ Professionelles, ausgeglichenes Erscheinungsbild
+- ✅ Beschreibungsspalte passt sich flexibel an
 
-### 2. Professionelles Erscheinungsbild
-- ✅ Kompakte Darstellung bei kurzen Inhalten
-- ✅ Vollständige Anzeige langer Texte ohne Abschneiden
-- ✅ Konsistente Formatierung
+### 2. Präzise Spaltenbreiten
+- ✅ Alle Spalten außer Beschreibung sind exakt so breit wie ihr Inhalt
+- ✅ Keine zu breiten oder zu schmalen Spalten
+- ✅ Maximaler Platz für Beschreibungen bei kurzen Preisen
+- ✅ Automatischer Textumbruch bei knappem Platz
 
 ### 3. Wartbarkeit
 - ✅ Zentrale Konstanten für einfache Anpassungen

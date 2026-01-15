@@ -673,9 +673,9 @@ function calculateColumnWidths(doc, items, tableWidth) {
   // Minimum column widths based on padding and minimum usability
   const minColumnWidth = CELL_PADDING * 2; // Minimum: padding on both sides
   
-  // Measure content widths for each column (start from 0, no artificial minimums)
+  // Measure content widths for each column
+  // Note: We measure Description content for reference, but it will be adjusted to fill remaining space
   let maxPos = 0;
-  let maxBeschreibung = 0;
   let maxMenge = 0;
   let maxEinheit = 0;
   let maxEinzelpreis = 0;
@@ -684,7 +684,7 @@ function calculateColumnWidths(doc, items, tableWidth) {
   // Measure header text
   doc.setFont('helvetica', 'bold');
   maxPos = Math.max(maxPos, doc.getTextWidth('Pos.') + CELL_PADDING);
-  maxBeschreibung = Math.max(maxBeschreibung, doc.getTextWidth('Beschreibung') + CELL_PADDING);
+  // Skip measuring 'Beschreibung' header as this column will be flexible
   maxMenge = Math.max(maxMenge, doc.getTextWidth('Menge') + CELL_PADDING);
   maxEinheit = Math.max(maxEinheit, doc.getTextWidth('Einheit') + CELL_PADDING);
   maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth('Einzelpreis') + CELL_PADDING);
@@ -695,14 +695,14 @@ function calculateColumnWidths(doc, items, tableWidth) {
   // Measure each item's content
   items.forEach((item, index) => {
     const posText = String(item.position || index + 1);
-    const beschreibungText = item.beschreibung || item.artikel || '';
+    // Skip measuring beschreibung content as this column will be flexible
     const mengeText = String(item.menge || '1');
     const einheitText = item.einheit || 'Stk';
     const einzelpreisText = formatCurrency(item.einzelpreis);
     const gesamtpreisText = formatCurrency(item.gesamtpreis);
     
     maxPos = Math.max(maxPos, doc.getTextWidth(posText) + CELL_PADDING);
-    maxBeschreibung = Math.max(maxBeschreibung, doc.getTextWidth(beschreibungText) + CELL_PADDING);
+    // Skip measuring beschreibung width
     maxMenge = Math.max(maxMenge, doc.getTextWidth(mengeText) + CELL_PADDING);
     maxEinheit = Math.max(maxEinheit, doc.getTextWidth(einheitText) + CELL_PADDING);
     maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth(einzelpreisText) + CELL_PADDING);
@@ -711,29 +711,14 @@ function calculateColumnWidths(doc, items, tableWidth) {
   
   // Ensure minimum column widths
   maxPos = Math.max(maxPos, minColumnWidth);
-  maxBeschreibung = Math.max(maxBeschreibung, minColumnWidth);
   maxMenge = Math.max(maxMenge, minColumnWidth);
   maxEinheit = Math.max(maxEinheit, minColumnWidth);
   maxEinzelpreis = Math.max(maxEinzelpreis, minColumnWidth);
   maxGesamtpreis = Math.max(maxGesamtpreis, minColumnWidth);
   
-  // Calculate total width needed for all columns
-  const totalNeededWidth = maxPos + maxBeschreibung + maxMenge + maxEinheit + maxEinzelpreis + maxGesamtpreis;
-  
-  // If all columns fit within table width, use their natural sizes
-  if (totalNeededWidth <= tableWidth) {
-    return {
-      pos: maxPos,
-      beschreibung: maxBeschreibung,
-      menge: maxMenge,
-      einheit: maxEinheit,
-      einzelpreis: maxEinzelpreis,
-      gesamtpreis: maxGesamtpreis
-    };
-  }
-  
-  // If columns don't fit, we need to shrink the description column
-  // All other columns keep their needed width, description gets remaining space
+  // NEW RULE: Description column is the only column that adjusts to fill full table width
+  // All other columns use their content-based width
+  // Description column gets all remaining space (expanding or shrinking as needed)
   const usedWidth = maxPos + maxMenge + maxEinheit + maxEinzelpreis + maxGesamtpreis;
   const beschreibungWidth = Math.max(minColumnWidth, tableWidth - usedWidth);
   
