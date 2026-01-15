@@ -317,7 +317,7 @@ function sanitizeFilenameComponent(text) {
   // Replace spaces and special characters with hyphens, remove multiple hyphens
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9äöüß]/gi, '-')
+    .replace(/[^a-z0-9äöüß]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 }
