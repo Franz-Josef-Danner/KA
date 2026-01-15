@@ -113,6 +113,8 @@ export function render() {
       pdfViewBtn.disabled = true;
       pdfViewBtn.textContent = 'PDF wird erstellt...';
       try {
+        // Use custom template for admin view (5th parameter = false)
+        // This allows admins to see PDFs with their custom layout from the PDF editor
         const pdf = await generatePDF('order', row, false, null, false);
         if (pdf) {
           viewPDF(pdf);
@@ -137,6 +139,8 @@ export function render() {
       pdfDownloadBtn.disabled = true;
       pdfDownloadBtn.textContent = 'PDF wird erstellt...';
       try {
+        // Use custom template for admin view (5th parameter = false)
+        // This allows admins to see PDFs with their custom layout from the PDF editor
         const pdf = await generatePDF('order', row, false, null, false);
         if (pdf) {
           const filename = generatePdfFilename('A', row.Projekt, row.Firma, row.Auftragsdatum);
