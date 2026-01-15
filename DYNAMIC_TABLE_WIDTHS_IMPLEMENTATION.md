@@ -11,14 +11,16 @@ Diese Implementierung erfüllt die Anforderung, dass Tabellenspalten in PDF-Rech
 
 **Implementierung:**
 - Neue Funktion `calculateColumnWidths()` misst die tatsächliche Breite aller Zelleninhalte
-- Jede Spalte (außer Beschreibung) erhält die minimale Breite, die für ihren Inhalt benötigt wird
-- Min/Max-Beschränkungen verhindern zu schmale oder zu breite Spalten
-- Beschreibungsspalte erhält den verbleibenden Platz
+- **Jede Spalte** (einschließlich Beschreibung) erhält die minimale Breite, die für ihren Inhalt benötigt wird
+- Keine künstlichen Min/Max-Beschränkungen mehr - Spalten sind so breit wie ihr Inhalt
+- Wenn alle Spalten gemeinsam passen, verwenden alle ihre natürliche Größe
 
 ### 2. Textumbruch in der Beschreibungsspalte
 **Regel:** Wenn die Spalten keinen Platz mehr zum Ausdehnen haben, wird in der Spalte Beschreibung der Inhalt auf zwei Zeilen in derselben Zelle aufgeteilt.
 
 **Implementierung:**
+- Nur wenn alle Spalten **nicht** in die Tabellenbreite passen, wird die Beschreibungsspalte komprimiert
+- Beschreibungsspalte erhält dann den verbleibenden Platz nach allen anderen Spalten
 - Neue Funktion `calculateRowHeight()` erkennt, wann Text umgebrochen werden muss
 - Text wird automatisch auf mehrere Zeilen aufgeteilt
 - Zeilenhöhe passt sich dynamisch an die Anzahl der Zeilen an
@@ -33,21 +35,21 @@ Diese Implementierung erfüllt die Anforderung, dass Tabellenspalten in PDF-Rech
 // Berechnet optimale Spaltenbreiten basierend auf Inhalt
 // Rückgabe: Objekt mit Breiten für jede Spalte
 {
-  pos: number,         // Positionsnummer (6-10% der Tabellenbreite)
-  beschreibung: number, // Beschreibung (verbleibender Platz)
-  menge: number,       // Menge (8-12%)
-  einheit: number,     // Einheit (8-12%)
-  einzelpreis: number, // Einzelpreis (14-18%)
-  gesamtpreis: number  // Gesamtpreis (14-18%)
+  pos: number,         // Positionsnummer (basierend auf Inhalt)
+  beschreibung: number, // Beschreibung (basierend auf Inhalt, oder verbleibender Platz wenn zu groß)
+  menge: number,       // Menge (basierend auf Inhalt)
+  einheit: number,     // Einheit (basierend auf Inhalt)
+  einzelpreis: number, // Einzelpreis (basierend auf Inhalt)
+  gesamtpreis: number  // Gesamtpreis (basierend auf Inhalt)
 }
 ```
 
 **Ablauf:**
-1. Definiert Min/Max-Breiten für jede Spalte als Prozentsatz der Tabellenbreite
-2. Misst Kopfzeilen-Text mit `doc.getTextWidth()`
-3. Misst alle Datenzeilen für jede Spalte
-4. Wendet Max-Beschränkungen an
-5. Berechnet Beschreibungsbreite als verbleibenden Platz
+1. Misst Kopfzeilen-Text mit `doc.getTextWidth()` für alle Spalten
+2. Misst alle Datenzeilen für jede Spalte einschließlich Beschreibung
+3. Berechnet benötigte Breite für jede Spalte basierend auf Inhalt
+4. Wenn alle Spalten in die Tabellenbreite passen: Verwendet natürliche Größen
+5. Wenn nicht genug Platz: Beschreibungsspalte erhält verbleibenden Platz (mit Textumbruch)
 
 #### `calculateRowHeight(doc, beschreibung, beschreibungWidth, baseRowHeight)`
 ```javascript

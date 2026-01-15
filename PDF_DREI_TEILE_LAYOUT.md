@@ -181,16 +181,13 @@ Die Tabellenspalten passen sich nun automatisch an den Inhalt an, und lange Besc
 
 ### Regel 1: Spaltenbreiten basierend auf Inhalt
 - Spaltenbreiten werden dynamisch berechnet basierend auf dem tatsächlichen Inhalt der Zellen
-- Jede Spalte (außer Beschreibung) erhält die minimale Breite, die benötigt wird, um ihren Inhalt anzuzeigen
-- Mindest- und Maximalbreiten verhindern zu schmale oder zu breite Spalten:
-  - Position: 6-10% der Tabellenbreite
-  - Menge: 8-12%
-  - Einheit: 8-12%
-  - Einzelpreis: 14-18%
-  - Gesamtpreis: 14-18%
-- Die Beschreibungsspalte erhält den verbleibenden Platz
+- **Jede Spalte** (einschließlich Beschreibung) erhält die minimale Breite, die benötigt wird, um ihren Inhalt anzuzeigen
+- Keine künstlichen Beschränkungen - Spalten sind so breit wie ihr Inhalt
+- Wenn alle Spalten gemeinsam in die Tabellenbreite passen, verwenden alle ihre natürliche Größe
 
 ### Regel 2: Textumbruch in der Beschreibungsspalte
+- Nur wenn alle Spalten nicht in die Tabellenbreite passen, wird die Beschreibungsspalte komprimiert
+- Die Beschreibungsspalte erhält dann den verbleibenden Platz nach allen anderen Spalten
 - Wenn eine Beschreibung nicht in die Spaltenbreite passt, wird sie automatisch auf mehrere Zeilen umgebrochen
 - Die Zeilenhöhe wird dynamisch angepasst, um allen Text anzuzeigen
 - Andere Spalten bleiben vertikal zentriert in der Zeile
