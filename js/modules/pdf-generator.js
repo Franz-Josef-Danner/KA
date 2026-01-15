@@ -1478,9 +1478,8 @@ function formatCurrency(value) {
 }
 
 // Constants for URL cleanup timeouts
-const URL_CLEANUP_DELAY_SHORT = 500; // Short delay for load event cleanup (ms)
 const URL_CLEANUP_DELAY_STANDARD = 1000; // Standard delay for simple window open (ms)
-const URL_CLEANUP_DELAY_FALLBACK = 5000; // Fallback delay if load event doesn't fire (ms)
+const URL_CLEANUP_DELAY_FALLBACK = 5000; // Longer delay for window with filename or download (ms)
 
 // Invalid filename characters pattern
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
@@ -1489,14 +1488,19 @@ const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
 // Format for orders: A_"Projektname"_"Firmenname"_"erstellungsdatum"
 // Format for invoices: R_"Projektname"_"Firmenname"_"erstellungsdatum"
 export function generatePDFFilename(documentType, documentData) {
-  // Determine prefix based on document type
+  // Determine prefix and date field based on document type
   let prefix = '';
+  let dateField = '';
+  
   if (documentType === 'order' || documentType === 'auftrag') {
     prefix = 'A';
+    dateField = 'Auftragsdatum';
   } else if (documentType === 'invoice' || documentType === 'rechnung') {
     prefix = 'R';
+    dateField = 'Rechnungsdatum';
   } else {
     prefix = 'DOC';
+    dateField = '';
   }
   
   // Extract project name (Projekt)
@@ -1505,12 +1509,12 @@ export function generatePDFFilename(documentType, documentData) {
   // Extract company name (Firma)
   const firmaName = documentData.Firma || documentData.customer?.company || 'Unbekannt';
   
-  // Extract creation date
+  // Extract creation date using the appropriate field
   let dateStr = '';
-  if (documentType === 'order' || documentType === 'auftrag') {
-    dateStr = documentData.Auftragsdatum || documentData.orderDate || '';
-  } else {
-    dateStr = documentData.Rechnungsdatum || documentData.invoiceDate || '';
+  if (dateField) {
+    dateStr = documentData[dateField] || 
+              (dateField === 'Auftragsdatum' ? documentData.orderDate : '') ||
+              (dateField === 'Rechnungsdatum' ? documentData.invoiceDate : '');
   }
   
   // If no date found, use current date
@@ -1579,14 +1583,14 @@ export function viewPDF(doc, filename = null) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      // Use longer delay for download to complete
+      // Use fallback delay for download to complete
       setTimeout(() => {
         try {
           URL.revokeObjectURL(fileUrl);
         } catch (error) {
           console.warn('Error revoking PDF URL:', error);
         }
-      }, URL_CLEANUP_DELAY_STANDARD);
+      }, URL_CLEANUP_DELAY_FALLBACK);
     }
   } else {
     // Original behavior: just open in new window
