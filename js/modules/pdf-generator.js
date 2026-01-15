@@ -1556,6 +1556,14 @@ export function viewPDF(doc, filename = null) {
     // Create a blob URL
     const url = URL.createObjectURL(pdfBlob);
     
+    // Escape filename for safe HTML insertion
+    const escapedFilename = String(filename)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    
     // Open in a new window/tab
     const newWindow = window.open('', '_blank');
     
@@ -1566,7 +1574,7 @@ export function viewPDF(doc, filename = null) {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>${filename}</title>
+          <title>${escapedFilename}</title>
           <style>
             body { margin: 0; padding: 0; overflow: hidden; }
             iframe { border: none; width: 100vw; height: 100vh; }
