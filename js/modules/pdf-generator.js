@@ -1538,7 +1538,6 @@ export function downloadPDF(doc, filename) {
 export function viewPDF(doc, filename = null) {
   if (!doc) return;
   const pdfBlob = doc.output('blob');
-  const url = URL.createObjectURL(pdfBlob);
   
   // If filename is provided, create a blob with proper filename
   // This allows the browser to suggest the filename when user tries to save
@@ -1550,12 +1549,19 @@ export function viewPDF(doc, filename = null) {
     // Open in new window - browser will use the filename when saving
     const newWindow = window.open(fileUrl, '_blank');
     
-    // Clean up the URL after opening
+    // Clean up the URL to prevent memory leaks
     if (newWindow) {
-      // Revoke URL after window is loaded to free up memory
-      newWindow.addEventListener('load', () => {
-        setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
-      });
+      // Try to revoke URL after window loads, with fallback timeout
+      try {
+        newWindow.addEventListener('load', () => {
+          setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
+        });
+      } catch (error) {
+        // If event listener fails, use timeout as fallback
+        console.warn('Could not add load event listener, using timeout fallback');
+      }
+      // Fallback: Always revoke after a reasonable time even if load event doesn't fire
+      setTimeout(() => URL.revokeObjectURL(fileUrl), 5000);
     } else {
       // If popup was blocked, fallback to direct download
       const link = document.createElement('a');
@@ -1568,6 +1574,9 @@ export function viewPDF(doc, filename = null) {
     }
   } else {
     // Original behavior: just open in new window
+    const url = URL.createObjectURL(pdfBlob);
     window.open(url, '_blank');
+    // Clean up URL after a delay to prevent memory leaks
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }
