@@ -1551,47 +1551,25 @@ export function viewPDF(doc, filename = null) {
   if (!doc) return;
   const pdfBlob = doc.output('blob');
   
-  // If filename is provided, create a blob with proper filename
-  // This allows the browser to suggest the filename when user tries to save
+  // If filename is provided, trigger download with proper filename
   if (filename) {
-    // Create a File object with the specified name
-    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-    const fileUrl = URL.createObjectURL(file);
+    // Create a download link with the specified filename
+    const url = URL.createObjectURL(pdfBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     
-    // Open in new window - browser will use the filename when saving
-    const newWindow = window.open(fileUrl, '_blank');
-    
-    // Clean up the URL to prevent memory leaks
-    // We use a fallback timeout as the primary cleanup mechanism since
-    // adding event listeners to newly opened windows can fail due to
-    // cross-origin restrictions or timing issues
-    if (newWindow) {
-      // Primary cleanup: Revoke URL after sufficient time for window to load
-      // 5 seconds should be enough for the browser to load and cache the PDF
-      setTimeout(() => {
-        try {
-          URL.revokeObjectURL(fileUrl);
-        } catch (error) {
-          console.warn('Error revoking PDF URL:', error);
-        }
-      }, URL_CLEANUP_DELAY_FALLBACK);
-    } else {
-      // If popup was blocked, fallback to direct download
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      // Use fallback delay for download to complete
-      setTimeout(() => {
-        try {
-          URL.revokeObjectURL(fileUrl);
-        } catch (error) {
-          console.warn('Error revoking PDF URL:', error);
-        }
-      }, URL_CLEANUP_DELAY_FALLBACK);
-    }
+    // Clean up URL after download is triggered
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.warn('Error revoking PDF URL:', error);
+      }
+    }, URL_CLEANUP_DELAY_FALLBACK);
   } else {
     // Original behavior: just open in new window
     const url = URL.createObjectURL(pdfBlob);
