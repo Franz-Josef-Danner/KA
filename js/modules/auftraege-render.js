@@ -7,6 +7,8 @@ import { toCellDisplay } from '../utils/formatting.js';
 import { debounce } from '../utils/helpers.js';
 import { rowMatchesSearch } from './auftraege-search.js';
 import { updateUndoRedoButtons } from './auftraege-ui.js';
+import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
+import { getRows as getCompanies } from './state.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -101,6 +103,55 @@ export function render() {
     const act = document.createElement("td");
     act.className = "actions";
     
+    // PDF View button
+    const viewPdfBtn = document.createElement("button");
+    viewPdfBtn.textContent = "PDF anzeigen";
+    viewPdfBtn.className = "btn-secondary";
+    viewPdfBtn.title = "PDF anzeigen";
+    viewPdfBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      viewPdfBtn.disabled = true;
+      viewPdfBtn.textContent = 'PDF wird erstellt...';
+      try {
+        const pdf = await generatePDF('order', row, false, null, true);
+        if (pdf) {
+          viewPDF(pdf);
+        }
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+      } finally {
+        viewPdfBtn.disabled = false;
+        viewPdfBtn.textContent = 'PDF anzeigen';
+      }
+    });
+    act.appendChild(viewPdfBtn);
+    
+    // PDF Download button
+    const downloadPdfBtn = document.createElement("button");
+    downloadPdfBtn.textContent = "PDF herunterladen";
+    downloadPdfBtn.className = "btn-primary";
+    downloadPdfBtn.title = "PDF herunterladen";
+    downloadPdfBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      downloadPdfBtn.disabled = true;
+      downloadPdfBtn.textContent = 'PDF wird erstellt...';
+      try {
+        const pdf = await generatePDF('order', row, false, null, true);
+        if (pdf) {
+          const filename = generatePdfFilename('A', row.Projekt, row.Firma, row.Auftragsdatum);
+          downloadPDF(pdf, filename);
+        }
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+      } finally {
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.textContent = 'PDF herunterladen';
+      }
+    });
+    act.appendChild(downloadPdfBtn);
+    
     // Plus button - add row below
     const plus = document.createElement("button");
     plus.textContent = "+";
@@ -139,3 +190,24 @@ export function render() {
 
 // Create a debounced version of render to avoid multiple rapid re-renders
 export const debouncedRender = debounce(render, 300);
+
+// Helper function to sanitize and format filename components
+function sanitizeFilenameComponent(text) {
+  if (!text) return 'unbekannt';
+  // Replace spaces and special characters with hyphens, remove multiple hyphens
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9äöüß]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// Generate filename for PDF download
+// prefix: 'A' for Aufträge, 'R' for Rechnungen
+function generatePdfFilename(prefix, projektName, firmaName, datum) {
+  const sanitizedProjekt = sanitizeFilenameComponent(projektName);
+  const sanitizedFirma = sanitizeFilenameComponent(firmaName);
+  const sanitizedDatum = sanitizeFilenameComponent(datum);
+  
+  return `${prefix}_${sanitizedProjekt}_${sanitizedFirma}_${sanitizedDatum}.pdf`;
+}
