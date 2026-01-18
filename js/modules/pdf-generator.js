@@ -1204,13 +1204,36 @@ function getInvoiceIdentifiers(documentData) {
 }
 
 /**
- * Helper function to generate payment terms text
+ * Helper function to generate payment terms text with due date
  * @param {string} invoiceNumber - Invoice number
  * @param {number} zahlungszielTage - Payment terms in days
- * @returns {string} - Payment terms text
+ * @param {string} invoiceDate - Invoice date (YYYY-MM-DD format or Date object)
+ * @returns {string} - Payment terms text with due date
  */
-function generatePaymentTermsText(invoiceNumber, zahlungszielTage) {
-  return `Zahlung unter Angabe der Rechnungsnummer (${invoiceNumber}) binnen ${zahlungszielTage} Tagen netto ab Rechnungsdatum.`;
+function generatePaymentTermsText(invoiceNumber, zahlungszielTage, invoiceDate) {
+  // Calculate due date
+  let dueDate = new Date();
+  
+  // Parse invoice date if provided
+  if (invoiceDate) {
+    if (typeof invoiceDate === 'string') {
+      dueDate = new Date(invoiceDate);
+    } else if (invoiceDate instanceof Date) {
+      dueDate = new Date(invoiceDate);
+    }
+  }
+  
+  // Add payment terms days to invoice date
+  dueDate.setDate(dueDate.getDate() + zahlungszielTage);
+  
+  // Format due date as DD.MM.YYYY (German format)
+  const dueDateStr = dueDate.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+  
+  return `Zahlung unter Angabe der Rechnungsnummer (${invoiceNumber}) bis zum ${dueDateStr}.`;
 }
 
 // Calculate footer height without rendering (for layout planning)
@@ -1225,9 +1248,10 @@ function calculateFooterHeight(doc, x, y, width, companySettings, documentType, 
     // Calculate space if we have an invoice number (Firmen_ID is optional)
     if (invoiceNumber) {
       let zahlungszielTage = documentData.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
+      const invoiceDate = documentData.invoiceDate || documentData.Rechnungsdatum || new Date();
       
       // Calculate space needed for payment terms text
-      const paymentTermsText = generatePaymentTermsText(invoiceNumber, zahlungszielTage);
+      const paymentTermsText = generatePaymentTermsText(invoiceNumber, zahlungszielTage, invoiceDate);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       const paymentLines = doc.splitTextToSize(paymentTermsText, width - FOOTER_TEXT_MARGIN);
@@ -1306,9 +1330,10 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
       // Get payment terms from cached data passed in documentData
       // If no Firmen_ID or payment terms data, use default
       let zahlungszielTage = documentData.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
+      const invoiceDate = documentData.invoiceDate || documentData.Rechnungsdatum || new Date();
       
-      // Add payment terms text
-      const paymentTermsText = generatePaymentTermsText(invoiceNumber, zahlungszielTage);
+      // Add payment terms text with due date
+      const paymentTermsText = generatePaymentTermsText(invoiceNumber, zahlungszielTage, invoiceDate);
       
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
