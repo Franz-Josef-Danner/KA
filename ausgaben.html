@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ausgaben - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <h1>Ausgaben – Verwaltung</h1>
+
+  <div class="bar">
+    <button id="newAusgabenBtn">+ Neue Ausgabe</button>
+    <button id="undoBtn" title="Rückgängig (Strg+Z)">↶ Rückgängig</button>
+    <button id="redoBtn" title="Wiederholen (Strg+Y)">↷ Wiederholen</button>
+    <input id="search" class="search" type="search" placeholder="Suchen (Empfänger, Verwendungszweck, Rechnungsnummer …)" />
+  </div>
+
+  <div class="hint">
+    Bedienung: Doppelklick auf eine Ausgabe zum Bearbeiten. <span class="pill">Tab</span> springt zum nächsten Feld im Bearbeitungsdialog.
+  </div>
+
+  <div class="wrap">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th>Ausgaben_ID</th>
+          <th>Datum</th>
+          <th>Empfänger</th>
+          <th>Verwendungszweck</th>
+          <th>Rechnungsnummer</th>
+          <th>Betrag</th>
+          <th>Kategorie</th>
+          <th>Status</th>
+          <th>Kommentare</th>
+          <th class="actions">Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Ausgaben Edit Modal -->
+  <div id="ausgabenModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Ausgabe bearbeiten</h2>
+        <button id="modalClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="ausgabenForm">
+          <div class="form-group">
+            <label for="edit_Ausgaben_ID">Ausgaben-ID:</label>
+            <input type="text" id="edit_Ausgaben_ID" name="Ausgaben_ID" readonly style="background-color: #f5f5f5;" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Datum">Datum:</label>
+            <input type="date" id="edit_Datum" name="Datum" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Empfaenger">Empfänger: *</label>
+            <input type="text" id="edit_Empfaenger" name="Empfaenger" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Verwendungszweck">Verwendungszweck: *</label>
+            <input type="text" id="edit_Verwendungszweck" name="Verwendungszweck" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Rechnungsnummer">Rechnungsnummer:</label>
+            <input type="text" id="edit_Rechnungsnummer" name="Rechnungsnummer" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Betrag">Betrag (€): *</label>
+            <input type="number" id="edit_Betrag" name="Betrag" step="0.01" min="0" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Kategorie">Kategorie:</label>
+            <select id="edit_Kategorie" name="Kategorie">
+              <option value="Privat">Privat</option>
+              <option value="Beruflich">Beruflich</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit_Status">Bezahlstatus:</label>
+            <select id="edit_Status" name="Status">
+              <option value="unbezahlt">Unbezahlt</option>
+              <option value="bezahlt">Bezahlt</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="edit_Kommentare">Kommentare:</label>
+            <textarea id="edit_Kommentare" name="Kommentare" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="modalCancel" class="btn-secondary">Abbrechen</button>
+        <button id="modalSave" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, requireAdmin } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    
+    (() => {
+      try {
+        // Require authentication and admin role
+        requireAuth();
+        requireAdmin();
+
+        // Initialize navigation only after successful authentication
+        initNavigation('ausgaben.html');
+      } catch (error) {
+        // Authentication failed or a redirect is in progress; avoid further DOM manipulation
+        console.error('Authentication error on ausgaben page:', error);
+      }
+    })();
+  </script>
+  <script type="module" src="js/ausgaben-app.js"></script>
+</body>
+</html>
