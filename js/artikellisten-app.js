@@ -29,6 +29,7 @@ async function renderPreview(firmenId) {
       <div class="preview-header">
         <h3>${artikelliste.firmenName || artikelliste.firmenId}</h3>
         <p><strong>Firmen-ID:</strong> ${artikelliste.firmenId}</p>
+        <p><strong>Zahlungsziel:</strong> ${artikelliste.zahlungsziel_tage || 30} Tage</p>
         <p><strong>Erstellt:</strong> ${new Date(artikelliste.created).toLocaleDateString('de-DE')}</p>
         <p><strong>Geändert:</strong> ${new Date(artikelliste.modified).toLocaleDateString('de-DE')}</p>
         <p><strong>Positionen:</strong> ${artikelliste.items.length}</p>
@@ -106,7 +107,7 @@ async function render() {
   if (artikellistenArray.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.setAttribute("colspan", "5");
+    td.setAttribute("colspan", "6");
     td.style.textAlign = "center";
     td.style.padding = "20px";
     td.style.color = "#666";
@@ -146,6 +147,12 @@ async function render() {
     tdItems.textContent = artikelliste.items.length.toString();
     tdItems.style.textAlign = "center";
     tr.appendChild(tdItems);
+    
+    // Zahlungsziel (Tage)
+    const tdZahlungsziel = document.createElement("td");
+    tdZahlungsziel.textContent = (artikelliste.zahlungsziel_tage || 30).toString();
+    tdZahlungsziel.style.textAlign = "center";
+    tr.appendChild(tdZahlungsziel);
     
     // Created date
     const tdCreated = document.createElement("td");

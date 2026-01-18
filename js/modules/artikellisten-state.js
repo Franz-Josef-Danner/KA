@@ -186,6 +186,7 @@ export async function createEmptyArtikelliste(firmenId, firmenName) {
   const artikelliste = {
     firmenId: firmenId,
     firmenName: firmenName,
+    zahlungsziel_tage: 30, // Default payment term: 30 days
     created: new Date().toISOString(),
     modified: new Date().toISOString(),
     items: []
