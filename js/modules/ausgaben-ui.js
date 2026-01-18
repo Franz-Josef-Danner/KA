@@ -41,6 +41,13 @@ export function openModal(rowIndex = null) {
     document.getElementById("edit_IBAN").value = row.IBAN || '';
     document.getElementById("edit_BIC").value = row.BIC || '';
     document.getElementById("edit_Kommentare").value = row.Kommentare || '';
+    
+    // Store Recurring_ID in a hidden data attribute if it exists
+    if (row.Recurring_ID) {
+      ausgabenForm.dataset.recurringId = row.Recurring_ID;
+    } else {
+      delete ausgabenForm.dataset.recurringId;
+    }
   } else {
     // Create new expense
     modalTitle.textContent = "Neue Ausgabe";
@@ -59,6 +66,9 @@ export function openModal(rowIndex = null) {
     document.getElementById("edit_IBAN").value = '';
     document.getElementById("edit_BIC").value = '';
     document.getElementById("edit_Kommentare").value = '';
+    
+    // Clear Recurring_ID for new expenses
+    delete ausgabenForm.dataset.recurringId;
   }
   
   modal.style.display = "flex";
@@ -76,6 +86,8 @@ export function closeModal() {
   modal.style.display = "none";
   currentEditIndex = null;
   ausgabenForm.reset();
+  // Clear the Recurring_ID data attribute
+  delete ausgabenForm.dataset.recurringId;
 }
 
 /**
@@ -97,6 +109,11 @@ export function saveModal() {
     BIC: document.getElementById("edit_BIC").value,
     Kommentare: document.getElementById("edit_Kommentare").value
   };
+  
+  // Preserve Recurring_ID if it exists (for auto-generated expenses)
+  if (ausgabenForm.dataset.recurringId) {
+    formData.Recurring_ID = ausgabenForm.dataset.recurringId;
+  }
   
   // Validate required fields
   if (!formData.Empfaenger || !formData.Verwendungszweck) {
