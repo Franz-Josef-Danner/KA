@@ -8,19 +8,19 @@ import { sanitizeText } from '../utils/sanitize.js';
 import { render } from './dauerhafte-ausgaben-render.js';
 
 const modal = document.getElementById("dauerhafteAusgabenModal");
-const modalTitle = document.getElementById("modalTitle");
-const modalClose = document.getElementById("modalClose");
-const modalCancel = document.getElementById("modalCancel");
-const modalSave = document.getElementById("modalSave");
+const modalTitle = document.getElementById("recurringModalTitle");
+const modalClose = document.getElementById("recurringModalClose");
+const modalCancel = document.getElementById("recurringModalCancel");
+const modalSave = document.getElementById("recurringModalSave");
 const dauerhafteAusgabenForm = document.getElementById("dauerhafteAusgabenForm");
 
-let currentEditIndex = null;
+let currentRecurringEditIndex = null;
 
 /**
  * Open the modal for editing or creating a recurring expense
  */
 export function openModal(rowIndex = null) {
-  currentEditIndex = rowIndex;
+  currentRecurringEditIndex = rowIndex;
   
   if (rowIndex !== null) {
     // Edit existing recurring expense
@@ -29,43 +29,43 @@ export function openModal(rowIndex = null) {
     const row = rows[rowIndex];
     
     // Populate form fields
-    document.getElementById("edit_Ausgaben_ID").value = row.Ausgaben_ID || '';
-    document.getElementById("edit_Empfaenger").value = row.Empfaenger || '';
-    document.getElementById("edit_Verwendungszweck").value = row.Verwendungszweck || '';
-    document.getElementById("edit_Rechnungsnummer").value = row.Rechnungsnummer || '';
-    document.getElementById("edit_Betrag").value = row.Betrag || '0.00';
-    document.getElementById("edit_Kategorie").value = row.Kategorie || 'Beruflich';
-    document.getElementById("edit_IBAN").value = row.IBAN || '';
-    document.getElementById("edit_BIC").value = row.BIC || '';
-    document.getElementById("edit_Kommentare").value = row.Kommentare || '';
-    document.getElementById("edit_Wiederholungszeitraum").value = row.Wiederholungszeitraum || 'Monatlich';
-    document.getElementById("edit_Beginn_Datum").value = row.Beginn_Datum || '';
-    document.getElementById("edit_Stichtag").value = row.Stichtag || '1';
+    document.getElementById("edit_Recurring_Ausgaben_ID").value = row.Ausgaben_ID || '';
+    document.getElementById("edit_Recurring_Empfaenger").value = row.Empfaenger || '';
+    document.getElementById("edit_Recurring_Verwendungszweck").value = row.Verwendungszweck || '';
+    document.getElementById("edit_Recurring_Rechnungsnummer").value = row.Rechnungsnummer || '';
+    document.getElementById("edit_Recurring_Betrag").value = row.Betrag || '0.00';
+    document.getElementById("edit_Recurring_Kategorie").value = row.Kategorie || 'Beruflich';
+    document.getElementById("edit_Recurring_IBAN").value = row.IBAN || '';
+    document.getElementById("edit_Recurring_BIC").value = row.BIC || '';
+    document.getElementById("edit_Recurring_Kommentare").value = row.Kommentare || '';
+    document.getElementById("edit_Recurring_Wiederholungszeitraum").value = row.Wiederholungszeitraum || 'Monatlich';
+    document.getElementById("edit_Recurring_Beginn_Datum").value = row.Beginn_Datum || '';
+    document.getElementById("edit_Recurring_Stichtag").value = row.Stichtag || '1';
   } else {
     // Create new recurring expense
     modalTitle.textContent = "Neue dauerhafte Ausgabe";
     const newRow = newEmptyRow();
     
     // Populate form with default values
-    document.getElementById("edit_Ausgaben_ID").value = newRow.Ausgaben_ID;
-    document.getElementById("edit_Empfaenger").value = '';
-    document.getElementById("edit_Verwendungszweck").value = '';
-    document.getElementById("edit_Rechnungsnummer").value = '';
-    document.getElementById("edit_Betrag").value = '0.00';
-    document.getElementById("edit_Kategorie").value = 'Beruflich';
-    document.getElementById("edit_IBAN").value = '';
-    document.getElementById("edit_BIC").value = '';
-    document.getElementById("edit_Kommentare").value = '';
-    document.getElementById("edit_Wiederholungszeitraum").value = 'Monatlich';
-    document.getElementById("edit_Beginn_Datum").value = newRow.Beginn_Datum;
-    document.getElementById("edit_Stichtag").value = '1';
+    document.getElementById("edit_Recurring_Ausgaben_ID").value = newRow.Ausgaben_ID;
+    document.getElementById("edit_Recurring_Empfaenger").value = '';
+    document.getElementById("edit_Recurring_Verwendungszweck").value = '';
+    document.getElementById("edit_Recurring_Rechnungsnummer").value = '';
+    document.getElementById("edit_Recurring_Betrag").value = '0.00';
+    document.getElementById("edit_Recurring_Kategorie").value = 'Beruflich';
+    document.getElementById("edit_Recurring_IBAN").value = '';
+    document.getElementById("edit_Recurring_BIC").value = '';
+    document.getElementById("edit_Recurring_Kommentare").value = '';
+    document.getElementById("edit_Recurring_Wiederholungszeitraum").value = 'Monatlich';
+    document.getElementById("edit_Recurring_Beginn_Datum").value = newRow.Beginn_Datum;
+    document.getElementById("edit_Recurring_Stichtag").value = '1';
   }
   
   modal.style.display = "flex";
   
   // Focus first input
   setTimeout(() => {
-    document.getElementById("edit_Empfaenger").focus();
+    document.getElementById("edit_Recurring_Empfaenger").focus();
   }, 100);
 }
 
@@ -74,7 +74,7 @@ export function openModal(rowIndex = null) {
  */
 export function closeModal() {
   modal.style.display = "none";
-  currentEditIndex = null;
+  currentRecurringEditIndex = null;
   dauerhafteAusgabenForm.reset();
 }
 
@@ -84,18 +84,18 @@ export function closeModal() {
 export function saveModal() {
   // Get form values
   const formData = {
-    Ausgaben_ID: document.getElementById("edit_Ausgaben_ID").value,
-    Empfaenger: document.getElementById("edit_Empfaenger").value,
-    Verwendungszweck: document.getElementById("edit_Verwendungszweck").value,
-    Rechnungsnummer: document.getElementById("edit_Rechnungsnummer").value,
-    Betrag: document.getElementById("edit_Betrag").value,
-    Kategorie: document.getElementById("edit_Kategorie").value,
-    IBAN: document.getElementById("edit_IBAN").value,
-    BIC: document.getElementById("edit_BIC").value,
-    Kommentare: document.getElementById("edit_Kommentare").value,
-    Wiederholungszeitraum: document.getElementById("edit_Wiederholungszeitraum").value,
-    Beginn_Datum: document.getElementById("edit_Beginn_Datum").value,
-    Stichtag: document.getElementById("edit_Stichtag").value
+    Ausgaben_ID: document.getElementById("edit_Recurring_Ausgaben_ID").value,
+    Empfaenger: document.getElementById("edit_Recurring_Empfaenger").value,
+    Verwendungszweck: document.getElementById("edit_Recurring_Verwendungszweck").value,
+    Rechnungsnummer: document.getElementById("edit_Recurring_Rechnungsnummer").value,
+    Betrag: document.getElementById("edit_Recurring_Betrag").value,
+    Kategorie: document.getElementById("edit_Recurring_Kategorie").value,
+    IBAN: document.getElementById("edit_Recurring_IBAN").value,
+    BIC: document.getElementById("edit_Recurring_BIC").value,
+    Kommentare: document.getElementById("edit_Recurring_Kommentare").value,
+    Wiederholungszeitraum: document.getElementById("edit_Recurring_Wiederholungszeitraum").value,
+    Beginn_Datum: document.getElementById("edit_Recurring_Beginn_Datum").value,
+    Stichtag: document.getElementById("edit_Recurring_Stichtag").value
   };
   
   // Validate required fields
@@ -136,9 +136,9 @@ export function saveModal() {
   }
   
   // Save the recurring expense
-  if (currentEditIndex !== null) {
+  if (currentRecurringEditIndex !== null) {
     // Update existing recurring expense
-    updateRow(currentEditIndex, formData);
+    updateRow(currentRecurringEditIndex, formData);
   } else {
     // Add new recurring expense
     const rows = getRows();
@@ -197,3 +197,4 @@ export function initModalHandlers() {
     }
   });
 }
+

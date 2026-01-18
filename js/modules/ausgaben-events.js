@@ -7,25 +7,45 @@ import { openModal, closeModal, initModalHandlers, updateUndoRedoButtons } from 
 import { debounce } from '../utils/helpers.js';
 
 /**
- * Initialize all event handlers for the Ausgaben page
+ * Initialize all event handlers for the Ausgaben page (regular expenses)
  */
 export function initEventHandlers() {
   // Initialize modal handlers
   initModalHandlers();
   
-  // New expense button
+  // New expense button - will be handled by tab-aware logic in main app
   const newBtn = document.getElementById("newAusgabenBtn");
   if (newBtn) {
-    newBtn.addEventListener("click", () => openModal(null));
+    // Remove any existing listeners and add new one
+    const newBtnClone = newBtn.cloneNode(true);
+    newBtn.parentNode.replaceChild(newBtnClone, newBtn);
+    
+    newBtnClone.addEventListener("click", () => {
+      // Check which view is active
+      const regularTab = document.getElementById('regularTab');
+      if (regularTab && regularTab.classList.contains('active')) {
+        openModal(null);
+      } else {
+        // Trigger recurring expense modal
+        window.dispatchEvent(new CustomEvent('openDauerhafteAusgabenModal', { detail: { rowIndex: null } }));
+      }
+    });
   }
   
   // Undo button
   const undoBtn = document.getElementById("undoBtn");
   if (undoBtn) {
     undoBtn.addEventListener("click", () => {
-      if (undo()) {
-        render();
-        updateUndoRedoButtons();
+      // Check which view is active
+      const regularTab = document.getElementById('regularTab');
+      if (regularTab && regularTab.classList.contains('active')) {
+        if (undo()) {
+          render();
+          updateUndoRedoButtons();
+        }
+      } else {
+        // Trigger recurring undo
+        window.dispatchEvent(new CustomEvent('recurringUndo'));
       }
     });
   }
@@ -34,9 +54,16 @@ export function initEventHandlers() {
   const redoBtn = document.getElementById("redoBtn");
   if (redoBtn) {
     redoBtn.addEventListener("click", () => {
-      if (redo()) {
-        render();
-        updateUndoRedoButtons();
+      // Check which view is active
+      const regularTab = document.getElementById('regularTab');
+      if (regularTab && regularTab.classList.contains('active')) {
+        if (redo()) {
+          render();
+          updateUndoRedoButtons();
+        }
+      } else {
+        // Trigger recurring redo
+        window.dispatchEvent(new CustomEvent('recurringRedo'));
       }
     });
   }
@@ -45,7 +72,13 @@ export function initEventHandlers() {
   const searchInput = document.getElementById("search");
   if (searchInput) {
     searchInput.addEventListener("input", debounce(() => {
-      render();
+      // Check which view is active and render accordingly
+      const regularTab = document.getElementById('regularTab');
+      if (regularTab && regularTab.classList.contains('active')) {
+        render();
+      } else {
+        window.dispatchEvent(new CustomEvent('recurringSearch'));
+      }
     }, 300));
   }
   
@@ -58,21 +91,33 @@ export function initEventHandlers() {
       return;
     }
     
+    // Check which view is active
+    const regularTab = document.getElementById('regularTab');
+    const isRegularView = regularTab && regularTab.classList.contains('active');
+    
     // Undo: Ctrl+Z
     if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
-      if (undo()) {
-        render();
-        updateUndoRedoButtons();
+      if (isRegularView) {
+        if (undo()) {
+          render();
+          updateUndoRedoButtons();
+        }
+      } else {
+        window.dispatchEvent(new CustomEvent('recurringUndo'));
       }
     }
     
     // Redo: Ctrl+Y or Ctrl+Shift+Z
     if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
       e.preventDefault();
-      if (redo()) {
-        render();
-        updateUndoRedoButtons();
+      if (isRegularView) {
+        if (redo()) {
+          render();
+          updateUndoRedoButtons();
+        }
+      } else {
+        window.dispatchEvent(new CustomEvent('recurringRedo'));
       }
     }
   });

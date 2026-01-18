@@ -7,74 +7,29 @@ import { openModal, closeModal, initModalHandlers, updateUndoRedoButtons } from 
 import { debounce } from '../utils/helpers.js';
 
 /**
- * Initialize all event handlers for the Dauerhafte Ausgaben page
+ * Initialize all event handlers for the Dauerhafte Ausgaben (integrated into Ausgaben page)
  */
 export function initEventHandlers() {
   // Initialize modal handlers
   initModalHandlers();
   
-  // New recurring expense button
-  const newBtn = document.getElementById("newDauerhafteAusgabenBtn");
-  if (newBtn) {
-    newBtn.addEventListener("click", () => openModal(null));
-  }
-  
-  // Undo button
-  const undoBtn = document.getElementById("undoBtn");
-  if (undoBtn) {
-    undoBtn.addEventListener("click", () => {
-      if (undo()) {
-        render();
-        updateUndoRedoButtons();
-      }
-    });
-  }
-  
-  // Redo button
-  const redoBtn = document.getElementById("redoBtn");
-  if (redoBtn) {
-    redoBtn.addEventListener("click", () => {
-      if (redo()) {
-        render();
-        updateUndoRedoButtons();
-      }
-    });
-  }
-  
-  // Search input with debounce
-  const searchInput = document.getElementById("search");
-  if (searchInput) {
-    searchInput.addEventListener("input", debounce(() => {
+  // Listen to custom events triggered by the unified UI
+  window.addEventListener('recurringUndo', () => {
+    if (undo()) {
       render();
-    }, 300));
-  }
+      updateUndoRedoButtons();
+    }
+  });
   
-  // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
-    // Skip if user is typing in contenteditable or input fields
-    if (e.target.isContentEditable || 
-        e.target.tagName === 'INPUT' || 
-        e.target.tagName === 'TEXTAREA') {
-      return;
+  window.addEventListener('recurringRedo', () => {
+    if (redo()) {
+      render();
+      updateUndoRedoButtons();
     }
-    
-    // Undo: Ctrl+Z
-    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
-      e.preventDefault();
-      if (undo()) {
-        render();
-        updateUndoRedoButtons();
-      }
-    }
-    
-    // Redo: Ctrl+Y or Ctrl+Shift+Z
-    if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
-      e.preventDefault();
-      if (redo()) {
-        render();
-        updateUndoRedoButtons();
-      }
-    }
+  });
+  
+  window.addEventListener('recurringSearch', () => {
+    render();
   });
   
   // Custom events for modal and delete actions

@@ -7,7 +7,7 @@ import { toCellDisplay } from '../utils/formatting.js';
 import { rowMatchesSearch } from './dauerhafte-ausgaben-search.js';
 import { updateUndoRedoButtons } from './dauerhafte-ausgaben-ui.js';
 
-const tbody = document.getElementById("tbody");
+const tbody = document.getElementById("recurringTbody");
 const searchInput = document.getElementById("search");
 
 export function render() {

@@ -4,8 +4,11 @@
 
 The recurring expenses feature allows you to define expenses that repeat on a regular basis (daily, weekly, monthly, or yearly). These recurring expenses automatically generate regular expenses based on their schedule.
 
+**Integration**: Recurring expenses are integrated into the main Ausgaben (Expenses) page with a tab interface, allowing easy switching between regular one-time expenses and recurring expenses.
+
 ## Features
 
+- **Integrated Interface**: Manage both regular and recurring expenses from a single page with tabs
 - **Recurring Expense Management**: Create and manage recurring expenses with the same fields as regular expenses
 - **Recurrence Periods**: Daily, Weekly, Monthly, or Yearly
 - **Start Date**: Define when the recurring expense begins
@@ -15,11 +18,17 @@ The recurring expenses feature allows you to define expenses that repeat on a re
 
 ## User Interface
 
-The recurring expenses management page is available in the navigation menu under "Dauerhafte Ausgaben".
+The recurring expenses management is integrated into the **Ausgaben** page with a tab interface.
+
+### Accessing Recurring Expenses
+
+1. Navigate to **Ausgaben** in the menu
+2. Click on the **"Dauerhafte Ausgaben"** tab to switch to recurring expenses view
+3. Click on **"Einmalige Ausgaben"** tab to switch back to regular expenses
 
 ### Creating a Recurring Expense
 
-1. Navigate to **Dauerhafte Ausgaben** in the menu
+1. Navigate to **Ausgaben** and click the **"Dauerhafte Ausgaben"** tab
 2. Click **+ Neue dauerhafte Ausgabe**
 3. Fill in the required fields:
    - **Empfänger** (Recipient): Who receives the payment
