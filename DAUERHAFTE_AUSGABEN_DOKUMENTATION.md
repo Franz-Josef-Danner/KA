@@ -48,48 +48,47 @@ The recurring expenses management is integrated into the **Ausgaben** page with 
 
 ## Automatic Expense Generation
 
-### Cronjob Script
+### Automatic Triggering
 
-The system includes a PHP script `generate-recurring-expenses.php` that processes recurring expenses and generates regular expenses automatically.
+The system automatically checks for and generates due recurring expenses when the **Dashboard** is loaded. No manual cronjob setup is required - the generation happens automatically in the background whenever a user accesses the dashboard.
 
-### Setup Instructions
+### How It Works
 
-1. **Make the script executable** (optional, for direct execution):
-   ```bash
-   chmod +x /path/to/KA/generate-recurring-expenses.php
-   ```
+1. When you access the dashboard, the system automatically checks all recurring expenses
+2. For each recurring expense, it calculates if an expense is due today
+3. If due and not already generated, a new regular expense is created automatically
+4. The generated expense is marked as "bezahlt" (paid)
+5. The process runs silently in the background without disrupting the dashboard display
 
-2. **Configure Cronjob**: Add the following line to your crontab to run the script daily at midnight:
-   ```bash
-   crontab -e
-   ```
-   
-   Add this line:
-   ```bash
-   0 0 * * * /usr/bin/php /path/to/KA/generate-recurring-expenses.php >> /var/log/ka-recurring-expenses.log 2>&1
-   ```
+### Manual Triggering (Optional)
 
-3. **Alternative Schedule**: Run every day at 6 AM:
-   ```bash
-   0 6 * * * /usr/bin/php /path/to/KA/generate-recurring-expenses.php >> /var/log/ka-recurring-expenses.log 2>&1
-   ```
+If you prefer to run the generation manually or via a scheduled task, you can use the cronjob script:
 
-### Manual Execution
-
-You can also run the script manually for testing:
 ```bash
 cd /path/to/KA
 php generate-recurring-expenses.php
 ```
 
-### How It Works
+Or set up a cronjob to run it daily:
 
-1. The script runs daily (or as configured in cron)
-2. It checks each recurring expense to see if:
+```bash
+crontab -e
+```
+
+Add this line to run daily at midnight:
+```bash
+0 0 * * * /usr/bin/php /path/to/KA/generate-recurring-expenses.php >> /var/log/ka-recurring-expenses.log 2>&1
+```
+
+**Note:** Manual cronjob setup is optional. The system automatically generates expenses when the dashboard is accessed.
+
+### Technical Details
+
+1. The generation process checks each recurring expense to see if:
    - The start date has been reached
    - An expense is due today based on the recurrence schedule
    - An expense hasn't already been generated for today
-3. If all conditions are met, it creates a regular expense with:
+2. If all conditions are met, it creates a regular expense with:
    - All fields copied from the recurring expense
    - Today's date
    - Status automatically set to "bezahlt" (paid)
@@ -123,6 +122,25 @@ Example log output:
 
 - **Load Recurring Expenses**: `api/load-dauerhafte-ausgaben.php`
 - **Save Recurring Expenses**: `api/save-dauerhafte-ausgaben.php`
+- **Trigger Generation**: `api/trigger-recurring-expenses.php` (POST) - Manually trigger expense generation
+
+### API Response Example
+
+Calling the trigger endpoint returns:
+```json
+{
+  "success": true,
+  "message": "Generated 2 new expense(s)",
+  "generated": 2,
+  "expenses": [
+    {
+      "id": "AUS-1234567890-abc123",
+      "recipient": "Supplier Name",
+      "amount": "99.99"
+    }
+  ]
+}
+```
 
 ## Examples
 
