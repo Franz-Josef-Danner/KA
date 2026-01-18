@@ -1222,7 +1222,8 @@ function calculateFooterHeight(doc, x, y, width, companySettings, documentType, 
   if ((documentType === 'invoice' || documentType === 'rechnung') && documentData) {
     const { invoiceNumber, firmenId } = getInvoiceIdentifiers(documentData);
     
-    if (invoiceNumber && firmenId) {
+    // Calculate space if we have an invoice number (Firmen_ID is optional)
+    if (invoiceNumber) {
       let zahlungszielTage = documentData.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
       
       // Calculate space needed for payment terms text
@@ -1300,8 +1301,10 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
   if ((documentType === 'invoice' || documentType === 'rechnung') && documentData) {
     const { invoiceNumber, firmenId } = getInvoiceIdentifiers(documentData);
     
-    if (invoiceNumber && firmenId) {
+    // Show payment terms text if we have an invoice number (Firmen_ID is optional)
+    if (invoiceNumber) {
       // Get payment terms from cached data passed in documentData
+      // If no Firmen_ID or payment terms data, use default
       let zahlungszielTage = documentData.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
       
       // Add payment terms text
