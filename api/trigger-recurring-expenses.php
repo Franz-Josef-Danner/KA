@@ -173,41 +173,66 @@ try {
             continue;
         }
         
-        // Calculate next due date
-        $nextDueDate = calculateNextDueDate($beginDate, $recurrencePeriod, $dueDay, $today);
+        // Generate all missing expenses from begin date to today
+        $currentCheckDate = $beginDate;
+        $todayDateTime = new DateTime($today);
         
-        // Check if an expense is due today
-        if ($nextDueDate === $today) {
-            // Check if expense already exists
-            if (expenseExists($ausgaben, $recurringId, $today)) {
-                continue;
+        while ($currentCheckDate <= $today) {
+            // Calculate next due date from current check date
+            $nextDueDate = calculateNextDueDate($beginDate, $recurrencePeriod, $dueDay, $currentCheckDate);
+            
+            // If the due date is in the future, stop
+            if ($nextDueDate > $today) {
+                break;
             }
             
-            // Generate a new regular expense
-            $newExpense = [
-                'Ausgaben_ID' => generateExpenseId(),
-                'Datum' => $today,
-                'Empfaenger' => $dauerhafteAusgabe['Empfaenger'] ?? '',
-                'Verwendungszweck' => $dauerhafteAusgabe['Verwendungszweck'] ?? '',
-                'Rechnungsnummer' => $dauerhafteAusgabe['Rechnungsnummer'] ?? '',
-                'Betrag' => $dauerhafteAusgabe['Betrag'] ?? '0.00',
-                'Kategorie' => $dauerhafteAusgabe['Kategorie'] ?? 'Beruflich',
-                'Status' => 'bezahlt',
-                'Deadline' => $today,
-                'IBAN' => $dauerhafteAusgabe['IBAN'] ?? '',
-                'BIC' => $dauerhafteAusgabe['BIC'] ?? '',
-                'Kommentare' => ($dauerhafteAusgabe['Kommentare'] ?? '') . 
-                               " [Automatisch generiert aus dauerhafter Ausgabe $recurringId]",
-                'Recurring_ID' => $recurringId
-            ];
+            // Check if expense already exists for this date
+            if (!expenseExists($ausgaben, $recurringId, $nextDueDate)) {
+                // Generate a new regular expense
+                $newExpense = [
+                    'Ausgaben_ID' => generateExpenseId(),
+                    'Datum' => $nextDueDate,
+                    'Empfaenger' => $dauerhafteAusgabe['Empfaenger'] ?? '',
+                    'Verwendungszweck' => $dauerhafteAusgabe['Verwendungszweck'] ?? '',
+                    'Rechnungsnummer' => $dauerhafteAusgabe['Rechnungsnummer'] ?? '',
+                    'Betrag' => $dauerhafteAusgabe['Betrag'] ?? '0.00',
+                    'Kategorie' => $dauerhafteAusgabe['Kategorie'] ?? 'Beruflich',
+                    'Status' => 'bezahlt',
+                    'Deadline' => $nextDueDate,
+                    'IBAN' => $dauerhafteAusgabe['IBAN'] ?? '',
+                    'BIC' => $dauerhafteAusgabe['BIC'] ?? '',
+                    'Kommentare' => ($dauerhafteAusgabe['Kommentare'] ?? '') . 
+                                   " [Automatisch generiert aus dauerhafter Ausgabe $recurringId]",
+                    'Recurring_ID' => $recurringId
+                ];
+                
+                $ausgaben[] = $newExpense;
+                $newExpensesCount++;
+                $generatedExpenses[] = [
+                    'id' => $newExpense['Ausgaben_ID'],
+                    'recipient' => $newExpense['Empfaenger'],
+                    'amount' => $newExpense['Betrag'],
+                    'date' => $nextDueDate
+                ];
+            }
             
-            $ausgaben[] = $newExpense;
-            $newExpensesCount++;
-            $generatedExpenses[] = [
-                'id' => $newExpense['Ausgaben_ID'],
-                'recipient' => $newExpense['Empfaenger'],
-                'amount' => $newExpense['Betrag']
-            ];
+            // Move to next period
+            $nextCheckDate = new DateTime($nextDueDate);
+            switch ($recurrencePeriod) {
+                case 'Täglich':
+                    $nextCheckDate->modify('+1 day');
+                    break;
+                case 'Wöchentlich':
+                    $nextCheckDate->modify('+1 week');
+                    break;
+                case 'Monatlich':
+                    $nextCheckDate->modify('+1 month');
+                    break;
+                case 'Jährlich':
+                    $nextCheckDate->modify('+1 year');
+                    break;
+            }
+            $currentCheckDate = $nextCheckDate->format('Y-m-d');
         }
     }
     
