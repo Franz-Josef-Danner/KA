@@ -33,7 +33,7 @@ The recurring expenses management page is available in the navigation menu under
 ### Stichtag (Due Day) Guidelines
 
 - **Monthly**: Enter 1-31 for the day of the month
-- **Weekly**: Enter 1-7 (1=Monday, 7=Sunday)
+- **Weekly**: Enter 1-7 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday)
 - **Daily**: The due day is ignored (payment due every day)
 - **Yearly**: Uses the month and day from the start date
 
