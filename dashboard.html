@@ -13,6 +13,19 @@
     <h1>Willkommen im KA System</h1>
     <p class="dashboard-subtitle">Wählen Sie einen Bereich aus dem Menü oben</p>
     
+    <!-- Dashboard Statistics -->
+    <div id="dashboard-stats" class="dashboard-stats">
+      <div class="stat-card invoices">
+        <div class="stat-card-loading">Lade Statistiken...</div>
+      </div>
+      <div class="stat-card orders">
+        <div class="stat-card-loading">Lade Statistiken...</div>
+      </div>
+      <div class="stat-card expenses">
+        <div class="stat-card-loading">Lade Statistiken...</div>
+      </div>
+    </div>
+    
     <div class="dashboard-grid">
       <a href="firmenliste.html" class="dashboard-card">
         <div class="card-icon">🏢</div>
@@ -69,6 +82,89 @@
     import { initNavigation } from './js/modules/navigation.js';
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     
+    // Function to format numbers with German locale
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+    
+    // Function to load and display dashboard statistics
+    async function loadDashboardStats() {
+      try {
+        const response = await fetch('api/load-dashboard-stats.php');
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to load statistics');
+        }
+        
+        const stats = result.data;
+        
+        // Update invoices card
+        const invoicesCard = document.querySelector('.stat-card.invoices');
+        invoicesCard.innerHTML = `
+          <div class="stat-card-title">Offene Rechnungen</div>
+          <div class="stat-card-content">
+            <div class="stat-item">
+              <span class="stat-label">Anzahl:</span>
+              <span class="stat-value">${stats.openInvoices.count}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Gesamtsumme:</span>
+              <span class="stat-value amount">${formatCurrency(stats.openInvoices.sum)}</span>
+            </div>
+          </div>
+        `;
+        
+        // Update orders card
+        const ordersCard = document.querySelector('.stat-card.orders');
+        ordersCard.innerHTML = `
+          <div class="stat-card-title">Offene Aufträge</div>
+          <div class="stat-card-content">
+            <div class="stat-item">
+              <span class="stat-label">Anzahl:</span>
+              <span class="stat-value">${stats.openOrders.count}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Gesamtsumme:</span>
+              <span class="stat-value amount">${formatCurrency(stats.openOrders.sum)}</span>
+            </div>
+          </div>
+        `;
+        
+        // Update expenses card
+        const expensesCard = document.querySelector('.stat-card.expenses');
+        expensesCard.innerHTML = `
+          <div class="stat-card-title">Offene Ausgaben</div>
+          <div class="stat-card-content">
+            <div class="stat-item">
+              <span class="stat-label">Anzahl:</span>
+              <span class="stat-value">${stats.openExpenses.count}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Gesamtsumme:</span>
+              <span class="stat-value amount">${formatCurrency(stats.openExpenses.sum)}</span>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error loading dashboard statistics:', error);
+        
+        // Show error in all cards
+        document.querySelectorAll('.stat-card').forEach(card => {
+          card.innerHTML = `
+            <div class="stat-card-error">
+              Fehler beim Laden der Statistiken
+            </div>
+          `;
+        });
+      }
+    }
+    
     (() => {
       try {
         // Require authentication and admin role
@@ -80,6 +176,9 @@
         
         // Initialize email error display
         initEmailErrorDisplay();
+        
+        // Load dashboard statistics
+        loadDashboardStats();
       } catch (error) {
         // Authentication failed or a redirect is in progress; avoid further DOM manipulation
         console.error('Authentication error on dashboard page:', error);
