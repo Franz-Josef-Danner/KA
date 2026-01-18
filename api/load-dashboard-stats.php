@@ -103,8 +103,12 @@ $DEFAULT_ZAHLUNGSZIEL_TAGE = 30;
 // Build a map of Firmen_ID to zahlungsziel_tage for quick lookup
 $paymentTermsMap = [];
 foreach ($artikellisten as $artikelliste) {
-    if (isset($artikelliste['firmen_id']) && isset($artikelliste['zahlungsziel_tage'])) {
-        $paymentTermsMap[$artikelliste['firmen_id']] = intval($artikelliste['zahlungsziel_tage']);
+    // Support both 'firmenId' (JS format) and 'Firmen_ID' (standardized format)
+    $firmenId = isset($artikelliste['firmenId']) ? $artikelliste['firmenId'] : 
+                (isset($artikelliste['Firmen_ID']) ? $artikelliste['Firmen_ID'] : null);
+    
+    if ($firmenId && isset($artikelliste['zahlungsziel_tage'])) {
+        $paymentTermsMap[$firmenId] = intval($artikelliste['zahlungsziel_tage']);
     }
 }
 

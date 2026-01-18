@@ -225,10 +225,11 @@
       const DEFAULT_ZAHLUNGSZIEL_TAGE = 30;
       
       // Build a map of Firmen_ID to zahlungsziel_tage for quick lookup
+      // artikellisten is an object where keys are firmenIds
       const paymentTermsMap = {};
-      artikellisten.forEach(artikelliste => {
-        if (artikelliste.firmen_id && artikelliste.zahlungsziel_tage) {
-          paymentTermsMap[artikelliste.firmen_id] = parseInt(artikelliste.zahlungsziel_tage);
+      Object.entries(artikellisten).forEach(([firmenId, artikelliste]) => {
+        if (firmenId && artikelliste.zahlungsziel_tage) {
+          paymentTermsMap[firmenId] = parseInt(artikelliste.zahlungsziel_tage);
         }
       });
       
