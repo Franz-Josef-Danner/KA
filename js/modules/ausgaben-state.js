@@ -188,7 +188,7 @@ export function newEmptyRow() {
       row[col] = '0.00';
     } else if (col === 'Ausgaben_ID') {
       // Generate a unique ID
-      row[col] = `AUS-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      row[col] = `AUS-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     } else {
       row[col] = '';
     }

@@ -2,9 +2,10 @@
 // Ausgaben UI Module
 // -----------------------------
 import { KATEGORIE_OPTIONS, STATUS_OPTIONS } from './ausgaben-config.js';
-import { getRows, newEmptyRow, updateRow } from './ausgaben-state.js';
+import { getRows, newEmptyRow, updateRow, setRows } from './ausgaben-state.js';
 import { isUndoAvailable, isRedoAvailable } from './ausgaben-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
+import { render } from './ausgaben-render.js';
 
 const modal = document.getElementById("ausgabenModal");
 const modalTitle = document.getElementById("modalTitle");
@@ -109,17 +110,13 @@ export function saveModal() {
     // Add new expense
     const rows = getRows();
     rows.push(formData);
-    import('./ausgaben-state.js').then(module => {
-      module.setRows(rows);
-    });
+    setRows(rows);
   }
   
   closeModal();
   
   // Re-render the table
-  import('./ausgaben-render.js').then(module => {
-    module.render();
-  });
+  render();
 }
 
 /**
