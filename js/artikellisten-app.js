@@ -2,6 +2,7 @@
 // Artikellisten Application
 // -----------------------------
 import { getArtikellisten } from './modules/artikellisten-state.js';
+import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './modules/artikellisten-config.js';
 import { getRows, ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
 
 let selectedFirmenId = null;
@@ -29,7 +30,7 @@ async function renderPreview(firmenId) {
       <div class="preview-header">
         <h3>${artikelliste.firmenName || artikelliste.firmenId}</h3>
         <p><strong>Firmen-ID:</strong> ${artikelliste.firmenId}</p>
-        <p><strong>Zahlungsziel:</strong> ${artikelliste.zahlungsziel_tage || 30} Tage</p>
+        <p><strong>Zahlungsziel:</strong> ${artikelliste.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE} Tage</p>
         <p><strong>Erstellt:</strong> ${new Date(artikelliste.created).toLocaleDateString('de-DE')}</p>
         <p><strong>Geändert:</strong> ${new Date(artikelliste.modified).toLocaleDateString('de-DE')}</p>
         <p><strong>Positionen:</strong> ${artikelliste.items.length}</p>
@@ -150,7 +151,7 @@ async function render() {
     
     // Zahlungsziel (Tage)
     const tdZahlungsziel = document.createElement("td");
-    tdZahlungsziel.textContent = (artikelliste.zahlungsziel_tage || 30).toString();
+    tdZahlungsziel.textContent = (artikelliste.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE).toString();
     tdZahlungsziel.style.textAlign = "center";
     tr.appendChild(tdZahlungsziel);
     
