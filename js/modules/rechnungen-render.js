@@ -9,6 +9,8 @@ import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
+import { getArtikelliste } from './artikellisten-state.js';
+import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -109,7 +111,9 @@ export function render() {
       viewPdfBtn.disabled = true;
       viewPdfBtn.textContent = 'PDF wird erstellt...';
       try {
-        const pdf = await generatePDF('invoice', row, false, null, true);
+        // Enrich invoice data with payment terms from article list
+        const enrichedRow = await enrichInvoiceWithPaymentTerms(row);
+        const pdf = await generatePDF('invoice', enrichedRow, false, null, true);
         if (pdf) {
           viewPDF(pdf);
         }
@@ -133,7 +137,9 @@ export function render() {
       downloadPdfBtn.disabled = true;
       downloadPdfBtn.textContent = 'PDF wird erstellt...';
       try {
-        const pdf = await generatePDF('invoice', row, false, null, true);
+        // Enrich invoice data with payment terms from article list
+        const enrichedRow = await enrichInvoiceWithPaymentTerms(row);
+        const pdf = await generatePDF('invoice', enrichedRow, false, null, true);
         if (pdf) {
           const filename = generatePdfFilename('R', row.Projekt, row.Firma, row.Rechnungsdatum);
           downloadPDF(pdf, filename);
@@ -186,3 +192,31 @@ export function render() {
 
 // Create a debounced version of render to avoid multiple rapid re-renders
 export const debouncedRender = debounce(render, 300);
+
+/**
+ * Enrich invoice data with payment terms from the article list
+ * @param {Object} invoiceRow - The invoice row data
+ * @returns {Promise<Object>} - Enriched invoice data with payment terms
+ */
+async function enrichInvoiceWithPaymentTerms(invoiceRow) {
+  const enriched = { ...invoiceRow };
+  
+  // Try to get payment terms from article list if Firmen_ID is available
+  if (invoiceRow.Firmen_ID) {
+    try {
+      const artikelliste = await getArtikelliste(invoiceRow.Firmen_ID);
+      if (artikelliste && artikelliste.zahlungsziel_tage) {
+        enriched.zahlungsziel_tage = artikelliste.zahlungsziel_tage;
+      } else {
+        enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+      }
+    } catch (error) {
+      console.warn('Could not fetch payment terms from article list:', error);
+      enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+    }
+  } else {
+    enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+  }
+  
+  return enriched;
+}

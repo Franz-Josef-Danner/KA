@@ -8,6 +8,8 @@ import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
+import { getArtikelliste } from './artikellisten-state.js';
+import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 
 export function render() {
   const user = getCurrentUser();
@@ -262,8 +264,10 @@ function renderInvoices(firmenId, firmaName) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
+          // Enrich invoice data with payment terms
+          const enrichedInvoice = await enrichInvoiceWithPaymentTerms(invoice);
           // Use standard template for customer-facing PDFs (5th parameter = true)
-          const pdf = await generatePDF('invoice', invoice, false, null, true);
+          const pdf = await generatePDF('invoice', enrichedInvoice, false, null, true);
           if (pdf) {
             viewPDF(pdf);
           }
@@ -287,8 +291,10 @@ function renderInvoices(firmenId, firmaName) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
+          // Enrich invoice data with payment terms
+          const enrichedInvoice = await enrichInvoiceWithPaymentTerms(invoice);
           // Use standard template for customer-facing PDFs (5th parameter = true)
-          const pdf = await generatePDF('invoice', invoice, false, null, true);
+          const pdf = await generatePDF('invoice', enrichedInvoice, false, null, true);
           if (pdf) {
             // Generate filename: R_projekt_firma_datum
             const filename = generatePdfFilename('R', invoice.Projekt, firmaName, invoice.Rechnungsdatum);
@@ -310,4 +316,32 @@ function getCompanyNameByFirmenId(firmenId) {
   const companies = getCompanies();
   const company = companies.find(c => c.Firmen_ID === firmenId);
   return company ? company.Firma : '';
+}
+
+/**
+ * Enrich invoice data with payment terms from the article list
+ * @param {Object} invoiceRow - The invoice row data
+ * @returns {Promise<Object>} - Enriched invoice data with payment terms
+ */
+async function enrichInvoiceWithPaymentTerms(invoiceRow) {
+  const enriched = { ...invoiceRow };
+  
+  // Try to get payment terms from article list if Firmen_ID is available
+  if (invoiceRow.Firmen_ID) {
+    try {
+      const artikelliste = await getArtikelliste(invoiceRow.Firmen_ID);
+      if (artikelliste && artikelliste.zahlungsziel_tage) {
+        enriched.zahlungsziel_tage = artikelliste.zahlungsziel_tage;
+      } else {
+        enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+      }
+    } catch (error) {
+      console.warn('Could not fetch payment terms from article list:', error);
+      enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+    }
+  } else {
+    enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+  }
+  
+  return enriched;
 }

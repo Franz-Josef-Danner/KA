@@ -2,6 +2,8 @@
 // PDF Generation Module
 // -----------------------------
 import { getCompanySettings, getPdfLayoutTemplate, getStandardLayoutTemplate } from './settings.js';
+import { getArtikelliste } from './artikellisten-state.js';
+import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 
 // PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
 const PDF_MARGIN = 10;
@@ -1196,6 +1198,29 @@ function renderTotals(doc, x, y, width, documentData) {
 function calculateFooterHeight(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {
   let offsetY = y + 3; // Initial offset from top border
   
+  // For invoices, calculate space needed for payment terms text
+  if ((documentType === 'invoice' || documentType === 'rechnung') && documentData) {
+    const invoiceNumber = documentData.invoiceId || documentData.Rechnungs_ID || documentData.Rechnungsnummer;
+    const firmenId = documentData.Firmen_ID || documentData.firmenId;
+    
+    if (invoiceNumber && firmenId) {
+      let zahlungszielTage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+      
+      // Try to get payment terms from cached data
+      if (documentData.zahlungsziel_tage) {
+        zahlungszielTage = documentData.zahlungsziel_tage;
+      }
+      
+      // Calculate space needed for payment terms text
+      const paymentTermsText = `Zahlung unter Angabe der Rechnungsnummer (${invoiceNumber}) binnen ${zahlungszielTage} Tagen netto ab Rechnungsdatum.`;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      const paymentLines = doc.splitTextToSize(paymentTermsText, width - FOOTER_TEXT_MARGIN);
+      offsetY += paymentLines.length * FOOTER_LINE_HEIGHT;
+      offsetY += 2; // Extra spacing after payment terms
+    }
+  }
+  
   // For invoices, calculate space needed for bank account information
   if ((documentType === 'invoice' || documentType === 'rechnung') && companySettings.iban) {
     const hasQRCode = paymentQRCode !== null;
@@ -1256,6 +1281,38 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
   doc.line(x, y - 2, x + width, y - 2);
   
   let offsetY = y + 3;
+  
+  // For invoices, add payment terms text at the beginning
+  if ((documentType === 'invoice' || documentType === 'rechnung') && documentData) {
+    const invoiceNumber = documentData.invoiceId || documentData.Rechnungs_ID || documentData.Rechnungsnummer;
+    const firmenId = documentData.Firmen_ID || documentData.firmenId;
+    
+    if (invoiceNumber && firmenId) {
+      // Get payment terms from article list (synchronously, using cached data if available)
+      let zahlungszielTage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+      
+      // Try to get payment terms from article list
+      // Note: This needs to be handled carefully as getArtikelliste is async
+      // For now, we'll use a cached value if it was passed in documentData
+      if (documentData.zahlungsziel_tage) {
+        zahlungszielTage = documentData.zahlungsziel_tage;
+      }
+      
+      // Add payment terms text
+      const paymentTermsText = `Zahlung unter Angabe der Rechnungsnummer (${invoiceNumber}) binnen ${zahlungszielTage} Tagen netto ab Rechnungsdatum.`;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(60, 60, 60);
+      const paymentLines = doc.splitTextToSize(paymentTermsText, width - FOOTER_TEXT_MARGIN);
+      paymentLines.forEach(line => {
+        doc.text(line, x + width / 2, offsetY, { align: 'center' });
+        offsetY += FOOTER_LINE_HEIGHT;
+      });
+      
+      offsetY += 2; // Extra spacing after payment terms
+    }
+  }
   
   // For invoices, show bank account information prominently if IBAN is available
   if ((documentType === 'invoice' || documentType === 'rechnung') && companySettings.iban) {
