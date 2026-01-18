@@ -2,7 +2,6 @@
 // PDF Generation Module
 // -----------------------------
 import { getCompanySettings, getPdfLayoutTemplate, getStandardLayoutTemplate } from './settings.js';
-import { getArtikelliste } from './artikellisten-state.js';
 import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 
 // PDF margin in mm (1cm on all sides to prevent elements from sticking to edges)
@@ -1193,6 +1192,27 @@ function renderTotals(doc, x, y, width, documentData) {
   return totalHeight;
 }
 
+/**
+ * Helper function to get invoice number and company ID from document data
+ * @param {Object} documentData - Document data
+ * @returns {Object} - { invoiceNumber, firmenId }
+ */
+function getInvoiceIdentifiers(documentData) {
+  const invoiceNumber = documentData.invoiceId || documentData.Rechnungs_ID || documentData.Rechnungsnummer;
+  const firmenId = documentData.Firmen_ID || documentData.firmenId;
+  return { invoiceNumber, firmenId };
+}
+
+/**
+ * Helper function to generate payment terms text
+ * @param {string} invoiceNumber - Invoice number
+ * @param {number} zahlungszielTage - Payment terms in days
+ * @returns {string} - Payment terms text
+ */
+function generatePaymentTermsText(invoiceNumber, zahlungszielTage) {
+  return `Zahlung unter Angabe der Rechnungsnummer (${invoiceNumber}) binnen ${zahlungszielTage} Tagen netto ab Rechnungsdatum.`;
+}
+
 // Calculate footer height without rendering (for layout planning)
 // This allows the footer to dynamically grow upward based on content
 function calculateFooterHeight(doc, x, y, width, companySettings, documentType, documentData = null, paymentQRCode = null) {
@@ -1200,19 +1220,13 @@ function calculateFooterHeight(doc, x, y, width, companySettings, documentType, 
   
   // For invoices, calculate space needed for payment terms text
   if ((documentType === 'invoice' || documentType === 'rechnung') && documentData) {
-    const invoiceNumber = documentData.invoiceId || documentData.Rechnungs_ID || documentData.Rechnungsnummer;
-    const firmenId = documentData.Firmen_ID || documentData.firmenId;
+    const { invoiceNumber, firmenId } = getInvoiceIdentifiers(documentData);
     
     if (invoiceNumber && firmenId) {
-      let zahlungszielTage = DEFAULT_ZAHLUNGSZIEL_TAGE;
-      
-      // Try to get payment terms from cached data
-      if (documentData.zahlungsziel_tage) {
-        zahlungszielTage = documentData.zahlungsziel_tage;
-      }
+      let zahlungszielTage = documentData.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
       
       // Calculate space needed for payment terms text
-      const paymentTermsText = `Zahlung unter Angabe der Rechnungsnummer (${invoiceNumber}) binnen ${zahlungszielTage} Tagen netto ab Rechnungsdatum.`;
+      const paymentTermsText = generatePaymentTermsText(invoiceNumber, zahlungszielTage);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       const paymentLines = doc.splitTextToSize(paymentTermsText, width - FOOTER_TEXT_MARGIN);
@@ -1284,22 +1298,14 @@ function renderFooter(doc, x, y, width, companySettings, documentType, documentD
   
   // For invoices, add payment terms text at the beginning
   if ((documentType === 'invoice' || documentType === 'rechnung') && documentData) {
-    const invoiceNumber = documentData.invoiceId || documentData.Rechnungs_ID || documentData.Rechnungsnummer;
-    const firmenId = documentData.Firmen_ID || documentData.firmenId;
+    const { invoiceNumber, firmenId } = getInvoiceIdentifiers(documentData);
     
     if (invoiceNumber && firmenId) {
-      // Get payment terms from article list (synchronously, using cached data if available)
-      let zahlungszielTage = DEFAULT_ZAHLUNGSZIEL_TAGE;
-      
-      // Try to get payment terms from article list
-      // Note: This needs to be handled carefully as getArtikelliste is async
-      // For now, we'll use a cached value if it was passed in documentData
-      if (documentData.zahlungsziel_tage) {
-        zahlungszielTage = documentData.zahlungsziel_tage;
-      }
+      // Get payment terms from cached data passed in documentData
+      let zahlungszielTage = documentData.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
       
       // Add payment terms text
-      const paymentTermsText = `Zahlung unter Angabe der Rechnungsnummer (${invoiceNumber}) binnen ${zahlungszielTage} Tagen netto ab Rechnungsdatum.`;
+      const paymentTermsText = generatePaymentTermsText(invoiceNumber, zahlungszielTage);
       
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
