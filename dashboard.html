@@ -95,14 +95,32 @@
     // Function to load and display dashboard statistics
     async function loadDashboardStats() {
       try {
-        const response = await fetch('api/load-dashboard-stats.php');
-        const result = await response.json();
+        let stats = null;
         
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to load statistics');
+        // Try to load from API first
+        try {
+          const response = await fetch('api/load-dashboard-stats.php');
+          const result = await response.json();
+          
+          if (result.success && result.data) {
+            const apiStats = result.data;
+            // Check if API returned any data
+            const hasApiData = apiStats.openInvoices.count > 0 || 
+                              apiStats.openOrders.count > 0 || 
+                              apiStats.openExpenses.count > 0;
+            
+            if (hasApiData) {
+              stats = apiStats;
+            }
+          }
+        } catch (apiError) {
+          console.log('API not available, falling back to localStorage:', apiError);
         }
         
-        const stats = result.data;
+        // Fallback to localStorage if API didn't return data
+        if (!stats) {
+          stats = loadStatsFromLocalStorage();
+        }
         
         // Update invoices card
         const invoicesCard = document.querySelector('.stat-card.invoices');
@@ -160,6 +178,80 @@
           card.textContent = 'Fehler beim Laden der Statistiken';
         });
       }
+    }
+    
+    // Function to load statistics from localStorage
+    function loadStatsFromLocalStorage() {
+      // Load data from localStorage
+      const rechnungenData = localStorage.getItem('rechnungen_tabelle_v1');
+      const auftraegData = localStorage.getItem('auftraege_tabelle_v1');
+      const ausgabenData = localStorage.getItem('ausgaben_tabelle_v1');
+      
+      const rechnungen = rechnungenData ? JSON.parse(rechnungenData) : [];
+      const auftraege = auftraegData ? JSON.parse(auftraegData) : [];
+      const ausgaben = ausgabenData ? JSON.parse(ausgabenData) : [];
+      
+      // Calculate statistics for open invoices
+      let openInvoicesCount = 0;
+      let openInvoicesSum = 0;
+      
+      rechnungen.forEach(invoice => {
+        if (invoice.Bezahlt === 'unbezahlt') {
+          openInvoicesCount++;
+          if (invoice.Gesamtsumme) {
+            openInvoicesSum += parseGermanNumber(invoice.Gesamtsumme);
+          }
+        }
+      });
+      
+      // Calculate statistics for open orders
+      let openOrdersCount = 0;
+      let openOrdersSum = 0;
+      
+      auftraege.forEach(order => {
+        const status = order.Status || '';
+        if (status === 'in Arbeit' || status === '' || status === 'offen') {
+          openOrdersCount++;
+          if (order.Budget) {
+            openOrdersSum += parseGermanNumber(order.Budget);
+          }
+        }
+      });
+      
+      // Calculate statistics for open expenses
+      let openExpensesCount = 0;
+      let openExpensesSum = 0;
+      
+      ausgaben.forEach(expense => {
+        if (expense.Status === 'unbezahlt') {
+          openExpensesCount++;
+          if (expense.Betrag) {
+            openExpensesSum += parseGermanNumber(expense.Betrag);
+          }
+        }
+      });
+      
+      return {
+        openInvoices: { count: openInvoicesCount, sum: openInvoicesSum },
+        openOrders: { count: openOrdersCount, sum: openOrdersSum },
+        openExpenses: { count: openExpensesCount, sum: openExpensesSum }
+      };
+    }
+    
+    // Function to parse German formatted numbers
+    function parseGermanNumber(value) {
+      if (!value || typeof value !== 'string') {
+        return 0;
+      }
+      
+      // Remove thousands separator (.) and replace decimal comma with dot
+      let cleaned = value.replace(/\./g, '');
+      cleaned = cleaned.replace(',', '.');
+      
+      // Remove currency symbols and whitespace
+      cleaned = cleaned.replace(/[^\d.-]/g, '');
+      
+      return parseFloat(cleaned) || 0;
     }
     
     (() => {
