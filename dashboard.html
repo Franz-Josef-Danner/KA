@@ -224,7 +224,10 @@
           if (invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0) {
             // New format: calculate from items array
             invoice.items.forEach(item => {
-              const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+              // Items store Gesamtpreis as number, but handle string format too
+              const gesamtpreis = typeof item.Gesamtpreis === 'number' 
+                ? item.Gesamtpreis 
+                : parseGermanNumber(String(item.Gesamtpreis || 0));
               invoiceTotal += gesamtpreis;
             });
             
@@ -256,7 +259,10 @@
           if (order.items && Array.isArray(order.items) && order.items.length > 0) {
             // New format: calculate from items array
             order.items.forEach(item => {
-              const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+              // Items store Gesamtpreis as number, but handle string format too
+              const gesamtpreis = typeof item.Gesamtpreis === 'number' 
+                ? item.Gesamtpreis 
+                : parseGermanNumber(String(item.Gesamtpreis || 0));
               orderTotal += gesamtpreis;
             });
             

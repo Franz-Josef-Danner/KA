@@ -109,7 +109,11 @@ foreach ($rechnungen as $invoice) {
             // New format: calculate from items array
             foreach ($invoice['items'] as $item) {
                 if (isset($item['Gesamtpreis'])) {
-                    $invoiceTotal += floatval($item['Gesamtpreis']);
+                    // Items store Gesamtpreis as number, but handle string format too
+                    $gesamtpreis = is_numeric($item['Gesamtpreis']) 
+                        ? floatval($item['Gesamtpreis']) 
+                        : parseGermanNumber(strval($item['Gesamtpreis']));
+                    $invoiceTotal += $gesamtpreis;
                 }
             }
             
@@ -144,7 +148,11 @@ foreach ($auftraege as $order) {
             // New format: calculate from items array
             foreach ($order['items'] as $item) {
                 if (isset($item['Gesamtpreis'])) {
-                    $orderTotal += floatval($item['Gesamtpreis']);
+                    // Items store Gesamtpreis as number, but handle string format too
+                    $gesamtpreis = is_numeric($item['Gesamtpreis']) 
+                        ? floatval($item['Gesamtpreis']) 
+                        : parseGermanNumber(strval($item['Gesamtpreis']));
+                    $orderTotal += $gesamtpreis;
                 }
             }
             
