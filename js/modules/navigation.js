@@ -4,6 +4,7 @@
 import { logout, isAdmin } from './auth.js';
 
 const ADMIN_NAV_ITEMS = [
+  { label: 'Dashboard', href: 'dashboard.html' },
   { label: 'Firmenliste', href: 'firmenliste.html' },
   { label: 'Artikellisten', href: 'artikellisten.html' },
   { label: 'Aufträge', href: 'auftraege.html' },
