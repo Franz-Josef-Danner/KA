@@ -8,6 +8,7 @@ const ADMIN_NAV_ITEMS = [
   { label: 'Artikellisten', href: 'artikellisten.html' },
   { label: 'Aufträge', href: 'auftraege.html' },
   { label: 'Rechnungen', href: 'rechnungen.html' },
+  { label: 'Ausgaben', href: 'ausgaben.html' },
   { label: 'Kampagnen', href: 'kampagnen.html' },
   { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
   { label: 'Einstellungen', href: 'einstellungen.html' }
