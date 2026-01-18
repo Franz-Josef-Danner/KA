@@ -258,17 +258,37 @@
       };
     }
     
-    // Function to parse German formatted numbers
+    // Function to parse numbers in both German and English format
     function parseGermanNumber(value) {
       if (!value || typeof value !== 'string') {
         return 0;
       }
       
-      // Remove thousands separator (.) and replace decimal comma with dot
-      let cleaned = value.replace(/\./g, '');
-      cleaned = cleaned.replace(',', '.');
+      // Remove currency symbols and whitespace first
+      let cleaned = value.replace(/[€$\s]/g, '');
       
-      // Remove currency symbols and whitespace
+      // Detect format by checking which separator appears last
+      const lastDotIndex = cleaned.lastIndexOf('.');
+      const lastCommaIndex = cleaned.lastIndexOf(',');
+      
+      if (lastCommaIndex > lastDotIndex) {
+        // German format: comma is decimal separator, dot is thousands
+        // Example: "5.000,50" or "1.234.567,89"
+        cleaned = cleaned.replace(/\./g, ''); // Remove thousands separator
+        cleaned = cleaned.replace(',', '.'); // Replace decimal comma with dot
+      } else if (lastDotIndex > lastCommaIndex) {
+        // English format: dot is decimal separator, comma is thousands
+        // Example: "5,000.50" or "1,234,567.89"
+        cleaned = cleaned.replace(/,/g, ''); // Remove thousands separator
+        // Dot is already decimal separator
+      } else if (lastCommaIndex !== -1) {
+        // Only comma present - it's decimal separator (German)
+        // Example: "450,50"
+        cleaned = cleaned.replace(',', '.');
+      }
+      // else: only dot or neither - treat dot as decimal (English format)
+      
+      // Remove any remaining non-numeric characters except dot and minus
       cleaned = cleaned.replace(/[^\d.-]/g, '');
       
       return parseFloat(cleaned) || 0;

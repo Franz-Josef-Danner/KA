@@ -48,17 +48,37 @@ function readJsonFile($filePath) {
     return $data;
 }
 
-// Function to parse German formatted number (e.g., "1.234,56" -> 1234.56)
+// Function to parse numbers in both German and English format
 function parseGermanNumber($value) {
     if (empty($value) || !is_string($value)) {
         return 0;
     }
     
-    // Remove thousands separator (.) and replace decimal comma with dot
-    $cleaned = str_replace('.', '', $value);
-    $cleaned = str_replace(',', '.', $cleaned);
+    // Remove currency symbols and whitespace first
+    $cleaned = preg_replace('/[€$\s]/', '', $value);
     
-    // Remove currency symbols and whitespace
+    // Detect format by checking which separator appears last
+    $lastDotPos = strrpos($cleaned, '.');
+    $lastCommaPos = strrpos($cleaned, ',');
+    
+    if ($lastCommaPos !== false && ($lastDotPos === false || $lastCommaPos > $lastDotPos)) {
+        // German format: comma is decimal separator, dot is thousands
+        // Example: "5.000,50" or "1.234.567,89"
+        $cleaned = str_replace('.', '', $cleaned); // Remove thousands separator
+        $cleaned = str_replace(',', '.', $cleaned); // Replace decimal comma with dot
+    } else if ($lastDotPos !== false && ($lastCommaPos === false || $lastDotPos > $lastCommaPos)) {
+        // English format: dot is decimal separator, comma is thousands
+        // Example: "5,000.50" or "1,234,567.89"
+        $cleaned = str_replace(',', '', $cleaned); // Remove thousands separator
+        // Dot is already decimal separator
+    } else if ($lastCommaPos !== false) {
+        // Only comma present - it's decimal separator (German)
+        // Example: "450,50"
+        $cleaned = str_replace(',', '.', $cleaned);
+    }
+    // else: only dot or neither - treat dot as decimal (English format)
+    
+    // Remove any remaining non-numeric characters except dot and minus
     $cleaned = preg_replace('/[^\d.-]/', '', $cleaned);
     
     return floatval($cleaned);
