@@ -34,7 +34,11 @@ function readJsonFile($filePath) {
         return [];
     }
     
-    $jsonData = file_get_contents($filePath);
+    $jsonData = @file_get_contents($filePath);
+    if ($jsonData === false) {
+        return [];
+    }
+    
     $data = json_decode($jsonData, true);
     
     if ($data === null) {
