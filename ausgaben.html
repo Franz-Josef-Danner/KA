@@ -34,6 +34,8 @@
           <th>Betrag</th>
           <th>Kategorie</th>
           <th>Status</th>
+          <th>IBAN</th>
+          <th>BIC</th>
           <th>Kommentare</th>
           <th class="actions">Aktion</th>
         </tr>
@@ -88,6 +90,14 @@
               <option value="unbezahlt">Unbezahlt</option>
               <option value="bezahlt">Bezahlt</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label for="edit_IBAN">IBAN:</label>
+            <input type="text" id="edit_IBAN" name="IBAN" maxlength="34" placeholder="DE89 3704 0044 0532 0130 00" />
+          </div>
+          <div class="form-group">
+            <label for="edit_BIC">BIC:</label>
+            <input type="text" id="edit_BIC" name="BIC" maxlength="11" placeholder="COBADEFFXXX" />
           </div>
           <div class="form-group" style="grid-column: 1 / -1;">
             <label for="edit_Kommentare">Kommentare:</label>
