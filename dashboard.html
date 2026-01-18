@@ -135,7 +135,7 @@
           } else if (!stats) {
             // Neither API nor localStorage has data, use empty stats
             stats = {
-              openInvoices: { count: 0, sum: 0 },
+              openInvoices: { count: 0, sum: 0, dueSoon: 0, overdue: 0 },
               openOrders: { count: 0, sum: 0 },
               openExpenses: { count: 0, sum: 0 }
             };
@@ -148,8 +148,16 @@
           <div class="stat-card-title">Offene Rechnungen</div>
           <div class="stat-card-content">
             <div class="stat-item">
-              <span class="stat-label">Anzahl:</span>
+              <span class="stat-label">Anzahl insgesamt:</span>
               <span class="stat-value">${stats.openInvoices.count}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Weniger als 4 Tage:</span>
+              <span class="stat-value stat-warning">${stats.openInvoices.dueSoon || 0}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Nach Deadline:</span>
+              <span class="stat-value stat-danger">${stats.openInvoices.overdue || 0}</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">Gesamtsumme:</span>
@@ -206,14 +214,34 @@
       const rechnungenData = localStorage.getItem('rechnungen_tabelle_v1');
       const auftraegData = localStorage.getItem('auftraege_tabelle_v1');
       const ausgabenData = localStorage.getItem('ausgaben_tabelle_v1');
+      const artikellistenData = localStorage.getItem('artikellisten_v1');
       
       const rechnungen = rechnungenData ? JSON.parse(rechnungenData) : [];
       const auftraege = auftraegData ? JSON.parse(auftraegData) : [];
       const ausgaben = ausgabenData ? JSON.parse(ausgabenData) : [];
+      const artikellisten = artikellistenData ? JSON.parse(artikellistenData) : [];
+      
+      // Default payment term in days
+      const DEFAULT_ZAHLUNGSZIEL_TAGE = 30;
+      
+      // Build a map of Firmen_ID to zahlungsziel_tage for quick lookup
+      // artikellisten is an object where keys are firmenIds
+      const paymentTermsMap = {};
+      Object.entries(artikellisten).forEach(([firmenId, artikelliste]) => {
+        if (firmenId && artikelliste.zahlungsziel_tage) {
+          paymentTermsMap[firmenId] = parseInt(artikelliste.zahlungsziel_tage);
+        }
+      });
       
       // Calculate statistics for open invoices
       let openInvoicesCount = 0;
       let openInvoicesSum = 0;
+      let invoicesDueSoon = 0; // < 4 days to deadline
+      let invoicesOverdue = 0; // past deadline
+      
+      // Get current date for comparison
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to midnight for accurate day comparison
       
       rechnungen.forEach(invoice => {
         if (invoice.Bezahlt === 'unbezahlt') {
@@ -242,6 +270,41 @@
           }
           
           openInvoicesSum += invoiceTotal;
+          
+          // Calculate deadline for this invoice
+          if (invoice.Rechnungsdatum) {
+            try {
+              const invoiceDate = new Date(invoice.Rechnungsdatum);
+              
+              // Get payment terms (zahlungsziel_tage) for this invoice
+              let zahlungszielTage = DEFAULT_ZAHLUNGSZIEL_TAGE;
+              if (invoice.Firmen_ID && paymentTermsMap[invoice.Firmen_ID]) {
+                zahlungszielTage = paymentTermsMap[invoice.Firmen_ID];
+              }
+              
+              // Calculate deadline date
+              const deadline = new Date(invoiceDate);
+              deadline.setDate(deadline.getDate() + zahlungszielTage);
+              deadline.setHours(0, 0, 0, 0); // Set to midnight for accurate comparison
+              
+              // Calculate days until deadline
+              const timeDiff = deadline - today;
+              const daysUntilDeadline = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+              
+              if (daysUntilDeadline < 0) {
+                // Past deadline (negative days means deadline has passed)
+                invoicesOverdue++;
+              } else if (daysUntilDeadline < 4) {
+                // Less than 4 days to deadline (0-3 days)
+                invoicesDueSoon++;
+              }
+              // else: more than 4 days - no special category needed
+              
+            } catch (error) {
+              // If date parsing fails, skip deadline calculation for this invoice
+              console.warn('Failed to parse invoice date:', invoice.Rechnungsdatum);
+            }
+          }
         }
       });
       
@@ -294,7 +357,12 @@
       });
       
       return {
-        openInvoices: { count: openInvoicesCount, sum: openInvoicesSum },
+        openInvoices: { 
+          count: openInvoicesCount, 
+          sum: openInvoicesSum,
+          dueSoon: invoicesDueSoon,
+          overdue: invoicesOverdue
+        },
         openOrders: { count: openOrdersCount, sum: openOrdersSum },
         openExpenses: { count: openExpensesCount, sum: openExpensesSum }
       };

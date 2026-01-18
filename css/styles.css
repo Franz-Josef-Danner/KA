@@ -414,6 +414,24 @@ td.readonly:hover {
   font-size: 20px;
 }
 
+.stat-value.stat-warning {
+  color: #ffd700;
+}
+
+.stat-value.stat-danger {
+  color: #ff6b6b;
+  animation: pulse-danger 2s ease-in-out infinite;
+}
+
+@keyframes pulse-danger {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .stat-card-loading {
   text-align: center;
   padding: 20px;

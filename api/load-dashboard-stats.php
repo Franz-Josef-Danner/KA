@@ -89,15 +89,38 @@ $dataDir = __DIR__ . '/../data';
 $rechnungenFile = $dataDir . '/rechnungen.json';
 $auftraegFile = $dataDir . '/auftraege.json';
 $ausgabenFile = $dataDir . '/ausgaben.json';
+$artikellistenFile = $dataDir . '/artikellisten.json';
 
 // Load data
 $rechnungen = readJsonFile($rechnungenFile);
 $auftraege = readJsonFile($auftraegFile);
 $ausgaben = readJsonFile($ausgabenFile);
+$artikellisten = readJsonFile($artikellistenFile);
+
+// Default payment term in days
+$DEFAULT_ZAHLUNGSZIEL_TAGE = 30;
+
+// Build a map of Firmen_ID to zahlungsziel_tage for quick lookup
+$paymentTermsMap = [];
+foreach ($artikellisten as $artikelliste) {
+    // Support both 'firmenId' (JS format) and 'Firmen_ID' (standardized format)
+    $firmenId = isset($artikelliste['firmenId']) ? $artikelliste['firmenId'] : 
+                (isset($artikelliste['Firmen_ID']) ? $artikelliste['Firmen_ID'] : null);
+    
+    if ($firmenId && isset($artikelliste['zahlungsziel_tage'])) {
+        $paymentTermsMap[$firmenId] = intval($artikelliste['zahlungsziel_tage']);
+    }
+}
 
 // Calculate statistics for open invoices (unbezahlt)
 $openInvoicesCount = 0;
 $openInvoicesSum = 0;
+$invoicesDueSoon = 0; // < 4 days to deadline
+$invoicesOverdue = 0; // past deadline
+
+// Get current date for comparison
+$today = new DateTime();
+$today->setTime(0, 0, 0); // Set to midnight for accurate day comparison
 
 foreach ($rechnungen as $invoice) {
     if (isset($invoice['Bezahlt']) && $invoice['Bezahlt'] === 'unbezahlt') {
@@ -128,6 +151,41 @@ foreach ($rechnungen as $invoice) {
         }
         
         $openInvoicesSum += $invoiceTotal;
+        
+        // Calculate deadline for this invoice
+        if (isset($invoice['Rechnungsdatum']) && !empty($invoice['Rechnungsdatum'])) {
+            try {
+                $invoiceDate = new DateTime($invoice['Rechnungsdatum']);
+                
+                // Get payment terms (zahlungsziel_tage) for this invoice
+                $zahlungszielTage = $DEFAULT_ZAHLUNGSZIEL_TAGE;
+                if (isset($invoice['Firmen_ID']) && isset($paymentTermsMap[$invoice['Firmen_ID']])) {
+                    $zahlungszielTage = $paymentTermsMap[$invoice['Firmen_ID']];
+                }
+                
+                // Calculate deadline date
+                $deadline = clone $invoiceDate;
+                $deadline->modify("+{$zahlungszielTage} days");
+                $deadline->setTime(0, 0, 0); // Set to midnight for accurate comparison
+                
+                // Calculate days until deadline
+                $interval = $today->diff($deadline);
+                $daysUntilDeadline = (int)$interval->format('%r%a'); // %r gives sign, %a gives days
+                
+                if ($daysUntilDeadline < 0) {
+                    // Past deadline (negative days means deadline has passed)
+                    $invoicesOverdue++;
+                } else if ($daysUntilDeadline < 4) {
+                    // Less than 4 days to deadline (0-3 days)
+                    $invoicesDueSoon++;
+                }
+                // else: more than 4 days - no special category needed
+                
+            } catch (Exception $e) {
+                // If date parsing fails, skip deadline calculation for this invoice
+                error_log("Failed to parse invoice date: " . $invoice['Rechnungsdatum']);
+            }
+        }
     }
 }
 
@@ -191,7 +249,9 @@ echo json_encode([
     'data' => [
         'openInvoices' => [
             'count' => $openInvoicesCount,
-            'sum' => $openInvoicesSum
+            'sum' => $openInvoicesSum,
+            'dueSoon' => $invoicesDueSoon,
+            'overdue' => $invoicesOverdue
         ],
         'openOrders' => [
             'count' => $openOrdersCount,
