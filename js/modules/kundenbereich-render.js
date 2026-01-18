@@ -8,8 +8,7 @@ import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
-import { getArtikelliste } from './artikellisten-state.js';
-import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
+import { enrichInvoiceWithPaymentTerms } from '../utils/invoice-helpers.js';
 
 export function render() {
   const user = getCurrentUser();
@@ -316,32 +315,4 @@ function getCompanyNameByFirmenId(firmenId) {
   const companies = getCompanies();
   const company = companies.find(c => c.Firmen_ID === firmenId);
   return company ? company.Firma : '';
-}
-
-/**
- * Enrich invoice data with payment terms from the article list
- * @param {Object} invoiceRow - The invoice row data
- * @returns {Promise<Object>} - Enriched invoice data with payment terms
- */
-async function enrichInvoiceWithPaymentTerms(invoiceRow) {
-  const enriched = { ...invoiceRow };
-  
-  // Try to get payment terms from article list if Firmen_ID is available
-  if (invoiceRow.Firmen_ID) {
-    try {
-      const artikelliste = await getArtikelliste(invoiceRow.Firmen_ID);
-      if (artikelliste && artikelliste.zahlungsziel_tage) {
-        enriched.zahlungsziel_tage = artikelliste.zahlungsziel_tage;
-      } else {
-        enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
-      }
-    } catch (error) {
-      console.warn('Could not fetch payment terms from article list:', error);
-      enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
-    }
-  } else {
-    enriched.zahlungsziel_tage = DEFAULT_ZAHLUNGSZIEL_TAGE;
-  }
-  
-  return enriched;
 }
