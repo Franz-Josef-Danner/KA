@@ -37,6 +37,8 @@ export function openModal(rowIndex = null) {
     document.getElementById("edit_Betrag").value = row.Betrag || '0.00';
     document.getElementById("edit_Kategorie").value = row.Kategorie || 'Beruflich';
     document.getElementById("edit_Status").value = row.Status || 'unbezahlt';
+    document.getElementById("edit_IBAN").value = row.IBAN || '';
+    document.getElementById("edit_BIC").value = row.BIC || '';
     document.getElementById("edit_Kommentare").value = row.Kommentare || '';
   } else {
     // Create new expense
@@ -52,6 +54,8 @@ export function openModal(rowIndex = null) {
     document.getElementById("edit_Betrag").value = '0.00';
     document.getElementById("edit_Kategorie").value = 'Beruflich';
     document.getElementById("edit_Status").value = 'unbezahlt';
+    document.getElementById("edit_IBAN").value = '';
+    document.getElementById("edit_BIC").value = '';
     document.getElementById("edit_Kommentare").value = '';
   }
   
@@ -86,6 +90,8 @@ export function saveModal() {
     Betrag: document.getElementById("edit_Betrag").value,
     Kategorie: document.getElementById("edit_Kategorie").value,
     Status: document.getElementById("edit_Status").value,
+    IBAN: document.getElementById("edit_IBAN").value,
+    BIC: document.getElementById("edit_BIC").value,
     Kommentare: document.getElementById("edit_Kommentare").value
   };
   
