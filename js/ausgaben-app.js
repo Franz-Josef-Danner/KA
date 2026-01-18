@@ -88,8 +88,8 @@ async function init() {
   // Initialize tab handlers
   initTabHandlers();
   
-  // Render initial view (regular expenses)
-  renderRegular();
+  // Initialize and render the default view (regular expenses)
+  switchView('regular');
 }
 
 // ES6 modules are deferred by default; at this point the DOM is ready, so start the application

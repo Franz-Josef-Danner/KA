@@ -6,30 +6,40 @@ import { deleteRow, undo, redo } from './ausgaben-state.js';
 import { openModal, closeModal, initModalHandlers, updateUndoRedoButtons } from './ausgaben-ui.js';
 import { debounce } from '../utils/helpers.js';
 
+// Flag to prevent duplicate event handler initialization
+let eventHandlersInitialized = false;
+
+/**
+ * Handle new expense button click based on active view
+ */
+function handleNewExpenseClick() {
+  // Check which view is active
+  const regularTab = document.getElementById('regularTab');
+  if (regularTab && regularTab.classList.contains('active')) {
+    openModal(null);
+  } else {
+    // Trigger recurring expense modal
+    window.dispatchEvent(new CustomEvent('openDauerhafteAusgabenModal', { detail: { rowIndex: null } }));
+  }
+}
+
 /**
  * Initialize all event handlers for the Ausgaben page (regular expenses)
  */
 export function initEventHandlers() {
+  // Prevent duplicate initialization
+  if (eventHandlersInitialized) {
+    return;
+  }
+  eventHandlersInitialized = true;
+  
   // Initialize modal handlers
   initModalHandlers();
   
-  // New expense button - will be handled by tab-aware logic in main app
+  // New expense button - will be handled by tab-aware logic
   const newBtn = document.getElementById("newAusgabenBtn");
   if (newBtn) {
-    // Remove any existing listeners and add new one
-    const newBtnClone = newBtn.cloneNode(true);
-    newBtn.parentNode.replaceChild(newBtnClone, newBtn);
-    
-    newBtnClone.addEventListener("click", () => {
-      // Check which view is active
-      const regularTab = document.getElementById('regularTab');
-      if (regularTab && regularTab.classList.contains('active')) {
-        openModal(null);
-      } else {
-        // Trigger recurring expense modal
-        window.dispatchEvent(new CustomEvent('openDauerhafteAusgabenModal', { detail: { rowIndex: null } }));
-      }
-    });
+    newBtn.addEventListener("click", handleNewExpenseClick);
   }
   
   // Undo button
