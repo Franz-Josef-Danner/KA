@@ -139,23 +139,23 @@ export function updateUndoRedoButtons() {
  */
 export function initModalHandlers() {
   if (modalClose) {
-    modalClose.onclick = closeModal;
+    modalClose.addEventListener('click', closeModal);
   }
   
   if (modalCancel) {
-    modalCancel.onclick = closeModal;
+    modalCancel.addEventListener('click', closeModal);
   }
   
   if (modalSave) {
-    modalSave.onclick = saveModal;
+    modalSave.addEventListener('click', saveModal);
   }
   
   // Close modal when clicking outside
-  modal.onclick = (e) => {
+  modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       closeModal();
     }
-  };
+  });
   
   // Close modal on Escape key
   document.addEventListener('keydown', (e) => {
