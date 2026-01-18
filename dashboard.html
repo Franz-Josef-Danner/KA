@@ -13,6 +13,19 @@
     <h1>Willkommen im KA System</h1>
     <p class="dashboard-subtitle">Wählen Sie einen Bereich aus dem Menü oben</p>
     
+    <!-- Dashboard Statistics -->
+    <div id="dashboard-stats" class="dashboard-stats">
+      <div class="stat-card invoices">
+        <div class="stat-card-loading">Lade Statistiken...</div>
+      </div>
+      <div class="stat-card orders">
+        <div class="stat-card-loading">Lade Statistiken...</div>
+      </div>
+      <div class="stat-card expenses">
+        <div class="stat-card-loading">Lade Statistiken...</div>
+      </div>
+    </div>
+    
     <div class="dashboard-grid">
       <a href="firmenliste.html" class="dashboard-card">
         <div class="card-icon">🏢</div>
@@ -69,6 +82,260 @@
     import { initNavigation } from './js/modules/navigation.js';
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     
+    // Function to format numbers with German locale
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+    
+    // Function to load and display dashboard statistics
+    async function loadDashboardStats() {
+      try {
+        let stats = null;
+        
+        // Try to load from API first
+        let useLocalStorage = true;
+        
+        try {
+          const response = await fetch('api/load-dashboard-stats.php');
+          if (response.ok) {
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+              stats = result.data;
+              // Only skip localStorage if we have actual data from API
+              // Check if there's any data in the system by looking for non-zero counts
+              const hasData = stats.openInvoices.count > 0 || 
+                             stats.openOrders.count > 0 || 
+                             stats.openExpenses.count > 0;
+              
+              if (hasData) {
+                useLocalStorage = false;
+              }
+            }
+          }
+        } catch (apiError) {
+          console.log('API not available, falling back to localStorage:', apiError);
+        }
+        
+        // Fallback to localStorage if API returned no data or failed
+        if (useLocalStorage) {
+          const localStats = loadStatsFromLocalStorage();
+          // Only use localStorage if it has data
+          const hasLocalData = localStats.openInvoices.count > 0 || 
+                              localStats.openOrders.count > 0 || 
+                              localStats.openExpenses.count > 0;
+          
+          if (hasLocalData) {
+            stats = localStats;
+          } else if (!stats) {
+            // Neither API nor localStorage has data, use empty stats
+            stats = {
+              openInvoices: { count: 0, sum: 0 },
+              openOrders: { count: 0, sum: 0 },
+              openExpenses: { count: 0, sum: 0 }
+            };
+          }
+        }
+        
+        // Update invoices card
+        const invoicesCard = document.querySelector('.stat-card.invoices');
+        invoicesCard.innerHTML = `
+          <div class="stat-card-title">Offene Rechnungen</div>
+          <div class="stat-card-content">
+            <div class="stat-item">
+              <span class="stat-label">Anzahl:</span>
+              <span class="stat-value">${stats.openInvoices.count}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Gesamtsumme:</span>
+              <span class="stat-value amount">${formatCurrency(stats.openInvoices.sum)}</span>
+            </div>
+          </div>
+        `;
+        
+        // Update orders card
+        const ordersCard = document.querySelector('.stat-card.orders');
+        ordersCard.innerHTML = `
+          <div class="stat-card-title">Offene Aufträge</div>
+          <div class="stat-card-content">
+            <div class="stat-item">
+              <span class="stat-label">Anzahl:</span>
+              <span class="stat-value">${stats.openOrders.count}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Gesamtsumme:</span>
+              <span class="stat-value amount">${formatCurrency(stats.openOrders.sum)}</span>
+            </div>
+          </div>
+        `;
+        
+        // Update expenses card
+        const expensesCard = document.querySelector('.stat-card.expenses');
+        expensesCard.innerHTML = `
+          <div class="stat-card-title">Offene Ausgaben</div>
+          <div class="stat-card-content">
+            <div class="stat-item">
+              <span class="stat-label">Anzahl:</span>
+              <span class="stat-value">${stats.openExpenses.count}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Gesamtsumme:</span>
+              <span class="stat-value amount">${formatCurrency(stats.openExpenses.sum)}</span>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error loading dashboard statistics:', error);
+        
+        // Show error in all cards
+        document.querySelectorAll('.stat-card').forEach(card => {
+          card.className = 'stat-card stat-card-error';
+          card.textContent = 'Fehler beim Laden der Statistiken';
+        });
+      }
+    }
+    
+    // Function to load statistics from localStorage
+    function loadStatsFromLocalStorage() {
+      // Load data from localStorage
+      const rechnungenData = localStorage.getItem('rechnungen_tabelle_v1');
+      const auftraegData = localStorage.getItem('auftraege_tabelle_v1');
+      const ausgabenData = localStorage.getItem('ausgaben_tabelle_v1');
+      
+      const rechnungen = rechnungenData ? JSON.parse(rechnungenData) : [];
+      const auftraege = auftraegData ? JSON.parse(auftraegData) : [];
+      const ausgaben = ausgabenData ? JSON.parse(ausgabenData) : [];
+      
+      // Calculate statistics for open invoices
+      let openInvoicesCount = 0;
+      let openInvoicesSum = 0;
+      
+      rechnungen.forEach(invoice => {
+        if (invoice.Bezahlt === 'unbezahlt') {
+          openInvoicesCount++;
+          
+          // Calculate total from items array (new format) or Gesamtsumme field (old format)
+          let invoiceTotal = 0;
+          if (invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0) {
+            // New format: calculate from items array
+            invoice.items.forEach(item => {
+              // Items store Gesamtpreis as number, but handle string format too
+              const gesamtpreis = typeof item.Gesamtpreis === 'number' 
+                ? item.Gesamtpreis 
+                : parseGermanNumber(String(item.Gesamtpreis || 0));
+              invoiceTotal += gesamtpreis;
+            });
+            
+            // Apply discount if present
+            const rabattPercent = parseFloat(invoice.Rabatt) || 0;
+            if (rabattPercent > 0) {
+              invoiceTotal = invoiceTotal * (1 - rabattPercent / 100);
+            }
+          } else if (invoice.Gesamtsumme) {
+            // Old format: use Gesamtsumme field
+            invoiceTotal = parseGermanNumber(invoice.Gesamtsumme);
+          }
+          
+          openInvoicesSum += invoiceTotal;
+        }
+      });
+      
+      // Calculate statistics for open orders
+      let openOrdersCount = 0;
+      let openOrdersSum = 0;
+      
+      auftraege.forEach(order => {
+        const status = order.Status || '';
+        if (status === 'in Arbeit' || status === '' || status === 'offen') {
+          openOrdersCount++;
+          
+          // Calculate total from items array (new format) or Budget field (old format)
+          let orderTotal = 0;
+          if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+            // New format: calculate from items array
+            order.items.forEach(item => {
+              // Items store Gesamtpreis as number, but handle string format too
+              const gesamtpreis = typeof item.Gesamtpreis === 'number' 
+                ? item.Gesamtpreis 
+                : parseGermanNumber(String(item.Gesamtpreis || 0));
+              orderTotal += gesamtpreis;
+            });
+            
+            // Apply discount if present
+            const rabattPercent = parseFloat(order.Rabatt) || 0;
+            if (rabattPercent > 0) {
+              orderTotal = orderTotal * (1 - rabattPercent / 100);
+            }
+          } else if (order.Budget) {
+            // Old format: use Budget field
+            orderTotal = parseGermanNumber(order.Budget);
+          }
+          
+          openOrdersSum += orderTotal;
+        }
+      });
+      
+      // Calculate statistics for open expenses
+      let openExpensesCount = 0;
+      let openExpensesSum = 0;
+      
+      ausgaben.forEach(expense => {
+        if (expense.Status === 'unbezahlt') {
+          openExpensesCount++;
+          if (expense.Betrag) {
+            openExpensesSum += parseGermanNumber(expense.Betrag);
+          }
+        }
+      });
+      
+      return {
+        openInvoices: { count: openInvoicesCount, sum: openInvoicesSum },
+        openOrders: { count: openOrdersCount, sum: openOrdersSum },
+        openExpenses: { count: openExpensesCount, sum: openExpensesSum }
+      };
+    }
+    
+    // Function to parse numbers in both German and English format
+    function parseGermanNumber(value) {
+      if (!value || typeof value !== 'string') {
+        return 0;
+      }
+      
+      // Remove currency symbols and whitespace first
+      let cleaned = value.replace(/[€$\s]/g, '');
+      
+      // Detect format by checking which separator appears last
+      const lastDotIndex = cleaned.lastIndexOf('.');
+      const lastCommaIndex = cleaned.lastIndexOf(',');
+      
+      if (lastCommaIndex > lastDotIndex) {
+        // German format: comma is decimal separator, dot is thousands
+        // Example: "5.000,50" or "1.234.567,89"
+        cleaned = cleaned.replace(/\./g, ''); // Remove thousands separator
+        cleaned = cleaned.replace(',', '.'); // Replace decimal comma with dot
+      } else if (lastDotIndex > lastCommaIndex) {
+        // English format: dot is decimal separator, comma is thousands
+        // Example: "5,000.50" or "1,234,567.89"
+        cleaned = cleaned.replace(/,/g, ''); // Remove thousands separator
+        // Dot is already decimal separator
+      } else if (lastCommaIndex !== -1) {
+        // Only comma present - it's decimal separator (German)
+        // Example: "450,50"
+        cleaned = cleaned.replace(',', '.');
+      }
+      // else: only dot or neither - treat dot as decimal (English format)
+      
+      // Remove any remaining non-numeric characters except dot and minus
+      cleaned = cleaned.replace(/[^\d.-]/g, '');
+      
+      return parseFloat(cleaned) || 0;
+    }
+    
     (() => {
       try {
         // Require authentication and admin role
@@ -80,6 +347,9 @@
         
         // Initialize email error display
         initEmailErrorDisplay();
+        
+        // Load dashboard statistics
+        loadDashboardStats();
       } catch (error) {
         // Authentication failed or a redirect is in progress; avoid further DOM manipulation
         console.error('Authentication error on dashboard page:', error);
