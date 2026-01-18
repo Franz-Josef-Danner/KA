@@ -2,7 +2,7 @@
 // Artikelliste Detail Application
 // -----------------------------
 import { getArtikelliste, updateArtikelliste, deleteArtikelliste } from './modules/artikellisten-state.js';
-import { ARTIKELLISTEN_ITEM_COLUMNS } from './modules/artikellisten-config.js';
+import { ARTIKELLISTEN_ITEM_COLUMNS, DEFAULT_ZAHLUNGSZIEL_TAGE } from './modules/artikellisten-config.js';
 import { sanitizeText } from './utils/sanitize.js';
 
 let currentFirmenId = null;
@@ -216,6 +216,20 @@ async function init() {
   // Update title and subtitle
   document.getElementById("detail-title").textContent = `Artikelliste: ${currentArtikelliste.firmenName}`;
   document.getElementById("detail-subtitle").textContent = `Firmen-ID: ${currentFirmenId}`;
+  
+  // Initialize payment terms input
+  const zahlungszielInput = document.getElementById("zahlungsziel-input");
+  zahlungszielInput.value = currentArtikelliste.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
+  zahlungszielInput.addEventListener("change", () => {
+    const value = parseInt(zahlungszielInput.value, 10);
+    if (!isNaN(value) && value >= 1 && value <= 365) {
+      currentArtikelliste.zahlungsziel_tage = value;
+    } else {
+      // Reset to current value if invalid
+      zahlungszielInput.value = currentArtikelliste.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
+      alert("Bitte geben Sie eine gültige Anzahl von Tagen zwischen 1 und 365 ein.");
+    }
+  });
   
   // Event handlers
   document.getElementById("backBtn").addEventListener("click", () => {

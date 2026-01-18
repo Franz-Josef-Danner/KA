@@ -9,6 +9,7 @@ import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
+import { enrichInvoiceWithPaymentTerms } from '../utils/invoice-helpers.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -109,7 +110,9 @@ export function render() {
       viewPdfBtn.disabled = true;
       viewPdfBtn.textContent = 'PDF wird erstellt...';
       try {
-        const pdf = await generatePDF('invoice', row, false, null, true);
+        // Enrich invoice data with payment terms from article list
+        const enrichedRow = await enrichInvoiceWithPaymentTerms(row);
+        const pdf = await generatePDF('invoice', enrichedRow, false, null, true);
         if (pdf) {
           viewPDF(pdf);
         }
@@ -133,7 +136,9 @@ export function render() {
       downloadPdfBtn.disabled = true;
       downloadPdfBtn.textContent = 'PDF wird erstellt...';
       try {
-        const pdf = await generatePDF('invoice', row, false, null, true);
+        // Enrich invoice data with payment terms from article list
+        const enrichedRow = await enrichInvoiceWithPaymentTerms(row);
+        const pdf = await generatePDF('invoice', enrichedRow, false, null, true);
         if (pdf) {
           const filename = generatePdfFilename('R', row.Projekt, row.Firma, row.Rechnungsdatum);
           downloadPDF(pdf, filename);

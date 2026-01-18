@@ -1,7 +1,7 @@
 // -----------------------------
 // Artikellisten State Management
 // -----------------------------
-import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
+import { ARTIKELLISTEN_STORAGE_KEY, DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 
 // API endpoints
 const API_BASE_URL = './api';
@@ -186,6 +186,7 @@ export async function createEmptyArtikelliste(firmenId, firmenName) {
   const artikelliste = {
     firmenId: firmenId,
     firmenName: firmenName,
+    zahlungsziel_tage: DEFAULT_ZAHLUNGSZIEL_TAGE,
     created: new Date().toISOString(),
     modified: new Date().toISOString(),
     items: []

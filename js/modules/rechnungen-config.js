@@ -7,6 +7,7 @@ export const COLUMNS = [
   "Rechnungs_ID",
   "Rechnungsdatum",
   "Firma",
+  "Firmen_ID", // Company ID reference for payment terms and other company-specific data
   "Firmen_Email",
   "Ansprechpartner",
   "Artikel",

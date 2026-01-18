@@ -8,6 +8,7 @@ import { getRows as getCompanies } from './state.js';
 import { escapeHtml } from '../utils/sanitize.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
+import { enrichInvoiceWithPaymentTerms } from '../utils/invoice-helpers.js';
 
 export function render() {
   const user = getCurrentUser();
@@ -262,8 +263,10 @@ function renderInvoices(firmenId, firmaName) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
+          // Enrich invoice data with payment terms
+          const enrichedInvoice = await enrichInvoiceWithPaymentTerms(invoice);
           // Use standard template for customer-facing PDFs (5th parameter = true)
-          const pdf = await generatePDF('invoice', invoice, false, null, true);
+          const pdf = await generatePDF('invoice', enrichedInvoice, false, null, true);
           if (pdf) {
             viewPDF(pdf);
           }
@@ -287,8 +290,10 @@ function renderInvoices(firmenId, firmaName) {
         btn.disabled = true;
         btn.textContent = 'PDF wird erstellt...';
         try {
+          // Enrich invoice data with payment terms
+          const enrichedInvoice = await enrichInvoiceWithPaymentTerms(invoice);
           // Use standard template for customer-facing PDFs (5th parameter = true)
-          const pdf = await generatePDF('invoice', invoice, false, null, true);
+          const pdf = await generatePDF('invoice', enrichedInvoice, false, null, true);
           if (pdf) {
             // Generate filename: R_projekt_firma_datum
             const filename = generatePdfFilename('R', invoice.Projekt, firmaName, invoice.Rechnungsdatum);
