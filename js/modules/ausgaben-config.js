@@ -12,6 +12,7 @@ export const COLUMNS = [
   "Betrag",
   "Kategorie", // "Privat" or "Beruflich"
   "Status", // "bezahlt" or "unbezahlt"
+  "Deadline", // Payment deadline
   "IBAN",
   "BIC",
   "Kommentare"
