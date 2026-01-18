@@ -638,6 +638,22 @@ function getFormData() {
       continue;
     }
     
+    // Handle Firmen_ID separately - get from company data based on selected Firma
+    if (col === "Firmen_ID") {
+      const firmaInput = document.getElementById("edit_Firma");
+      if (firmaInput && firmaInput.value) {
+        const company = getCompanyByName(firmaInput.value);
+        if (company && company.Firmen_ID) {
+          formData[col] = company.Firmen_ID;
+        } else {
+          formData[col] = "";
+        }
+      } else {
+        formData[col] = "";
+      }
+      continue;
+    }
+    
     // Handle Firmenadresse and Firmen_Email separately - get from company data
     if (col === "Firmenadresse" || col === "Firmen_Email") {
       const firmaInput = document.getElementById("edit_Firma");
@@ -662,19 +678,6 @@ function getFormData() {
     if (input) {
       formData[col] = sanitizeText(input.value || "");
     }
-  }
-  
-  // Add Firmen_ID from the selected company
-  const firmaInput = document.getElementById("edit_Firma");
-  if (firmaInput && firmaInput.value) {
-    const company = getCompanyByName(firmaInput.value);
-    if (company && company.Firmen_ID) {
-      formData.Firmen_ID = company.Firmen_ID;
-    } else {
-      formData.Firmen_ID = "";
-    }
-  } else {
-    formData.Firmen_ID = "";
   }
   
   // Add invoice items to formData with all fields
