@@ -239,7 +239,9 @@ export function undo() {
   if (previousState !== null) {
     rowsCache = previousState;
     save();
+    return true;
   }
+  return false;
 }
 
 /**
@@ -250,7 +252,9 @@ export function redo() {
   if (nextState !== null) {
     rowsCache = nextState;
     save();
+    return true;
   }
+  return false;
 }
 
 /**

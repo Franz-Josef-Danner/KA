@@ -3,7 +3,7 @@
 // -----------------------------
 import { render } from './ausgaben-render.js';
 import { deleteRow, undo, redo } from './ausgaben-state.js';
-import { openModal, closeModal, initModalHandlers } from './ausgaben-ui.js';
+import { openModal, closeModal, initModalHandlers, updateUndoRedoButtons } from './ausgaben-ui.js';
 import { debounce } from '../utils/helpers.js';
 
 /**
@@ -16,25 +16,29 @@ export function initEventHandlers() {
   // New expense button
   const newBtn = document.getElementById("newAusgabenBtn");
   if (newBtn) {
-    newBtn.onclick = () => openModal(null);
+    newBtn.addEventListener("click", () => openModal(null));
   }
   
   // Undo button
   const undoBtn = document.getElementById("undoBtn");
   if (undoBtn) {
-    undoBtn.onclick = () => {
-      undo();
-      render();
-    };
+    undoBtn.addEventListener("click", () => {
+      if (undo()) {
+        render();
+        updateUndoRedoButtons();
+      }
+    });
   }
   
   // Redo button
   const redoBtn = document.getElementById("redoBtn");
   if (redoBtn) {
-    redoBtn.onclick = () => {
-      redo();
-      render();
-    };
+    redoBtn.addEventListener("click", () => {
+      if (redo()) {
+        render();
+        updateUndoRedoButtons();
+      }
+    });
   }
   
   // Search input with debounce
@@ -47,18 +51,29 @@ export function initEventHandlers() {
   
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    // Skip if user is typing in contenteditable or input fields
+    if (e.target.isContentEditable || 
+        e.target.tagName === 'INPUT' || 
+        e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+    
     // Undo: Ctrl+Z
     if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
-      undo();
-      render();
+      if (undo()) {
+        render();
+        updateUndoRedoButtons();
+      }
     }
     
     // Redo: Ctrl+Y or Ctrl+Shift+Z
     if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
       e.preventDefault();
-      redo();
-      render();
+      if (redo()) {
+        render();
+        updateUndoRedoButtons();
+      }
     }
   });
   
@@ -74,4 +89,7 @@ export function initEventHandlers() {
       render();
     }
   });
+  
+  // Initial button state update
+  updateUndoRedoButtons();
 }
