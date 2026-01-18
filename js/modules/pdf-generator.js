@@ -1219,12 +1219,20 @@ function generatePaymentTermsText(invoiceNumber, zahlungszielTage, invoiceDate) 
     if (typeof invoiceDate === 'string') {
       dueDate = new Date(invoiceDate);
     } else if (invoiceDate instanceof Date) {
-      dueDate = new Date(invoiceDate);
+      dueDate = new Date(invoiceDate.getTime());
+    }
+    
+    // Validate the parsed date
+    if (isNaN(dueDate.getTime())) {
+      // Invalid date, fall back to current date
+      console.warn('Invalid invoice date provided, using current date:', invoiceDate);
+      dueDate = new Date();
     }
   }
   
-  // Add payment terms days to invoice date
-  dueDate.setDate(dueDate.getDate() + zahlungszielTage);
+  // Add payment terms days to invoice date using milliseconds for accuracy
+  // This correctly handles month/year boundaries
+  dueDate = new Date(dueDate.getTime() + (zahlungszielTage * 24 * 60 * 60 * 1000));
   
   // Format due date as DD.MM.YYYY (German format)
   const dueDateStr = dueDate.toLocaleDateString('de-DE', {
