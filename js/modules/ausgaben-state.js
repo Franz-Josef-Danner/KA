@@ -189,6 +189,9 @@ export function newEmptyRow() {
     } else if (col === 'Ausgaben_ID') {
       // Generate a unique ID
       row[col] = `AUS-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    } else if (col === 'Deadline') {
+      // Set default deadline to empty (optional field)
+      row[col] = '';
     } else {
       row[col] = '';
     }
