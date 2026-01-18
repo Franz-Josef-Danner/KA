@@ -218,9 +218,27 @@
       rechnungen.forEach(invoice => {
         if (invoice.Bezahlt === 'unbezahlt') {
           openInvoicesCount++;
-          if (invoice.Gesamtsumme) {
-            openInvoicesSum += parseGermanNumber(invoice.Gesamtsumme);
+          
+          // Calculate total from items array (new format) or Gesamtsumme field (old format)
+          let invoiceTotal = 0;
+          if (invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0) {
+            // New format: calculate from items array
+            invoice.items.forEach(item => {
+              const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+              invoiceTotal += gesamtpreis;
+            });
+            
+            // Apply discount if present
+            const rabattPercent = parseFloat(invoice.Rabatt) || 0;
+            if (rabattPercent > 0) {
+              invoiceTotal = invoiceTotal * (1 - rabattPercent / 100);
+            }
+          } else if (invoice.Gesamtsumme) {
+            // Old format: use Gesamtsumme field
+            invoiceTotal = parseGermanNumber(invoice.Gesamtsumme);
           }
+          
+          openInvoicesSum += invoiceTotal;
         }
       });
       
@@ -232,9 +250,27 @@
         const status = order.Status || '';
         if (status === 'in Arbeit' || status === '' || status === 'offen') {
           openOrdersCount++;
-          if (order.Budget) {
-            openOrdersSum += parseGermanNumber(order.Budget);
+          
+          // Calculate total from items array (new format) or Budget field (old format)
+          let orderTotal = 0;
+          if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+            // New format: calculate from items array
+            order.items.forEach(item => {
+              const gesamtpreis = parseFloat(item.Gesamtpreis) || 0;
+              orderTotal += gesamtpreis;
+            });
+            
+            // Apply discount if present
+            const rabattPercent = parseFloat(order.Rabatt) || 0;
+            if (rabattPercent > 0) {
+              orderTotal = orderTotal * (1 - rabattPercent / 100);
+            }
+          } else if (order.Budget) {
+            // Old format: use Budget field
+            orderTotal = parseGermanNumber(order.Budget);
           }
+          
+          openOrdersSum += orderTotal;
         }
       });
       

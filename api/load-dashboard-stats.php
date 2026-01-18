@@ -103,9 +103,27 @@ foreach ($rechnungen as $invoice) {
     if (isset($invoice['Bezahlt']) && $invoice['Bezahlt'] === 'unbezahlt') {
         $openInvoicesCount++;
         
-        if (isset($invoice['Gesamtsumme'])) {
-            $openInvoicesSum += parseGermanNumber($invoice['Gesamtsumme']);
+        // Calculate total from items array (new format) or Gesamtsumme field (old format)
+        $invoiceTotal = 0;
+        if (isset($invoice['items']) && is_array($invoice['items']) && count($invoice['items']) > 0) {
+            // New format: calculate from items array
+            foreach ($invoice['items'] as $item) {
+                if (isset($item['Gesamtpreis'])) {
+                    $invoiceTotal += floatval($item['Gesamtpreis']);
+                }
+            }
+            
+            // Apply discount if present
+            $rabattPercent = isset($invoice['Rabatt']) ? floatval($invoice['Rabatt']) : 0;
+            if ($rabattPercent > 0) {
+                $invoiceTotal = $invoiceTotal * (1 - $rabattPercent / 100);
+            }
+        } else if (isset($invoice['Gesamtsumme'])) {
+            // Old format: use Gesamtsumme field
+            $invoiceTotal = parseGermanNumber($invoice['Gesamtsumme']);
         }
+        
+        $openInvoicesSum += $invoiceTotal;
     }
 }
 
@@ -120,9 +138,27 @@ foreach ($auftraege as $order) {
     if ($status === 'in Arbeit' || $status === '' || $status === 'offen') {
         $openOrdersCount++;
         
-        if (isset($order['Budget'])) {
-            $openOrdersSum += parseGermanNumber($order['Budget']);
+        // Calculate total from items array (new format) or Budget field (old format)
+        $orderTotal = 0;
+        if (isset($order['items']) && is_array($order['items']) && count($order['items']) > 0) {
+            // New format: calculate from items array
+            foreach ($order['items'] as $item) {
+                if (isset($item['Gesamtpreis'])) {
+                    $orderTotal += floatval($item['Gesamtpreis']);
+                }
+            }
+            
+            // Apply discount if present
+            $rabattPercent = isset($order['Rabatt']) ? floatval($order['Rabatt']) : 0;
+            if ($rabattPercent > 0) {
+                $orderTotal = $orderTotal * (1 - $rabattPercent / 100);
+            }
+        } else if (isset($order['Budget'])) {
+            // Old format: use Budget field
+            $orderTotal = parseGermanNumber($order['Budget']);
         }
+        
+        $openOrdersSum += $orderTotal;
     }
 }
 
