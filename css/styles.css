@@ -371,10 +371,6 @@ td.readonly:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-.stat-card.invoices {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
 .stat-card.orders {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }

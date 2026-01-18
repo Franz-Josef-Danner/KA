@@ -156,11 +156,8 @@
         
         // Show error in all cards
         document.querySelectorAll('.stat-card').forEach(card => {
-          card.innerHTML = `
-            <div class="stat-card-error">
-              Fehler beim Laden der Statistiken
-            </div>
-          `;
+          card.className = 'stat-card stat-card-error';
+          card.textContent = 'Fehler beim Laden der Statistiken';
         });
       }
     }
