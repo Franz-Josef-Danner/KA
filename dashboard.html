@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dashboard - KA System</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div id="nav-container"></div>
@@ -23,6 +24,25 @@
       </div>
       <div class="stat-card expenses">
         <div class="stat-card-loading">Lade Statistiken...</div>
+      </div>
+    </div>
+    
+    <!-- Dashboard Charts -->
+    <div class="dashboard-charts">
+      <div class="chart-section">
+        <h2>Tatsächliche Entwicklung <span class="chart-year" id="actual-year"></span></h2>
+        <p class="chart-description">Anstieg der Einnahmen (bezahlte Rechnungen) und Ausgaben (bezahlte Ausgaben)</p>
+        <div class="chart-container">
+          <canvas id="actualTrendsChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-section">
+        <h2>Prognose-Entwicklung <span class="chart-year" id="projection-year"></span></h2>
+        <p class="chart-description">Durchschnittliche Projektion für Einnahmen und Ausgaben mit offenen Rechnungen und Ausgaben</p>
+        <div class="chart-container">
+          <canvas id="projectionChart"></canvas>
+        </div>
       </div>
     </div>
     
@@ -456,6 +476,236 @@
       }
     }
     
+    // Function to load and display dashboard charts
+    async function loadDashboardCharts() {
+      try {
+        const response = await fetch('api/load-dashboard-charts.php');
+        if (!response.ok) {
+          throw new Error('Failed to load chart data');
+        }
+        
+        const result = await response.json();
+        if (!result.success || !result.data) {
+          throw new Error('Invalid chart data');
+        }
+        
+        const chartData = result.data;
+        
+        // Update year displays
+        document.getElementById('actual-year').textContent = chartData.year;
+        document.getElementById('projection-year').textContent = chartData.year;
+        
+        // Create Actual Trends Chart
+        const actualCtx = document.getElementById('actualTrendsChart').getContext('2d');
+        new Chart(actualCtx, {
+          type: 'line',
+          data: {
+            labels: chartData.labels,
+            datasets: [
+              {
+                label: 'Einnahmen (bezahlt)',
+                data: chartData.actual.revenue,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6
+              },
+              {
+                label: 'Ausgaben (bezahlt)',
+                data: chartData.actual.expenses,
+                borderColor: '#f5576c',
+                backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.5,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 15,
+                  font: {
+                    size: 13
+                  }
+                }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    label += formatCurrency(context.parsed.y);
+                    return label;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return formatCurrency(value);
+                  }
+                },
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            }
+          }
+        });
+        
+        // Create Projection Chart
+        const projectionCtx = document.getElementById('projectionChart').getContext('2d');
+        
+        // Create gradient for projected line
+        const gradientRevenue = projectionCtx.createLinearGradient(0, 0, projectionCtx.canvas.width, 0);
+        gradientRevenue.addColorStop(0, '#667eea');
+        gradientRevenue.addColorStop(chartData.currentMonth / 12, '#667eea');
+        gradientRevenue.addColorStop(chartData.currentMonth / 12, 'rgba(102, 126, 234, 0.5)');
+        gradientRevenue.addColorStop(1, 'rgba(102, 126, 234, 0.5)');
+        
+        const gradientExpenses = projectionCtx.createLinearGradient(0, 0, projectionCtx.canvas.width, 0);
+        gradientExpenses.addColorStop(0, '#f5576c');
+        gradientExpenses.addColorStop(chartData.currentMonth / 12, '#f5576c');
+        gradientExpenses.addColorStop(chartData.currentMonth / 12, 'rgba(245, 87, 108, 0.5)');
+        gradientExpenses.addColorStop(1, 'rgba(245, 87, 108, 0.5)');
+        
+        new Chart(projectionCtx, {
+          type: 'line',
+          data: {
+            labels: chartData.labels,
+            datasets: [
+              {
+                label: 'Einnahmen (Prognose)',
+                data: chartData.projected.revenue,
+                borderColor: gradientRevenue,
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                segment: {
+                  borderDash: ctx => {
+                    // Dashed line for future months
+                    return ctx.p0DataIndex >= chartData.currentMonth - 1 ? [5, 5] : undefined;
+                  }
+                }
+              },
+              {
+                label: 'Ausgaben (Prognose)',
+                data: chartData.projected.expenses,
+                borderColor: gradientExpenses,
+                backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                segment: {
+                  borderDash: ctx => {
+                    // Dashed line for future months
+                    return ctx.p0DataIndex >= chartData.currentMonth - 1 ? [5, 5] : undefined;
+                  }
+                }
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.5,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 15,
+                  font: {
+                    size: 13
+                  }
+                }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    label += formatCurrency(context.parsed.y);
+                    return label;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return formatCurrency(value);
+                  }
+                },
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            }
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error loading dashboard charts:', error);
+        // Hide chart sections on error
+        document.querySelectorAll('.chart-section').forEach(section => {
+          section.style.display = 'none';
+        });
+      }
+    }
+    
     (() => {
       try {
         // Require authentication and admin role
@@ -473,6 +723,9 @@
         
         // Load dashboard statistics
         loadDashboardStats();
+        
+        // Load dashboard charts
+        loadDashboardCharts();
       } catch (error) {
         // Authentication failed or a redirect is in progress; avoid further DOM manipulation
         console.error('Authentication error on dashboard page:', error);
