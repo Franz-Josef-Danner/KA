@@ -11,6 +11,7 @@ Thumbs.db
 # Test and development artifacts
 screenshots/
 test-*.html
+js/libs/chart-mock.js
 
 # Backend sensitive data
 backend/config.json
