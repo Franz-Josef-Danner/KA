@@ -492,6 +492,9 @@
         
         const chartData = result.data;
         
+        // Constants for chart styling
+        const DASH_PATTERN = [5, 5];
+        
         // Update year displays
         document.getElementById('actual-year').textContent = chartData.year;
         document.getElementById('projection-year').textContent = chartData.year;
@@ -618,7 +621,7 @@
                 segment: {
                   borderDash: ctx => {
                     // Dashed line for future months
-                    return ctx.p0DataIndex >= chartData.currentMonth - 1 ? [5, 5] : undefined;
+                    return ctx.p0DataIndex >= chartData.currentMonth - 1 ? DASH_PATTERN : undefined;
                   }
                 }
               },
@@ -635,7 +638,7 @@
                 segment: {
                   borderDash: ctx => {
                     // Dashed line for future months
-                    return ctx.p0DataIndex >= chartData.currentMonth - 1 ? [5, 5] : undefined;
+                    return ctx.p0DataIndex >= chartData.currentMonth - 1 ? DASH_PATTERN : undefined;
                   }
                 }
               }

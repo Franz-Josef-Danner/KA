@@ -50,7 +50,16 @@ function readJsonFile($filePath) {
 
 // Function to parse numbers in both German and English format
 function parseGermanNumber($value) {
-    if (empty($value) || !is_string($value)) {
+    if (empty($value)) {
+        return 0;
+    }
+    
+    // Allow numeric types to pass through
+    if (is_numeric($value) && !is_string($value)) {
+        return floatval($value);
+    }
+    
+    if (!is_string($value)) {
         return 0;
     }
     
@@ -83,7 +92,7 @@ function parseGermanNumber($value) {
 function calculateTotal($record, $itemsField, $fallbackField) {
     $total = 0;
     
-    if (isset($record['items']) && is_array($record['items']) && count($record['items']) > 0) {
+    if (isset($record['items']) && is_array($record['items'])) {
         // New format: calculate from items array
         foreach ($record['items'] as $item) {
             if (isset($item['Gesamtpreis'])) {
@@ -233,9 +242,9 @@ $projectedExpenses = $runningExpenses;
 $totalOpenRevenue = array_sum($monthlyOpenRevenue);
 $totalOpenExpenses = array_sum($monthlyOpenExpenses);
 
-// Distribute open amounts evenly over remaining months
-$monthlyProjectedOpenRevenue = $remainingMonths > 0 ? $totalOpenRevenue / $remainingMonths : 0;
-$monthlyProjectedOpenExpenses = $remainingMonths > 0 ? $totalOpenExpenses / $remainingMonths : 0;
+// Distribute open amounts evenly over remaining months (only if there are remaining months)
+$monthlyProjectedOpenRevenue = ($remainingMonths > 0) ? $totalOpenRevenue / $remainingMonths : 0;
+$monthlyProjectedOpenExpenses = ($remainingMonths > 0) ? $totalOpenExpenses / $remainingMonths : 0;
 
 for ($month = 1; $month <= 12; $month++) {
     if ($month <= $currentMonth) {
