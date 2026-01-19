@@ -444,6 +444,51 @@ td.readonly:hover {
   font-size: 14px;
 }
 
+/* Dashboard Charts */
+.dashboard-charts {
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.chart-section {
+  background: #fff;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s;
+}
+
+.chart-section:hover {
+  border-color: #d0d0d0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.chart-section h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+  color: #333;
+}
+
+.chart-year {
+  font-size: 16px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.chart-description {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 24px;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+}
+
 /* ===========================
    Page Container Styles
    =========================== */
