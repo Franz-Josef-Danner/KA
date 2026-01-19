@@ -121,6 +121,21 @@ function expenseExists($ausgaben, $recurringId, $date) {
 }
 
 /**
+ * Calculate total amount paid for a recurring expense
+ */
+function calculateTotalPaid($ausgaben, $recurringId) {
+    $total = 0.0;
+    foreach ($ausgaben as $expense) {
+        if (isset($expense['Recurring_ID']) && 
+            $expense['Recurring_ID'] === $recurringId) {
+            $betrag = floatval($expense['Betrag'] ?? 0);
+            $total += $betrag;
+        }
+    }
+    return $total;
+}
+
+/**
  * Generate a unique ID for an expense
  */
 function generateExpenseId() {
@@ -170,6 +185,10 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
     $beginDate = $dauerhafteAusgabe['Beginn_Datum'] ?? '';
     $recurrencePeriod = $dauerhafteAusgabe['Wiederholungszeitraum'] ?? 'Monatlich';
     $dueDay = $dauerhafteAusgabe['Stichtag'] ?? '1';
+    $betrag = floatval($dauerhafteAusgabe['Betrag'] ?? 0);
+    $gesamtSumme = isset($dauerhafteAusgabe['GesamtSumme']) && !empty($dauerhafteAusgabe['GesamtSumme']) 
+                   ? floatval($dauerhafteAusgabe['GesamtSumme']) 
+                   : null;
     
     if (empty($beginDate) || empty($recurringId)) {
         logMessage("WARNING: Skipping recurring expense with missing begin date or ID");
@@ -180,6 +199,15 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
     if ($beginDate > $today) {
         logMessage("Skipping recurring expense $recurringId - begin date not yet reached");
         continue;
+    }
+    
+    // Check if total sum has been reached (if GesamtSumme is set)
+    if ($gesamtSumme !== null) {
+        $totalPaid = calculateTotalPaid($ausgaben, $recurringId);
+        if ($totalPaid >= $gesamtSumme) {
+            logMessage("Skipping recurring expense $recurringId - total sum of " . number_format($gesamtSumme, 2) . " € already reached (paid: " . number_format($totalPaid, 2) . " €)");
+            continue;
+        }
     }
     
     // Generate all missing expenses from begin date to today
@@ -195,6 +223,25 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
             break;
         }
         
+        // Check if we should generate this expense based on GesamtSumme
+        if ($gesamtSumme !== null) {
+            $totalPaid = calculateTotalPaid($ausgaben, $recurringId);
+            
+            // Check if we've reached or exceeded the total sum
+            if ($totalPaid >= $gesamtSumme) {
+                logMessage("Total sum reached for recurring expense $recurringId - stopping generation");
+                break;
+            }
+            
+            // Check if this expense would exceed the total sum
+            if (($totalPaid + $betrag) > $gesamtSumme) {
+                // Adjust the final payment to not exceed total sum
+                $adjustedBetrag = $gesamtSumme - $totalPaid;
+                logMessage("Final payment for recurring expense $recurringId adjusted to " . number_format($adjustedBetrag, 2) . " € to reach total sum of " . number_format($gesamtSumme, 2) . " €");
+                $betrag = $adjustedBetrag;
+            }
+        }
+        
         // Check if expense already exists for this date
         if (!expenseExists($ausgaben, $recurringId, $nextDueDate)) {
             // Generate a new regular expense
@@ -204,7 +251,7 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
                 'Empfaenger' => $dauerhafteAusgabe['Empfaenger'] ?? '',
                 'Verwendungszweck' => $dauerhafteAusgabe['Verwendungszweck'] ?? '',
                 'Rechnungsnummer' => $dauerhafteAusgabe['Rechnungsnummer'] ?? '',
-                'Betrag' => $dauerhafteAusgabe['Betrag'] ?? '0.00',
+                'Betrag' => number_format($betrag, 2, '.', ''),
                 'Kategorie' => $dauerhafteAusgabe['Kategorie'] ?? 'Beruflich',
                 'Status' => 'bezahlt', // Automatically mark as paid
                 'Deadline' => $nextDueDate,
@@ -219,6 +266,12 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
             $newExpensesCount++;
             
             logMessage("Generated new expense for recurring ID $recurringId on $nextDueDate: " . $newExpense['Ausgaben_ID']);
+            
+            // If this was an adjusted final payment, stop generating
+            if ($gesamtSumme !== null && $betrag < floatval($dauerhafteAusgabe['Betrag'] ?? 0)) {
+                logMessage("Final payment generated for recurring expense $recurringId - total sum reached");
+                break;
+            }
         } else {
             logMessage("Expense already exists for recurring ID $recurringId on $nextDueDate");
         }
@@ -240,6 +293,9 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
                 break;
         }
         $currentCheckDate = $nextCheckDate->format('Y-m-d');
+        
+        // Reset betrag to original value for next iteration
+        $betrag = floatval($dauerhafteAusgabe['Betrag'] ?? 0);
     }
 }
 

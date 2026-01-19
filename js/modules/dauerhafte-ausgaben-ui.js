@@ -41,6 +41,7 @@ export function openModal(rowIndex = null) {
     document.getElementById("edit_Recurring_Wiederholungszeitraum").value = row.Wiederholungszeitraum || 'Monatlich';
     document.getElementById("edit_Recurring_Beginn_Datum").value = row.Beginn_Datum || '';
     document.getElementById("edit_Recurring_Stichtag").value = row.Stichtag || '1';
+    document.getElementById("edit_Recurring_GesamtSumme").value = row.GesamtSumme || '';
   } else {
     // Create new recurring expense
     modalTitle.textContent = "Neue dauerhafte Ausgabe";
@@ -59,6 +60,7 @@ export function openModal(rowIndex = null) {
     document.getElementById("edit_Recurring_Wiederholungszeitraum").value = 'Monatlich';
     document.getElementById("edit_Recurring_Beginn_Datum").value = newRow.Beginn_Datum;
     document.getElementById("edit_Recurring_Stichtag").value = '1';
+    document.getElementById("edit_Recurring_GesamtSumme").value = '';
   }
   
   modal.style.display = "flex";
@@ -95,7 +97,8 @@ export function saveModal() {
     Kommentare: document.getElementById("edit_Recurring_Kommentare").value,
     Wiederholungszeitraum: document.getElementById("edit_Recurring_Wiederholungszeitraum").value,
     Beginn_Datum: document.getElementById("edit_Recurring_Beginn_Datum").value,
-    Stichtag: document.getElementById("edit_Recurring_Stichtag").value
+    Stichtag: document.getElementById("edit_Recurring_Stichtag").value,
+    GesamtSumme: document.getElementById("edit_Recurring_GesamtSumme").value
   };
   
   // Validate required fields
@@ -133,6 +136,23 @@ export function saveModal() {
   if (formData.Wiederholungszeitraum === 'Wöchentlich' && (stichtag < 1 || stichtag > 7)) {
     alert('Für wöchentliche Ausgaben muss der Stichtag zwischen 1 (Montag) und 7 (Sonntag) liegen.');
     return;
+  }
+  
+  // Validate GesamtSumme if provided
+  if (formData.GesamtSumme && formData.GesamtSumme !== '') {
+    const gesamtSumme = parseFloat(formData.GesamtSumme);
+    if (isNaN(gesamtSumme) || gesamtSumme <= 0) {
+      alert('Bitte geben Sie eine gültige Gesamtsumme ein (größer als 0).');
+      return;
+    }
+    
+    // Warn if GesamtSumme is less than Betrag
+    if (gesamtSumme < betrag) {
+      const proceed = confirm('Die Gesamtsumme ist kleiner als der Betrag einer einzelnen Rate. Fortfahren?');
+      if (!proceed) {
+        return;
+      }
+    }
   }
   
   // Save the recurring expense
