@@ -1580,3 +1580,40 @@ td.readonly:hover {
   color: #333;
   margin: 0;
 }
+
+/* Tabs for switching between views */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: -2px;
+}
+
+.tab-button:hover {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.05);
+}
+
+.tab-button.active {
+  color: #1890ff;
+  border-bottom-color: #1890ff;
+  background: transparent;
+}
+
+.tab-button:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}

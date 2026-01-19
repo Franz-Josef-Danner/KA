@@ -11,6 +11,12 @@
   
   <h1>Ausgaben – Verwaltung</h1>
 
+  <!-- Tabs for switching between regular and recurring expenses -->
+  <div class="tabs">
+    <button id="regularTab" class="tab-button active">Einmalige Ausgaben</button>
+    <button id="recurringTab" class="tab-button">Dauerhafte Ausgaben</button>
+  </div>
+
   <div class="bar">
     <button id="newAusgabenBtn">+ Neue Ausgabe</button>
     <button id="undoBtn" title="Rückgängig (Strg+Z)">↶ Rückgängig</button>
@@ -18,11 +24,15 @@
     <input id="search" class="search" type="search" placeholder="Suchen (Empfänger, Verwendungszweck, Rechnungsnummer …)" />
   </div>
 
-  <div class="hint">
+  <div class="hint" id="regularHint">
     Bedienung: Doppelklick auf eine Ausgabe zum Bearbeiten. <span class="pill">Tab</span> springt zum nächsten Feld im Bearbeitungsdialog.
   </div>
+  <div class="hint" id="recurringHint" style="display: none;">
+    Bedienung: Doppelklick auf eine dauerhafte Ausgabe zum Bearbeiten. <span class="pill">Tab</span> springt zum nächsten Feld im Bearbeitungsdialog.
+  </div>
 
-  <div class="wrap">
+  <!-- Regular expenses table -->
+  <div class="wrap" id="regularExpensesTable">
     <table id="grid">
       <thead>
         <tr>
@@ -42,6 +52,30 @@
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Recurring expenses table -->
+  <div class="wrap" id="recurringExpensesTable" style="display: none;">
+    <table id="recurringGrid">
+      <thead>
+        <tr>
+          <th>Ausgaben_ID</th>
+          <th>Empfänger</th>
+          <th>Verwendungszweck</th>
+          <th>Rechnungsnummer</th>
+          <th>Betrag</th>
+          <th>Kategorie</th>
+          <th>IBAN</th>
+          <th>BIC</th>
+          <th>Kommentare</th>
+          <th>Wiederholungszeitraum</th>
+          <th>Beginn Datum</th>
+          <th>Stichtag</th>
+          <th class="actions">Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="recurringTbody"></tbody>
     </table>
   </div>
 
@@ -113,6 +147,82 @@
       <div class="modal-footer">
         <button id="modalCancel" class="btn-secondary">Abbrechen</button>
         <button id="modalSave" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dauerhafte Ausgaben Edit Modal -->
+  <div id="dauerhafteAusgabenModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="recurringModalTitle">Dauerhafte Ausgabe bearbeiten</h2>
+        <button id="recurringModalClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="dauerhafteAusgabenForm">
+          <div class="form-group">
+            <label for="edit_Recurring_Ausgaben_ID">Ausgaben-ID:</label>
+            <input type="text" id="edit_Recurring_Ausgaben_ID" name="Ausgaben_ID" readonly style="background-color: #f5f5f5;" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Empfaenger">Empfänger: *</label>
+            <input type="text" id="edit_Recurring_Empfaenger" name="Empfaenger" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Verwendungszweck">Verwendungszweck: *</label>
+            <input type="text" id="edit_Recurring_Verwendungszweck" name="Verwendungszweck" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Rechnungsnummer">Rechnungsnummer:</label>
+            <input type="text" id="edit_Recurring_Rechnungsnummer" name="Rechnungsnummer" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Betrag">Betrag (€): *</label>
+            <input type="number" id="edit_Recurring_Betrag" name="Betrag" step="0.01" min="0" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Kategorie">Kategorie:</label>
+            <select id="edit_Recurring_Kategorie" name="Kategorie">
+              <option value="Privat">Privat</option>
+              <option value="Beruflich">Beruflich</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_IBAN">IBAN:</label>
+            <input type="text" id="edit_Recurring_IBAN" name="IBAN" maxlength="34" placeholder="DE89 3704 0044 0532 0130 00" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_BIC">BIC:</label>
+            <input type="text" id="edit_Recurring_BIC" name="BIC" maxlength="11" placeholder="COBADEFFXXX" />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Wiederholungszeitraum">Wiederholungszeitraum: *</label>
+            <select id="edit_Recurring_Wiederholungszeitraum" name="Wiederholungszeitraum" required>
+              <option value="Täglich">Täglich</option>
+              <option value="Wöchentlich">Wöchentlich</option>
+              <option value="Monatlich">Monatlich</option>
+              <option value="Jährlich">Jährlich</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Beginn_Datum">Beginn Datum: *</label>
+            <input type="date" id="edit_Recurring_Beginn_Datum" name="Beginn_Datum" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_Recurring_Stichtag">Stichtag: *</label>
+            <input type="number" id="edit_Recurring_Stichtag" name="Stichtag" min="1" required 
+                   title="Tag des Monats (1-31) für Monatlich, Wochentag (1-7) für Wöchentlich, oder 1 für Täglich/Jährlich" />
+            <small>Für Monatlich: 1-31 (Tag des Monats), für Wöchentlich: 1-7 (1=Montag, 2=Dienstag, ..., 7=Sonntag)</small>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="edit_Recurring_Kommentare">Kommentare:</label>
+            <textarea id="edit_Recurring_Kommentare" name="Kommentare" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="recurringModalCancel" class="btn-secondary">Abbrechen</button>
+        <button id="recurringModalSave" class="btn-primary">Speichern</button>
       </div>
     </div>
   </div>
