@@ -185,7 +185,8 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
     $beginDate = $dauerhafteAusgabe['Beginn_Datum'] ?? '';
     $recurrencePeriod = $dauerhafteAusgabe['Wiederholungszeitraum'] ?? 'Monatlich';
     $dueDay = $dauerhafteAusgabe['Stichtag'] ?? '1';
-    $betrag = floatval($dauerhafteAusgabe['Betrag'] ?? 0);
+    $originalBetrag = floatval($dauerhafteAusgabe['Betrag'] ?? 0);
+    $betrag = $originalBetrag;
     $gesamtSumme = isset($dauerhafteAusgabe['GesamtSumme']) && !empty($dauerhafteAusgabe['GesamtSumme']) 
                    ? floatval($dauerhafteAusgabe['GesamtSumme']) 
                    : null;
@@ -224,6 +225,7 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
         }
         
         // Check if we should generate this expense based on GesamtSumme
+        $wasAdjusted = false;
         if ($gesamtSumme !== null) {
             $totalPaid = calculateTotalPaid($ausgaben, $recurringId);
             
@@ -239,6 +241,7 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
                 $adjustedBetrag = $gesamtSumme - $totalPaid;
                 logMessage("Final payment for recurring expense $recurringId adjusted to " . number_format($adjustedBetrag, 2) . " € to reach total sum of " . number_format($gesamtSumme, 2) . " €");
                 $betrag = $adjustedBetrag;
+                $wasAdjusted = true;
             }
         }
         
@@ -268,7 +271,7 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
             logMessage("Generated new expense for recurring ID $recurringId on $nextDueDate: " . $newExpense['Ausgaben_ID']);
             
             // If this was an adjusted final payment, stop generating
-            if ($gesamtSumme !== null && $betrag < floatval($dauerhafteAusgabe['Betrag'] ?? 0)) {
+            if ($wasAdjusted) {
                 logMessage("Final payment generated for recurring expense $recurringId - total sum reached");
                 break;
             }
@@ -295,7 +298,7 @@ foreach ($dauerhafteAusgaben as $dauerhafteAusgabe) {
         $currentCheckDate = $nextCheckDate->format('Y-m-d');
         
         // Reset betrag to original value for next iteration
-        $betrag = floatval($dauerhafteAusgabe['Betrag'] ?? 0);
+        $betrag = $originalBetrag;
     }
 }
 
