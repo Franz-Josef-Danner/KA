@@ -15,7 +15,8 @@ export const COLUMNS = [
   "Kommentare",
   "Wiederholungszeitraum", // "Täglich", "Wöchentlich", "Monatlich", "Jährlich"
   "Beginn_Datum", // Start date when recurring expense begins
-  "Stichtag" // Day of period when payment is due (e.g., day of month)
+  "Stichtag", // Day of period when payment is due (e.g., day of month)
+  "GesamtSumme" // Optional: Total sum - recurring expense stops after this amount is reached
 ];
 
 // Category dropdown options

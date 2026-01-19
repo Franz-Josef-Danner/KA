@@ -33,11 +33,28 @@ The recurring expenses management is integrated into the **Ausgaben** page with 
 3. Fill in the required fields:
    - **Empfänger** (Recipient): Who receives the payment
    - **Verwendungszweck** (Purpose): What the payment is for
-   - **Betrag** (Amount): Payment amount in euros
+   - **Betrag** (Amount): Payment amount in euros (per installment)
    - **Wiederholungszeitraum** (Recurrence Period): Daily, Weekly, Monthly, or Yearly
    - **Beginn Datum** (Start Date): When the recurring expense begins
    - **Stichtag** (Due Day): Day of the period when payment is due
+   - **Gesamtsumme** (Total Sum) *(optional)*: Total amount for installment payments. When set, the recurring expense will automatically stop after reaching this sum.
 4. Click **Speichern** (Save)
+
+### Gesamtsumme (Total Sum) Feature
+
+The **Gesamtsumme** field allows you to set up installment payments that automatically stop after the total amount is reached:
+
+- **How it works**: Enter the total amount you need to pay (e.g., 1000 €)
+- **Automatic calculation**: The system will generate payments using the specified **Betrag** (installment amount)
+- **Automatic stop**: Once the total sum is reached, no more payments will be generated
+- **Partial final payment**: If the remaining amount is less than the regular installment, the final payment will be automatically adjusted
+
+**Example**: 
+- Betrag: 150 € (per month)
+- Gesamtsumme: 400 €
+- Result: The system generates: 150 € + 150 € + 100 € = 400 € (3 payments total)
+
+**Leave empty** for unlimited recurring payments (traditional behavior).
 
 ### Stichtag (Due Day) Guidelines
 
@@ -176,6 +193,30 @@ Result: An expense for €150 will be generated every Monday.
 - **Stichtag**: (uses month/day from start date)
 
 Result: An expense for €2400 will be generated on March 15th every year.
+
+### Example 4: Installment Payment (NEW)
+
+- **Empfänger**: Equipment Supplier
+- **Verwendungszweck**: Equipment Purchase - Installment Plan
+- **Betrag**: 250.00 (per month)
+- **Wiederholungszeitraum**: Monatlich
+- **Beginn Datum**: 2026-01-01
+- **Stichtag**: 1 (first day of each month)
+- **Gesamtsumme**: 1000.00
+
+Result: The system generates 4 monthly payments of €250 each (250 + 250 + 250 + 250 = 1000), then automatically stops.
+
+### Example 5: Installment with Partial Final Payment (NEW)
+
+- **Empfänger**: Service Provider
+- **Verwendungszweck**: Service Package - Payment Plan
+- **Betrag**: 175.00 (per month)
+- **Wiederholungszeitraum**: Monatlich
+- **Beginn Datum**: 2026-02-01
+- **Stichtag**: 1
+- **Gesamtsumme**: 500.00
+
+Result: The system generates 3 payments: €175 + €175 + €150 = €500 (final payment automatically adjusted to reach exactly €500).
 
 ## Troubleshooting
 
