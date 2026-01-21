@@ -105,6 +105,6 @@ export function getDraftById(id) {
 /**
  * Initialize state - load drafts from storage
  */
-export async function ensureInitialized() {
+export function ensureInitialized() {
   loadDrafts();
 }

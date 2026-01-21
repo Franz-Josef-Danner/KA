@@ -72,6 +72,7 @@ function initSendEmailHandler() {
     }
     
     // Show preview (since this is basic implementation without actual sending)
+    // TODO: Replace alert with a proper modal dialog in future enhancement
     const preview = `
 E-Mail Vorschau:
 ──────────────────
@@ -85,6 +86,7 @@ ${body || '(Keine Nachricht)'}
     alert(preview + '\n\nHinweis: Dies ist eine Vorschau. Die Versand-Funktionalität wird in einer späteren Version hinzugefügt.');
     
     // Optionally save as draft and clear form
+    // TODO: Replace confirm with a proper modal dialog in future enhancement
     if (confirm('Möchten Sie diese E-Mail als Entwurf speichern?')) {
       if (currentDraftId) {
         updateDraft(currentDraftId, { subject, body, recipients });
@@ -122,6 +124,7 @@ function initDraftsListHandlers() {
     // Delete draft
     if (target.classList.contains('delete-draft-btn')) {
       const draftId = target.getAttribute('data-draft-id');
+      // TODO: Replace confirm with a proper modal dialog in future enhancement
       if (confirm('Möchten Sie diesen Entwurf wirklich löschen?')) {
         deleteDraft(draftId);
         if (currentDraftId === draftId) {

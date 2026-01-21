@@ -6,9 +6,9 @@ import { initEventHandlers } from './modules/kampagnen-events.js';
 import { ensureInitialized } from './modules/kampagnen-state.js';
 
 // Initialize the application
-async function init() {
+function init() {
   // Ensure drafts are loaded before rendering
-  await ensureInitialized();
+  ensureInitialized();
   render();
   initEventHandlers();
 }
