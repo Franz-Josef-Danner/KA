@@ -2,8 +2,9 @@
 // Kampagnen Event Handlers
 // -----------------------------
 import { createDraft, updateDraft, deleteDraft, getDraftById } from './kampagnen-state.js';
-import { renderDraftsList } from './kampagnen-render.js';
+import { renderPreviewList } from './kampagnen-render.js';
 import { showSuccessMessage, showErrorMessage, clearEmailForm } from './kampagnen-ui.js';
+import { ensureInitialized as ensureCompanyDataInitialized } from './state.js';
 
 let currentDraftId = null;
 
@@ -12,8 +13,8 @@ let currentDraftId = null;
  */
 export function initEventHandlers() {
   initSaveDraftHandler();
-  initSendEmailHandler();
-  initDraftsListHandlers();
+  initGeneratePreviewHandler();
+  initTextareaChangeHandler();
 }
 
 /**
@@ -42,19 +43,17 @@ function initSaveDraftHandler() {
       currentDraftId = draft.id;
       showSuccessMessage('Entwurf gespeichert!');
     }
-    
-    renderDraftsList();
   });
 }
 
 /**
- * Send email button handler (preview mode for now)
+ * Generate preview button handler
  */
-function initSendEmailHandler() {
-  const sendEmailBtn = document.getElementById('send-email-btn');
-  if (!sendEmailBtn) return;
+function initGeneratePreviewHandler() {
+  const generatePreviewBtn = document.getElementById('generate-preview-btn');
+  if (!generatePreviewBtn) return;
   
-  sendEmailBtn.addEventListener('click', () => {
+  generatePreviewBtn.addEventListener('click', async () => {
     const body = document.getElementById('email-body')?.value || '';
     
     if (!body) {
@@ -62,86 +61,32 @@ function initSendEmailHandler() {
       return;
     }
     
-    // Show preview (since this is basic implementation without actual sending)
-    // TODO: Replace alert with a proper modal dialog in future enhancement
-    const preview = `
-Nachrichtenvorschau:
-──────────────────
-
-${body}
-
-──────────────────
-    `.trim();
+    // Ensure company data is loaded
+    await ensureCompanyDataInitialized();
     
-    alert(preview + '\n\nHinweis: Dies ist eine Vorschau. Die Versand-Funktionalität wird in einer späteren Version hinzugefügt.');
-    
-    // Optionally save as draft and clear form
-    // TODO: Replace confirm with a proper modal dialog in future enhancement
-    if (confirm('Möchten Sie diese Nachricht als Entwurf speichern?')) {
-      if (currentDraftId) {
-        updateDraft(currentDraftId, { body });
-      } else {
-        const draft = createDraft();
-        updateDraft(draft.id, { body });
-      }
-      renderDraftsList();
-    }
-    
-    // Clear form and reset current draft
-    clearEmailForm();
-    currentDraftId = null;
-    showSuccessMessage('Formular zurückgesetzt.');
+    // Render preview list
+    renderPreviewList();
+    showSuccessMessage('Vorschau generiert!');
   });
 }
 
 /**
- * Initialize handlers for draft list (load and delete)
+ * Textarea change handler to auto-update preview
  */
-function initDraftsListHandlers() {
-  const container = document.getElementById('drafts-list');
-  if (!container) return;
+function initTextareaChangeHandler() {
+  const textarea = document.getElementById('email-body');
+  if (!textarea) return;
   
-  // Event delegation for load and delete buttons
-  container.addEventListener('click', (e) => {
-    const target = e.target;
-    
-    // Load draft
-    if (target.classList.contains('load-draft-btn')) {
-      const draftId = target.getAttribute('data-draft-id');
-      loadDraftIntoForm(draftId);
-    }
-    
-    // Delete draft
-    if (target.classList.contains('delete-draft-btn')) {
-      const draftId = target.getAttribute('data-draft-id');
-      // TODO: Replace confirm with a proper modal dialog in future enhancement
-      if (confirm('Möchten Sie diesen Entwurf wirklich löschen?')) {
-        deleteDraft(draftId);
-        if (currentDraftId === draftId) {
-          clearEmailForm();
-          currentDraftId = null;
-        }
-        renderDraftsList();
-        showSuccessMessage('Entwurf gelöscht.');
+  let debounceTimer;
+  textarea.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      // Auto-update preview if there's content
+      if (textarea.value.trim()) {
+        ensureCompanyDataInitialized().then(() => {
+          renderPreviewList();
+        });
       }
-    }
+    }, 1000); // Wait 1 second after user stops typing
   });
-}
-
-/**
- * Load a draft into the email form
- */
-function loadDraftIntoForm(draftId) {
-  const draft = getDraftById(draftId);
-  if (!draft) {
-    showErrorMessage('Entwurf nicht gefunden.');
-    return;
-  }
-  
-  const bodyTextarea = document.getElementById('email-body');
-  
-  if (bodyTextarea) bodyTextarea.value = draft.body || '';
-  
-  currentDraftId = draftId;
-  showSuccessMessage('Entwurf geladen.');
 }

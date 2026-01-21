@@ -1681,7 +1681,8 @@ td.readonly:hover {
 }
 
 .mail-section,
-.drafts-section {
+.drafts-section,
+.preview-section {
   background: #fff;
   border: 1px solid #e5e5e5;
   border-radius: 10px;
@@ -1689,11 +1690,47 @@ td.readonly:hover {
 }
 
 .mail-section h2,
-.drafts-section h2 {
+.drafts-section h2,
+.preview-section h2 {
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 600;
   color: #333;
+}
+
+/* Template Variables Section */
+.template-variables {
+  background: #f0f7ff;
+  border: 1px solid #d6e4ff;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.template-variables h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0050b3;
+}
+
+.variables-list {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #0050b3;
+  background: white;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 8px 0;
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+.variables-hint {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
 }
 
 /* Mail Form Styles */
@@ -1784,6 +1821,63 @@ td.readonly:hover {
   font-size: 14px;
 }
 
+/* Preview List Styles */
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-count {
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0050b3;
+  text-align: center;
+}
+
+.preview-item {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  transition: box-shadow 0.2s ease;
+  background: white;
+}
+
+.preview-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.preview-header {
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 8px;
+}
+
+.preview-title {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.preview-recipient {
+  font-size: 12px;
+  color: #666;
+}
+
+.preview-body {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Old Draft Styles (keeping for compatibility) */
 .drafts-container {
   display: flex;
   flex-direction: column;

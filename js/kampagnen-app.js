@@ -4,11 +4,15 @@
 import { render } from './modules/kampagnen-render.js';
 import { initEventHandlers } from './modules/kampagnen-events.js';
 import { ensureInitialized } from './modules/kampagnen-state.js';
+import { ensureInitialized as ensureCompanyDataInitialized } from './modules/state.js';
 
 // Initialize the application
-function init() {
-  // Ensure drafts are loaded before rendering
-  ensureInitialized();
+async function init() {
+  // Ensure drafts and company data are loaded before rendering
+  await Promise.all([
+    ensureInitialized(),
+    ensureCompanyDataInitialized()
+  ]);
   render();
   initEventHandlers();
 }
