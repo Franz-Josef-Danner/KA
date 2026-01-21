@@ -51,9 +51,7 @@ export function getDrafts() {
 export function createDraft() {
   const draft = {
     id: `draft_${Date.now()}`,
-    subject: '',
     body: '',
-    recipients: '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };

@@ -90,11 +90,7 @@ export function formatDate(isoString) {
  * Clear the email form
  */
 export function clearEmailForm() {
-  const subjectInput = document.getElementById('email-subject');
   const bodyTextarea = document.getElementById('email-body');
-  const recipientsInput = document.getElementById('email-recipients');
   
-  if (subjectInput) subjectInput.value = '';
   if (bodyTextarea) bodyTextarea.value = '';
-  if (recipientsInput) recipientsInput.value = '';
 }

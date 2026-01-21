@@ -24,23 +24,21 @@ function initSaveDraftHandler() {
   if (!saveDraftBtn) return;
   
   saveDraftBtn.addEventListener('click', () => {
-    const subject = document.getElementById('email-subject')?.value || '';
     const body = document.getElementById('email-body')?.value || '';
-    const recipients = document.getElementById('email-recipients')?.value || '';
     
-    if (!subject && !body && !recipients) {
-      showErrorMessage('Bitte füllen Sie mindestens ein Feld aus, um einen Entwurf zu speichern.');
+    if (!body) {
+      showErrorMessage('Bitte geben Sie eine Nachricht ein, um einen Entwurf zu speichern.');
       return;
     }
     
     if (currentDraftId) {
       // Update existing draft
-      updateDraft(currentDraftId, { subject, body, recipients });
+      updateDraft(currentDraftId, { body });
       showSuccessMessage('Entwurf aktualisiert!');
     } else {
       // Create new draft
       const draft = createDraft();
-      updateDraft(draft.id, { subject, body, recipients });
+      updateDraft(draft.id, { body });
       currentDraftId = draft.id;
       showSuccessMessage('Entwurf gespeichert!');
     }
@@ -57,29 +55,21 @@ function initSendEmailHandler() {
   if (!sendEmailBtn) return;
   
   sendEmailBtn.addEventListener('click', () => {
-    const subject = document.getElementById('email-subject')?.value || '';
     const body = document.getElementById('email-body')?.value || '';
-    const recipients = document.getElementById('email-recipients')?.value || '';
     
-    if (!recipients) {
-      showErrorMessage('Bitte geben Sie mindestens einen Empfänger an.');
-      return;
-    }
-    
-    if (!subject && !body) {
-      showErrorMessage('Bitte geben Sie einen Betreff oder eine Nachricht ein.');
+    if (!body) {
+      showErrorMessage('Bitte geben Sie eine Nachricht ein.');
       return;
     }
     
     // Show preview (since this is basic implementation without actual sending)
     // TODO: Replace alert with a proper modal dialog in future enhancement
     const preview = `
-E-Mail Vorschau:
+Nachrichtenvorschau:
 ──────────────────
-An: ${recipients}
-Betreff: ${subject || '(Kein Betreff)'}
 
-${body || '(Keine Nachricht)'}
+${body}
+
 ──────────────────
     `.trim();
     
@@ -87,12 +77,12 @@ ${body || '(Keine Nachricht)'}
     
     // Optionally save as draft and clear form
     // TODO: Replace confirm with a proper modal dialog in future enhancement
-    if (confirm('Möchten Sie diese E-Mail als Entwurf speichern?')) {
+    if (confirm('Möchten Sie diese Nachricht als Entwurf speichern?')) {
       if (currentDraftId) {
-        updateDraft(currentDraftId, { subject, body, recipients });
+        updateDraft(currentDraftId, { body });
       } else {
         const draft = createDraft();
-        updateDraft(draft.id, { subject, body, recipients });
+        updateDraft(draft.id, { body });
       }
       renderDraftsList();
     }
@@ -148,13 +138,9 @@ function loadDraftIntoForm(draftId) {
     return;
   }
   
-  const subjectInput = document.getElementById('email-subject');
   const bodyTextarea = document.getElementById('email-body');
-  const recipientsInput = document.getElementById('email-recipients');
   
-  if (subjectInput) subjectInput.value = draft.subject || '';
   if (bodyTextarea) bodyTextarea.value = draft.body || '';
-  if (recipientsInput) recipientsInput.value = draft.recipients || '';
   
   currentDraftId = draftId;
   showSuccessMessage('Entwurf geladen.');
