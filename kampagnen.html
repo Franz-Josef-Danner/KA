@@ -13,9 +13,18 @@
     <h1>Kampagnen</h1>
     <p class="page-subtitle">Verwalten Sie Ihre Marketing-Kampagnen</p>
     
-    <div class="placeholder-content">
-      <p>Diese Seite ist noch in Entwicklung.</p>
-      <p>Hier können Sie bald Kampagnen planen und verfolgen.</p>
+    <div class="kampagnen-layout">
+      <!-- Mail Interface Section -->
+      <section class="mail-section">
+        <h2>E-Mail erstellen</h2>
+        <div id="mail-interface"></div>
+      </section>
+      
+      <!-- Saved Drafts Section -->
+      <section class="drafts-section">
+        <h2>Gespeicherte Entwürfe</h2>
+        <div id="drafts-list"></div>
+      </section>
     </div>
   </div>
 
@@ -36,5 +45,8 @@
       }
     })();
   </script>
+  
+  <!-- Load the kampagnen application -->
+  <script type="module" src="./js/kampagnen-app.js"></script>
 </body>
 </html>
