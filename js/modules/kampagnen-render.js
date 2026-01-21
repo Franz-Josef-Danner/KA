@@ -12,6 +12,7 @@ import { getRows } from './state.js';
 export function render() {
   renderMailInterface();
   renderPreviewList();
+  renderDraftsList();
 }
 
 /**
@@ -106,6 +107,46 @@ export function renderPreviewList() {
         ${companies.length} E-Mail${companies.length !== 1 ? 's' : ''} werden versendet
       </div>
       ${previewsHtml}
+    </div>
+  `;
+}
+
+/**
+ * Render the list of saved drafts
+ */
+export function renderDraftsList() {
+  const container = document.getElementById('drafts-list');
+  if (!container) return;
+  
+  const drafts = getDrafts();
+  
+  if (drafts.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <p>Keine gespeicherten Entwürfe vorhanden.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  const draftsHtml = drafts.map(draft => `
+    <div class="draft-item" data-draft-id="${draft.id}">
+      <div class="draft-header">
+        <h3 class="draft-subject">Entwurf vom ${formatDate(draft.createdAt)}</h3>
+        <div class="draft-actions">
+          <button class="btn-small load-draft-btn" data-draft-id="${draft.id}">Laden</button>
+          <button class="btn-small delete-draft-btn" data-draft-id="${draft.id}">Löschen</button>
+        </div>
+      </div>
+      <div class="draft-preview">
+        ${draft.body ? escapeHtml(draft.body.substring(0, 200)).replace(/\n/g, '<br>') + (draft.body.length > 200 ? '...' : '') : '(Keine Nachricht)'}
+      </div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="drafts-container">
+      ${draftsHtml}
     </div>
   `;
 }
