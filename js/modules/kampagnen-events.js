@@ -2,9 +2,11 @@
 // Kampagnen Event Handlers
 // -----------------------------
 import { createDraft, updateDraft, deleteDraft, getDraftById } from './kampagnen-state.js';
-import { renderPreviewList, renderDraftsList } from './kampagnen-render.js';
+import { renderPreviewList, renderDraftsList, getStatusFilter, setStatusFilter } from './kampagnen-render.js';
 import { showSuccessMessage, showErrorMessage, clearEmailForm } from './kampagnen-ui.js';
 import { ensureInitialized as ensureCompanyDataInitialized } from './state.js';
+import { getRows } from './state.js';
+import { COLUMNS } from './config.js';
 
 let currentDraftId = null;
 
@@ -14,7 +16,8 @@ let currentDraftId = null;
 export function initEventHandlers() {
   initTabHandlers();
   initSaveDraftHandler();
-  initGeneratePreviewHandler();
+  initStatusFilterHandler();
+  initDownloadCSVHandler();
   initTextareaChangeHandler();
   initDraftsListHandlers();
 }
@@ -82,27 +85,92 @@ function initSaveDraftHandler() {
 }
 
 /**
- * Generate preview button handler
+ * Status filter change handler
  */
-function initGeneratePreviewHandler() {
-  const generatePreviewBtn = document.getElementById('generate-preview-btn');
-  if (!generatePreviewBtn) return;
+function initStatusFilterHandler() {
+  const statusFilter = document.getElementById('status-filter');
+  if (!statusFilter) return;
   
-  generatePreviewBtn.addEventListener('click', async () => {
-    const body = document.getElementById('email-body')?.value || '';
-    
-    if (!body) {
-      showErrorMessage('Bitte geben Sie eine Nachricht ein.');
-      return;
-    }
+  statusFilter.addEventListener('change', async (e) => {
+    const selectedStatus = e.target.value;
+    setStatusFilter(selectedStatus);
     
     // Ensure company data is loaded
     await ensureCompanyDataInitialized();
     
-    // Render preview list
+    // Update preview with new filter
     renderPreviewList();
-    showSuccessMessage('Vorschau generiert!');
   });
+}
+
+/**
+ * Download CSV button handler
+ */
+function initDownloadCSVHandler() {
+  const downloadBtn = document.getElementById('download-csv-btn');
+  if (!downloadBtn) return;
+  
+  downloadBtn.addEventListener('click', async () => {
+    // Ensure company data is loaded
+    await ensureCompanyDataInitialized();
+    
+    const status = getStatusFilter();
+    const companies = getRows().filter(row => row.Status === status);
+    
+    if (companies.length === 0) {
+      showErrorMessage(`Keine Firmen mit Status "${status}" gefunden.`);
+      return;
+    }
+    
+    // Generate CSV
+    const csv = generateCSV(companies);
+    
+    // Download CSV file
+    downloadCSVFile(csv, `firmen_${status.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+    
+    showSuccessMessage(`${companies.length} Firmen als CSV heruntergeladen.`);
+  });
+}
+
+/**
+ * Generate CSV from company data
+ */
+function generateCSV(companies) {
+  if (companies.length === 0) return '';
+  
+  // CSV header
+  const header = COLUMNS.join(',');
+  
+  // CSV rows
+  const rows = companies.map(company => {
+    return COLUMNS.map(column => {
+      const value = company[column] || '';
+      // Escape quotes and wrap in quotes if contains comma or quote
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    }).join(',');
+  });
+  
+  return [header, ...rows].join('\n');
+}
+
+/**
+ * Download CSV file
+ */
+function downloadCSVFile(csvContent, filename) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 /**
@@ -121,6 +189,8 @@ function initTextareaChangeHandler() {
         ensureCompanyDataInitialized().then(() => {
           renderPreviewList();
         });
+      } else {
+        renderPreviewList(); // Show empty state
       }
     }, 1000); // Wait 1 second after user stops typing
   });

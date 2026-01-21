@@ -1805,7 +1805,8 @@ td.readonly:hover {
 }
 
 .form-input,
-.form-textarea {
+.form-textarea,
+.form-select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #ccc;
@@ -1816,10 +1817,16 @@ td.readonly:hover {
 }
 
 .form-input:focus,
-.form-textarea:focus {
+.form-textarea:focus,
+.form-select:focus {
   outline: none;
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.form-select {
+  cursor: pointer;
+  background-color: white;
 }
 
 .form-textarea {
