@@ -13,9 +13,34 @@
     <h1>Kampagnen</h1>
     <p class="page-subtitle">Verwalten Sie Ihre Marketing-Kampagnen</p>
     
-    <div class="placeholder-content">
-      <p>Diese Seite ist noch in Entwicklung.</p>
-      <p>Hier können Sie bald Kampagnen planen und verfolgen.</p>
+    <div class="kampagnen-tabs">
+      <button class="tab-button active" data-tab="generate">Nachricht generieren</button>
+      <button class="tab-button" data-tab="drafts">Gespeicherte Entwürfe</button>
+    </div>
+    
+    <div class="kampagnen-layout">
+      <!-- Generate Tab Content -->
+      <div id="generate-tab" class="tab-content active">
+        <!-- Mail Interface Section -->
+        <section class="mail-section">
+          <h2>Nachricht erstellen</h2>
+          <div id="mail-interface"></div>
+        </section>
+        
+        <!-- Preview Section -->
+        <section class="preview-section">
+          <h2>E-Mail Vorschau</h2>
+          <div id="preview-list"></div>
+        </section>
+      </div>
+      
+      <!-- Drafts Tab Content -->
+      <div id="drafts-tab" class="tab-content">
+        <section class="drafts-section-full">
+          <h2>Gespeicherte Entwürfe</h2>
+          <div id="drafts-list"></div>
+        </section>
+      </div>
     </div>
   </div>
 
@@ -36,5 +61,8 @@
       }
     })();
   </script>
+  
+  <!-- Load the kampagnen application -->
+  <script type="module" src="./js/kampagnen-app.js"></script>
 </body>
 </html>
