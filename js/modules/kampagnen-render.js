@@ -78,6 +78,7 @@ Verwenden Sie {{Platzhalter}} für dynamische Inhalte."
       
       <div class="form-actions">
         <button id="save-draft-btn" class="btn btn-secondary">Als Entwurf speichern</button>
+        <button id="copy-message-btn" class="btn btn-secondary">Nachricht kopieren</button>
         <button id="download-csv-btn" class="btn btn-secondary">Gefilterte Firmen als CSV</button>
       </div>
     </div>

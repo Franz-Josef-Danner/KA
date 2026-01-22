@@ -16,6 +16,7 @@ let currentDraftId = null;
 export function initEventHandlers() {
   initTabHandlers();
   initSaveDraftHandler();
+  initCopyMessageHandler();
   initStatusFilterHandler();
   initDownloadCSVHandler();
   initTextareaChangeHandler();
@@ -81,6 +82,39 @@ function initSaveDraftHandler() {
     
     // Refresh drafts list
     renderDraftsList();
+  });
+}
+
+/**
+ * Copy message button handler
+ */
+function initCopyMessageHandler() {
+  const copyBtn = document.getElementById('copy-message-btn');
+  if (!copyBtn) return;
+  
+  copyBtn.addEventListener('click', async () => {
+    const body = document.getElementById('email-body')?.value || '';
+    
+    if (!body) {
+      showErrorMessage('Keine Nachricht zum Kopieren vorhanden.');
+      return;
+    }
+    
+    try {
+      // Use Clipboard API to copy text
+      await navigator.clipboard.writeText(body);
+      showSuccessMessage('Nachricht in Zwischenablage kopiert!');
+    } catch (err) {
+      // Fallback for older browsers
+      try {
+        const textarea = document.getElementById('email-body');
+        textarea.select();
+        document.execCommand('copy');
+        showSuccessMessage('Nachricht in Zwischenablage kopiert!');
+      } catch (fallbackErr) {
+        showErrorMessage('Kopieren fehlgeschlagen. Bitte manuell kopieren.');
+      }
+    }
   });
 }
 
