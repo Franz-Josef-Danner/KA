@@ -10,6 +10,8 @@ import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
 import { enrichInvoiceWithPaymentTerms } from '../utils/invoice-helpers.js';
+import { getArtikelliste } from './artikellisten-state.js';
+import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -23,7 +25,55 @@ const searchInput = document.getElementById("search");
 // Columns that are stored but not displayed in the table
 const HIDDEN_COLUMNS = ['Firmenadresse', 'Beschreibung', 'Rabatt', 'Firmen_ID', 'Firmen_Email', 'Ansprechpartner', 'Artikel', 'Auftrags_ID'];
 
-export function render() {
+/**
+ * Calculate deadline date based on invoice date and payment terms
+ * @param {string} invoiceDate - Invoice date in YYYY-MM-DD format
+ * @param {number} paymentTermDays - Number of days until payment is due
+ * @returns {string} - Deadline date in DD.MM.YYYY format or empty string
+ */
+function calculateDeadline(invoiceDate, paymentTermDays) {
+  if (!invoiceDate) return '';
+  
+  try {
+    const date = new Date(invoiceDate);
+    if (isNaN(date.getTime())) return '';
+    
+    // Add payment term days to the invoice date
+    date.setDate(date.getDate() + paymentTermDays);
+    
+    // Format as DD.MM.YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}.${month}.${year}`;
+  } catch (error) {
+    console.error('Error calculating deadline:', error);
+    return '';
+  }
+}
+
+/**
+ * Check if a deadline has passed
+ * @param {string} deadlineStr - Deadline date in DD.MM.YYYY format
+ * @returns {boolean} - True if deadline has passed
+ */
+function isDeadlinePassed(deadlineStr) {
+  if (!deadlineStr) return false;
+  
+  try {
+    const [day, month, year] = deadlineStr.split('.');
+    const deadline = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return deadline < today;
+  } catch (error) {
+    return false;
+  }
+}
+
+export async function render() {
   if (!tbody || !searchInput) {
     console.warn('Required DOM elements not found for rendering');
     return;
@@ -33,6 +83,19 @@ export function render() {
   tbody.innerHTML = "";
 
   const rows = getRows();
+  
+  // Pre-fetch all payment terms for companies to avoid multiple async calls during rendering
+  const paymentTermsCache = {};
+  const companyIds = [...new Set(rows.map(row => row.Firmen_ID).filter(id => id))];
+  
+  await Promise.all(companyIds.map(async (firmenId) => {
+    try {
+      const artikelliste = await getArtikelliste(firmenId);
+      paymentTermsCache[firmenId] = artikelliste?.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
+    } catch (error) {
+      paymentTermsCache[firmenId] = DEFAULT_ZAHLUNGSZIEL_TAGE;
+    }
+  }));
 
   rows.forEach((row, idx) => {
     if (!rowMatchesSearch(row, q)) return;
@@ -89,6 +152,25 @@ export function render() {
         const bezahlt = row[col] || "unbezahlt";
         const config = PAYMENT_STATUS_CONFIG[bezahlt] || PAYMENT_STATUS_CONFIG.unbezahlt;
         td.innerHTML = `<span style="font-weight: 500; color: ${config.color};">${config.text}</span>`;
+      } else if (col === "Deadline") {
+        // Display deadline only for unpaid invoices
+        const bezahlt = row.Bezahlt || "unbezahlt";
+        if (bezahlt === "unbezahlt") {
+          const paymentTermDays = paymentTermsCache[row.Firmen_ID] || DEFAULT_ZAHLUNGSZIEL_TAGE;
+          const deadlineStr = calculateDeadline(row.Rechnungsdatum, paymentTermDays);
+          
+          if (deadlineStr) {
+            const isPastDue = isDeadlinePassed(deadlineStr);
+            const color = isPastDue ? '#ef4444' : '#6b7280'; // Red if overdue, gray otherwise
+            const weight = isPastDue ? '600' : '500';
+            td.innerHTML = `<span style="font-weight: ${weight}; color: ${color};">${deadlineStr}</span>`;
+          } else {
+            td.innerHTML = '<span style="color: #999;">-</span>';
+          }
+        } else {
+          // For paid invoices, show a dash
+          td.innerHTML = '<span style="color: #999;">-</span>';
+        }
       } else {
         // Display formatted content (read-only)
         td.innerHTML = toCellDisplay(col, row[col]);

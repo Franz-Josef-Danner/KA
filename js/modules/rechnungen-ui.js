@@ -847,7 +847,7 @@ window.addEventListener('openInvoiceModal', (e) => {
 
 window.addEventListener('invoicesChanged', () => {
   // Dynamically import render to avoid circular dependency at module load time
-  import('./rechnungen-render.js').then(module => {
-    module.render();
+  import('./rechnungen-render.js').then(async (module) => {
+    await module.render();
   });
 });
