@@ -103,6 +103,20 @@ Kunde: ${data.customerName}
 Betrag: ${(data.amount || 0).toFixed(2)} €
 Zahlungsdatum: ${data.paymentDate}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    contactMessage: `
+Kontaktformular-Nachricht
+
+Von: ${data.senderName}
+E-Mail: ${data.senderEmail}
+Betreff: ${data.subject}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+
+Nachricht:
+${data.message}
+
+---
+Diese Nachricht wurde über das Kontaktformular im KA System gesendet.
 `
   };
   
@@ -115,7 +129,8 @@ export function getNotificationSubject(type, data) {
     newCustomer: `Neuer Kunde: ${data.customerName}`,
     newOrder: `Neuer Auftrag: ${data.orderId}`,
     newInvoice: `Neue Rechnung: ${data.invoiceId}`,
-    paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`
+    paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`,
+    contactMessage: `Kontaktanfrage: ${data.subject}`
   };
   
   return subjects[type] || 'KA System Benachrichtigung';

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kontakt - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="nav-container"></div>
+  
+  <h1>Kontakt</h1>
+
+  <div class="settings-container">
+    <div class="settings-card">
+      <p class="form-hint">
+        Verwenden Sie dieses Formular, um eine Nachricht zu senden. Die Nachricht wird an die im System konfigurierte E-Mail-Adresse gesendet.
+      </p>
+      
+      <form id="contactForm" class="settings-form">
+        <div class="form-section">
+          <h2>Kontaktformular</h2>
+          
+          <div class="form-group">
+            <label for="senderName">Name *</label>
+            <input 
+              type="text" 
+              id="senderName" 
+              name="senderName" 
+              placeholder="Ihr Name"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="senderEmail">E-Mail-Adresse *</label>
+            <input 
+              type="email" 
+              id="senderEmail" 
+              name="senderEmail" 
+              placeholder="ihre.email@beispiel.de"
+              required
+            />
+            <div class="form-hint">Ihre E-Mail-Adresse für Rückfragen</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="subject">Betreff *</label>
+            <input 
+              type="text" 
+              id="subject" 
+              name="subject" 
+              placeholder="Betreff der Nachricht"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="message">Nachricht *</label>
+            <textarea 
+              id="message" 
+              name="message" 
+              rows="8"
+              placeholder="Ihre Nachricht..."
+              required
+            ></textarea>
+            <div class="form-hint">Mindestens 10 Zeichen</div>
+          </div>
+        </div>
+        
+        <div id="errorMessage" class="message error-message" style="display: none;"></div>
+        <div id="successMessage" class="message success-message" style="display: none;"></div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="submitBtn">Nachricht senden</button>
+          <button type="button" id="resetBtn" class="btn-secondary">Zurücksetzen</button>
+        </div>
+      </form>
+      
+      <div class="form-hint" style="margin-top: 20px;">
+        <strong>ℹ️ Hinweis:</strong> Die Nachricht wird in die E-Mail-Warteschlange eingereiht. 
+        Wenn das Backend-System konfiguriert ist, wird die Nachricht automatisch versendet. 
+        Andernfalls können Sie den Versand manuell über das Backend auslösen.
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+    import { sendContactMessage, validateContactForm } from './js/modules/contact-form.js';
+    
+    (() => {
+      try {
+        // Require authentication
+        requireAuth();
+
+        // Initialize navigation
+        initNavigation('kontakt.html');
+        
+        // Initialize contact form
+        initContactForm();
+      } catch (error) {
+        // Authentication failed or a redirect is in progress
+        console.error('Authentication error on contact page:', error);
+      }
+    })();
+    
+    const SUCCESS_MESSAGE_TIMEOUT = 5000; // 5 seconds
+    const MESSAGES = {
+      sendSuccess: 'Ihre Nachricht wurde erfolgreich in die Warteschlange eingereiht und wird in Kürze versendet.',
+      sendError: 'Fehler beim Senden der Nachricht. Bitte versuchen Sie es später erneut.',
+      emailNotConfigured: 'E-Mail-Benachrichtigungen sind nicht aktiviert. Bitte aktivieren Sie diese in den Einstellungen.',
+      confirmReset: 'Möchten Sie das Formular wirklich zurücksetzen?'
+    };
+    
+    function initContactForm() {
+      const form = document.getElementById('contactForm');
+      const errorMessage = document.getElementById('errorMessage');
+      const successMessage = document.getElementById('successMessage');
+      const resetBtn = document.getElementById('resetBtn');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      // Handle form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        hideMessages();
+        
+        // Disable submit button to prevent double submission
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Wird gesendet...';
+        
+        // Get form data
+        const formData = {
+          senderName: document.getElementById('senderName').value.trim(),
+          senderEmail: document.getElementById('senderEmail').value.trim(),
+          subject: document.getElementById('subject').value.trim(),
+          message: document.getElementById('message').value.trim()
+        };
+        
+        // Validate form
+        const errors = validateContactForm(formData);
+        
+        if (errors.length > 0) {
+          showError(errors.join(' '));
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Nachricht senden';
+          return;
+        }
+        
+        // Send message
+        const result = sendContactMessage(formData);
+        
+        if (result.success) {
+          showSuccess(MESSAGES.sendSuccess);
+          // Clear form on success
+          form.reset();
+        } else {
+          showError(result.error || MESSAGES.sendError);
+        }
+        
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Nachricht senden';
+      });
+      
+      // Handle reset button
+      resetBtn.addEventListener('click', () => {
+        if (confirm(MESSAGES.confirmReset)) {
+          form.reset();
+          hideMessages();
+        }
+      });
+      
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        successMessage.style.display = 'none';
+        
+        // Scroll to message
+        errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      
+      function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.style.display = 'block';
+        errorMessage.style.display = 'none';
+        
+        // Scroll to message
+        successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Hide success message after timeout
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+        }, SUCCESS_MESSAGE_TIMEOUT);
+      }
+      
+      function hideMessages() {
+        errorMessage.style.display = 'none';
+        successMessage.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
