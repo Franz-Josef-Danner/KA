@@ -16,6 +16,7 @@ export const COLUMNS = [
   "Kommentare",
   "Auftrags_ID", // Reference to original order
   "Bezahlt", // Payment status: "unbezahlt" or "bezahlt"
+  "Deadline", // Payment deadline for open invoices
   // Hidden columns (stored but not displayed in table)
   "Firmenadresse",
   "Beschreibung",

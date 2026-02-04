@@ -10,7 +10,7 @@ async function init() {
   // Ensure invoices are loaded before rendering
   await ensureInitialized();
   initEventHandlers();
-  render();
+  await render();
 }
 
 // ES6 modules are deferred by default; at this point the DOM is ready, so start the application
