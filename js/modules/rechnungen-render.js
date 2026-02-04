@@ -21,7 +21,7 @@ const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
 // Columns that are stored but not displayed in the table
-const HIDDEN_COLUMNS = ['Firmenadresse', 'Beschreibung', 'Rabatt'];
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Beschreibung', 'Rabatt', 'Firmen_ID', 'Firmen_Email', 'Ansprechpartner', 'Artikel', 'Auftrags_ID'];
 
 export function render() {
   if (!tbody || !searchInput) {
