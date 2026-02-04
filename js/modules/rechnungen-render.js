@@ -35,18 +35,21 @@ function calculateDeadline(invoiceDate, paymentTermDays) {
   if (!invoiceDate) return '';
   
   try {
-    const date = new Date(invoiceDate);
+    // Parse date explicitly to avoid timezone issues
+    // Invoice date format is YYYY-MM-DD
+    const [year, month, day] = invoiceDate.split('-');
+    const date = new Date(year, month - 1, day);
     if (isNaN(date.getTime())) return '';
     
     // Add payment term days to the invoice date
     date.setDate(date.getDate() + paymentTermDays);
     
     // Format as DD.MM.YYYY
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
+    const dayFormatted = String(date.getDate()).padStart(2, '0');
+    const monthFormatted = String(date.getMonth() + 1).padStart(2, '0');
+    const yearFormatted = date.getFullYear();
     
-    return `${day}.${month}.${year}`;
+    return `${dayFormatted}.${monthFormatted}.${yearFormatted}`;
   } catch (error) {
     console.error('Error calculating deadline:', error);
     return '';
@@ -93,6 +96,7 @@ export async function render() {
       const artikelliste = await getArtikelliste(firmenId);
       paymentTermsCache[firmenId] = artikelliste?.zahlungsziel_tage || DEFAULT_ZAHLUNGSZIEL_TAGE;
     } catch (error) {
+      console.warn('Failed to fetch payment terms for company', firmenId, error);
       paymentTermsCache[firmenId] = DEFAULT_ZAHLUNGSZIEL_TAGE;
     }
   }));
