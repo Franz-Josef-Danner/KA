@@ -262,6 +262,16 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ⚠️ **Hinweis**: Frontend-only - E-Mails werden in Warteschlange gespeichert, Backend erforderlich zum Versenden
 - 📖 Siehe [EMAIL_CONFIGURATION.md](EMAIL_CONFIGURATION.md) für Details
 
+### E-Mail-Warteschlangen-Verwaltung (NEU)
+- ✅ **Dashboard-Integration**: Warteschlange direkt auf dem Dashboard sichtbar
+- ✅ **Individuelle Kontrolle**: Jede E-Mail einzeln genehmigen oder ablehnen
+- ✅ **Vorschau-Funktion**: Vollständigen E-Mail-Inhalt vor Genehmigung ansehen
+- ✅ **Status-Übersicht**: Zeigt wartende und genehmigte E-Mails
+- ✅ **Manueller Versand**: "E-Mail senden" Button für genehmigte E-Mails
+- ✅ **Auto-Refresh**: Automatische Aktualisierung alle 10 Sekunden
+- 📌 **Verwendung**: Dashboard laden → E-Mails prüfen → Einzeln genehmigen → Versenden
+- 📖 Siehe [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) für Details
+
 ### Kontaktformular (NEU)
 - ✅ Integriertes Kontaktformular zum Senden von Nachrichten
 - ✅ Formularvalidierung (Name, E-Mail, Betreff, Nachricht)
