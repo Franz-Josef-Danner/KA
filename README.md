@@ -134,6 +134,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - **Kampagnen**: Kampagnen-Verwaltung (Platzhalter)
    - **Kundenbereiche**: Verwaltung von Kundenzugängen (NEU)
    - **Einstellungen**: Verwaltung der Firmendaten und Logo (NEU)
+   - **Kontakt**: Kontaktformular zum Senden von Nachrichten (NEU)
 4. Die Anwendung verwendet ES6-Module (type="module")
 5. **Datenspeicherung**:
    - **Server-Speicherung** (mit LocalStorage-Fallback):
@@ -260,6 +261,15 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ Auswählbare Benachrichtigungstypen (Kunden, Aufträge, Rechnungen, Zahlungen)
 - ⚠️ **Hinweis**: Frontend-only - E-Mails werden in Warteschlange gespeichert, Backend erforderlich zum Versenden
 - 📖 Siehe [EMAIL_CONFIGURATION.md](EMAIL_CONFIGURATION.md) für Details
+
+### Kontaktformular (NEU)
+- ✅ Integriertes Kontaktformular zum Senden von Nachrichten
+- ✅ Formularvalidierung (Name, E-Mail, Betreff, Nachricht)
+- ✅ Integration mit E-Mail-Benachrichtigungssystem
+- ✅ Nachrichten werden in die E-Mail-Warteschlange eingereiht
+- ✅ Automatischer Versand über Backend (wenn konfiguriert)
+- ✅ Manueller Versand über Backend möglich
+- 📌 **Verwendung**: Navigationsmenü → Kontakt → Formular ausfüllen → Nachricht senden
 
 ### PDF-Funktionalität (NEU)
 - ✅ Automatische PDF-Generierung für Aufträge und Rechnungen
