@@ -25,7 +25,7 @@ Wenn Sie das Dashboard öffnen, sehen Sie sofort die E-Mail-Warteschlange mit:
 ### E-Mail-Informationen
 
 Jede E-Mail in der Warteschlange zeigt:
-- **Typ**: Kontaktanfrage, Neuer Auftrag, Neue Rechnung, etc.
+- **Typ**: Neuer Auftrag, Neue Rechnung, Neuer Kunde, Zahlungseingang
 - **Betreff**: Der E-Mail-Betreff
 - **Zeitstempel**: Wann die E-Mail erstellt wurde
 - **Empfänger**: An welche E-Mail-Adresse gesendet wird
@@ -86,10 +86,6 @@ Klicken Sie auf "✓ Genehmigen" für jede E-Mail, die versendet werden soll.
 
 Die Warteschlange unterstützt folgende E-Mail-Typen:
 
-### Kontaktanfrage
-- Nachrichten aus dem Kontaktformular
-- Zeigt Absender, E-Mail, Betreff und Nachricht
-
 ### Neuer Kunde
 - Benachrichtigung bei Statusänderung zu "Kunde"
 - Zeigt Firmenname, Ansprechpartner, E-Mail, Telefon
@@ -141,13 +137,13 @@ E-Mails werden in `localStorage` gespeichert:
 Beispiel-Struktur:
 ```json
 {
-  "id": "contactMessage_1234567890_abc123",
-  "type": "contactMessage",
+  "id": "newOrder_1234567890_abc123",
+  "type": "newOrder",
   "data": {
-    "senderName": "Max Mustermann",
-    "senderEmail": "max@example.com",
-    "subject": "Produktanfrage",
-    "message": "Ich hätte gerne...",
+    "orderId": "A-2024-001",
+    "customerName": "Beispiel GmbH",
+    "total": 1500.00,
+    "items": [{"name": "Produkt A"}],
     "timestamp": "2024-02-04T10:00:00.000Z"
   },
   "recipientEmail": "test@example.com",
