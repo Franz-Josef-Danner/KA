@@ -218,9 +218,6 @@
         </div>
       </form>
     </div>
-    
-    <!-- Layout Editor Section -->
-    <div id="layoutEditor"></div>
   </div>
 
   <script type="module">
@@ -237,7 +234,6 @@
       saveEmailConfig,
       validateEmailConfig
     } from './js/modules/email-config.js';
-    import { initLayoutEditor } from './js/modules/layout-editor-ui.js';
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     
     (() => {
@@ -251,9 +247,6 @@
         
         // Initialize settings form
         initSettingsForm();
-        
-        // Initialize layout editor
-        initLayoutEditor('layoutEditor');
         
         // Initialize email error display
         initEmailErrorDisplay();
