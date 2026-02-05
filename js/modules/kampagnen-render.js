@@ -5,6 +5,7 @@ import { getDrafts } from './kampagnen-state.js';
 import { formatDate } from './kampagnen-ui.js';
 import { COLUMNS, STATUS_OPTIONS } from './config.js';
 import { getRows } from './state.js';
+import { getEmailConfig } from './email-config.js';
 
 // Track current status filter
 let currentStatusFilter = 'Kunde';
@@ -47,8 +48,20 @@ function renderMailInterface() {
     `<option value="${status}" ${status === currentStatusFilter ? 'selected' : ''}>${status}</option>`
   ).join('');
   
+  // Check for test email mode
+  const emailConfig = getEmailConfig();
+  const testEmailOverride = emailConfig.testEmail?.trim();
+  const testModeWarning = testEmailOverride 
+    ? `<div class="test-mode-warning" style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+         <strong>⚠️ TEST-MODUS AKTIV</strong><br>
+         Alle E-Mails werden an <strong>${escapeHtml(testEmailOverride)}</strong> gesendet.<br>
+         <small>Ändern Sie die Test-E-Mail-Adresse in <a href="einstellungen.html">Einstellungen</a> oder lassen Sie das Feld leer, um an echte Empfänger zu senden.</small>
+       </div>`
+    : '';
+  
   container.innerHTML = `
     <div class="mail-form">
+      ${testModeWarning}
       <div class="template-variables">
         <h3>Verfügbare Platzhalter:</h3>
         <p class="variables-list">${templateVariables}</p>
@@ -60,6 +73,16 @@ function renderMailInterface() {
         <select id="status-filter" class="form-select">
           ${statusOptionsHtml}
         </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="email-subject">Betreff:</label>
+        <input 
+          type="text" 
+          id="email-subject" 
+          placeholder="Betreff der E-Mail (z.B. Angebot für {{Firma}})"
+          class="form-input"
+        />
       </div>
       
       <div class="form-group">
@@ -80,6 +103,7 @@ Verwenden Sie {{Platzhalter}} für dynamische Inhalte."
         <button id="save-draft-btn" class="btn btn-secondary">Als Entwurf speichern</button>
         <button id="copy-message-btn" class="btn btn-secondary">Nachricht kopieren</button>
         <button id="download-csv-btn" class="btn btn-secondary">Gefilterte Firmen als CSV</button>
+        <button id="bulk-send-btn" class="btn btn-primary">E-Mails versenden</button>
       </div>
     </div>
   `;

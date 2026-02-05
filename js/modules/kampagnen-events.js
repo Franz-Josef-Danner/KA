@@ -7,6 +7,7 @@ import { showSuccessMessage, showErrorMessage, clearEmailForm } from './kampagne
 import { ensureInitialized as ensureCompanyDataInitialized } from './state.js';
 import { getRows } from './state.js';
 import { COLUMNS } from './config.js';
+import { getEmailConfig } from './email-config.js';
 
 let currentDraftId = null;
 
@@ -21,6 +22,7 @@ export function initEventHandlers() {
   initDownloadCSVHandler();
   initTextareaChangeHandler();
   initDraftsListHandlers();
+  initBulkSendHandler();
 }
 
 /**
@@ -290,4 +292,144 @@ function loadDraftIntoForm(draftId) {
   ensureCompanyDataInitialized().then(() => {
     renderPreviewList();
   });
+}
+
+/**
+ * Bulk send handler - sends emails to all filtered companies
+ */
+function initBulkSendHandler() {
+  const sendButton = document.getElementById('bulk-send-btn');
+  if (!sendButton) return;
+  
+  sendButton.addEventListener('click', async () => {
+    await ensureCompanyDataInitialized();
+    
+    const subjectInput = document.getElementById('email-subject');
+    const bodyTextarea = document.getElementById('email-body');
+    const targetStatus = getStatusFilter();
+    
+    const subjectTemplate = subjectInput?.value?.trim() || '';
+    const bodyTemplate = bodyTextarea?.value?.trim() || '';
+    
+    if (!bodyTemplate) {
+      showErrorMessage('Bitte geben Sie eine Nachricht ein.');
+      return;
+    }
+    
+    const filteredCompanies = getRows().filter(c => c.Status === targetStatus);
+    
+    if (filteredCompanies.length === 0) {
+      showErrorMessage(`Keine Firmen mit Status "${targetStatus}" gefunden.`);
+      return;
+    }
+    
+    // Validate companies have email addresses
+    const companiesWithEmail = filteredCompanies.filter(c => c['E-mail'] && c['E-mail'].trim());
+    const missingEmailCount = filteredCompanies.length - companiesWithEmail.length;
+    
+    if (companiesWithEmail.length === 0) {
+      showErrorMessage('Keine der gefilterten Firmen hat eine E-Mail-Adresse.');
+      return;
+    }
+    
+    // Check for test email override
+    const emailConfig = getEmailConfig();
+    const testEmailOverride = emailConfig.testEmail?.trim();
+    
+    let warningMsg = `${companiesWithEmail.length} E-Mail(s) werden versendet`;
+    if (missingEmailCount > 0) {
+      warningMsg += ` (${missingEmailCount} Firma(en) ohne E-Mail werden übersprungen)`;
+    }
+    
+    // Add test mode warning to confirmation
+    if (testEmailOverride) {
+      warningMsg += `\n\n⚠️ TEST-MODUS: Alle E-Mails werden an ${testEmailOverride} gesendet`;
+    }
+    
+    warningMsg += '. Fortfahren?';
+    
+    if (!confirm(warningMsg)) {
+      return;
+    }
+    
+    // Disable button and show progress
+    sendButton.disabled = true;
+    sendButton.textContent = 'Wird versendet...';
+    
+    try {
+      const batchTimestamp = Date.now();
+      const emailPayload = companiesWithEmail.map((companyData, idx) => {
+        const personalizedSubject = applyVariableSubstitution(subjectTemplate, companyData);
+        const personalizedBody = applyVariableSubstitution(bodyTemplate, companyData);
+        
+        // Use test email if configured, otherwise use actual recipient
+        const finalRecipient = testEmailOverride || companyData['E-mail'].trim();
+        
+        return {
+          id: `campaign_${batchTimestamp}_${idx}`,
+          to: finalRecipient,
+          recipientEmail: finalRecipient,
+          subject: personalizedSubject || 'Nachricht von KA System',
+          body: personalizedBody,
+          status: 'approved',
+          companyName: companyData.Firma || 'Unbekannt',
+          timestamp: new Date().toISOString(),
+          testMode: !!testEmailOverride,
+          originalRecipient: companyData['E-mail'].trim()
+        };
+      });
+      
+      const response = await fetch('./api/send-approved-emails-inline.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approvedEmails: emailPayload })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        const successCount = result.count || result.sent || 0;
+        let successMsg = `✅ ${successCount} E-Mail(s) erfolgreich versendet!`;
+        if (testEmailOverride) {
+          successMsg += ` (Test-Modus: an ${testEmailOverride})`;
+        }
+        showSuccessMessage(successMsg);
+        
+        // Clear form after successful send
+        if (bodyTextarea) bodyTextarea.value = '';
+        if (subjectInput) subjectInput.value = '';
+        renderPreviewList();
+      } else {
+        const errorMsg = result.message || result.error || 'Unbekannter Fehler';
+        showErrorMessage(`❌ Fehler: ${errorMsg}`);
+        
+        if (result.details) {
+          console.error('Send error details:', result.details);
+        }
+      }
+      
+    } catch (err) {
+      console.error('Email send failed:', err);
+      showErrorMessage(`❌ Netzwerkfehler: ${err.message}`);
+    } finally {
+      sendButton.disabled = false;
+      sendButton.textContent = 'E-Mails versenden';
+    }
+  });
+}
+
+/**
+ * Apply variable substitution to template string
+ */
+function applyVariableSubstitution(template, dataRecord) {
+  let output = template;
+  
+  COLUMNS.forEach(columnName => {
+    const variablePattern = `{{${columnName}}}`;
+    const replacementValue = dataRecord[columnName] || '';
+    // Use split/join for better performance instead of regex
+    output = output.split(variablePattern).join(replacementValue);
+  });
+  
+  return output;
 }
