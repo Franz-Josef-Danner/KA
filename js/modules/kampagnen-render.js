@@ -54,7 +54,7 @@ function renderMailInterface() {
   const testModeWarning = testEmailOverride 
     ? `<div class="test-mode-warning" style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
          <strong>⚠️ TEST-MODUS AKTIV</strong><br>
-         Alle E-Mails werden an <strong>${testEmailOverride}</strong> gesendet.<br>
+         Alle E-Mails werden an <strong>${escapeHtml(testEmailOverride)}</strong> gesendet.<br>
          <small>Ändern Sie die Test-E-Mail-Adresse in <a href="einstellungen.html">Einstellungen</a> oder lassen Sie das Feld leer, um an echte Empfänger zu senden.</small>
        </div>`
     : '';
