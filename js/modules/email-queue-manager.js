@@ -80,7 +80,8 @@ export async function sendApprovedNotifications() {
   
   try {
     // Call backend API to actually send emails
-    const response = await fetch('api/send-approved-emails.php', {
+    // Use inline version for World4You compatibility (no exec())
+    const response = await fetch('api/send-approved-emails-inline.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
