@@ -68,8 +68,8 @@ export function getApprovedNotifications() {
   return getEmailQueue().filter(item => item.status === 'approved');
 }
 
-// Send approved notifications (simulate sending)
-export function sendApprovedNotifications() {
+// Send approved notifications via backend
+export async function sendApprovedNotifications() {
   const approved = getApprovedNotifications();
   
   if (approved.length === 0) {
@@ -79,17 +79,54 @@ export function sendApprovedNotifications() {
     };
   }
   
-  // In a real implementation, this would call the backend
-  // For now, we'll mark them as sent
-  approved.forEach(notification => {
-    markNotificationAsSent(notification.id);
-  });
-  
-  return {
-    success: true,
-    count: approved.length,
-    message: `${approved.length} E-Mail${approved.length > 1 ? 's' : ''} wurde${approved.length > 1 ? 'n' : ''} erfolgreich versendet.`
-  };
+  try {
+    // Call backend API to actually send emails
+    const response = await fetch('api/send-approved-emails.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        approvedEmails: approved
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      // Backend successfully sent emails, mark them as sent
+      approved.forEach(notification => {
+        markNotificationAsSent(notification.id);
+      });
+      
+      return {
+        success: true,
+        count: approved.length,
+        message: `${approved.length} E-Mail${approved.length > 1 ? 's' : ''} wurde${approved.length > 1 ? 'n' : ''} erfolgreich versendet!`,
+        details: result.output
+      };
+    } else {
+      // Backend reported an error
+      return {
+        success: false,
+        message: result.error || result.message || 'Fehler beim Versenden der E-Mails.',
+        details: result.output,
+        instructions: result.instructions
+      };
+    }
+  } catch (error) {
+    console.error('Error sending approved emails:', error);
+    return {
+      success: false,
+      message: 'Verbindungsfehler: Konnte Backend nicht erreichen.',
+      error: error.message,
+      instructions: [
+        'Überprüfen Sie, ob der Webserver läuft',
+        'Überprüfen Sie, ob backend/config.json existiert',
+        'Versuchen Sie es später erneut'
+      ]
+    };
+  }
 }
 
 // Get email preview text
@@ -336,12 +373,44 @@ function attachEventListeners(container) {
   // Send approved button
   const sendBtn = container.querySelector('#sendApprovedBtn');
   if (sendBtn) {
-    sendBtn.addEventListener('click', () => {
+    sendBtn.addEventListener('click', async () => {
       const approved = getApprovedNotifications();
       if (confirm(`Möchten Sie ${approved.length} genehmigte E-Mail${approved.length > 1 ? 's' : ''} wirklich senden?`)) {
-        const result = sendApprovedNotifications();
-        alert(result.message);
-        if (result.success) {
+        // Disable button and show loading state
+        sendBtn.disabled = true;
+        sendBtn.textContent = '⏳ Wird gesendet...';
+        
+        try {
+          const result = await sendApprovedNotifications();
+          
+          if (result.success) {
+            // Show success message with details
+            let message = result.message;
+            if (result.details) {
+              message += '\n\nDetails:\n' + result.details;
+            }
+            alert(message);
+            renderEmailQueue(container);
+          } else {
+            // Show error message with instructions
+            let errorMessage = result.message || 'Fehler beim Versenden der E-Mails.';
+            
+            if (result.instructions && result.instructions.length > 0) {
+              errorMessage += '\n\nAnweisungen:\n' + result.instructions.join('\n');
+            }
+            
+            if (result.details) {
+              errorMessage += '\n\nTechnische Details:\n' + result.details;
+            }
+            
+            alert(errorMessage);
+          }
+        } catch (error) {
+          alert('Unerwarteter Fehler: ' + error.message);
+        } finally {
+          // Re-enable button
+          sendBtn.disabled = false;
+          sendBtn.textContent = `📤 ${approved.length} E-Mail${approved.length > 1 ? 's' : ''} senden`;
           renderEmailQueue(container);
         }
       }
