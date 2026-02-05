@@ -72,16 +72,10 @@ function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbos
         $mail->Password   = $password;
         $mail->Port       = $port;
         
-        // World4You specific: Use STARTTLS (not direct SSL)
-        // As per user's working code: SMTPSecure = false with port 587
-        if ($port == 587) {
-            $mail->SMTPSecure = false; // STARTTLS will be initiated automatically
-            $mail->SMTPAutoTLS = true; // Enable TLS encryption automatically
-        } elseif ($port == 465) {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL
-        } else {
-            $mail->SMTPSecure = false;
-        }
+        // World4You specific: STARTTLS intern bei World4You
+        // IMPORTANT: User's PROVEN working configuration - DO NOT CHANGE!
+        // Port 587 with SMTPSecure = false - STARTTLS handled automatically by PHPMailer
+        $mail->SMTPSecure = false; // STARTTLS intern bei World4You
         
         // Recipients
         $mail->setFrom($from, $fromName);

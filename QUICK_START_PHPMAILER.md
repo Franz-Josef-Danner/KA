@@ -42,7 +42,6 @@ try {
     $mail->Password   = $config['password'];
     $mail->Port       = isset($config['smtp']['port']) ? $config['smtp']['port'] : 587;
     $mail->SMTPSecure = false; // STARTTLS intern bei World4You
-    $mail->SMTPAutoTLS = true;
     
     $mail->setFrom($config['email'], isset($config['fromName']) ? $config['fromName'] : 'SMTP Test');
     $mail->addAddress('deine.private@gmail.com'); // ← ÄNDERN SIE DIES!
