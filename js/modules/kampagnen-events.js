@@ -7,6 +7,7 @@ import { showSuccessMessage, showErrorMessage, clearEmailForm } from './kampagne
 import { ensureInitialized as ensureCompanyDataInitialized } from './state.js';
 import { getRows } from './state.js';
 import { COLUMNS } from './config.js';
+import { getEmailConfig } from './email-config.js';
 
 let currentDraftId = null;
 
@@ -331,10 +332,20 @@ function initBulkSendHandler() {
       return;
     }
     
+    // Check for test email override
+    const emailConfig = getEmailConfig();
+    const testEmailOverride = emailConfig.testEmail?.trim();
+    
     let warningMsg = `${companiesWithEmail.length} E-Mail(s) werden versendet`;
     if (missingEmailCount > 0) {
       warningMsg += ` (${missingEmailCount} Firma(en) ohne E-Mail werden übersprungen)`;
     }
+    
+    // Add test mode warning to confirmation
+    if (testEmailOverride) {
+      warningMsg += `\n\n⚠️ TEST-MODUS: Alle E-Mails werden an ${testEmailOverride} gesendet`;
+    }
+    
     warningMsg += '. Fortfahren?';
     
     if (!confirm(warningMsg)) {
@@ -351,15 +362,20 @@ function initBulkSendHandler() {
         const personalizedSubject = applyVariableSubstitution(subjectTemplate, companyData);
         const personalizedBody = applyVariableSubstitution(bodyTemplate, companyData);
         
+        // Use test email if configured, otherwise use actual recipient
+        const finalRecipient = testEmailOverride || companyData['E-mail'].trim();
+        
         return {
           id: `campaign_${batchTimestamp}_${idx}`,
-          to: companyData['E-mail'].trim(),
-          recipientEmail: companyData['E-mail'].trim(),
+          to: finalRecipient,
+          recipientEmail: finalRecipient,
           subject: personalizedSubject || 'Nachricht von KA System',
           body: personalizedBody,
           status: 'approved',
           companyName: companyData.Firma || 'Unbekannt',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          testMode: !!testEmailOverride,
+          originalRecipient: companyData['E-mail'].trim()
         };
       });
       
@@ -373,7 +389,11 @@ function initBulkSendHandler() {
       
       if (response.ok && result.success) {
         const successCount = result.count || result.sent || 0;
-        showSuccessMessage(`✅ ${successCount} E-Mail(s) erfolgreich versendet!`);
+        let successMsg = `✅ ${successCount} E-Mail(s) erfolgreich versendet!`;
+        if (testEmailOverride) {
+          successMsg += ` (Test-Modus: an ${testEmailOverride})`;
+        }
+        showSuccessMessage(successMsg);
         
         // Clear form after successful send
         if (bodyTextarea) bodyTextarea.value = '';
