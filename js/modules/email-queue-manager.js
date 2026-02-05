@@ -385,9 +385,17 @@ function attachEventListeners(container) {
           if (result.success) {
             // Show success message with details
             let message = result.message;
-            if (result.details) {
+            
+            // Check if this was a queue-only operation (Node.js not available)
+            if (result.info) {
+              message = `⚠️ ${result.message}\n\n${result.info}`;
+              if (result.instructions && result.instructions.length > 0) {
+                message += '\n\n' + result.instructions.join('\n');
+              }
+            } else if (result.details) {
               message += '\n\nDetails:\n' + result.details;
             }
+            
             alert(message);
             renderEmailQueue(container);
           } else {
