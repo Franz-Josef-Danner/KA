@@ -10,7 +10,7 @@
  *   node email-sender.js
  * 
  * Cronjob example (every 5 minutes):
- *   */5 * * * * cd /path/to/KA/backend && node email-sender.js >> /var/log/ka-email.log 2>&1
+ *   (asterisk)/5 * * * * cd /path/to/KA/backend && node email-sender.js >> /var/log/ka-email.log 2>&1
  */
 
 const nodemailer = require('nodemailer');

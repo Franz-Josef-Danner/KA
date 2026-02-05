@@ -150,7 +150,19 @@ exec($command, $output, $returnCode);
 $outputText = implode("\n", $output);
 
 // Check if emails were sent successfully
-if ($returnCode === 0 && (strpos($outputText, '✅') !== false || strpos($outputText, 'Successfully sent') !== false)) {
+// Look for "✅ Sent: X" where X > 0, not just presence of ✅
+$sentCount = 0;
+if (preg_match('/✅ Sent: (\d+)/', $outputText, $matches)) {
+    $sentCount = (int)$matches[1];
+}
+
+$failedCount = 0;
+if (preg_match('/❌ Failed: (\d+)/', $outputText, $matches)) {
+    $failedCount = (int)$matches[1];
+}
+
+if ($returnCode === 0 && $sentCount > 0) {
+    // Emails were successfully sent
     // Load updated queue to get sent status
     $updatedQueue = [];
     if (file_exists($queueFile)) {
@@ -161,8 +173,9 @@ if ($returnCode === 0 && (strpos($outputText, '✅') !== false || strpos($output
     http_response_code(200);
     echo json_encode([
         'success' => true,
-        'message' => 'E-Mails wurden erfolgreich versendet!',
-        'count' => count($approvedEmails),
+        'message' => "$sentCount E-Mail" . ($sentCount > 1 ? 's' : '') . " wurde" . ($sentCount > 1 ? 'n' : '') . " erfolgreich versendet!",
+        'count' => $sentCount,
+        'failed' => $failedCount,
         'output' => $outputText,
         'updatedQueue' => $updatedQueue
     ]);
@@ -173,10 +186,14 @@ if ($returnCode === 0 && (strpos($outputText, '✅') !== false || strpos($output
     // Try to extract specific error
     if (strpos($outputText, 'Invalid login') !== false) {
         $errorMessage = 'Fehler: Ungültige E-Mail-Zugangsdaten. Bitte überprüfen Sie backend/config.json.';
+    } elseif (strpos($outputText, 'ENOTFOUND') !== false) {
+        $errorMessage = 'Fehler: SMTP-Server nicht gefunden. Bitte überprüfen Sie den SMTP-Host in backend/config.json.';
     } elseif (strpos($outputText, 'ECONNREFUSED') !== false) {
         $errorMessage = 'Fehler: Verbindung zum E-Mail-Server fehlgeschlagen. Bitte überprüfen Sie SMTP-Host und Port.';
     } elseif (strpos($outputText, 'ETIMEDOUT') !== false) {
         $errorMessage = 'Fehler: Zeitüberschreitung bei Verbindung zum E-Mail-Server.';
+    } elseif (strpos($outputText, 'EAUTH') !== false) {
+        $errorMessage = 'Fehler: Authentifizierung fehlgeschlagen. Bitte überprüfen Sie E-Mail-Adresse und Passwort.';
     }
     
     http_response_code(500);
@@ -184,12 +201,14 @@ if ($returnCode === 0 && (strpos($outputText, '✅') !== false || strpos($output
         'error' => $errorMessage,
         'output' => $outputText,
         'returnCode' => $returnCode,
+        'sent' => $sentCount,
+        'failed' => $failedCount,
         'queued' => count($approvedEmails),
         'instructions' => [
             'E-Mails wurden in die Warteschlange eingereiht.',
             'Überprüfen Sie die Backend-Konfiguration in backend/config.json',
             'Testen Sie manuell: cd backend && node email-sender.js',
-            'Details finden Sie in backend/README.md'
+            'Details finden Sie in backend/README.md und EMAIL_SETUP_ANLEITUNG.md'
         ]
     ]);
 }
