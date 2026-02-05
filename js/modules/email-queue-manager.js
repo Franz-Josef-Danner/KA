@@ -78,6 +78,20 @@ export async function sendApprovedNotifications() {
     };
   }
   
+  // Transform notifications into email format expected by backend
+  const emailsToSend = approved.map(notification => {
+    const subject = getNotificationSubject(notification.type, notification.data);
+    const body = getNotificationTemplate(notification.type, notification.data);
+    const to = notification.recipientEmail || ''; // Use recipientEmail from notification
+    
+    return {
+      to: to,
+      subject: subject,
+      body: body,
+      notificationId: notification.id // Keep for tracking
+    };
+  });
+  
   try {
     // Call backend API to actually send emails
     // Use inline version for World4You compatibility (no exec())
@@ -87,7 +101,7 @@ export async function sendApprovedNotifications() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        approvedEmails: approved
+        approvedEmails: emailsToSend
       })
     });
     

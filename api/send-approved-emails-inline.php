@@ -100,13 +100,9 @@ foreach ($approvedEmails as $email) {
     $subject = isset($email['subject']) ? $email['subject'] : 'KA System Benachrichtigung';
     $body = isset($email['body']) ? $email['body'] : (isset($email['message']) ? $email['message'] : '');
     
+    // If no recipient specified, use the configured email as fallback (send to self for notifications)
     if (empty($to)) {
-        $failedCount++;
-        $errors[] = [
-            'to' => 'unknown',
-            'error' => 'Keine Empfängeradresse angegeben'
-        ];
-        continue;
+        $to = $config['email']; // Use configured email as default recipient
     }
     
     // Send email via SMTP using PHPMailer (verbose mode for debugging)
