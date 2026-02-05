@@ -12,8 +12,7 @@ const ADMIN_NAV_ITEMS = [
   { label: 'Ausgaben', href: 'ausgaben.html' },
   { label: 'Kampagnen', href: 'kampagnen.html' },
   { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
-  { label: 'Einstellungen', href: 'einstellungen.html' },
-  { label: 'Kontakt', href: 'kontakt.html' }
+  { label: 'Einstellungen', href: 'einstellungen.html' }
 ];
 
 const CUSTOMER_NAV_ITEMS = [

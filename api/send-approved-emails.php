@@ -106,16 +106,20 @@ $returnCode = 0;
 // Check if Node.js is available
 exec('node --version 2>&1', $nodeCheck, $nodeCheckCode);
 if ($nodeCheckCode !== 0) {
-    http_response_code(500);
+    // Node.js not available - queue emails for manual processing
+    http_response_code(200);
     echo json_encode([
-        'error' => 'Node.js nicht verfügbar',
-        'message' => 'Node.js ist nicht installiert oder nicht im PATH. E-Mails wurden in die Warteschlange eingereiht, aber nicht versendet.',
+        'success' => true,
+        'queued' => count($approvedEmails),
+        'message' => count($approvedEmails) . ' E-Mail' . (count($approvedEmails) > 1 ? 's' : '') . ' wurde' . (count($approvedEmails) > 1 ? 'n' : '') . ' in die Warteschlange eingereiht.',
+        'info' => 'Node.js ist nicht verfügbar. E-Mails wurden gespeichert und müssen manuell versendet werden.',
         'instructions' => [
             'Option 1: Installieren Sie Node.js von https://nodejs.org/',
             'Option 2: Führen Sie manuell aus: cd backend && node email-sender.js',
-            'Option 3: Richten Sie einen Cronjob ein (siehe backend/CRONJOB_SETUP.md)'
+            'Option 3: Richten Sie einen Cronjob ein (siehe backend/CRONJOB_SETUP.md)',
+            '',
+            'Die E-Mails wurden in backend/email-queue.json gespeichert und warten auf Versand.'
         ],
-        'queued' => count($approvedEmails),
         'queueFile' => $queueFile
     ]);
     exit();

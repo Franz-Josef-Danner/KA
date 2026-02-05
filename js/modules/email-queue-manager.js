@@ -34,8 +34,7 @@ export function getNotificationTypeLabel(type) {
     newCustomer: 'Neuer Kunde',
     newOrder: 'Neuer Auftrag',
     newInvoice: 'Neue Rechnung',
-    paymentReceived: 'Zahlungseingang',
-    contactMessage: 'Kontaktanfrage'
+    paymentReceived: 'Zahlungseingang'
   };
   return labels[type] || type;
 }

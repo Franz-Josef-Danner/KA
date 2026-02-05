@@ -134,7 +134,6 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - **Kampagnen**: Kampagnen-Verwaltung (Platzhalter)
    - **Kundenbereiche**: Verwaltung von Kundenzugängen (NEU)
    - **Einstellungen**: Verwaltung der Firmendaten und Logo (NEU)
-   - **Kontakt**: Kontaktformular zum Senden von Nachrichten (NEU)
 4. Die Anwendung verwendet ES6-Module (type="module")
 5. **Datenspeicherung**:
    - **Server-Speicherung** (mit LocalStorage-Fallback):
@@ -273,15 +272,6 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - 📌 **Verwendung**: Dashboard laden → E-Mails prüfen → Einzeln genehmigen → Versenden
 - 📖 Siehe [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) für Details
 - 🔧 **Problem?** Siehe [EMAIL_PROBLEM_ERKLAERUNG.md](EMAIL_PROBLEM_ERKLAERUNG.md) für Lösungen
-
-### Kontaktformular (NEU)
-- ✅ Integriertes Kontaktformular zum Senden von Nachrichten
-- ✅ Formularvalidierung (Name, E-Mail, Betreff, Nachricht)
-- ✅ Integration mit E-Mail-Benachrichtigungssystem
-- ✅ Nachrichten werden in die E-Mail-Warteschlange eingereiht
-- ✅ Automatischer Versand über Backend (wenn konfiguriert)
-- ✅ Manueller Versand über Backend möglich
-- 📌 **Verwendung**: Navigationsmenü → Kontakt → Formular ausfüllen → Nachricht senden
 
 ### PDF-Funktionalität (NEU)
 - ✅ Automatische PDF-Generierung für Aufträge und Rechnungen

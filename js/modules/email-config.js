@@ -29,8 +29,7 @@ function getDefaultEmailConfig() {
       newCustomer: true,
       newOrder: true,
       newInvoice: true,
-      paymentReceived: true,
-      contactMessage: true // Contact form messages
+      paymentReceived: true
     }
   };
 }
