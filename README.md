@@ -272,6 +272,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - 📌 **Verwendung**: Dashboard laden → E-Mails prüfen → Einzeln genehmigen → Versenden
 - 📖 Siehe [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) für Details
 - 🔧 **Problem?** Siehe [EMAIL_PROBLEM_ERKLAERUNG.md](EMAIL_PROBLEM_ERKLAERUNG.md) für Lösungen
+- 🌐 **World4You Hosting?** Siehe [WORLD4YOU_INSTALLATION.md](WORLD4YOU_INSTALLATION.md) für spezifische Anleitung
 
 ### PDF-Funktionalität (NEU)
 - ✅ Automatische PDF-Generierung für Aufträge und Rechnungen

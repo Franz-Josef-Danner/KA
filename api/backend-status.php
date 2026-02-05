@@ -151,9 +151,46 @@ if (!$status['ready']) {
         'documentation' => [
             'EMAIL_SETUP_ANLEITUNG.md' => 'Vollständige Setup-Anleitung',
             'EMAIL_SCHNELL_REFERENZ.md' => 'Schnell-Referenz',
-            'backend/README.md' => 'Backend-Dokumentation'
+            'backend/README.md' => 'Backend-Dokumentation',
+            'WORLD4YOU_INSTALLATION.md' => 'World4You Hosting-spezifische Anleitung'
         ]
     ];
+    
+    // Add hosting-specific help
+    if (!$status['nodeJsAvailable']) {
+        $status['hostingHelp'] = [
+            'title' => 'Node.js nicht verfügbar auf Ihrem Server?',
+            'description' => 'Wenn Sie Shared Hosting verwenden (z.B. World4You Webhosting), ist Node.js möglicherweise nicht verfügbar.',
+            'options' => [
+                [
+                    'title' => '📚 World4You Hosting Guide',
+                    'description' => 'Detaillierte Anleitung für World4You-Kunden',
+                    'action' => 'Siehe WORLD4YOU_INSTALLATION.md',
+                    'details' => [
+                        'Prüfen Sie Ihr Hosting-Paket (Shared vs. VPS)',
+                        'Upgrade-Optionen zu VPS für Node.js-Support',
+                        'PHP-basierte Alternative ohne Node.js',
+                        'Externe E-Mail-Services als Alternative'
+                    ]
+                ],
+                [
+                    'title' => '🔄 Upgrade auf VPS',
+                    'description' => 'VPS bietet volle Kontrolle und Node.js-Support',
+                    'action' => 'Kontaktieren Sie Ihren Hosting-Provider',
+                    'providers' => [
+                        'World4You VPS ab €12/Monat',
+                        'Andere VPS-Anbieter mit SSH-Zugang'
+                    ]
+                ],
+                [
+                    'title' => '🐘 PHP-Alternative nutzen',
+                    'description' => 'E-Mails mit PHP versenden (ohne Node.js)',
+                    'action' => 'Siehe WORLD4YOU_INSTALLATION.md → PHP-basierter E-Mail-Versand',
+                    'note' => 'Funktioniert auf Standard Webhosting'
+                ]
+            ]
+        ];
+    }
 }
 
 http_response_code(200);

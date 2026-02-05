@@ -257,6 +257,66 @@ async function updateBackendStatus() {
     `;
   }
 
+  // Hosting-specific help (when Node.js not available)
+  if (status.hostingHelp && !status.nodeJsAvailable) {
+    html += `
+      <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
+        <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #856404;">
+          💡 ${status.hostingHelp.title}
+        </h4>
+        <p style="margin: 0 0 15px 0; font-size: 14px; color: #856404;">
+          ${status.hostingHelp.description}
+        </p>
+        <div style="background: white; border-radius: 4px; padding: 15px;">
+    `;
+    
+    status.hostingHelp.options.forEach((option, index) => {
+      html += `
+        <div style="margin-bottom: ${index < status.hostingHelp.options.length - 1 ? '20px' : '0'}; padding-bottom: ${index < status.hostingHelp.options.length - 1 ? '15px' : '0'}; border-bottom: ${index < status.hostingHelp.options.length - 1 ? '1px solid #eee' : 'none'};">
+          <div style="font-weight: bold; color: #856404; margin-bottom: 5px; font-size: 15px;">
+            ${option.title}
+          </div>
+          <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+            ${option.description}
+          </div>
+          <div style="background: #f8f9fa; padding: 8px; border-radius: 3px; font-size: 13px; color: #495057; margin-bottom: 5px;">
+            <strong>→</strong> ${option.action}
+          </div>
+      `;
+      
+      if (option.details && option.details.length > 0) {
+        html += `<ul style="margin: 8px 0 0 20px; font-size: 12px; color: #666;">`;
+        option.details.forEach(detail => {
+          html += `<li style="margin-bottom: 3px;">${detail}</li>`;
+        });
+        html += `</ul>`;
+      }
+      
+      if (option.providers && option.providers.length > 0) {
+        html += `<ul style="margin: 8px 0 0 20px; font-size: 12px; color: #666;">`;
+        option.providers.forEach(provider => {
+          html += `<li style="margin-bottom: 3px;">${provider}</li>`;
+        });
+        html += `</ul>`;
+      }
+      
+      if (option.note) {
+        html += `
+          <div style="margin-top: 5px; font-size: 12px; color: #28a745;">
+            ✓ ${option.note}
+          </div>
+        `;
+      }
+      
+      html += `</div>`;
+    });
+    
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
   contentDiv.innerHTML = html;
 }
 
