@@ -39,8 +39,17 @@ $body .= "- From: " . $config['email'] . "\n";
 $body .= "- To: " . $testRecipient . "\n\n";
 $body .= "Zeitstempel: " . date('Y-m-d H:i:s') . "\n";
 
+// Enable output buffering and flushing for real-time display
+@ini_set('output_buffering', 'off');
+@ini_set('zlib.output_compression', 0);
+@ini_set('implicit_flush', 1);
+ob_implicit_flush(1);
+
+// Increase timeout for SMTP operations
+set_time_limit(60);
+
 echo "<html><head><title>SMTP Test</title>";
-echo "<style>body { font-family: monospace; padding: 20px; } pre { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; }</style>";
+echo "<style>body { font-family: monospace; padding: 20px; } pre { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; }</style>";
 echo "</head><body>";
 echo "<h1>🧪 World4You SMTP Test</h1>\n";
 echo "<p><strong>Empfänger:</strong> $testRecipient</p>\n";
@@ -48,13 +57,27 @@ echo "<p><strong>Konfiguration:</strong> " . $config['smtp']['host'] . ":" . (is
 echo "<hr>\n";
 echo "<h2>Test wird ausgeführt...</h2>\n";
 echo "<pre>\n";
+flush();
 
 // Send test email with verbose logging
-$result = sendEmailSMTPInline($config, $testRecipient, $subject, $body, null, true);
-
-// Display log
-foreach ($result['log'] as $logLine) {
-    echo htmlspecialchars($logLine) . "\n";
+try {
+    $result = sendEmailSMTPInline($config, $testRecipient, $subject, $body, null, true);
+    
+    // Display log with real-time flushing
+    if (isset($result['log']) && is_array($result['log'])) {
+        foreach ($result['log'] as $logLine) {
+            echo htmlspecialchars($logLine) . "\n";
+            flush();
+        }
+    }
+} catch (Exception $e) {
+    echo "❌ Exception occurred: " . htmlspecialchars($e->getMessage()) . "\n";
+    echo "Stack trace:\n" . htmlspecialchars($e->getTraceAsString()) . "\n";
+    $result = [
+        'success' => false,
+        'error' => $e->getMessage(),
+        'log' => []
+    ];
 }
 
 echo "</pre>\n";

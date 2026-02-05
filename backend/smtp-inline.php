@@ -193,12 +193,24 @@ function sendEmailSMTPInline($config, $to, $subject, $body, $from = null, $verbo
         }
         fputs($socket, "MAIL FROM: <$from>\r\n");
         $response = fgets($socket, 515);
+        if ($response === false) {
+            fclose($socket);
+            $error = 'Socket error: No response from server after MAIL FROM command';
+            if ($verbose) {
+                $log[] = "❌ " . $error;
+            }
+            return ['success' => false, 'error' => $error, 'log' => $log];
+        }
         if ($verbose) {
             $log[] = "Server: " . trim($response);
         }
         if (substr($response, 0, 3) != '250') {
             fclose($socket);
-            return ['success' => false, 'error' => 'MAIL FROM failed: ' . $response, 'log' => $log];
+            $error = 'MAIL FROM failed: ' . trim($response) . ' (Check FROM address: ' . $from . ')';
+            if ($verbose) {
+                $log[] = "❌ " . $error;
+            }
+            return ['success' => false, 'error' => $error, 'log' => $log];
         }
         
         // RCPT TO
@@ -207,12 +219,20 @@ function sendEmailSMTPInline($config, $to, $subject, $body, $from = null, $verbo
         }
         fputs($socket, "RCPT TO: <$to>\r\n");
         $response = fgets($socket, 515);
+        if ($response === false) {
+            fclose($socket);
+            $error = 'Socket error: No response from server after RCPT TO command';
+            if ($verbose) {
+                $log[] = "❌ " . $error;
+            }
+            return ['success' => false, 'error' => $error, 'log' => $log];
+        }
         if ($verbose) {
             $log[] = "Server: " . trim($response);
         }
         if (substr($response, 0, 3) != '250') {
             fclose($socket);
-            $error = 'RCPT TO failed: ' . $response . ' (Invalid recipient: ' . $to . ')';
+            $error = 'RCPT TO failed: ' . trim($response) . ' (Invalid recipient: ' . $to . ')';
             if ($verbose) {
                 $log[] = "❌ " . $error;
             }
