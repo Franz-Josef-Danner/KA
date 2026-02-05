@@ -73,6 +73,8 @@ if (!file_exists($configFile)) {
             // Check SMTP host
             if (isset($config['smtp']['host'])) {
                 $host = strtolower($config['smtp']['host']);
+                
+                // Check for placeholder values
                 if (strpos($host, 'example.com') !== false || 
                     strpos($host, 'ihr-provider') !== false ||
                     strpos($host, 'your-provider') !== false ||
@@ -84,6 +86,45 @@ if (!file_exists($configFile)) {
                         'solution' => 'Ersetzen Sie in backend/config.json mit echtem SMTP-Host (z.B. smtp.gmail.com, smtp.franzjosef-danner.at)'
                     ];
                     $hasPlaceholders = true;
+                }
+                
+                // Check for test/development email services
+                $testServices = [
+                    'mailtrap.io' => 'Mailtrap',
+                    'smtp.mailtrap.io' => 'Mailtrap',
+                    'ethereal.email' => 'Ethereal Email',
+                    'smtp.ethereal.email' => 'Ethereal Email',
+                    'mailhog' => 'MailHog',
+                    'mailcatcher' => 'MailCatcher',
+                    'papercut' => 'Papercut SMTP',
+                    'localhost' => 'Localhost',
+                    '127.0.0.1' => 'Localhost'
+                ];
+                
+                $isTestService = false;
+                $testServiceName = '';
+                foreach ($testServices as $pattern => $name) {
+                    if (strpos($host, $pattern) !== false) {
+                        $isTestService = true;
+                        $testServiceName = $name;
+                        break;
+                    }
+                }
+                
+                if ($isTestService) {
+                    $status['testMode'] = true;
+                    $status['testServiceName'] = $testServiceName;
+                    $status['issues'][] = [
+                        'type' => 'test_email_service',
+                        'severity' => 'warning',
+                        'message' => '⚠️ TEST-MODUS: ' . $testServiceName . ' erkannt (' . $config['smtp']['host'] . ')',
+                        'solution' => 'E-Mails werden an Test-Service gesendet und NICHT zugestellt. Für echten E-Mail-Versand verwenden Sie einen produktiven SMTP-Server (z.B. smtp.gmail.com, smtp.world4you.com).',
+                        'details' => [
+                            'current' => $config['smtp']['host'],
+                            'explanation' => $testServiceName . ' ist ein Entwicklungs-Tool, das E-Mails abfängt statt sie zuzustellen.',
+                            'action' => 'Ändern Sie smtp.host in backend/config.json auf einen echten SMTP-Server.'
+                        ]
+                    ];
                 }
             }
             

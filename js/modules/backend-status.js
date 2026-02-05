@@ -208,6 +208,49 @@ async function updateBackendStatus() {
   
   html += `</div>`;
 
+  // Test Mode Warning (prominent display)
+  if (status.testMode) {
+    html += `
+      <div style="margin-top: 15px; padding: 20px; background: #fff3cd; border: 3px solid #ffc107; border-radius: 8px;">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+          <span style="font-size: 48px; margin-right: 15px;">⚠️</span>
+          <div>
+            <h3 style="margin: 0; font-size: 20px; color: #856404;">TEST-MODUS AKTIV</h3>
+            <p style="margin: 5px 0 0 0; font-size: 16px; color: #856404; font-weight: bold;">
+              E-Mails werden NICHT zugestellt!
+            </p>
+          </div>
+        </div>
+        <div style="background: white; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
+          <p style="margin: 0 0 10px 0; font-size: 14px; color: #333;">
+            <strong>Sie verwenden derzeit: ${status.testServiceName}</strong>
+          </p>
+          <p style="margin: 0; font-size: 14px; color: #666;">
+            ${status.testServiceName} ist ein Entwicklungs-Tool, das E-Mails abfängt und NICHT an die Empfänger zustellt. 
+            Die E-Mails werden nur zu Test-/Debug-Zwecken gespeichert.
+          </p>
+        </div>
+        <div style="background: #ffe69c; padding: 15px; border-radius: 4px;">
+          <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #856404;">
+            ✅ Für echten E-Mail-Versand:
+          </p>
+          <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: #666;">
+            <li>Öffnen Sie <code style="background: white; padding: 2px 6px; border-radius: 3px;">backend/config.json</code></li>
+            <li>Ändern Sie <code style="background: white; padding: 2px 6px; border-radius: 3px;">smtp.host</code> auf einen produktiven SMTP-Server</li>
+            <li>Beispiele:
+              <ul style="margin-top: 5px;">
+                <li><code style="background: white; padding: 2px 6px; border-radius: 3px;">smtp.gmail.com</code> (Gmail)</li>
+                <li><code style="background: white; padding: 2px 6px; border-radius: 3px;">smtp-mail.outlook.com</code> (Outlook)</li>
+                <li><code style="background: white; padding: 2px 6px; border-radius: 3px;">smtp.world4you.com</code> (World4You)</li>
+              </ul>
+            </li>
+            <li>Speichern und neu laden</li>
+          </ol>
+        </div>
+      </div>
+    `;
+  }
+
   // Issues
   if (status.issues && status.issues.length > 0) {
     html += `
@@ -216,13 +259,29 @@ async function updateBackendStatus() {
     `;
     
     status.issues.forEach(issue => {
-      const bgColor = issue.severity === 'critical' ? '#f8d7da' : '#fff3cd';
-      const borderColor = issue.severity === 'critical' ? '#dc3545' : '#ffc107';
+      // Test email service issues get special treatment
+      const isTestService = issue.type === 'test_email_service';
+      const bgColor = isTestService ? '#fff3cd' : (issue.severity === 'critical' ? '#f8d7da' : '#fff3cd');
+      const borderColor = isTestService ? '#ffc107' : (issue.severity === 'critical' ? '#dc3545' : '#ffc107');
       
       html += `
-        <div style="padding: 10px; background: ${bgColor}; border-radius: 4px; border-left: 3px solid ${borderColor}; margin-bottom: 8px;">
-          <div style="font-weight: bold; font-size: 14px; margin-bottom: 3px;">${issue.message}</div>
-          <div style="font-size: 13px; color: #666;">💡 ${issue.solution}</div>
+        <div style="padding: ${isTestService ? '15px' : '10px'}; background: ${bgColor}; border-radius: 4px; border-left: 3px solid ${borderColor}; margin-bottom: 8px;">
+          <div style="font-weight: bold; font-size: ${isTestService ? '15px' : '14px'}; margin-bottom: ${isTestService ? '8px' : '3px'};">${issue.message}</div>
+          <div style="font-size: 13px; color: #666; ${isTestService ? 'margin-bottom: 10px;' : ''}">💡 ${issue.solution}</div>
+      `;
+      
+      // Show additional details for test service
+      if (isTestService && issue.details) {
+        html += `
+          <div style="background: white; padding: 10px; border-radius: 3px; margin-top: 10px; font-size: 13px;">
+            <div style="margin-bottom: 5px;"><strong>Aktuell:</strong> <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 2px;">${issue.details.current}</code></div>
+            <div style="margin-bottom: 5px;"><strong>Erklärung:</strong> ${issue.details.explanation}</div>
+            <div><strong>Lösung:</strong> ${issue.details.action}</div>
+          </div>
+        `;
+      }
+      
+      html += `
         </div>
       `;
     });
