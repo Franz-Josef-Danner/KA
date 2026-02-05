@@ -75,8 +75,8 @@ if (!$config || !isset($config['email']) || !isset($config['password']) || !isse
     exit();
 }
 
-// Include SMTP sending function
-require_once $backendDir . '/smtp-inline.php';
+// Include SMTP sending function (using PHPMailer - PROVEN to work with World4You!)
+require_once $backendDir . '/smtp-phpmailer.php';
 
 // Send emails inline
 $sentCount = 0;
@@ -98,8 +98,11 @@ foreach ($approvedEmails as $email) {
         continue;
     }
     
-    // Send email via SMTP (verbose mode for debugging)
-    $result = sendEmailSMTPInline($config, $to, $subject, $body, null, true);
+    // Send email via SMTP using PHPMailer (verbose mode for debugging)
+    $result = sendEmailPHPMailer($config, $to, $subject, $body, null, true);
+    
+    // Log to file for persistence
+    writeSmtpLog($result);
     
     if ($result['success']) {
         $sentCount++;

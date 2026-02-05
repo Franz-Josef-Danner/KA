@@ -12,6 +12,8 @@ Thumbs.db
 screenshots/
 test-*.html
 test-smtp-connection.php
+test-phpmailer.php
+test-mail.php
 js/libs/chart-mock.js
 
 # Backend sensitive data
