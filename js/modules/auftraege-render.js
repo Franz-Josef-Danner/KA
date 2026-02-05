@@ -60,7 +60,9 @@ export function render() {
     
     // Add status-based CSS class for visual indication
     const status = row.Status || "in Arbeit";
-    if (status === "abgeschlossen") {
+    const isCompleted = status.toLowerCase() === "abgeschlossen";
+    
+    if (isCompleted) {
       tr.classList.add("order-completed");
     } else {
       tr.classList.add("order-in-progress");
@@ -87,8 +89,8 @@ export function render() {
 
       // Special handling for Auftrags_ID column to include status badge
       if (col === "Auftrags_ID") {
-        const statusBadgeClass = status === "abgeschlossen" ? "status-badge-completed" : "status-badge-in-progress";
-        const statusText = status === "abgeschlossen" ? "Abgeschlossen" : "In Arbeit";
+        const statusBadgeClass = isCompleted ? "status-badge-completed" : "status-badge-in-progress";
+        const statusText = isCompleted ? "Abgeschlossen" : "In Arbeit";
         td.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>
