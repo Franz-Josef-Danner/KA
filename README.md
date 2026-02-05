@@ -274,6 +274,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 
 #### Dokumentation:
 - 📖 [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) - Warteschlangen-Manager Details
+- 🔍 [EMAIL_DIAGNOSTICS_DOKUMENTATION.md](EMAIL_DIAGNOSTICS_DOKUMENTATION.md) - **E-Mails werden nicht versendet? Vollständige SMTP-Diagnose!**
 - 🔧 [BACKEND_BEREIT_ABER_KEINE_MAILS.md](BACKEND_BEREIT_ABER_KEINE_MAILS.md) - **Dashboard zeigt "bereit" aber E-Mails kommen nicht an?**
 - ⚠️ [TEST_MAIL_SERVICE_PROBLEM.md](TEST_MAIL_SERVICE_PROBLEM.md) - **E-Mails kommen nicht an? Test-Mail-Service erkannt?**
 - 🔧 [EMAIL_PROBLEM_ERKLAERUNG.md](EMAIL_PROBLEM_ERKLAERUNG.md) - Allgemeine Problem-Lösungen
