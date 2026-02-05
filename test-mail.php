@@ -11,6 +11,42 @@
 // Configuration
 $testRecipient = 'IHRE_EMAIL@gmail.com'; // CHANGE THIS TO YOUR EMAIL!
 
+// Check if placeholder email is still being used
+if ($testRecipient === 'IHRE_EMAIL@gmail.com' || strpos($testRecipient, 'IHRE_EMAIL') !== false) {
+    echo "<!DOCTYPE html>\n";
+    echo "<html><head><title>SMTP Test - Konfiguration erforderlich</title>";
+    echo "<style>body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; } ";
+    echo ".error { background: #fff; border: 3px solid #e74c3c; border-radius: 8px; padding: 30px; max-width: 700px; margin: 0 auto; } ";
+    echo "h1 { color: #e74c3c; } code { background: #f0f0f0; padding: 3px 8px; border-radius: 3px; font-family: monospace; } ";
+    echo ".highlight { background: #fff3cd; padding: 20px; border-left: 4px solid #ffc107; margin: 20px 0; }</style>";
+    echo "</head><body>";
+    echo "<div class='error'>";
+    echo "<h1>⚠️ Bitte E-Mail-Adresse ändern!</h1>";
+    echo "<p><strong>Sie verwenden noch die Platzhalter-E-Mail-Adresse!</strong></p>";
+    echo "<div class='highlight'>";
+    echo "<p><strong>Aktuelle Adresse:</strong> <code>" . htmlspecialchars($testRecipient) . "</code></p>";
+    echo "<p>Diese ist <strong>KEINE echte E-Mail-Adresse</strong> und wird von Gmail abgelehnt!</p>";
+    echo "</div>";
+    echo "<h2>So beheben Sie das Problem:</h2>";
+    echo "<ol>";
+    echo "<li>Öffnen Sie die Datei <code>test-mail.php</code> in einem Texteditor</li>";
+    echo "<li>Suchen Sie Zeile 12: <code>\$testRecipient = 'IHRE_EMAIL@gmail.com';</code></li>";
+    echo "<li>Ersetzen Sie <code>IHRE_EMAIL@gmail.com</code> mit <strong>Ihrer echten E-Mail-Adresse</strong></li>";
+    echo "<li>Speichern Sie die Datei und laden Sie diese Seite neu</li>";
+    echo "</ol>";
+    echo "<h3>Beispiel:</h3>";
+    echo "<pre style='background: #f0f0f0; padding: 15px; border-radius: 5px;'>";
+    echo "// Vorher:\n";
+    echo "\$testRecipient = 'IHRE_EMAIL@gmail.com';\n\n";
+    echo "// Nachher:\n";
+    echo "\$testRecipient = 'max.mustermann@gmail.com';  // Ihre echte E-Mail!";
+    echo "</pre>";
+    echo "<p><strong>Tipp:</strong> Nach dem Test sollten Sie diese Datei aus Sicherheitsgründen löschen!</p>";
+    echo "</div>";
+    echo "</body></html>";
+    exit();
+}
+
 // Load backend config
 $configFile = __DIR__ . '/backend/config.json';
 
@@ -43,17 +79,30 @@ $body .= "Zeitstempel: " . date('Y-m-d H:i:s') . "\n";
 @ini_set('output_buffering', 'off');
 @ini_set('zlib.output_compression', 0);
 @ini_set('implicit_flush', 1);
+@ob_end_clean(); // Clear any existing output buffers
 ob_implicit_flush(1);
 
 // Increase timeout for SMTP operations
-set_time_limit(60);
+set_time_limit(120); // Increased to 120 seconds for slow connections
 
+echo "<!DOCTYPE html>\n";
 echo "<html><head><title>SMTP Test</title>";
-echo "<style>body { font-family: monospace; padding: 20px; } pre { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; }</style>";
+echo "<style>body { font-family: monospace; padding: 20px; max-width: 1200px; margin: 0 auto; } ";
+echo "pre { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; } ";
+echo ".success { color: green; font-weight: bold; } .error { color: red; font-weight: bold; } ";
+echo ".warning { background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0; }</style>";
 echo "</head><body>";
 echo "<h1>🧪 World4You SMTP Test</h1>\n";
-echo "<p><strong>Empfänger:</strong> $testRecipient</p>\n";
-echo "<p><strong>Konfiguration:</strong> " . $config['smtp']['host'] . ":" . (isset($config['smtp']['port']) ? $config['smtp']['port'] : 587) . "</p>\n";
+echo "<p><strong>Empfänger:</strong> " . htmlspecialchars($testRecipient) . "</p>\n";
+echo "<p><strong>Konfiguration:</strong> " . htmlspecialchars($config['smtp']['host']) . ":" . (isset($config['smtp']['port']) ? $config['smtp']['port'] : 587) . "</p>\n";
+
+// Validate recipient email
+if (!filter_var($testRecipient, FILTER_VALIDATE_EMAIL)) {
+    echo "<div class='warning'>";
+    echo "<strong>⚠️ Warnung:</strong> Die E-Mail-Adresse sieht ungültig aus: " . htmlspecialchars($testRecipient);
+    echo "</div>\n";
+}
+
 echo "<hr>\n";
 echo "<h2>Test wird ausgeführt...</h2>\n";
 echo "<pre>\n";
@@ -68,6 +117,7 @@ try {
         foreach ($result['log'] as $logLine) {
             echo htmlspecialchars($logLine) . "\n";
             flush();
+            @ob_flush(); // Force output buffer flush
         }
     }
 } catch (Exception $e) {
@@ -84,13 +134,30 @@ echo "</pre>\n";
 echo "<hr>\n";
 
 if ($result['success']) {
-    echo "<h2 style='color: green;'>✅ TEST ERFOLGREICH!</h2>\n";
-    echo "<p><strong>Die E-Mail wurde versendet!</strong></p>\n";
-    echo "<p>Überprüfen Sie das Postfach von: <strong>$testRecipient</strong></p>\n";
-    echo "<p>Wenn die E-Mail ankommt, funktioniert SMTP korrekt auf Ihrem Hosting.</p>\n";
-    echo "<p style='color: blue;'><strong>✅ Ihr World4You Hosting unterstützt SMTP-Versand!</strong></p>\n";
+    echo "<h2 class='success'>✅ TEST ERFOLGREICH!</h2>\n";
+    echo "<p><strong>Die E-Mail wurde erfolgreich an den SMTP-Server übergeben!</strong></p>\n";
+    echo "<div style='background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;'>";
+    echo "<h3>Was bedeutet das?</h3>";
+    echo "<ul>";
+    echo "<li>✅ Ihre SMTP-Konfiguration ist korrekt</li>";
+    echo "<li>✅ Die Authentifizierung funktioniert</li>";
+    echo "<li>✅ Der E-Mail-Versand funktioniert auf Ihrem Hosting</li>";
+    echo "</ul>";
+    echo "<p><strong>Überprüfen Sie das Postfach:</strong> " . htmlspecialchars($testRecipient) . "</p>";
+    echo "<p><strong>Hinweis:</strong> Die E-Mail kann einige Minuten benötigen, um anzukommen. Prüfen Sie auch den Spam-Ordner!</p>";
+    echo "</div>";
+    
+    echo "<div class='warning'>";
+    echo "<h3>⚠️ Wichtige Hinweise:</h3>";
+    echo "<ul>";
+    echo "<li>Wenn die E-Mail <strong>nicht ankommt</strong>, überprüfen Sie den Spam-Ordner</li>";
+    echo "<li>Bei Gmail kann es vorkommen, dass E-Mails von unbekannten Servern verzögert oder blockiert werden</li>";
+    echo "<li>Eine Bounce-Message (Rückläufer) bedeutet, dass die E-Mail versendet wurde, aber vom Empfänger abgelehnt wurde</li>";
+    echo "<li><strong>Tipp:</strong> Testen Sie mit Ihrer eigenen E-Mail-Adresse, die bei Ihrem Hosting existiert (z.B. office@ihre-domain.at)</li>";
+    echo "</ul>";
+    echo "</div>";
 } else {
-    echo "<h2 style='color: red;'>❌ TEST FEHLGESCHLAGEN!</h2>\n";
+    echo "<h2 class='error'>❌ TEST FEHLGESCHLAGEN!</h2>\n";
     echo "<p><strong>Fehler:</strong> " . htmlspecialchars($result['error']) . "</p>\n";
     echo "<h3>Mögliche Ursachen:</h3>\n";
     echo "<ul>\n";
@@ -113,3 +180,4 @@ echo "<hr>\n";
 echo "<p><small>Test abgeschlossen: " . date('Y-m-d H:i:s') . "</small></p>\n";
 echo "<p><strong>WICHTIG:</strong> Löschen Sie diese Datei nach dem Test aus Sicherheitsgründen!</p>\n";
 echo "</body></html>\n";
+@ob_end_flush(); // Final flush
