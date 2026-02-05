@@ -170,6 +170,14 @@ if ($sentCount > 0 && $failedCount === 0) {
         $errorDetails[] = "❌ An: " . $error['to'] . " - " . $error['error'];
     }
     
+    // Collect all unique error messages for better diagnostics
+    $uniqueErrors = [];
+    foreach ($detailedLogs as $log) {
+        if (isset($log['error']) && !in_array($log['error'], $uniqueErrors)) {
+            $uniqueErrors[] = $log['error'];
+        }
+    }
+    
     echo json_encode([
         'error' => 'E-Mails konnten nicht versendet werden',
         'message' => "$failedCount E-Mail(s) fehlgeschlagen",
@@ -177,6 +185,7 @@ if ($sentCount > 0 && $failedCount === 0) {
         'failed' => $failedCount,
         'details' => implode("\n", $errorDetails),
         'errors' => $errors,
+        'uniqueErrors' => $uniqueErrors,
         'detailedLogs' => $detailedLogs,
         'instructions' => [
             '📋 Fehlerbehebung:',
