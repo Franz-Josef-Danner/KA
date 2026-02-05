@@ -275,6 +275,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 #### Dokumentation:
 - 📖 [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) - Warteschlangen-Manager Details
 - 🔧 [BACKEND_BEREIT_ABER_KEINE_MAILS.md](BACKEND_BEREIT_ABER_KEINE_MAILS.md) - **Dashboard zeigt "bereit" aber E-Mails kommen nicht an?**
+- ⚠️ [TEST_MAIL_SERVICE_PROBLEM.md](TEST_MAIL_SERVICE_PROBLEM.md) - **E-Mails kommen nicht an? Test-Mail-Service erkannt?**
 - 🔧 [EMAIL_PROBLEM_ERKLAERUNG.md](EMAIL_PROBLEM_ERKLAERUNG.md) - Allgemeine Problem-Lösungen
 - 🌐 [WORLD4YOU_INSTALLATION.md](WORLD4YOU_INSTALLATION.md) - Spezifisch für World4You Hosting
 - 📚 [PHP_EMAIL_SYSTEM_DOKUMENTATION.md](PHP_EMAIL_SYSTEM_DOKUMENTATION.md) - Technische Details zum PHP-System
