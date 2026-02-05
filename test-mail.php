@@ -9,10 +9,10 @@
  */
 
 // Configuration
-$testRecipient = 'office@franzjosef-danner.at'; // CHANGE THIS TO YOUR EMAIL!
+$testRecipient = 'scener@gmx.net'; // CHANGE THIS TO YOUR EMAIL!
 
 // Check if placeholder email is still being used
-if ($testRecipient === 'office@franzjosef-danner.at' || strpos($testRecipient, 'IHRE_EMAIL') !== false) {
+if ($testRecipient === 'scener@gmx.net' || strpos($testRecipient, 'IHRE_EMAIL') !== false) {
     echo "<!DOCTYPE html>\n";
     echo "<html><head><title>SMTP Test - Konfiguration erforderlich</title>";
     echo "<style>body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; } ";
@@ -30,14 +30,14 @@ if ($testRecipient === 'office@franzjosef-danner.at' || strpos($testRecipient, '
     echo "<h2>So beheben Sie das Problem:</h2>";
     echo "<ol>";
     echo "<li>Öffnen Sie die Datei <code>test-mail.php</code> in einem Texteditor</li>";
-    echo "<li>Suchen Sie Zeile 12: <code>\$testRecipient = 'office@franzjosef-danner.at';</code></li>";
-    echo "<li>Ersetzen Sie <code>office@franzjosef-danner.at</code> mit <strong>Ihrer echten E-Mail-Adresse</strong></li>";
+    echo "<li>Suchen Sie Zeile 12: <code>\$testRecipient = 'scener@gmx.net';</code></li>";
+    echo "<li>Ersetzen Sie <code>scener@gmx.net</code> mit <strong>Ihrer echten E-Mail-Adresse</strong></li>";
     echo "<li>Speichern Sie die Datei und laden Sie diese Seite neu</li>";
     echo "</ol>";
     echo "<h3>Beispiel:</h3>";
     echo "<pre style='background: #f0f0f0; padding: 15px; border-radius: 5px;'>";
     echo "// Vorher:\n";
-    echo "\$testRecipient = 'office@franzjosef-danner.at';\n\n";
+    echo "\$testRecipient = 'scener@gmx.net';\n\n";
     echo "// Nachher:\n";
     echo "\$testRecipient = 'max.mustermann@gmail.com';  // Ihre echte E-Mail!";
     echo "</pre>";
