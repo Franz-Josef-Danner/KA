@@ -78,6 +78,20 @@ export async function sendApprovedNotifications() {
     };
   }
   
+  // Transform notifications into email format expected by backend
+  const emailsToSend = approved.map(notification => {
+    const subject = getNotificationSubject(notification.type, notification.data);
+    const body = getNotificationTemplate(notification.type, notification.data);
+    const to = notification.recipientEmail || ''; // Use recipientEmail from notification
+    
+    return {
+      to: to,
+      subject: subject,
+      body: body,
+      notificationId: notification.id // Keep for tracking
+    };
+  });
+  
   try {
     // Call backend API to actually send emails
     // Use inline version for World4You compatibility (no exec())
@@ -87,7 +101,7 @@ export async function sendApprovedNotifications() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        approvedEmails: approved
+        approvedEmails: emailsToSend
       })
     });
     
@@ -107,10 +121,25 @@ export async function sendApprovedNotifications() {
       };
     } else {
       // Backend reported an error
+      // Include detailed error information for better diagnostics
+      let errorMessage = result.error || result.message || 'Fehler beim Versenden der E-Mails.';
+      
+      // Add unique errors if available
+      if (result.uniqueErrors && result.uniqueErrors.length > 0) {
+        errorMessage += '\n\nDetaillierte Fehler:\n' + result.uniqueErrors.join('\n');
+      }
+      
+      // Add individual errors if available
+      if (result.errors && result.errors.length > 0) {
+        const errorList = result.errors.map(e => `• ${e.to}: ${e.error}`).join('\n');
+        errorMessage += '\n\nFehlgeschlagene E-Mails:\n' + errorList;
+      }
+      
       return {
         success: false,
-        message: result.error || result.message || 'Fehler beim Versenden der E-Mails.',
-        details: result.output,
+        message: errorMessage,
+        details: result.details || result.output,
+        detailedLogs: result.detailedLogs,
         instructions: result.instructions
       };
     }
@@ -972,6 +1001,9 @@ function showSimpleErrorModal(errorMessage, result) {
         💡 Nächste Schritte:
       </div>
       <ol style="margin: 0; padding-left: 20px; color: #2e7d32; font-size: 13px;">
+        <li style="margin-bottom: 6px;">
+          <strong>Diagnostik ausführen:</strong> Öffnen Sie <a href="test-email-send.php" target="_blank" style="color: #1565c0; text-decoration: underline;">test-email-send.php</a> für vollständige Diagnose
+        </li>
         <li style="margin-bottom: 6px;">
           Überprüfen Sie <code>backend/config.json</code> auf Korrektheit
         </li>

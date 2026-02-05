@@ -78,6 +78,17 @@ if (!$config || !isset($config['email']) || !isset($config['password']) || !isse
 // Include SMTP sending function (using PHPMailer - PROVEN to work with World4You!)
 require_once $backendDir . '/smtp-phpmailer.php';
 
+// Initialize log file if it doesn't exist (ensures it's always available for debugging)
+$logFile = $backendDir . '/smtp-debug.log';
+if (!file_exists($logFile)) {
+    $header = "# SMTP Debug Log\n";
+    $header .= "# Created: " . date('c') . "\n";
+    $header .= "# This file logs all SMTP operations for debugging\n";
+    $header .= "# ================================================\n\n";
+    @file_put_contents($logFile, $header);
+}
+
+
 // Send emails inline
 $sentCount = 0;
 $failedCount = 0;
@@ -89,13 +100,9 @@ foreach ($approvedEmails as $email) {
     $subject = isset($email['subject']) ? $email['subject'] : 'KA System Benachrichtigung';
     $body = isset($email['body']) ? $email['body'] : (isset($email['message']) ? $email['message'] : '');
     
+    // If no recipient specified, use the configured email as fallback (send to self for notifications)
     if (empty($to)) {
-        $failedCount++;
-        $errors[] = [
-            'to' => 'unknown',
-            'error' => 'Keine Empfängeradresse angegeben'
-        ];
-        continue;
+        $to = $config['email']; // Use configured email as default recipient
     }
     
     // Send email via SMTP using PHPMailer (verbose mode for debugging)
@@ -159,6 +166,14 @@ if ($sentCount > 0 && $failedCount === 0) {
         $errorDetails[] = "❌ An: " . $error['to'] . " - " . $error['error'];
     }
     
+    // Collect all unique error messages for better diagnostics
+    $uniqueErrors = [];
+    foreach ($detailedLogs as $log) {
+        if (isset($log['error']) && !in_array($log['error'], $uniqueErrors)) {
+            $uniqueErrors[] = $log['error'];
+        }
+    }
+    
     echo json_encode([
         'error' => 'E-Mails konnten nicht versendet werden',
         'message' => "$failedCount E-Mail(s) fehlgeschlagen",
@@ -166,6 +181,7 @@ if ($sentCount > 0 && $failedCount === 0) {
         'failed' => $failedCount,
         'details' => implode("\n", $errorDetails),
         'errors' => $errors,
+        'uniqueErrors' => $uniqueErrors,
         'detailedLogs' => $detailedLogs,
         'instructions' => [
             '📋 Fehlerbehebung:',

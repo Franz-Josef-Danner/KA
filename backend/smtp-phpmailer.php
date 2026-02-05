@@ -130,21 +130,50 @@ function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbos
 
 /**
  * Write SMTP log to file
+ * 
+ * @param mixed $data Data to log
+ * @return bool True on success, false on failure
  */
 function writeSmtpLog($data) {
     $logFile = __DIR__ . '/smtp-debug.log';
     
-    // Rotate if > 10MB
-    if (file_exists($logFile) && filesize($logFile) > 10 * 1024 * 1024) {
-        rename($logFile, $logFile . '.old');
+    try {
+        // Check if directory is writable
+        if (!is_writable(__DIR__)) {
+            error_log("SMTP Log Error: Directory " . __DIR__ . " is not writable");
+            return false;
+        }
+        
+        // Rotate if > 10MB
+        if (file_exists($logFile) && filesize($logFile) > 10 * 1024 * 1024) {
+            @rename($logFile, $logFile . '.old');
+        }
+        
+        // Create log file if it doesn't exist with proper header
+        if (!file_exists($logFile)) {
+            $header = "# SMTP Debug Log\n";
+            $header .= "# Created: " . date('c') . "\n";
+            $header .= "# This file logs all SMTP operations for debugging\n";
+            $header .= "# ================================================\n\n";
+            @file_put_contents($logFile, $header);
+        }
+        
+        // Write with timestamp
+        $logEntry = "[" . date('c') . "]\n" .
+                   print_r($data, true) .
+                   "\n----------------------\n";
+        
+        $result = @file_put_contents($logFile, $logEntry, FILE_APPEND);
+        
+        if ($result === false) {
+            error_log("SMTP Log Error: Failed to write to " . $logFile);
+            return false;
+        }
+        
+        return true;
+        
+    } catch (Exception $e) {
+        error_log("SMTP Log Exception: " . $e->getMessage());
+        return false;
     }
-    
-    // Write with timestamp
-    file_put_contents(
-        $logFile,
-        "[" . date('c') . "]\n" .
-        print_r($data, true) .
-        "\n----------------------\n",
-        FILE_APPEND
-    );
 }

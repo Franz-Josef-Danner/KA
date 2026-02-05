@@ -54,6 +54,40 @@ if [ ! -f "email-queue.json" ]; then
     echo ""
 fi
 
+# Create smtp-debug.log with header if it doesn't exist
+if [ ! -f "smtp-debug.log" ]; then
+    cat > smtp-debug.log << 'EOF'
+# SMTP Debug Log
+# ================================================================================
+# This file logs all SMTP email sending operations for debugging purposes.
+# Each log entry includes timestamp, configuration, and detailed SMTP conversation.
+#
+# Log Rotation: Automatically rotates when file size exceeds 10MB
+#
+# Location: backend/smtp-debug.log
+# Created: Automatically by the email sending system
+#
+# IMPORTANT: This file may contain sensitive information (email addresses).
+#            It is protected by backend/.htaccess from web access.
+#
+# Usage:
+# - Check this file when email sending fails
+# - Look for error messages and SMTP response codes
+# - Common SMTP errors:
+#   * 535 Authentication failed - Wrong username/password
+#   * 550 Sender rejected - Invalid FROM address (must be existing mailbox)
+#   * 554 Connection refused - Wrong host or port
+#   * 454 TLS not available - Wrong port (use 587 for STARTTLS)
+#
+# If this file is empty or only contains this header, no email sending has been
+# attempted yet through the system.
+# ================================================================================
+
+EOF
+    echo "✅ SMTP Debug Log (smtp-debug.log) erstellt"
+    echo ""
+fi
+
 echo "✨ Setup abgeschlossen!"
 echo ""
 echo "📋 Nächste Schritte:"
