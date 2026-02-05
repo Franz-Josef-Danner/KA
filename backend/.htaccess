@@ -9,6 +9,11 @@
     Require all denied
 </FilesMatch>
 
+# Deny access to log files (contain sensitive information)
+<FilesMatch "\.log$">
+    Require all denied
+</FilesMatch>
+
 # Allow PHP scripts to run but deny direct access to sensitive files
 <Files "*.json">
     Require all denied
