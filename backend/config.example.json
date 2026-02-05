@@ -1,10 +1,22 @@
 {
-  "email": "office@franzjosef-danner.at",
-  "password": "IHRE_PASSWORT_HIER",
+  "_comment": "WICHTIG: Diese Datei zu 'config.json' kopieren und alle Werte anpassen!",
+  "_instructions": [
+    "1. Kopieren: cp config.example.json config.json",
+    "2. Bearbeiten: Alle Werte unten durch echte SMTP-Zugangsdaten ersetzen",
+    "3. Testen: php php-email-sender.php"
+  ],
+  "email": "ihre-email@ihr-provider.com",
+  "password": "IHR_SMTP_PASSWORT",
   "fromName": "KA System",
   "smtp": {
-    "host": "smtp.franzjosef-danner.at",
+    "host": "smtp.ihr-provider.com",
     "port": 587,
-    "secure": false
+    "secure": false,
+    "_examples": {
+      "Gmail": "smtp.gmail.com (Port 587, benötigt App-Passwort)",
+      "Outlook": "smtp-mail.outlook.com (Port 587)",
+      "World4You": "smtp.world4you.com (Port 587)",
+      "1und1": "smtp.1und1.de (Port 587)"
+    }
   }
 }

@@ -66,6 +66,65 @@ if (!file_exists($configFile)) {
                 'solution' => 'Überprüfen Sie backend/config.json (E-Mail, Passwort, SMTP-Einstellungen)'
             ];
             $status['configured'] = false;
+        } else {
+            // Check for placeholder/example values
+            $hasPlaceholders = false;
+            
+            // Check SMTP host
+            if (isset($config['smtp']['host'])) {
+                $host = strtolower($config['smtp']['host']);
+                if (strpos($host, 'example.com') !== false || 
+                    strpos($host, 'ihr-provider') !== false ||
+                    strpos($host, 'your-provider') !== false ||
+                    $host === 'smtp.example.com') {
+                    $status['issues'][] = [
+                        'type' => 'placeholder_smtp',
+                        'severity' => 'critical',
+                        'message' => 'SMTP host ist noch Beispielwert (' . $config['smtp']['host'] . ')',
+                        'solution' => 'Ersetzen Sie in backend/config.json mit echtem SMTP-Host (z.B. smtp.gmail.com, smtp.franzjosef-danner.at)'
+                    ];
+                    $hasPlaceholders = true;
+                }
+            }
+            
+            // Check email address
+            if (isset($config['email'])) {
+                $email = strtolower($config['email']);
+                if (strpos($email, 'example.com') !== false || 
+                    strpos($email, 'ihre-email') !== false ||
+                    strpos($email, 'your-email') !== false ||
+                    strpos($email, '@ihr-provider') !== false) {
+                    $status['issues'][] = [
+                        'type' => 'placeholder_email',
+                        'severity' => 'critical',
+                        'message' => 'E-Mail-Adresse ist noch Beispielwert (' . $config['email'] . ')',
+                        'solution' => 'Ersetzen Sie in backend/config.json mit echter E-Mail-Adresse'
+                    ];
+                    $hasPlaceholders = true;
+                }
+            }
+            
+            // Check password
+            if (isset($config['password'])) {
+                $password = strtolower($config['password']);
+                if (strpos($password, 'your_password') !== false ||
+                    strpos($password, 'ihr_smtp_passwort') !== false ||
+                    strpos($password, 'ihr passwort') !== false ||
+                    $password === 'password' ||
+                    $password === 'passwort') {
+                    $status['issues'][] = [
+                        'type' => 'placeholder_password',
+                        'severity' => 'critical',
+                        'message' => 'Passwort ist noch Beispielwert',
+                        'solution' => 'Ersetzen Sie in backend/config.json mit echtem SMTP-Passwort'
+                    ];
+                    $hasPlaceholders = true;
+                }
+            }
+            
+            if ($hasPlaceholders) {
+                $status['configured'] = false;
+            }
         }
     } catch (Exception $e) {
         $status['issues'][] = [
