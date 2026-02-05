@@ -263,6 +263,7 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 
 ### E-Mail-Warteschlangen-Verwaltung (NEU)
 - ✅ **Dashboard-Integration**: Warteschlange direkt auf dem Dashboard sichtbar
+- ✅ **Backend-Status**: Zeigt automatisch was konfiguriert werden muss
 - ✅ **Individuelle Kontrolle**: Jede E-Mail einzeln genehmigen oder ablehnen
 - ✅ **Vorschau-Funktion**: Vollständigen E-Mail-Inhalt vor Genehmigung ansehen
 - ✅ **Status-Übersicht**: Zeigt wartende und genehmigte E-Mails
@@ -270,9 +271,13 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ **Auto-Refresh**: Automatische Aktualisierung alle 10 Sekunden
 - ⚠️ **WICHTIG**: Backend muss konfiguriert werden! Siehe [EMAIL_SETUP_ANLEITUNG.md](EMAIL_SETUP_ANLEITUNG.md)
 - 📌 **Verwendung**: Dashboard laden → E-Mails prüfen → Einzeln genehmigen → Versenden
-- 📖 Siehe [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) für Details
-- 🔧 **Problem?** Siehe [EMAIL_PROBLEM_ERKLAERUNG.md](EMAIL_PROBLEM_ERKLAERUNG.md) für Lösungen
-- 🌐 **World4You Hosting?** Siehe [WORLD4YOU_INSTALLATION.md](WORLD4YOU_INSTALLATION.md) für spezifische Anleitung
+
+#### Dokumentation:
+- 📖 [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) - Warteschlangen-Manager Details
+- 🔧 [BACKEND_BEREIT_ABER_KEINE_MAILS.md](BACKEND_BEREIT_ABER_KEINE_MAILS.md) - **Dashboard zeigt "bereit" aber E-Mails kommen nicht an?**
+- 🔧 [EMAIL_PROBLEM_ERKLAERUNG.md](EMAIL_PROBLEM_ERKLAERUNG.md) - Allgemeine Problem-Lösungen
+- 🌐 [WORLD4YOU_INSTALLATION.md](WORLD4YOU_INSTALLATION.md) - Spezifisch für World4You Hosting
+- 📚 [PHP_EMAIL_SYSTEM_DOKUMENTATION.md](PHP_EMAIL_SYSTEM_DOKUMENTATION.md) - Technische Details zum PHP-System
 
 ### PDF-Funktionalität (NEU)
 - ✅ Automatische PDF-Generierung für Aufträge und Rechnungen
