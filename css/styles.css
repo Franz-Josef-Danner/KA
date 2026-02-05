@@ -82,6 +82,38 @@ td.readonly:hover {
   background-color: #ffcccc !important;
   color: #cc0000;
 }
+/* Order status visual indicators */
+.order-completed {
+  background-color: #f0f9ff !important;
+  border-left: 4px solid #10b981 !important;
+}
+.order-completed:hover {
+  background-color: #e0f2fe !important;
+}
+.order-in-progress {
+  background-color: #fffbeb !important;
+  border-left: 4px solid #f59e0b !important;
+}
+.order-in-progress:hover {
+  background-color: #fef3c7 !important;
+}
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status-badge-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+.status-badge-in-progress {
+  background-color: #fef3c7;
+  color: #92400e;
+}
 .actions { white-space: nowrap; }
 .actions button { margin-right: 4px; }
 .actions button:last-child { margin-right: 0; }
