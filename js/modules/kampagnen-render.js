@@ -63,6 +63,16 @@ function renderMailInterface() {
       </div>
       
       <div class="form-group">
+        <label for="email-subject">Betreff:</label>
+        <input 
+          type="text" 
+          id="email-subject" 
+          placeholder="Betreff der E-Mail (z.B. Angebot für {{Firma}})"
+          class="form-input"
+        />
+      </div>
+      
+      <div class="form-group">
         <label for="email-body">Nachricht:</label>
         <textarea 
           id="email-body" 
@@ -80,6 +90,7 @@ Verwenden Sie {{Platzhalter}} für dynamische Inhalte."
         <button id="save-draft-btn" class="btn btn-secondary">Als Entwurf speichern</button>
         <button id="copy-message-btn" class="btn btn-secondary">Nachricht kopieren</button>
         <button id="download-csv-btn" class="btn btn-secondary">Gefilterte Firmen als CSV</button>
+        <button id="bulk-send-btn" class="btn btn-primary">E-Mails versenden</button>
       </div>
     </div>
   `;

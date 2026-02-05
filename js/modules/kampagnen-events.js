@@ -21,6 +21,7 @@ export function initEventHandlers() {
   initDownloadCSVHandler();
   initTextareaChangeHandler();
   initDraftsListHandlers();
+  initBulkSendHandler();
 }
 
 /**
@@ -290,4 +291,124 @@ function loadDraftIntoForm(draftId) {
   ensureCompanyDataInitialized().then(() => {
     renderPreviewList();
   });
+}
+
+/**
+ * Bulk send handler - sends emails to all filtered companies
+ */
+function initBulkSendHandler() {
+  const sendButton = document.getElementById('bulk-send-btn');
+  if (!sendButton) return;
+  
+  sendButton.addEventListener('click', async () => {
+    await ensureCompanyDataInitialized();
+    
+    const subjectInput = document.getElementById('email-subject');
+    const bodyTextarea = document.getElementById('email-body');
+    const targetStatus = getStatusFilter();
+    
+    const subjectTemplate = subjectInput?.value?.trim() || '';
+    const bodyTemplate = bodyTextarea?.value?.trim() || '';
+    
+    if (!bodyTemplate) {
+      showErrorMessage('Bitte geben Sie eine Nachricht ein.');
+      return;
+    }
+    
+    const filteredCompanies = getRows().filter(c => c.Status === targetStatus);
+    
+    if (filteredCompanies.length === 0) {
+      showErrorMessage(`Keine Firmen mit Status "${targetStatus}" gefunden.`);
+      return;
+    }
+    
+    // Validate companies have email addresses
+    const companiesWithEmail = filteredCompanies.filter(c => c['E-mail'] && c['E-mail'].trim());
+    const missingEmailCount = filteredCompanies.length - companiesWithEmail.length;
+    
+    if (companiesWithEmail.length === 0) {
+      showErrorMessage('Keine der gefilterten Firmen hat eine E-Mail-Adresse.');
+      return;
+    }
+    
+    let warningMsg = `${companiesWithEmail.length} E-Mail(s) werden versendet`;
+    if (missingEmailCount > 0) {
+      warningMsg += ` (${missingEmailCount} Firma(en) ohne E-Mail werden übersprungen)`;
+    }
+    warningMsg += '. Fortfahren?';
+    
+    if (!confirm(warningMsg)) {
+      return;
+    }
+    
+    // Disable button and show progress
+    sendButton.disabled = true;
+    sendButton.textContent = 'Wird versendet...';
+    
+    try {
+      const emailPayload = companiesWithEmail.map((companyData, idx) => {
+        const personalizedSubject = applyVariableSubstitution(subjectTemplate, companyData);
+        const personalizedBody = applyVariableSubstitution(bodyTemplate, companyData);
+        
+        return {
+          id: `campaign_${Date.now()}_${idx}`,
+          to: companyData['E-mail'].trim(),
+          recipientEmail: companyData['E-mail'].trim(),
+          subject: personalizedSubject || 'Nachricht von KA System',
+          body: personalizedBody,
+          status: 'approved',
+          companyName: companyData.Firma || 'Unbekannt',
+          timestamp: new Date().toISOString()
+        };
+      });
+      
+      const response = await fetch('./api/send-approved-emails-inline.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approvedEmails: emailPayload })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        const successCount = result.count || result.sent || 0;
+        showSuccessMessage(`✅ ${successCount} E-Mail(s) erfolgreich versendet!`);
+        
+        // Clear form after successful send
+        if (bodyTextarea) bodyTextarea.value = '';
+        if (subjectInput) subjectInput.value = '';
+        renderPreviewList();
+      } else {
+        const errorMsg = result.message || result.error || 'Unbekannter Fehler';
+        showErrorMessage(`❌ Fehler: ${errorMsg}`);
+        
+        if (result.details) {
+          console.error('Send error details:', result.details);
+        }
+      }
+      
+    } catch (err) {
+      console.error('Email send failed:', err);
+      showErrorMessage(`❌ Netzwerkfehler: ${err.message}`);
+    } finally {
+      sendButton.disabled = false;
+      sendButton.textContent = 'E-Mails versenden';
+    }
+  });
+}
+
+/**
+ * Apply variable substitution to template string
+ */
+function applyVariableSubstitution(template, dataRecord) {
+  let output = template;
+  
+  COLUMNS.forEach(columnName => {
+    const variablePattern = `{{${columnName}}}`;
+    const replacementValue = dataRecord[columnName] || '';
+    const escapedPattern = variablePattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    output = output.replace(new RegExp(escapedPattern, 'g'), replacementValue);
+  });
+  
+  return output;
 }
