@@ -346,12 +346,13 @@ function initBulkSendHandler() {
     sendButton.textContent = 'Wird versendet...';
     
     try {
+      const batchTimestamp = Date.now();
       const emailPayload = companiesWithEmail.map((companyData, idx) => {
         const personalizedSubject = applyVariableSubstitution(subjectTemplate, companyData);
         const personalizedBody = applyVariableSubstitution(bodyTemplate, companyData);
         
         return {
-          id: `campaign_${Date.now()}_${idx}`,
+          id: `campaign_${batchTimestamp}_${idx}`,
           to: companyData['E-mail'].trim(),
           recipientEmail: companyData['E-mail'].trim(),
           subject: personalizedSubject || 'Nachricht von KA System',
@@ -406,8 +407,8 @@ function applyVariableSubstitution(template, dataRecord) {
   COLUMNS.forEach(columnName => {
     const variablePattern = `{{${columnName}}}`;
     const replacementValue = dataRecord[columnName] || '';
-    const escapedPattern = variablePattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    output = output.replace(new RegExp(escapedPattern, 'g'), replacementValue);
+    // Use split/join for better performance instead of regex
+    output = output.split(variablePattern).join(replacementValue);
   });
   
   return output;
