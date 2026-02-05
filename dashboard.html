@@ -15,6 +15,12 @@
     <h1>Willkommen im KA System</h1>
     <p class="dashboard-subtitle">Wählen Sie einen Bereich aus dem Menü oben</p>
     
+    <!-- Backend Status Widget -->
+    <div id="backend-status-container" style="margin-bottom: 20px;"></div>
+    
+    <!-- Email Queue Manager -->
+    <div id="email-queue-container" style="margin-bottom: 30px;"></div>
+    
     <!-- Dashboard Statistics -->
     <div id="dashboard-stats" class="dashboard-stats">
       <div class="stat-card invoices">
@@ -102,6 +108,8 @@
     import { requireAuth, requireAdmin } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
+    import { initEmailQueueManager } from './js/modules/email-queue-manager.js';
+    import { renderBackendStatus, cleanupBackendStatus } from './js/modules/backend-status.js';
     
     // Function to format numbers with German locale
     function formatCurrency(amount) {
@@ -721,6 +729,15 @@
         
         // Initialize email error display
         initEmailErrorDisplay();
+        
+        // Initialize backend status display
+        const backendStatusContainer = document.getElementById('backend-status-container');
+        if (backendStatusContainer) {
+          renderBackendStatus(backendStatusContainer);
+        }
+        
+        // Initialize email queue manager
+        initEmailQueueManager('email-queue-container');
         
         // Trigger recurring expense generation (runs in background)
         triggerRecurringExpenses();
