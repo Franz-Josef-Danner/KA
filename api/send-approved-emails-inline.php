@@ -78,6 +78,17 @@ if (!$config || !isset($config['email']) || !isset($config['password']) || !isse
 // Include SMTP sending function (using PHPMailer - PROVEN to work with World4You!)
 require_once $backendDir . '/smtp-phpmailer.php';
 
+// Initialize log file if it doesn't exist (ensures it's always available for debugging)
+$logFile = $backendDir . '/smtp-debug.log';
+if (!file_exists($logFile)) {
+    $header = "# SMTP Debug Log\n";
+    $header .= "# Created: " . date('c') . "\n";
+    $header .= "# This file logs all SMTP operations for debugging\n";
+    $header .= "# ================================================\n\n";
+    @file_put_contents($logFile, $header);
+}
+
+
 // Send emails inline
 $sentCount = 0;
 $failedCount = 0;

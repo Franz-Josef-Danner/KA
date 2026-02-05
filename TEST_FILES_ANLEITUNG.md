@@ -115,14 +115,23 @@ Die E-Mail wurde versendet!
 
 **Wo finde ich es?**
 - Pfad: `backend/smtp-debug.log`
-- Wird automatisch erstellt beim ersten E-Mail-Versand
+- **WICHTIG:** Die Datei wird automatisch beim System-Start erstellt
+- Wenn die Datei fehlt, wird sie beim ersten Zugriff automatisch angelegt
 - Log-Rotation bei > 10MB (alte Logs → smtp-debug.log.old)
+
+**Wenn die Datei nicht existiert:**
+Die Datei wird automatisch erstellt durch das System. Falls sie fehlt:
+1. Stellen Sie sicher, dass das `backend/` Verzeichnis beschreibbar ist
+2. Die Datei wird beim nächsten E-Mail-Versand automatisch angelegt
+3. Sie können die Datei manuell erstellen mit: `touch backend/smtp-debug.log`
+4. Stellen Sie sicher, dass der Webserver Schreibrechte hat
 
 **Was wird geloggt?**
 - Zeitstempel jedes Versands
 - SMTP-Konfiguration
 - Erfolg/Fehler-Status
 - Vollständige Log-Ausgabe
+- SMTP-Antworten und Fehlercodes
 
 **Verwendung:**
 ```bash
@@ -134,7 +143,15 @@ tail -n 50 backend/smtp-debug.log
 
 # Log löschen (bei Bedarf)
 rm backend/smtp-debug.log
+
+# Log-Datei überwachen (Echtzeit)
+tail -f backend/smtp-debug.log
 ```
+
+**Schutz:**
+- Die Log-Datei ist durch `backend/.htaccess` geschützt
+- Kann nicht direkt über den Browser aufgerufen werden
+- Enthält möglicherweise sensible Daten (E-Mail-Adressen)
 
 ## Schritt-für-Schritt Fehlerdiagnose
 
