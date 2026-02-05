@@ -76,41 +76,6 @@ if (!file_exists($configFile)) {
         ];
         $status['configured'] = false;
     }
-    ];
-}
-
-// Check if config.json exists
-if (!file_exists($configFile)) {
-    $status['issues'][] = [
-        'type' => 'config_missing',
-        'severity' => 'critical',
-        'message' => 'Backend-Konfiguration fehlt (config.json)',
-        'solution' => 'Erstellen Sie backend/config.json mit Ihren SMTP-Zugangsdaten'
-    ];
-} else {
-    $status['configured'] = true;
-    
-    // Check if config is valid
-    try {
-        $config = json_decode(file_get_contents($configFile), true);
-        if (!isset($config['email']) || !isset($config['password']) || !isset($config['smtp'])) {
-            $status['issues'][] = [
-                'type' => 'config_invalid',
-                'severity' => 'critical',
-                'message' => 'Backend-Konfiguration ist unvollständig',
-                'solution' => 'Überprüfen Sie backend/config.json (E-Mail, Passwort, SMTP-Einstellungen)'
-            ];
-            $status['configured'] = false;
-        }
-    } catch (Exception $e) {
-        $status['issues'][] = [
-            'type' => 'config_invalid',
-            'severity' => 'critical',
-            'message' => 'Backend-Konfiguration enthält Fehler',
-            'solution' => 'Überprüfen Sie das JSON-Format in backend/config.json'
-        ];
-        $status['configured'] = false;
-    }
 }
 
 // Check queue

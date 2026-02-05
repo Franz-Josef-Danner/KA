@@ -9,7 +9,7 @@
  *   php backend/php-email-sender.php
  * 
  * Cronjob example (every 5 minutes):
- *   */5 * * * * cd /pfad/zu/KA/backend && php php-email-sender.php >> /var/log/ka-email.log 2>&1
+ *   Asterisk-Slash-5 * * * * cd /pfad/zu/KA/backend && php php-email-sender.php >> /var/log/ka-email.log 2>&1
  */
 
 // Configuration file path
