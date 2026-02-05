@@ -267,10 +267,12 @@ Die Anwendung kann direkt im Browser geöffnet werden:
 - ✅ **Individuelle Kontrolle**: Jede E-Mail einzeln genehmigen oder ablehnen
 - ✅ **Vorschau-Funktion**: Vollständigen E-Mail-Inhalt vor Genehmigung ansehen
 - ✅ **Status-Übersicht**: Zeigt wartende und genehmigte E-Mails
-- ✅ **Manueller Versand**: "E-Mail senden" Button für genehmigte E-Mails
+- ✅ **Echter E-Mail-Versand**: Integration mit Backend für tatsächlichen SMTP-Versand
 - ✅ **Auto-Refresh**: Automatische Aktualisierung alle 10 Sekunden
+- ⚠️ **WICHTIG**: Backend muss konfiguriert werden! Siehe [EMAIL_SETUP_ANLEITUNG.md](EMAIL_SETUP_ANLEITUNG.md)
 - 📌 **Verwendung**: Dashboard laden → E-Mails prüfen → Einzeln genehmigen → Versenden
 - 📖 Siehe [EMAIL_QUEUE_MANAGER_DOKUMENTATION.md](EMAIL_QUEUE_MANAGER_DOKUMENTATION.md) für Details
+- 🔧 **Problem?** Siehe [EMAIL_PROBLEM_ERKLAERUNG.md](EMAIL_PROBLEM_ERKLAERUNG.md) für Lösungen
 
 ### Kontaktformular (NEU)
 - ✅ Integriertes Kontaktformular zum Senden von Nachrichten
