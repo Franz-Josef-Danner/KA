@@ -155,23 +155,47 @@ async function updateBackendStatus() {
     </div>
   `;
   
-  // Node.js status
+  // Node.js status (deprecated, replaced by PHP)
+  if (status.nodeJsAvailable !== undefined) {
+    html += `
+      <div style="padding: 10px; background: ${status.nodeJsAvailable ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+        <div style="font-size: 20px; margin-bottom: 5px;">${status.nodeJsAvailable ? '✅' : '❌'}</div>
+        <div style="font-weight: bold; font-size: 14px;">Node.js (veraltet)</div>
+        <div style="font-size: 12px; color: #666;">${status.nodeJsAvailable ? (status.nodeVersion || 'Installiert') : 'Nicht benötigt'}</div>
+      </div>
+    `;
+  }
+  
+  // PHP status
   html += `
-    <div style="padding: 10px; background: ${status.nodeJsAvailable ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
-      <div style="font-size: 20px; margin-bottom: 5px;">${status.nodeJsAvailable ? '✅' : '❌'}</div>
-      <div style="font-weight: bold; font-size: 14px;">Node.js</div>
-      <div style="font-size: 12px; color: #666;">${status.nodeJsAvailable ? (status.nodeVersion || 'Installiert') : 'Nicht verfügbar'}</div>
+    <div style="padding: 10px; background: ${status.phpAvailable ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+      <div style="font-size: 20px; margin-bottom: 5px;">${status.phpAvailable ? '✅' : '❌'}</div>
+      <div style="font-weight: bold; font-size: 14px;">PHP</div>
+      <div style="font-size: 12px; color: #666;">${status.phpAvailable ? (status.phpVersion || 'Verfügbar') : 'Nicht verfügbar'}</div>
     </div>
   `;
   
-  // Nodemailer status
-  html += `
-    <div style="padding: 10px; background: ${status.nodemailerInstalled ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
-      <div style="font-size: 20px; margin-bottom: 5px;">${status.nodemailerInstalled ? '✅' : '❌'}</div>
-      <div style="font-weight: bold; font-size: 14px;">Nodemailer</div>
-      <div style="font-size: 12px; color: #666;">${status.nodemailerInstalled ? 'Installiert' : 'Fehlt'}</div>
-    </div>
-  `;
+  // PHP Email Sender status (only if exists in status)
+  if (status.phpEmailSenderExists !== undefined) {
+    html += `
+      <div style="padding: 10px; background: ${status.phpEmailSenderExists ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+        <div style="font-size: 20px; margin-bottom: 5px;">${status.phpEmailSenderExists ? '✅' : '❌'}</div>
+        <div style="font-weight: bold; font-size: 14px;">E-Mail Sender</div>
+        <div style="font-size: 12px; color: #666;">${status.phpEmailSenderExists ? 'Vorhanden' : 'Fehlt'}</div>
+      </div>
+    `;
+  }
+  
+  // Nodemailer status (deprecated, only show if present)
+  if (status.nodemailerInstalled !== undefined) {
+    html += `
+      <div style="padding: 10px; background: ${status.nodemailerInstalled ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+        <div style="font-size: 20px; margin-bottom: 5px;">${status.nodemailerInstalled ? '✅' : '❌'}</div>
+        <div style="font-weight: bold; font-size: 14px;">Nodemailer (veraltet)</div>
+        <div style="font-size: 12px; color: #666;">${status.nodemailerInstalled ? 'Installiert' : 'Nicht benötigt'}</div>
+      </div>
+    `;
+  }
   
   // Queue status
   html += `

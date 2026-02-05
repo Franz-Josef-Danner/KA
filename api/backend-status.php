@@ -22,12 +22,62 @@ $queueFile = $backendDir . '/email-queue.json';
 
 $status = [
     'configured' => false,
-    'nodeJsAvailable' => false,
-    'nodemailerInstalled' => false,
+    'phpAvailable' => false,
+    'phpEmailSenderExists' => false,
     'ready' => false,
     'queuedEmails' => 0,
     'issues' => []
 ];
+
+// Check if PHP is available (it always should be since we're running PHP)
+$status['phpAvailable'] = true;
+$status['phpVersion'] = PHP_VERSION;
+
+// Check if PHP email sender exists
+$phpEmailSender = $backendDir . '/php-email-sender.php';
+if (file_exists($phpEmailSender)) {
+    $status['phpEmailSenderExists'] = true;
+} else {
+    $status['issues'][] = [
+        'type' => 'php_sender_missing',
+        'severity' => 'critical',
+        'message' => 'PHP E-Mail-Sender fehlt',
+        'solution' => 'Die Datei backend/php-email-sender.php muss existieren'
+    ];
+}
+if (!file_exists($configFile)) {
+    $status['issues'][] = [
+        'type' => 'config_missing',
+        'severity' => 'critical',
+        'message' => 'Backend-Konfiguration fehlt (config.json)',
+        'solution' => 'Erstellen Sie backend/config.json mit Ihren SMTP-Zugangsdaten'
+    ];
+} else {
+    $status['configured'] = true;
+    
+    // Check if config is valid
+    try {
+        $config = json_decode(file_get_contents($configFile), true);
+        if (!isset($config['email']) || !isset($config['password']) || !isset($config['smtp'])) {
+            $status['issues'][] = [
+                'type' => 'config_invalid',
+                'severity' => 'critical',
+                'message' => 'Backend-Konfiguration ist unvollständig',
+                'solution' => 'Überprüfen Sie backend/config.json (E-Mail, Passwort, SMTP-Einstellungen)'
+            ];
+            $status['configured'] = false;
+        }
+    } catch (Exception $e) {
+        $status['issues'][] = [
+            'type' => 'config_invalid',
+            'severity' => 'critical',
+            'message' => 'Backend-Konfiguration enthält Fehler',
+            'solution' => 'Überprüfen Sie das JSON-Format in backend/config.json'
+        ];
+        $status['configured'] = false;
+    }
+    ];
+}
 
 // Check if config.json exists
 if (!file_exists($configFile)) {
@@ -63,33 +113,6 @@ if (!file_exists($configFile)) {
     }
 }
 
-// Check if Node.js is available
-exec('node --version 2>&1', $nodeCheck, $nodeCheckCode);
-if ($nodeCheckCode === 0) {
-    $status['nodeJsAvailable'] = true;
-    $status['nodeVersion'] = trim($nodeCheck[0]);
-} else {
-    $status['issues'][] = [
-        'type' => 'nodejs_missing',
-        'severity' => 'critical',
-        'message' => 'Node.js ist nicht installiert oder nicht verfügbar',
-        'solution' => 'Installieren Sie Node.js von https://nodejs.org/'
-    ];
-}
-
-// Check if nodemailer is installed
-$nodeModulesCheck = $backendDir . '/node_modules/nodemailer';
-if (is_dir($nodeModulesCheck)) {
-    $status['nodemailerInstalled'] = true;
-} else {
-    $status['issues'][] = [
-        'type' => 'nodemailer_missing',
-        'severity' => 'critical',
-        'message' => 'Nodemailer ist nicht installiert',
-        'solution' => 'Führen Sie aus: cd backend && npm install'
-    ];
-}
-
 // Check queue
 if (file_exists($queueFile)) {
     try {
@@ -114,14 +137,14 @@ if (file_exists($queueFile)) {
     }
 }
 
-// Determine if ready
-$status['ready'] = $status['configured'] && $status['nodeJsAvailable'] && $status['nodemailerInstalled'];
+// Determine if ready (PHP + configured)
+$status['ready'] = $status['phpAvailable'] && $status['phpEmailSenderExists'] && $status['configured'];
 
 // Add setup instructions if not ready
 if (!$status['ready']) {
     $status['setupInstructions'] = [
         'title' => 'Backend-Einrichtung erforderlich',
-        'description' => 'Um E-Mails zu versenden, muss das Backend konfiguriert werden:',
+        'description' => 'Um E-Mails zu versenden, muss das Backend konfiguriert werden (PHP-basiert):',
         'steps' => [
             [
                 'number' => 1,
@@ -137,60 +160,23 @@ if (!$status['ready']) {
             ],
             [
                 'number' => 3,
-                'title' => 'Dependencies installieren',
-                'command' => 'cd backend && npm install',
-                'description' => 'Installieren Sie die erforderlichen Node.js-Pakete'
+                'title' => 'Testen',
+                'command' => 'php backend/php-email-sender.php',
+                'description' => 'Testen Sie die E-Mail-Konfiguration'
             ],
             [
                 'number' => 4,
-                'title' => 'Testen',
-                'command' => 'cd backend && node email-sender.js',
-                'description' => 'Testen Sie die Konfiguration'
+                'title' => 'Optional: Cronjob einrichten',
+                'description' => 'Für automatischen Versand richten Sie einen Cronjob ein (alle 5 Minuten)',
+                'command' => '*/5 * * * * cd /pfad/zu/KA/backend && php php-email-sender.php'
             ]
         ],
         'documentation' => [
             'EMAIL_SETUP_ANLEITUNG.md' => 'Vollständige Setup-Anleitung',
             'EMAIL_SCHNELL_REFERENZ.md' => 'Schnell-Referenz',
-            'backend/README.md' => 'Backend-Dokumentation',
             'WORLD4YOU_INSTALLATION.md' => 'World4You Hosting-spezifische Anleitung'
         ]
     ];
-    
-    // Add hosting-specific help
-    if (!$status['nodeJsAvailable']) {
-        $status['hostingHelp'] = [
-            'title' => 'Node.js nicht verfügbar auf Ihrem Server?',
-            'description' => 'Wenn Sie Shared Hosting verwenden (z.B. World4You Webhosting), ist Node.js möglicherweise nicht verfügbar.',
-            'options' => [
-                [
-                    'title' => '📚 World4You Hosting Guide',
-                    'description' => 'Detaillierte Anleitung für World4You-Kunden',
-                    'action' => 'Siehe WORLD4YOU_INSTALLATION.md',
-                    'details' => [
-                        'Prüfen Sie Ihr Hosting-Paket (Shared vs. VPS)',
-                        'Upgrade-Optionen zu VPS für Node.js-Support',
-                        'PHP-basierte Alternative ohne Node.js',
-                        'Externe E-Mail-Services als Alternative'
-                    ]
-                ],
-                [
-                    'title' => '🔄 Upgrade auf VPS',
-                    'description' => 'VPS bietet volle Kontrolle und Node.js-Support',
-                    'action' => 'Kontaktieren Sie Ihren Hosting-Provider',
-                    'providers' => [
-                        'World4You VPS ab €12/Monat',
-                        'Andere VPS-Anbieter mit SSH-Zugang'
-                    ]
-                ],
-                [
-                    'title' => '🐘 PHP-Alternative nutzen',
-                    'description' => 'E-Mails mit PHP versenden (ohne Node.js)',
-                    'action' => 'Siehe WORLD4YOU_INSTALLATION.md → PHP-basierter E-Mail-Versand',
-                    'note' => 'Funktioniert auf Standard Webhosting'
-                ]
-            ]
-        ];
-    }
 }
 
 http_response_code(200);
