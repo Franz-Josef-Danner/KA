@@ -135,27 +135,60 @@ if ($jsonResponse && isset($jsonResponse['success'])) {
     
     if ($sent > 0) {
         http_response_code(200);
-        echo json_encode([
+        $response = [
             'success' => true,
             'message' => "$sent E-Mail" . ($sent > 1 ? 's' : '') . " wurde" . ($sent > 1 ? 'n' : '') . " erfolgreich versendet!",
             'count' => $sent,
             'failed' => $failed
-        ]);
+        ];
+        
+        // Add detailed logs if available
+        if (isset($jsonResponse['detailedLogs'])) {
+            $response['detailedLogs'] = $jsonResponse['detailedLogs'];
+        }
+        
+        echo json_encode($response);
         exit();
     } else if ($failed > 0) {
         http_response_code(500);
-        echo json_encode([
+        $errorDetails = [];
+        
+        if (isset($jsonResponse['errors']) && is_array($jsonResponse['errors'])) {
+            foreach ($jsonResponse['errors'] as $error) {
+                if (is_array($error)) {
+                    $errorDetails[] = "❌ An: " . ($error['to'] ?? 'unknown') . " - " . ($error['error'] ?? 'Unbekannter Fehler');
+                } else {
+                    $errorDetails[] = "❌ " . $error;
+                }
+            }
+        }
+        
+        $response = [
             'error' => 'E-Mails konnten nicht versendet werden',
             'message' => "$failed E-Mail(s) fehlgeschlagen",
             'sent' => 0,
             'failed' => $failed,
-            'details' => isset($jsonResponse['errors']) ? implode(', ', $jsonResponse['errors']) : 'Siehe Logs',
+            'details' => implode("\n", $errorDetails),
             'instructions' => [
-                'Überprüfen Sie die Backend-Konfiguration (backend/config.json)',
-                'Prüfen Sie SMTP-Zugangsdaten',
-                'Führen Sie manuell aus: php backend/php-email-sender.php'
+                '📋 Fehlerbehebung:',
+                '1. Öffnen Sie backend/config.json',
+                '2. Überprüfen Sie:',
+                '   • SMTP Host: Ist der Server richtig?',
+                '   • SMTP Port: 587 (STARTTLS) oder 465 (SSL)?',
+                '   • E-Mail: Ist die Absender-Adresse korrekt?',
+                '   • Passwort: Ist das Passwort richtig?',
+                '   • Bei Gmail: App-Passwort verwenden!',
+                '3. Test: php backend/php-email-sender.php',
+                '4. Siehe Logs unten für Details'
             ]
-        ]);
+        ];
+        
+        // Add detailed logs if available
+        if (isset($jsonResponse['detailedLogs'])) {
+            $response['detailedLogs'] = $jsonResponse['detailedLogs'];
+        }
+        
+        echo json_encode($response);
         exit();
     } else {
         http_response_code(200);

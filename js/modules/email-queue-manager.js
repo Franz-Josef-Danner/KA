@@ -396,6 +396,17 @@ function attachEventListeners(container) {
               message += '\n\nDetails:\n' + result.details;
             }
             
+            // Show detailed logs if available
+            if (result.detailedLogs && result.detailedLogs.length > 0) {
+              message += '\n\n📋 Detaillierte Logs:';
+              result.detailedLogs.forEach(log => {
+                message += `\n\n${log.status === 'success' ? '✅' : '❌'} ${log.to}`;
+                if (log.log && log.log.length > 0) {
+                  message += '\n' + log.log.join('\n');
+                }
+              });
+            }
+            
             alert(message);
             renderEmailQueue(container);
           } else {
@@ -403,11 +414,24 @@ function attachEventListeners(container) {
             let errorMessage = result.message || 'Fehler beim Versenden der E-Mails.';
             
             if (result.instructions && result.instructions.length > 0) {
-              errorMessage += '\n\nAnweisungen:\n' + result.instructions.join('\n');
+              errorMessage += '\n\n' + result.instructions.join('\n');
             }
             
             if (result.details) {
-              errorMessage += '\n\nTechnische Details:\n' + result.details;
+              errorMessage += '\n\n' + result.details;
+            }
+            
+            // Show detailed SMTP logs if available
+            if (result.detailedLogs && result.detailedLogs.length > 0) {
+              errorMessage += '\n\n📋 Detaillierte SMTP Logs:';
+              result.detailedLogs.forEach(log => {
+                errorMessage += `\n\n❌ An: ${log.to}`;
+                errorMessage += `\nBetreff: ${log.subject}`;
+                errorMessage += `\nFehler: ${log.error}`;
+                if (log.log && log.log.length > 0) {
+                  errorMessage += '\n\nSMTP Kommunikation:\n' + log.log.join('\n');
+                }
+              });
             }
             
             alert(errorMessage);

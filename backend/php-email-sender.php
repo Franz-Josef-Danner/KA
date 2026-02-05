@@ -76,7 +76,7 @@ function saveQueue($queueFile, $queue) {
 /**
  * Send email via SMTP using PHP sockets
  */
-function sendEmailSMTP($config, $to, $subject, $body, $from = null) {
+function sendEmailSMTP($config, $to, $subject, $body, $from = null, $verbose = false) {
     $smtp = $config['smtp'];
     $host = $smtp['host'];
     $port = isset($smtp['port']) ? $smtp['port'] : 587;
@@ -85,14 +85,29 @@ function sendEmailSMTP($config, $to, $subject, $body, $from = null) {
     $password = $config['password'];
     $fromName = isset($config['fromName']) ? $config['fromName'] : 'KA System';
     
+    $log = [];
+    
     if (!$from) {
         $from = $username;
+    }
+    
+    if ($verbose) {
+        $log[] = "📧 Attempting to send email:";
+        $log[] = "   From: $from";
+        $log[] = "   To: $to";
+        $log[] = "   Subject: $subject";
+        $log[] = "   SMTP Host: $host:$port";
+        $log[] = "   Secure: " . ($secure ? 'Yes (SSL/TLS)' : ($port == 587 ? 'STARTTLS' : 'No'));
     }
     
     try {
         // Connect to SMTP server
         $errno = 0;
         $errstr = '';
+        
+        if ($verbose) {
+            $log[] = "\n🔌 Connecting to SMTP server...";
+        }
         
         if ($secure && $port == 465) {
             // SSL connection
@@ -103,53 +118,107 @@ function sendEmailSMTP($config, $to, $subject, $body, $from = null) {
         }
         
         if (!$socket) {
+            $error = "Could not connect to SMTP server $host:$port - $errstr ($errno)";
+            if ($verbose) {
+                $log[] = "❌ Connection failed: $error";
+            }
             return [
                 'success' => false,
-                'error' => "Could not connect to SMTP server: $errstr ($errno)"
+                'error' => $error,
+                'log' => $log,
+                'details' => [
+                    'host' => $host,
+                    'port' => $port,
+                    'errno' => $errno,
+                    'errstr' => $errstr
+                ]
             ];
+        }
+        
+        if ($verbose) {
+            $log[] = "✅ Connected to $host:$port";
         }
         
         // Read greeting
         $response = fgets($socket, 515);
+        if ($verbose) {
+            $log[] = "Server: " . trim($response);
+        }
         if (substr($response, 0, 3) != '220') {
             fclose($socket);
-            return ['success' => false, 'error' => 'SMTP greeting failed: ' . $response];
+            return ['success' => false, 'error' => 'SMTP greeting failed: ' . $response, 'log' => $log];
         }
         
         // Send EHLO
-        fputs($socket, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
+        $serverName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost';
+        fputs($socket, "EHLO $serverName\r\n");
         $response = fgets($socket, 515);
+        if ($verbose) {
+            $log[] = "Client: EHLO $serverName";
+            $log[] = "Server: " . trim($response);
+        }
         
         // Read all EHLO responses
         while (substr($response, 3, 1) == '-') {
             $response = fgets($socket, 515);
+            if ($verbose) {
+                $log[] = "Server: " . trim($response);
+            }
         }
         
         // STARTTLS if needed
         if (!$secure && $port == 587) {
+            if ($verbose) {
+                $log[] = "\n🔒 Starting TLS encryption...";
+                $log[] = "Client: STARTTLS";
+            }
             fputs($socket, "STARTTLS\r\n");
             $response = fgets($socket, 515);
+            if ($verbose) {
+                $log[] = "Server: " . trim($response);
+            }
             if (substr($response, 0, 3) != '220') {
                 fclose($socket);
-                return ['success' => false, 'error' => 'STARTTLS failed: ' . $response];
+                return ['success' => false, 'error' => 'STARTTLS failed: ' . $response, 'log' => $log];
             }
             
-            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                fclose($socket);
+                return ['success' => false, 'error' => 'Failed to enable TLS encryption', 'log' => $log];
+            }
+            
+            if ($verbose) {
+                $log[] = "✅ TLS encryption enabled";
+            }
             
             // Send EHLO again after STARTTLS
-            fputs($socket, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
+            fputs($socket, "EHLO $serverName\r\n");
             $response = fgets($socket, 515);
+            if ($verbose) {
+                $log[] = "Client: EHLO $serverName";
+                $log[] = "Server: " . trim($response);
+            }
             while (substr($response, 3, 1) == '-') {
                 $response = fgets($socket, 515);
+                if ($verbose) {
+                    $log[] = "Server: " . trim($response);
+                }
             }
         }
         
         // AUTH LOGIN
+        if ($verbose) {
+            $log[] = "\n🔑 Authenticating...";
+            $log[] = "Client: AUTH LOGIN";
+        }
         fputs($socket, "AUTH LOGIN\r\n");
         $response = fgets($socket, 515);
+        if ($verbose) {
+            $log[] = "Server: " . trim($response);
+        }
         if (substr($response, 0, 3) != '334') {
             fclose($socket);
-            return ['success' => false, 'error' => 'AUTH LOGIN failed: ' . $response];
+            return ['success' => false, 'error' => 'AUTH LOGIN not supported or failed: ' . $response, 'log' => $log];
         }
         
         // Send username
@@ -157,7 +226,11 @@ function sendEmailSMTP($config, $to, $subject, $body, $from = null) {
         $response = fgets($socket, 515);
         if (substr($response, 0, 3) != '334') {
             fclose($socket);
-            return ['success' => false, 'error' => 'Username authentication failed: ' . $response];
+            $error = 'Username authentication failed: ' . $response . ' (Check username: ' . $username . ')';
+            if ($verbose) {
+                $log[] = "❌ " . $error;
+            }
+            return ['success' => false, 'error' => $error, 'log' => $log];
         }
         
         // Send password
@@ -165,31 +238,62 @@ function sendEmailSMTP($config, $to, $subject, $body, $from = null) {
         $response = fgets($socket, 515);
         if (substr($response, 0, 3) != '235') {
             fclose($socket);
-            return ['success' => false, 'error' => 'Password authentication failed. Check credentials.'];
+            $error = 'Password authentication failed: ' . $response . ' (Check password or use app-specific password for Gmail)';
+            if ($verbose) {
+                $log[] = "❌ " . $error;
+            }
+            return ['success' => false, 'error' => $error, 'log' => $log];
+        }
+        
+        if ($verbose) {
+            $log[] = "✅ Authentication successful";
         }
         
         // MAIL FROM
+        if ($verbose) {
+            $log[] = "\n📤 Sending email...";
+            $log[] = "Client: MAIL FROM: <$from>";
+        }
         fputs($socket, "MAIL FROM: <$from>\r\n");
         $response = fgets($socket, 515);
+        if ($verbose) {
+            $log[] = "Server: " . trim($response);
+        }
         if (substr($response, 0, 3) != '250') {
             fclose($socket);
-            return ['success' => false, 'error' => 'MAIL FROM failed: ' . $response];
+            return ['success' => false, 'error' => 'MAIL FROM failed: ' . $response, 'log' => $log];
         }
         
         // RCPT TO
+        if ($verbose) {
+            $log[] = "Client: RCPT TO: <$to>";
+        }
         fputs($socket, "RCPT TO: <$to>\r\n");
         $response = fgets($socket, 515);
+        if ($verbose) {
+            $log[] = "Server: " . trim($response);
+        }
         if (substr($response, 0, 3) != '250') {
             fclose($socket);
-            return ['success' => false, 'error' => 'RCPT TO failed: ' . $response];
+            $error = 'RCPT TO failed: ' . $response . ' (Invalid recipient: ' . $to . ')';
+            if ($verbose) {
+                $log[] = "❌ " . $error;
+            }
+            return ['success' => false, 'error' => $error, 'log' => $log];
         }
         
         // DATA
+        if ($verbose) {
+            $log[] = "Client: DATA";
+        }
         fputs($socket, "DATA\r\n");
         $response = fgets($socket, 515);
+        if ($verbose) {
+            $log[] = "Server: " . trim($response);
+        }
         if (substr($response, 0, 3) != '354') {
             fclose($socket);
-            return ['success' => false, 'error' => 'DATA command failed: ' . $response];
+            return ['success' => false, 'error' => 'DATA command failed: ' . $response, 'log' => $log];
         }
         
         // Build email headers and body
@@ -204,21 +308,45 @@ function sendEmailSMTP($config, $to, $subject, $body, $from = null) {
         // Send headers and body
         fputs($socket, $headers . "\r\n" . $body . "\r\n.\r\n");
         $response = fgets($socket, 515);
+        if ($verbose) {
+            $log[] = "Client: [Email content]";
+            $log[] = "Server: " . trim($response);
+        }
         if (substr($response, 0, 3) != '250') {
             fclose($socket);
-            return ['success' => false, 'error' => 'Message not accepted: ' . $response];
+            $error = 'Message not accepted: ' . $response;
+            if ($verbose) {
+                $log[] = "❌ " . $error;
+            }
+            return ['success' => false, 'error' => $error, 'log' => $log];
         }
         
         // QUIT
         fputs($socket, "QUIT\r\n");
         fclose($socket);
         
-        return ['success' => true];
+        if ($verbose) {
+            $log[] = "\n✅ Email sent successfully!";
+            $log[] = "   To: $to";
+            $log[] = "   Subject: $subject";
+        }
+        
+        return [
+            'success' => true,
+            'log' => $log,
+            'recipient' => $to,
+            'subject' => $subject
+        ];
         
     } catch (Exception $e) {
+        $error = 'Exception: ' . $e->getMessage();
+        if ($verbose) {
+            $log[] = "❌ " . $error;
+        }
         return [
             'success' => false,
-            'error' => 'Exception: ' . $e->getMessage()
+            'error' => $error,
+            'log' => $log
         ];
     }
 }
@@ -336,6 +464,10 @@ if (empty($queue)) {
 $sent = 0;
 $failed = 0;
 $errors = [];
+$detailedLogs = [];
+
+// Enable verbose mode when not in CLI (for API calls)
+$verbose = (php_sapi_name() !== 'cli');
 
 foreach ($queue as $key => &$email) {
     // Skip emails that are not pending or approved
@@ -353,26 +485,58 @@ foreach ($queue as $key => &$email) {
     $subject = isset($email['subject']) ? $email['subject'] : $template['subject'];
     $body = isset($email['body']) ? $email['body'] : $template['body'];
     
-    // Send email
-    $result = sendEmailSMTP($config, $to, $subject, $body);
+    // Send email with verbose logging
+    $result = sendEmailSMTP($config, $to, $subject, $body, null, $verbose);
     
     if ($result['success']) {
         $email['status'] = 'sent';
         $email['sentAt'] = date('c');
+        $email['recipient'] = $to;
         $sent++;
         
         if (php_sapi_name() === 'cli') {
             echo "✅ Sent to: $to - $subject\n";
+        }
+        
+        // Store detailed log for API response
+        if (isset($result['log'])) {
+            $detailedLogs[] = [
+                'status' => 'success',
+                'to' => $to,
+                'subject' => $subject,
+                'log' => $result['log']
+            ];
         }
     } else {
         $email['status'] = 'failed';
         $email['error'] = $result['error'];
         $email['failedAt'] = date('c');
         $failed++;
-        $errors[] = $result['error'];
+        $errors[] = [
+            'to' => $to,
+            'subject' => $subject,
+            'error' => $result['error']
+        ];
         
         if (php_sapi_name() === 'cli') {
             echo "❌ Failed to: $to - " . $result['error'] . "\n";
+            if (isset($result['log']) && is_array($result['log'])) {
+                echo "   Debug log:\n";
+                foreach ($result['log'] as $logLine) {
+                    echo "   " . $logLine . "\n";
+                }
+            }
+        }
+        
+        // Store detailed log for API response
+        if (isset($result['log'])) {
+            $detailedLogs[] = [
+                'status' => 'failed',
+                'to' => $to,
+                'subject' => $subject,
+                'error' => $result['error'],
+                'log' => $result['log']
+            ];
         }
     }
 }
@@ -388,7 +552,7 @@ if (php_sapi_name() === 'cli') {
     echo "✨ Done!\n";
 } else {
     $response = [
-        'success' => true,
+        'success' => ($sent > 0 || $failed == 0),
         'sent' => $sent,
         'failed' => $failed,
         'total' => $sent + $failed
@@ -396,6 +560,12 @@ if (php_sapi_name() === 'cli') {
     
     if ($failed > 0) {
         $response['errors'] = $errors;
+        $response['detailedLogs'] = $detailedLogs;
+    }
+    
+    // If all failed, this is an error
+    if ($sent == 0 && $failed > 0) {
+        $response['success'] = false;
     }
     
     echo json_encode($response);
