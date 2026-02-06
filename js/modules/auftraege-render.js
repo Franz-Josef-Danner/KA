@@ -58,6 +58,16 @@ export function render() {
 
     const tr = document.createElement("tr");
     
+    // Add status-based CSS class for visual indication
+    const status = row.Status || "in Arbeit";
+    const isCompleted = status.toLowerCase() === "abgeschlossen";
+    
+    if (isCompleted) {
+      tr.classList.add("order-completed");
+    } else {
+      tr.classList.add("order-in-progress");
+    }
+    
     // Add double-click handler to open edit modal
     tr.addEventListener("dblclick", () => {
       // Dispatch custom event to avoid circular dependency
@@ -77,8 +87,18 @@ export function render() {
       td.dataset.row = String(idx);
       td.dataset.col = col;
 
-      // Special handling for Artikel column to display items count
-      if (col === "Artikel") {
+      // Special handling for Auftrags_ID column to include status badge
+      if (col === "Auftrags_ID") {
+        const statusBadgeClass = isCompleted ? "status-badge-completed" : "status-badge-in-progress";
+        const statusText = isCompleted ? "Abgeschlossen" : "In Arbeit";
+        td.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>
+            <span class="status-badge ${statusBadgeClass}">${statusText}</span>
+          </div>
+        `;
+      } else if (col === "Artikel") {
+        // Special handling for Artikel column to display items count
         const itemCount = row.items?.length || 0;
         if (itemCount === 0) {
           td.innerHTML = '<span style="color: #999;">Keine Artikel</span>';
