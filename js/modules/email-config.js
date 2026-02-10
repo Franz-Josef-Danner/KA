@@ -6,7 +6,15 @@
 
 const EMAIL_CONFIG_KEY = 'ka_email_config';
 
-// Get email configuration from localStorage
+// API endpoints
+const API_BASE_URL = './api';
+const SAVE_EMAIL_CONFIG_ENDPOINT = `${API_BASE_URL}/save-email-config.php`;
+const LOAD_EMAIL_CONFIG_ENDPOINT = `${API_BASE_URL}/load-email-config.php`;
+
+// Flag to track if we're using API storage
+let usingApiStorage = true;
+
+// Get email configuration from localStorage (synchronous fallback)
 export function getEmailConfig() {
   try {
     const raw = localStorage.getItem(EMAIL_CONFIG_KEY);
@@ -43,6 +51,103 @@ export function saveEmailConfig(config) {
     console.error('Failed to save email configuration:', error);
     return false;
   }
+}
+
+/**
+ * Load email configuration from server via API
+ */
+async function loadEmailConfigFromServer() {
+  try {
+    const response = await fetch(LOAD_EMAIL_CONFIG_ENDPOINT, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Failed to load email config from server:', error);
+    return null;
+  }
+}
+
+/**
+ * Save email configuration to server via API
+ */
+async function saveEmailConfigToServer(config) {
+  try {
+    const response = await fetch(SAVE_EMAIL_CONFIG_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to save email config to server:', error);
+    return false;
+  }
+}
+
+/**
+ * Load email configuration from server or localStorage (async version)
+ * Tries server first, falls back to localStorage if server fails
+ */
+export async function loadEmailConfigAsync() {
+  // Try to load from server first
+  const serverData = await loadEmailConfigFromServer();
+  
+  if (serverData) {
+    usingApiStorage = true;
+    // Save to localStorage as cache
+    saveEmailConfig(serverData);
+    return serverData;
+  }
+  
+  // Fallback to localStorage
+  usingApiStorage = false;
+  console.log('Falling back to localStorage for email config');
+  return getEmailConfig();
+}
+
+/**
+ * Save email configuration to server or localStorage (async version)
+ * Tries server first, falls back to localStorage if server fails
+ */
+export async function saveEmailConfigAsync(config) {
+  // Always save to localStorage first as backup
+  const localSaved = saveEmailConfig(config);
+  
+  // Try to save to server
+  const serverSaved = await saveEmailConfigToServer(config);
+  
+  if (serverSaved) {
+    usingApiStorage = true;
+    return true;
+  }
+  
+  // If server save fails, localStorage is still updated
+  usingApiStorage = false;
+  console.warn('Server save failed for email config, using localStorage only');
+  return localSaved;
 }
 
 // Validate email configuration

@@ -5,7 +5,15 @@
 const SETTINGS_KEY = 'ka_company_settings';
 const LAYOUT_KEY = 'ka_pdf_layout_template';
 
-// Get company settings from localStorage
+// API endpoints
+const API_BASE_URL = './api';
+const SAVE_SETTINGS_ENDPOINT = `${API_BASE_URL}/save-settings.php`;
+const LOAD_SETTINGS_ENDPOINT = `${API_BASE_URL}/load-settings.php`;
+
+// Flag to track if we're using API storage
+let usingApiStorage = true;
+
+// Get company settings from localStorage (synchronous fallback)
 export function getCompanySettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
@@ -46,6 +54,103 @@ export function saveCompanySettings(settings) {
     console.error('Failed to save company settings:', error);
     return false;
   }
+}
+
+/**
+ * Load company settings from server via API
+ */
+async function loadSettingsFromServer() {
+  try {
+    const response = await fetch(LOAD_SETTINGS_ENDPOINT, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Failed to load settings from server:', error);
+    return null;
+  }
+}
+
+/**
+ * Save company settings to server via API
+ */
+async function saveSettingsToServer(settings) {
+  try {
+    const response = await fetch(SAVE_SETTINGS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to save settings to server:', error);
+    return false;
+  }
+}
+
+/**
+ * Load settings from server or localStorage (async version)
+ * Tries server first, falls back to localStorage if server fails
+ */
+export async function loadCompanySettingsAsync() {
+  // Try to load from server first
+  const serverData = await loadSettingsFromServer();
+  
+  if (serverData) {
+    usingApiStorage = true;
+    // Save to localStorage as cache
+    saveCompanySettings(serverData);
+    return serverData;
+  }
+  
+  // Fallback to localStorage
+  usingApiStorage = false;
+  console.log('Falling back to localStorage for company settings');
+  return getCompanySettings();
+}
+
+/**
+ * Save settings to server or localStorage (async version)
+ * Tries server first, falls back to localStorage if server fails
+ */
+export async function saveCompanySettingsAsync(settings) {
+  // Always save to localStorage first as backup
+  const localSaved = saveCompanySettings(settings);
+  
+  // Try to save to server
+  const serverSaved = await saveSettingsToServer(settings);
+  
+  if (serverSaved) {
+    usingApiStorage = true;
+    return true;
+  }
+  
+  // If server save fails, localStorage is still updated
+  usingApiStorage = false;
+  console.warn('Server save failed, using localStorage only');
+  return localSaved;
 }
 
 // Get PDF layout template from localStorage
