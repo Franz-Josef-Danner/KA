@@ -225,13 +225,17 @@
     import { initNavigation } from './js/modules/navigation.js';
     import { 
       getCompanySettings, 
-      saveCompanySettings, 
+      saveCompanySettings,
+      loadCompanySettingsAsync,
+      saveCompanySettingsAsync,
       validateSettings,
       fileToBase64 
     } from './js/modules/settings.js';
     import {
       getEmailConfig,
       saveEmailConfig,
+      loadEmailConfigAsync,
+      saveEmailConfigAsync,
       validateEmailConfig
     } from './js/modules/email-config.js';
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
@@ -279,7 +283,8 @@
       const emailEnabled = document.getElementById('emailEnabled');
       const emailConfigSection = document.getElementById('emailConfigSection');
       
-      // Load current settings
+      // Load current settings (async)
+      let isLoading = false;
       loadSettings();
       
       // Handle email enabled checkbox
@@ -320,57 +325,76 @@
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        hideMessages();
-        
-        // Get form data
-        const settings = {
-          companyName: document.getElementById('companyName').value.trim(),
-          address: document.getElementById('address').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          logo: logoImage.src || '',
-          footerTextOrder: document.getElementById('footerTextOrder').value.trim(),
-          footerTextInvoice: document.getElementById('footerTextInvoice').value.trim(),
-          bankName: document.getElementById('bankName').value.trim(),
-          accountHolder: document.getElementById('accountHolder').value.trim(),
-          iban: document.getElementById('iban').value.trim(),
-          bic: document.getElementById('bic').value.trim()
-        };
-        
-        // Validate settings
-        const errors = validateSettings(settings);
-        
-        // Get email configuration
-        const emailConfig = {
-          enabled: emailEnabled.checked,
-          testEmail: document.getElementById('testEmail').value.trim(),
-          notificationSettings: {
-            newCustomer: document.getElementById('notifyNewCustomer').checked,
-            newOrder: document.getElementById('notifyNewOrder').checked,
-            newInvoice: document.getElementById('notifyNewInvoice').checked,
-            paymentReceived: document.getElementById('notifyPaymentReceived').checked
-          }
-        };
-        
-        // Validate email configuration if enabled
-        if (emailConfig.enabled) {
-          const emailErrors = validateEmailConfig(emailConfig);
-          errors.push(...emailErrors);
-        }
-        
-        if (errors.length > 0) {
-          showError(errors.join(' '));
+        // Prevent double submission
+        if (isLoading) {
           return;
         }
         
-        // Save settings and email config
-        const settingsSaved = saveCompanySettings(settings);
-        const emailConfigSaved = saveEmailConfig(emailConfig);
+        isLoading = true;
+        hideMessages();
         
-        if (settingsSaved && emailConfigSaved) {
-          showSuccess(MESSAGES.saveSuccess);
-        } else {
-          showError(MESSAGES.saveError);
+        // Disable submit button during save
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Speichern...';
+        
+        try {
+          // Get form data
+          const settings = {
+            companyName: document.getElementById('companyName').value.trim(),
+            address: document.getElementById('address').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
+            logo: logoImage.src || '',
+            footerTextOrder: document.getElementById('footerTextOrder').value.trim(),
+            footerTextInvoice: document.getElementById('footerTextInvoice').value.trim(),
+            bankName: document.getElementById('bankName').value.trim(),
+            accountHolder: document.getElementById('accountHolder').value.trim(),
+            iban: document.getElementById('iban').value.trim(),
+            bic: document.getElementById('bic').value.trim()
+          };
+          
+          // Validate settings
+          const errors = validateSettings(settings);
+          
+          // Get email configuration
+          const emailConfig = {
+            enabled: emailEnabled.checked,
+            testEmail: document.getElementById('testEmail').value.trim(),
+            notificationSettings: {
+              newCustomer: document.getElementById('notifyNewCustomer').checked,
+              newOrder: document.getElementById('notifyNewOrder').checked,
+              newInvoice: document.getElementById('notifyNewInvoice').checked,
+              paymentReceived: document.getElementById('notifyPaymentReceived').checked
+            }
+          };
+          
+          // Validate email configuration if enabled
+          if (emailConfig.enabled) {
+            const emailErrors = validateEmailConfig(emailConfig);
+            errors.push(...emailErrors);
+          }
+          
+          if (errors.length > 0) {
+            showError(errors.join(' '));
+            return;
+          }
+          
+          // Save settings and email config to server
+          const settingsSaved = await saveCompanySettingsAsync(settings);
+          const emailConfigSaved = await saveEmailConfigAsync(emailConfig);
+          
+          if (settingsSaved && emailConfigSaved) {
+            showSuccess(MESSAGES.saveSuccess);
+          } else {
+            showError(MESSAGES.saveError);
+          }
+        } finally {
+          // Re-enable submit button
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+          isLoading = false;
         }
       });
       
@@ -382,37 +406,50 @@
         }
       });
       
-      function loadSettings() {
-        const settings = getCompanySettings();
+      async function loadSettings() {
+        // Show loading state
+        const form = document.getElementById('settingsForm');
+        const submitBtn = form.querySelector('button[type="submit"]');
         
-        document.getElementById('companyName').value = settings.companyName || '';
-        document.getElementById('address').value = settings.address || '';
-        document.getElementById('email').value = settings.email || '';
-        document.getElementById('phone').value = settings.phone || '';
-        document.getElementById('footerTextOrder').value = settings.footerTextOrder || '';
-        document.getElementById('footerTextInvoice').value = settings.footerTextInvoice || '';
-        document.getElementById('bankName').value = settings.bankName || '';
-        document.getElementById('accountHolder').value = settings.accountHolder || '';
-        document.getElementById('iban').value = settings.iban || '';
-        document.getElementById('bic').value = settings.bic || '';
+        isLoading = true;
+        submitBtn.disabled = true;
         
-        if (settings.logo) {
-          logoImage.src = settings.logo;
-          logoPreview.style.display = 'block';
-        } else {
-          logoImage.src = '';
-          logoPreview.style.display = 'none';
+        try {
+          // Load settings from server (with localStorage fallback)
+          const settings = await loadCompanySettingsAsync();
+          
+          document.getElementById('companyName').value = settings.companyName || '';
+          document.getElementById('address').value = settings.address || '';
+          document.getElementById('email').value = settings.email || '';
+          document.getElementById('phone').value = settings.phone || '';
+          document.getElementById('footerTextOrder').value = settings.footerTextOrder || '';
+          document.getElementById('footerTextInvoice').value = settings.footerTextInvoice || '';
+          document.getElementById('bankName').value = settings.bankName || '';
+          document.getElementById('accountHolder').value = settings.accountHolder || '';
+          document.getElementById('iban').value = settings.iban || '';
+          document.getElementById('bic').value = settings.bic || '';
+          
+          if (settings.logo) {
+            logoImage.src = settings.logo;
+            logoPreview.style.display = 'block';
+          } else {
+            logoImage.src = '';
+            logoPreview.style.display = 'none';
+          }
+          
+          // Load email configuration from server (with localStorage fallback)
+          const emailConfig = await loadEmailConfigAsync();
+          emailEnabled.checked = emailConfig.enabled;
+          emailConfigSection.style.display = emailConfig.enabled ? 'block' : 'none';
+          document.getElementById('testEmail').value = emailConfig.testEmail || '';
+          document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
+          document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;
+          document.getElementById('notifyNewInvoice').checked = emailConfig.notificationSettings?.newInvoice !== false;
+          document.getElementById('notifyPaymentReceived').checked = emailConfig.notificationSettings?.paymentReceived !== false;
+        } finally {
+          isLoading = false;
+          submitBtn.disabled = false;
         }
-        
-        // Load email configuration
-        const emailConfig = getEmailConfig();
-        emailEnabled.checked = emailConfig.enabled;
-        emailConfigSection.style.display = emailConfig.enabled ? 'block' : 'none';
-        document.getElementById('testEmail').value = emailConfig.testEmail || '';
-        document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
-        document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;
-        document.getElementById('notifyNewInvoice').checked = emailConfig.notificationSettings?.newInvoice !== false;
-        document.getElementById('notifyPaymentReceived').checked = emailConfig.notificationSettings?.paymentReceived !== false;
       }
       
       function showError(message) {
