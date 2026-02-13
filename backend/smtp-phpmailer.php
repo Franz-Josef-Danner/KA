@@ -23,10 +23,11 @@ use PHPMailer\PHPMailer\Exception;
  * @param string $subject Email subject
  * @param string $body Email body (plain text)
  * @param string|null $from From address (defaults to config email)
+ * @param array|null $attachments Array of attachments with 'filename', 'content', and 'encoding' keys
  * @param bool $verbose Enable verbose logging
  * @return array Result with 'success', 'error', and 'log' keys
  */
-function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbose = false) {
+function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $attachments = null, $verbose = false) {
     $smtp = $config['smtp'];
     $host = $smtp['host'];
     $port = isset($smtp['port']) ? $smtp['port'] : 587;
@@ -48,6 +49,9 @@ function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbos
         $log[] = "   Subject: $subject";
         $log[] = "   SMTP Host: $host:$port";
         $log[] = "   Secure: " . ($secure ? 'SSL/TLS' : 'STARTTLS');
+        if ($attachments && is_array($attachments)) {
+            $log[] = "   Attachments: " . count($attachments);
+        }
         $log[] = "";
     }
     
@@ -86,6 +90,34 @@ function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbos
         $mail->CharSet = 'UTF-8';
         $mail->Subject = $subject;
         $mail->Body    = $body;
+        
+        // Add attachments if provided
+        if ($attachments && is_array($attachments)) {
+            foreach ($attachments as $attachment) {
+                if (isset($attachment['filename']) && isset($attachment['content']) && isset($attachment['encoding'])) {
+                    if ($attachment['encoding'] === 'base64') {
+                        // Decode base64 content
+                        $decodedContent = base64_decode($attachment['content']);
+                        if ($decodedContent !== false) {
+                            $mail->addStringAttachment($decodedContent, $attachment['filename']);
+                            if ($verbose) {
+                                $log[] = "   Added attachment: " . $attachment['filename'];
+                            }
+                        } else {
+                            if ($verbose) {
+                                $log[] = "   Warning: Failed to decode base64 content for " . $attachment['filename'];
+                            }
+                        }
+                    } else {
+                        // Assume raw content
+                        $mail->addStringAttachment($attachment['content'], $attachment['filename']);
+                        if ($verbose) {
+                            $log[] = "   Added attachment: " . $attachment['filename'];
+                        }
+                    }
+                }
+            }
+        }
         
         // Send
         $log[] = "";

@@ -186,14 +186,20 @@ export function queueEmailNotification(type, data) {
   }
   
   // Use helper function to get the effective recipient email
-  const recipientEmail = getRecipientEmail();
+  // Priority: customer email > test email > backend default
+  let recipientEmail = getRecipientEmail();
+  
+  // If customer email is provided in data, use it instead (unless test mode is active)
+  if (data.customerEmail && !config.testEmail) {
+    recipientEmail = data.customerEmail;
+  }
   
   // Generate unique ID for notification
   const id = `${type}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   
   // Store notification in queue for future processing
   const queue = getEmailQueue();
-  queue.push({
+  const queueItem = {
     id,
     type,
     data,
@@ -201,11 +207,19 @@ export function queueEmailNotification(type, data) {
     timestamp: new Date().toISOString(),
     status: 'pending',
     retryCount: 0
-  });
+  };
+  
+  // Add attachments if present in data
+  if (data.attachments && Array.isArray(data.attachments)) {
+    queueItem.attachments = data.attachments;
+  }
+  
+  queue.push(queueItem);
   saveEmailQueue(queue);
   
   console.log(`Email notification queued: ${type}`, data);
   console.log(`Recipient: ${recipientEmail || 'Backend default'}${config.testEmail ? ' (Test Mode)' : ''}`);
+  console.log(`Attachments: ${queueItem.attachments ? queueItem.attachments.length : 0}`);
   return id; // Return ID for tracking
 }
 

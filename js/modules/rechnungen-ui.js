@@ -720,7 +720,7 @@ function closeModal() {
   currentEditingRowIndex = null;
 }
 
-function saveInvoice() {
+async function saveInvoice() {
   // Validate form before saving
   if (!validateForm()) {
     return false;
@@ -744,19 +744,28 @@ function saveInvoice() {
   
   // Send email notification for new invoices
   if (isNewInvoice) {
-    const invoiceItems = formData.Artikel || [];
+    const invoiceItems = formData.items || [];
     const total = invoiceItems.reduce((sum, item) => {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    const notificationResult = notifyNewInvoice({
+    const notificationResult = await notifyNewInvoice({
+      Rechnungs_ID: formData.Rechnungs_ID || 'N/A',
       invoiceId: formData.Rechnungs_ID || 'N/A',
+      Rechnungsdatum: formData.Rechnungsdatum || new Date().toISOString().split('T')[0],
+      Firma: formData.Firma || 'Unbekannt',
       customerName: formData.Firma || 'Unbekannt',
+      Firmen_Email: formData.Firmen_Email || '',
+      customerEmail: formData.Firmen_Email || '',
+      Ansprechpartner: formData.Ansprechpartner || '',
       contactPerson: formData.Ansprechpartner || '',
-      total: total,
-      items: invoiceItems,
+      Projekt: formData.Projekt || '',
       project: formData.Projekt || '',
+      Auftrags_ID: formData.Auftrags_ID || '',
       orderId: formData.Auftrags_ID || '',
+      items: invoiceItems,
+      total: total,
+      Rabatt: formData.Rabatt || '',
       dueDate: '' // Could calculate this if needed
     });
     
@@ -794,8 +803,8 @@ function initModalHandlers() {
   
   // Save button
   if (modalSave) {
-    modalSave.addEventListener("click", () => {
-      saveInvoice();
+    modalSave.addEventListener("click", async () => {
+      await saveInvoice();
     });
   }
   
@@ -811,10 +820,10 @@ function initModalHandlers() {
   // Handle Enter key in form inputs (except textarea)
   const form = document.getElementById("invoiceForm");
   if (form) {
-    form.addEventListener("keydown", (e) => {
+    form.addEventListener("keydown", async (e) => {
       if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
         e.preventDefault();
-        saveInvoice();
+        await saveInvoice();
       }
     });
   }

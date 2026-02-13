@@ -105,8 +105,11 @@ foreach ($approvedEmails as $email) {
         $to = $config['email']; // Use configured email as default recipient
     }
     
+    // Extract attachments if present
+    $attachments = isset($email['attachments']) ? $email['attachments'] : null;
+    
     // Send email via SMTP using PHPMailer (verbose mode for debugging)
-    $result = sendEmailPHPMailer($config, $to, $subject, $body, null, true);
+    $result = sendEmailPHPMailer($config, $to, $subject, $body, null, $attachments, true);
     
     // Log to file for persistence
     writeSmtpLog($result);

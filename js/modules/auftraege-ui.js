@@ -798,19 +798,28 @@ async function saveOrder() {
   
   // Send email notification for new orders
   if (isNewOrder) {
-    const orderItems = formData.Artikel || [];
+    const orderItems = formData.items || [];
     const total = orderItems.reduce((sum, item) => {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    const notificationResult = notifyNewOrder({
+    const notificationResult = await notifyNewOrder({
+      Auftrags_ID: formData.Auftrags_ID || 'N/A',
       orderId: formData.Auftrags_ID || 'N/A',
+      Auftragsdatum: formData.Auftragsdatum || new Date().toISOString().split('T')[0],
+      Firma: formData.Firma || 'Unbekannt',
       customerName: formData.Firma || 'Unbekannt',
+      Firmen_Email: formData.Firmen_Email || '',
+      customerEmail: formData.Firmen_Email || '',
+      Ansprechpartner: formData.Ansprechpartner || '',
       contactPerson: formData.Ansprechpartner || '',
-      total: total,
-      items: orderItems,
+      Projekt: formData.Projekt || '',
       project: formData.Projekt || '',
-      status: formData.Status || ''
+      Status: formData.Status || '',
+      status: formData.Status || '',
+      items: orderItems,
+      total: total,
+      Rabatt: formData.Rabatt || ''
     });
     
     // Show feedback about notification status
@@ -910,6 +919,28 @@ async function convertToInvoice() {
     setRechnungenRows(updatedInvoices);
     await saveRechnungen();
     
+    // Send email notification for the newly created invoice
+    const invoiceItems = newInvoice.items || [];
+    const invoiceTotal = invoiceItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.Gesamtpreis) || 0);
+    }, 0);
+    
+    const notificationResult = await notifyNewInvoice({
+      Rechnungs_ID: newInvoice.Rechnungs_ID,
+      invoiceId: newInvoice.Rechnungs_ID,
+      Rechnungsdatum: newInvoice.Rechnungsdatum,
+      Firma: newInvoice.Firma,
+      customerName: newInvoice.Firma,
+      Firmen_Email: newInvoice.Firmen_Email || '',
+      customerEmail: newInvoice.Firmen_Email || '',
+      Ansprechpartner: newInvoice.Ansprechpartner,
+      Projekt: newInvoice.Projekt,
+      Auftrags_ID: newInvoice.Auftrags_ID,
+      items: invoiceItems,
+      total: invoiceTotal,
+      Rabatt: newInvoice.Rabatt || ''
+    });
+    
     // Update the order status to "abgeschlossen" (completed)
     formData.Status = COMPLETED_STATUS;
     
@@ -922,7 +953,14 @@ async function convertToInvoice() {
     // Trigger render event
     window.dispatchEvent(new Event('ordersChanged'));
     
-    alert(`Rechnung ${newInvoice.Rechnungs_ID} wurde erfolgreich erstellt!\n\nDer Auftrag wurde als "abgeschlossen" markiert und ist nun schreibgeschützt.`);
+    // Show feedback about the invoice creation and email notification
+    let message = `Rechnung ${newInvoice.Rechnungs_ID} wurde erfolgreich erstellt!\n\nDer Auftrag wurde als "abgeschlossen" markiert und ist nun schreibgeschützt.`;
+    if (notificationResult) {
+      message += '\n\nE-Mail-Benachrichtigung wurde in die Warteschlange eingereiht.';
+    } else {
+      message += '\n\nHinweis: E-Mail-Benachrichtigung konnte nicht versendet werden.';
+    }
+    alert(message);
     
     // Close modal
     closeModal();

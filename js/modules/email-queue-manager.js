@@ -84,12 +84,19 @@ export async function sendApprovedNotifications() {
     const body = getNotificationTemplate(notification.type, notification.data);
     const to = notification.recipientEmail || ''; // Use recipientEmail from notification
     
-    return {
+    const email = {
       to: to,
       subject: subject,
       body: body,
       notificationId: notification.id // Keep for tracking
     };
+    
+    // Include attachments if present
+    if (notification.attachments && Array.isArray(notification.attachments)) {
+      email.attachments = notification.attachments;
+    }
+    
+    return email;
   });
   
   try {
