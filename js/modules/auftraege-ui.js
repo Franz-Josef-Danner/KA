@@ -803,24 +803,19 @@ async function saveOrder() {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    const notificationResult = await notifyNewOrder({
-      Auftrags_ID: formData.Auftrags_ID || 'N/A',
+    // Prepare notification data - use formData directly with a few additional fields for email
+    const notificationData = {
+      ...formData, // Include all form data (uses German field names)
+      // Add English aliases for PDF generator compatibility
       orderId: formData.Auftrags_ID || 'N/A',
-      Auftragsdatum: formData.Auftragsdatum || new Date().toISOString().split('T')[0],
-      Firma: formData.Firma || 'Unbekannt',
+      orderDate: formData.Auftragsdatum || new Date().toISOString().split('T')[0],
       customerName: formData.Firma || 'Unbekannt',
-      Firmen_Email: formData.Firmen_Email || '',
       customerEmail: formData.Firmen_Email || '',
-      Ansprechpartner: formData.Ansprechpartner || '',
-      contactPerson: formData.Ansprechpartner || '',
-      Projekt: formData.Projekt || '',
-      project: formData.Projekt || '',
-      Status: formData.Status || '',
-      status: formData.Status || '',
-      items: orderItems,
-      total: total,
-      Rabatt: formData.Rabatt || ''
-    });
+      // Add calculated total
+      total: total
+    };
+    
+    const notificationResult = await notifyNewOrder(notificationData);
     
     // Show feedback about notification status
     if (!notificationResult) {
@@ -925,21 +920,19 @@ async function convertToInvoice() {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    const notificationResult = await notifyNewInvoice({
-      Rechnungs_ID: newInvoice.Rechnungs_ID,
+    // Prepare notification data - use invoice data directly with a few additional fields for email
+    const notificationData = {
+      ...newInvoice, // Include all invoice data (uses German field names)
+      // Add English aliases for PDF generator compatibility
       invoiceId: newInvoice.Rechnungs_ID,
-      Rechnungsdatum: newInvoice.Rechnungsdatum,
-      Firma: newInvoice.Firma,
+      invoiceDate: newInvoice.Rechnungsdatum,
       customerName: newInvoice.Firma,
-      Firmen_Email: newInvoice.Firmen_Email || '',
       customerEmail: newInvoice.Firmen_Email || '',
-      Ansprechpartner: newInvoice.Ansprechpartner,
-      Projekt: newInvoice.Projekt,
-      Auftrags_ID: newInvoice.Auftrags_ID,
-      items: invoiceItems,
-      total: invoiceTotal,
-      Rabatt: newInvoice.Rabatt || ''
-    });
+      // Add calculated total
+      total: invoiceTotal
+    };
+    
+    const notificationResult = await notifyNewInvoice(notificationData);
     
     // Update the order status to "abgeschlossen" (completed)
     formData.Status = COMPLETED_STATUS;

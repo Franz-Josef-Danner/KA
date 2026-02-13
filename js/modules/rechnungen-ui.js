@@ -749,25 +749,19 @@ async function saveInvoice() {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    const notificationResult = await notifyNewInvoice({
-      Rechnungs_ID: formData.Rechnungs_ID || 'N/A',
+    // Prepare notification data - use formData directly with a few additional fields for email
+    const notificationData = {
+      ...formData, // Include all form data (uses German field names)
+      // Add English aliases for PDF generator compatibility
       invoiceId: formData.Rechnungs_ID || 'N/A',
-      Rechnungsdatum: formData.Rechnungsdatum || new Date().toISOString().split('T')[0],
-      Firma: formData.Firma || 'Unbekannt',
+      invoiceDate: formData.Rechnungsdatum || new Date().toISOString().split('T')[0],
       customerName: formData.Firma || 'Unbekannt',
-      Firmen_Email: formData.Firmen_Email || '',
       customerEmail: formData.Firmen_Email || '',
-      Ansprechpartner: formData.Ansprechpartner || '',
-      contactPerson: formData.Ansprechpartner || '',
-      Projekt: formData.Projekt || '',
-      project: formData.Projekt || '',
-      Auftrags_ID: formData.Auftrags_ID || '',
-      orderId: formData.Auftrags_ID || '',
-      items: invoiceItems,
-      total: total,
-      Rabatt: formData.Rabatt || '',
-      dueDate: '' // Could calculate this if needed
-    });
+      // Add calculated total
+      total: total
+    };
+    
+    const notificationResult = await notifyNewInvoice(notificationData);
     
     // Show feedback about notification status
     if (!notificationResult) {
