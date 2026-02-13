@@ -120,6 +120,23 @@ export function notifyPaymentReceived(paymentData) {
 
 // Get notification template for email body
 export function getNotificationTemplate(type, data) {
+  // Load company settings for professional email signature
+  let companyName = 'Ihre Firma';
+  let companyEmail = '';
+  let companyPhone = '';
+  
+  try {
+    const settings = localStorage.getItem('ka_settings');
+    if (settings) {
+      const parsedSettings = JSON.parse(settings);
+      if (parsedSettings.companyName) companyName = parsedSettings.companyName;
+      if (parsedSettings.email) companyEmail = parsedSettings.email;
+      if (parsedSettings.phone) companyPhone = parsedSettings.phone;
+    }
+  } catch (error) {
+    console.error('Failed to load company settings for email template:', error);
+  }
+  
   const templates = {
     newCustomer: `
 Neuer Kunde erstellt
@@ -131,22 +148,39 @@ Telefon: ${data.phone}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
     newOrder: `
-Neuer Auftrag erstellt
+Sehr geehrte Damen und Herren,
+
+vielen Dank für Ihren Auftrag!
+
+Anbei erhalten Sie die Bestätigung Ihres Auftrags als PDF-Dokument.
 
 Auftragsnummer: ${data.orderId}
-Kunde: ${data.customerName}
-Gesamtsumme: ${(data.total || 0).toFixed(2)} €
 Anzahl Artikel: ${data.items?.length ?? 0}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+
+Bei Fragen stehen wir Ihnen gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+${companyName}
+${companyEmail ? '\nE-Mail: ' + companyEmail : ''}
+${companyPhone ? 'Tel: ' + companyPhone : ''}
 `,
     newInvoice: `
-Neue Rechnung erstellt
+Sehr geehrte Damen und Herren,
+
+anbei erhalten Sie Ihre Rechnung als PDF-Dokument.
 
 Rechnungsnummer: ${data.invoiceId}
-Kunde: ${data.customerName}
 Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Fälligkeitsdatum: ${data.dueDate}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+
+Bitte überweisen Sie den Betrag auf das in der Rechnung angegebene Konto.
+
+Bei Fragen zur Rechnung stehen wir Ihnen gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+${companyName}
+${companyEmail ? '\nE-Mail: ' + companyEmail : ''}
+${companyPhone ? 'Tel: ' + companyPhone : ''}
 `,
     paymentReceived: `
 Zahlung eingegangen
@@ -164,10 +198,23 @@ Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 
 // Get notification subject line
 export function getNotificationSubject(type, data) {
+  // Load company settings for professional subject lines
+  let companyName = 'Ihre Firma';
+  
+  try {
+    const settings = localStorage.getItem('ka_settings');
+    if (settings) {
+      const parsedSettings = JSON.parse(settings);
+      if (parsedSettings.companyName) companyName = parsedSettings.companyName;
+    }
+  } catch (error) {
+    console.error('Failed to load company settings for email subject:', error);
+  }
+  
   const subjects = {
     newCustomer: `Neuer Kunde: ${data.customerName}`,
-    newOrder: `Neuer Auftrag: ${data.orderId}`,
-    newInvoice: `Neue Rechnung: ${data.invoiceId}`,
+    newOrder: `Auftragsbestätigung ${data.orderId} - ${companyName}`,
+    newInvoice: `Rechnung ${data.invoiceId} - ${companyName}`,
     paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`
   };
   
