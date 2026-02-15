@@ -141,6 +141,13 @@ async function queueAndSendImmediately(type, data) {
   const body = getNotificationTemplate(type, data);
   const to = notification.recipientEmail || '';
   
+  // Validate recipient email
+  if (!to) {
+    console.error('No recipient email configured');
+    showEmailSendingError('Keine Empfänger-E-Mail-Adresse konfiguriert. Bitte konfigurieren Sie eine E-Mail-Adresse in den Einstellungen.');
+    return false;
+  }
+  
   const emailToSend = {
     to: to,
     subject: subject,
@@ -173,14 +180,25 @@ async function queueAndSendImmediately(type, data) {
       
       // Show user-friendly error message
       const errorMessage = result.error || result.message || 'Fehler beim Versenden der E-Mail.';
-      alert(`E-Mail konnte nicht versendet werden:\n\n${errorMessage}\n\nDie Benachrichtigung bleibt in der Warteschlange und kann später über das Dashboard versendet werden.`);
+      showEmailSendingError(errorMessage);
       return false;
     }
   } catch (error) {
     console.error('Error sending email:', error);
-    alert(`E-Mail konnte nicht versendet werden:\n\n${error.message}\n\nDie Benachrichtigung bleibt in der Warteschlange und kann später über das Dashboard versendet werden.`);
+    showEmailSendingError(error.message);
     return false;
   }
+}
+
+/**
+ * Show email sending error with consistent formatting
+ * @param {string} errorMessage - The error message to display
+ */
+function showEmailSendingError(errorMessage) {
+  alert(
+    `E-Mail konnte nicht versendet werden:\n\n${errorMessage}\n\n` +
+    `Die Benachrichtigung bleibt in der Warteschlange und kann später über das Dashboard versendet werden.`
+  );
 }
 
 // Send notification when a new customer is created
