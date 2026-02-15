@@ -798,7 +798,7 @@ async function saveOrder() {
   
   // Send email notification for new orders
   if (isNewOrder) {
-    const orderItems = formData.Artikel || [];
+    const orderItems = formData.items || [];
     const total = orderItems.reduce((sum, item) => {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
