@@ -10,6 +10,7 @@ import { updateUndoRedoButtons } from './auftraege-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
 import { notifyOrderDeleted } from './email-notifications.js';
+import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -196,9 +197,7 @@ export function render() {
       
       // Calculate total before deletion for notification
       const orderItems = row.Artikel || [];
-      const total = orderItems.reduce((sum, item) => {
-        return sum + (parseFloat(item.Gesamtpreis) || 0);
-      }, 0);
+      const total = calculateItemsTotal(orderItems);
       
       // Send deletion notification
       notifyOrderDeleted({

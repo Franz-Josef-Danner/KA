@@ -6,6 +6,7 @@ import { getRows } from './rechnungen-state.js';
 import { notifyInvoiceOverdue } from './email-notifications.js';
 import { getArtikelliste } from './artikellisten-state.js';
 import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
+import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 
 const OVERDUE_CHECK_KEY = 'ka_overdue_check_last_run';
 const OVERDUE_NOTIFIED_KEY = 'ka_overdue_notified_invoices';
@@ -186,9 +187,7 @@ export function checkOverdueInvoices(force = false) {
     
     // Calculate total
     const invoiceItems = invoice.Artikel || [];
-    const total = invoiceItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.Gesamtpreis) || 0);
-    }, 0);
+    const total = calculateItemsTotal(invoiceItems);
     
     // Send notification
     const notificationResult = notifyInvoiceOverdue({

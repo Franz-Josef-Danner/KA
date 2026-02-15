@@ -9,7 +9,7 @@ import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
-import { enrichInvoiceWithPaymentTerms } from '../utils/invoice-helpers.js';
+import { enrichInvoiceWithPaymentTerms, calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { getArtikelliste } from './artikellisten-state.js';
 import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 import { notifyInvoiceDeleted } from './email-notifications.js';
@@ -263,9 +263,7 @@ export async function render() {
       
       // Calculate total before deletion for notification
       const invoiceItems = row.Artikel || [];
-      const total = invoiceItems.reduce((sum, item) => {
-        return sum + (parseFloat(item.Gesamtpreis) || 0);
-      }, 0);
+      const total = calculateItemsTotal(invoiceItems);
       
       // Send deletion notification
       notifyInvoiceDeleted({

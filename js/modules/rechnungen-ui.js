@@ -7,6 +7,7 @@ import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewInvoice, notifyPaymentReceived, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 import { clearInvoiceFromNotified } from './overdue-invoice-checker.js';
+import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -755,9 +756,7 @@ function saveInvoice() {
   // Send email notification for new invoices
   if (isNewInvoice) {
     const invoiceItems = formData.Artikel || [];
-    const total = invoiceItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.Gesamtpreis) || 0);
-    }, 0);
+    const total = calculateItemsTotal(invoiceItems);
     
     const notificationResult = notifyNewInvoice({
       invoiceId: formData.Rechnungs_ID || 'N/A',
@@ -779,9 +778,7 @@ function saveInvoice() {
   } else if (paymentStatusChanged) {
     // Send payment received notification when invoice is marked as paid
     const invoiceItems = formData.Artikel || [];
-    const total = invoiceItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.Gesamtpreis) || 0);
-    }, 0);
+    const total = calculateItemsTotal(invoiceItems);
     
     const notificationResult = notifyPaymentReceived({
       invoiceId: formData.Rechnungs_ID || 'N/A',
