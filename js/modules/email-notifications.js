@@ -31,20 +31,6 @@ export async function notifyNewOrder(orderData) {
   let pdfBase64 = null;
   let pdfFilename = null;
   try {
-    console.log('DEBUG: Generating PDF for order with data:', {
-      hasItems: !!orderData.items,
-      itemsIsArray: Array.isArray(orderData.items),
-      itemsLength: orderData.items ? orderData.items.length : 0,
-      items: orderData.items,
-      orderId: orderData.Auftrags_ID || orderData.orderId,
-      allKeys: Object.keys(orderData)
-    });
-    
-    // Warn if items array is empty
-    if (!orderData.items || orderData.items.length === 0) {
-      console.warn('WARNING: Order has no items! PDF will be incomplete.');
-    }
-    
     const pdfDoc = await generatePDF('auftrag', orderData);
     if (pdfDoc) {
       // Add small delay to ensure PDF rendering is fully committed
@@ -54,11 +40,7 @@ export async function notifyNewOrder(orderData) {
       const pdfBlob = pdfDoc.output('blob');
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Auftrag_${orderData.orderId || orderData.Auftrags_ID || 'unbekannt'}.pdf`;
-      console.log('DEBUG: PDF generated successfully', {
-        blobSize: pdfBlob.size,
-        base64Length: pdfBase64.length,
-        filename: pdfFilename
-      });
+      console.log('PDF für Auftrag generiert:', pdfFilename, 'Größe:', pdfBlob.size, 'bytes');
     }
   } catch (error) {
     console.error('Failed to generate PDF for order notification:', error);
@@ -95,20 +77,6 @@ export async function notifyNewInvoice(invoiceData) {
   let pdfBase64 = null;
   let pdfFilename = null;
   try {
-    console.log('DEBUG: Generating PDF for invoice with data:', {
-      hasItems: !!invoiceData.items,
-      itemsIsArray: Array.isArray(invoiceData.items),
-      itemsLength: invoiceData.items ? invoiceData.items.length : 0,
-      items: invoiceData.items,
-      invoiceId: invoiceData.Rechnungs_ID || invoiceData.invoiceId,
-      allKeys: Object.keys(invoiceData)
-    });
-    
-    // Warn if items array is empty
-    if (!invoiceData.items || invoiceData.items.length === 0) {
-      console.warn('WARNING: Invoice has no items! PDF will be incomplete.');
-    }
-    
     const pdfDoc = await generatePDF('rechnung', invoiceData);
     if (pdfDoc) {
       // Add small delay to ensure PDF rendering is fully committed
@@ -118,11 +86,7 @@ export async function notifyNewInvoice(invoiceData) {
       const pdfBlob = pdfDoc.output('blob');
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Rechnung_${invoiceData.invoiceId || invoiceData.Rechnungs_ID || 'unbekannt'}.pdf`;
-      console.log('DEBUG: PDF generated successfully', {
-        blobSize: pdfBlob.size,
-        base64Length: pdfBase64.length,
-        filename: pdfFilename
-      });
+      console.log('PDF für Rechnung generiert:', pdfFilename, 'Größe:', pdfBlob.size, 'bytes');
     }
   } catch (error) {
     console.error('Failed to generate PDF for invoice notification:', error);
