@@ -199,6 +199,18 @@
                 <input type="checkbox" id="notifyPaymentReceived" name="notifyPaymentReceived" checked />
                 Zahlungseingänge
               </label>
+              <label>
+                <input type="checkbox" id="notifyOrderDeleted" name="notifyOrderDeleted" checked />
+                Gelöschte Aufträge
+              </label>
+              <label>
+                <input type="checkbox" id="notifyInvoiceDeleted" name="notifyInvoiceDeleted" checked />
+                Gelöschte Rechnungen
+              </label>
+              <label>
+                <input type="checkbox" id="notifyInvoiceOverdue" name="notifyInvoiceOverdue" checked />
+                Überfällige Rechnungen
+              </label>
             </div>
 
             <div class="form-hint">
@@ -366,7 +378,10 @@
               newCustomer: document.getElementById('notifyNewCustomer').checked,
               newOrder: document.getElementById('notifyNewOrder').checked,
               newInvoice: document.getElementById('notifyNewInvoice').checked,
-              paymentReceived: document.getElementById('notifyPaymentReceived').checked
+              paymentReceived: document.getElementById('notifyPaymentReceived').checked,
+              orderDeleted: document.getElementById('notifyOrderDeleted').checked,
+              invoiceDeleted: document.getElementById('notifyInvoiceDeleted').checked,
+              invoiceOverdue: document.getElementById('notifyInvoiceOverdue').checked
             }
           };
           
@@ -446,6 +461,9 @@
           document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;
           document.getElementById('notifyNewInvoice').checked = emailConfig.notificationSettings?.newInvoice !== false;
           document.getElementById('notifyPaymentReceived').checked = emailConfig.notificationSettings?.paymentReceived !== false;
+          document.getElementById('notifyOrderDeleted').checked = emailConfig.notificationSettings?.orderDeleted !== false;
+          document.getElementById('notifyInvoiceDeleted').checked = emailConfig.notificationSettings?.invoiceDeleted !== false;
+          document.getElementById('notifyInvoiceOverdue').checked = emailConfig.notificationSettings?.invoiceOverdue !== false;
         } finally {
           isLoading = false;
           submitBtn.disabled = false;
