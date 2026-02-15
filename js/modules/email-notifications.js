@@ -31,7 +31,9 @@ export async function notifyNewOrder(orderData) {
   let pdfBase64 = null;
   let pdfFilename = null;
   try {
-    const pdfDoc = await generatePDF('auftrag', orderData);
+    // Use same parameters as preview/download for consistency
+    // 5th parameter = true means use standard template (guaranteed to have items table)
+    const pdfDoc = await generatePDF('order', orderData, false, null, true);
     if (pdfDoc) {
       // Add small delay to ensure PDF rendering is fully committed
       // jsPDF may need time to finalize document state after addImage calls
@@ -77,7 +79,9 @@ export async function notifyNewInvoice(invoiceData) {
   let pdfBase64 = null;
   let pdfFilename = null;
   try {
-    const pdfDoc = await generatePDF('rechnung', invoiceData);
+    // Use same parameters as preview/download for consistency
+    // 5th parameter = true means use standard template (guaranteed to have items table)
+    const pdfDoc = await generatePDF('invoice', invoiceData, false, null, true);
     if (pdfDoc) {
       // Add small delay to ensure PDF rendering is fully committed
       // jsPDF may need time to finalize document state after addImage calls
