@@ -755,7 +755,7 @@ function saveInvoice() {
   
   // Send email notification for new invoices
   if (isNewInvoice) {
-    const invoiceItems = formData.Artikel || [];
+    const invoiceItems = formData.items || [];
     const total = calculateItemsTotal(invoiceItems);
     
     const notificationResult = notifyNewInvoice({
@@ -777,7 +777,7 @@ function saveInvoice() {
     }
   } else if (paymentStatusChanged) {
     // Send payment received notification when invoice is marked as paid
-    const invoiceItems = formData.Artikel || [];
+    const invoiceItems = formData.items || [];
     const total = calculateItemsTotal(invoiceItems);
     
     const notificationResult = notifyPaymentReceived({
