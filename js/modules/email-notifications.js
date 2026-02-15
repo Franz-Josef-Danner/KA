@@ -5,9 +5,27 @@
 
 import { queueEmailNotification, isEmailConfigured, getEmailConfig } from './email-config.js';
 
+/**
+ * Helper function to ask user if they want to send a notification
+ * @param {string} message - Confirmation message
+ * @returns {boolean} - True if user confirmed
+ */
+function confirmNotification(message) {
+  return confirm(message);
+}
+
 // Send notification when a new customer is created
 export function notifyNewCustomer(customerData) {
   if (!isEmailConfigured()) {
+    return false;
+  }
+  
+  // Ask for confirmation before queuing
+  const shouldSend = confirmNotification(
+    `Möchten Sie eine E-Mail-Benachrichtigung für den neuen Kunden "${customerData.firma || 'Unbekannt'}" senden?`
+  );
+  
+  if (!shouldSend) {
     return false;
   }
   
@@ -26,6 +44,15 @@ export function notifyNewOrder(orderData) {
     return false;
   }
   
+  // Ask for confirmation before queuing
+  const shouldSend = confirmNotification(
+    `Möchten Sie eine E-Mail-Benachrichtigung für den neuen Auftrag "${orderData.orderId || 'N/A'}" senden?`
+  );
+  
+  if (!shouldSend) {
+    return false;
+  }
+  
   return queueEmailNotification('newOrder', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
@@ -38,6 +65,15 @@ export function notifyNewOrder(orderData) {
 // Send notification when a new invoice is created
 export function notifyNewInvoice(invoiceData) {
   if (!isEmailConfigured()) {
+    return false;
+  }
+  
+  // Ask for confirmation before queuing
+  const shouldSend = confirmNotification(
+    `Möchten Sie eine E-Mail-Benachrichtigung für die neue Rechnung "${invoiceData.invoiceId || 'N/A'}" senden?`
+  );
+  
+  if (!shouldSend) {
     return false;
   }
   
@@ -56,6 +92,15 @@ export function notifyPaymentReceived(paymentData) {
     return false;
   }
   
+  // Ask for confirmation before queuing
+  const shouldSend = confirmNotification(
+    `Möchten Sie eine E-Mail-Benachrichtigung für den Zahlungseingang der Rechnung "${paymentData.invoiceId || 'N/A'}" senden?`
+  );
+  
+  if (!shouldSend) {
+    return false;
+  }
+  
   return queueEmailNotification('paymentReceived', {
     invoiceId: paymentData.invoiceId || '',
     customerName: paymentData.customerName || '',
@@ -71,6 +116,15 @@ export function notifyOrderDeleted(orderData) {
     return false;
   }
   
+  // Ask for confirmation before queuing
+  const shouldSend = confirmNotification(
+    `Möchten Sie eine E-Mail-Benachrichtigung für den gelöschten Auftrag "${orderData.orderId || 'N/A'}" senden?`
+  );
+  
+  if (!shouldSend) {
+    return false;
+  }
+  
   return queueEmailNotification('orderDeleted', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
@@ -83,6 +137,15 @@ export function notifyOrderDeleted(orderData) {
 // Send notification when an invoice is deleted
 export function notifyInvoiceDeleted(invoiceData) {
   if (!isEmailConfigured()) {
+    return false;
+  }
+  
+  // Ask for confirmation before queuing
+  const shouldSend = confirmNotification(
+    `Möchten Sie eine E-Mail-Benachrichtigung für die gelöschte Rechnung "${invoiceData.invoiceId || 'N/A'}" senden?`
+  );
+  
+  if (!shouldSend) {
     return false;
   }
   
@@ -201,26 +264,16 @@ export function showEmailNotificationWarning(itemType = 'Element', notificationT
   const config = getEmailConfig();
   
   if (!config.enabled) {
-    alert(`⚠️ Hinweis: E-Mail-Benachrichtigungen sind nicht aktiviert.\n\n${itemType} wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie E-Mail-Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.`);
+    // Don't show a warning if email is disabled - user made a conscious choice
+    return;
   } else if (notificationType && !config.notificationSettings[notificationType]) {
-    const typeLabels = {
-      newOrder: 'für neue Aufträge',
-      newInvoice: 'für neue Rechnungen',
-      newCustomer: 'für neue Kunden',
-      paymentReceived: 'für Zahlungseingänge',
-      orderDeleted: 'für gelöschte Aufträge',
-      invoiceDeleted: 'für gelöschte Rechnungen',
-      invoiceOverdue: 'für überfällige Rechnungen'
-    };
-    const typeLabel = typeLabels[notificationType] || 'für diesen Typ';
-    alert(`⚠️ Hinweis: E-Mail-Benachrichtigungen ${typeLabel} sind deaktiviert.\n\n${itemType} wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie diese Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.`);
-  } else {
-    // Some other reason for failure
-    alert(`⚠️ Hinweis: E-Mail-Benachrichtigung konnte nicht versendet werden.\n\n${itemType} wurde erfolgreich gespeichert, aber die E-Mail-Benachrichtigung konnte nicht in die Warteschlange eingereiht werden.\n\nBitte prüfen Sie Ihre E-Mail-Einstellungen.`);
+    // Don't show a warning if this notification type is disabled
+    return;
   }
 }
 
 // Show info when email notification was successfully queued
 export function showEmailNotificationQueued(itemType = 'Element') {
-  alert(`ℹ️ ${itemType} wurde gespeichert.\n\nE-Mail-Benachrichtigung wurde in die Warteschlange eingereiht.\n\nHinweis: Die aktuelle Version speichert nur Benachrichtigungen. Für den tatsächlichen E-Mail-Versand ist eine Backend-Integration erforderlich.`);
+  // No need to show feedback for user-confirmed notifications
+  // The user already knows they confirmed sending the email
 }
