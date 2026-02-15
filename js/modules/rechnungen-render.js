@@ -9,9 +9,10 @@ import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
-import { enrichInvoiceWithPaymentTerms } from '../utils/invoice-helpers.js';
+import { enrichInvoiceWithPaymentTerms, calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { getArtikelliste } from './artikellisten-state.js';
 import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
+import { notifyInvoiceDeleted } from './email-notifications.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -259,6 +260,18 @@ export async function render() {
     minus.addEventListener("click", () => {
       const ok = confirm("Sind Sie sicher, dass Sie diese Rechnung löschen möchten?");
       if (!ok) return;
+      
+      // Calculate total before deletion for notification
+      const invoiceItems = row.Artikel || [];
+      const total = calculateItemsTotal(invoiceItems);
+      
+      // Send deletion notification
+      notifyInvoiceDeleted({
+        invoiceId: row.Rechnungs_ID || '',
+        customerName: row.Firma || '',
+        total: total
+      });
+      
       rows.splice(idx, 1);
       setRows(rows);
       save();

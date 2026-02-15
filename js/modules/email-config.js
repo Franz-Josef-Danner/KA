@@ -37,7 +37,10 @@ function getDefaultEmailConfig() {
       newCustomer: true,
       newOrder: true,
       newInvoice: true,
-      paymentReceived: true
+      paymentReceived: true,
+      orderDeleted: true,
+      invoiceDeleted: true,
+      invoiceOverdue: true
     }
   };
 }

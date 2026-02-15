@@ -65,6 +65,51 @@ export function notifyPaymentReceived(paymentData) {
   });
 }
 
+// Send notification when an order is deleted
+export function notifyOrderDeleted(orderData) {
+  if (!isEmailConfigured()) {
+    return false;
+  }
+  
+  return queueEmailNotification('orderDeleted', {
+    orderId: orderData.orderId || '',
+    customerName: orderData.customerName || '',
+    total: orderData.total || 0,
+    items: orderData.items || [],
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Send notification when an invoice is deleted
+export function notifyInvoiceDeleted(invoiceData) {
+  if (!isEmailConfigured()) {
+    return false;
+  }
+  
+  return queueEmailNotification('invoiceDeleted', {
+    invoiceId: invoiceData.invoiceId || '',
+    customerName: invoiceData.customerName || '',
+    total: invoiceData.total || 0,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Send notification when an invoice is overdue
+export function notifyInvoiceOverdue(invoiceData) {
+  if (!isEmailConfigured()) {
+    return false;
+  }
+  
+  return queueEmailNotification('invoiceOverdue', {
+    invoiceId: invoiceData.invoiceId || '',
+    customerName: invoiceData.customerName || '',
+    total: invoiceData.total || 0,
+    dueDate: invoiceData.dueDate || '',
+    daysPastDue: invoiceData.daysPastDue || 0,
+    timestamp: new Date().toISOString()
+  });
+}
+
 // Get notification template for email body
 export function getNotificationTemplate(type, data) {
   const templates = {
@@ -103,6 +148,33 @@ Kunde: ${data.customerName}
 Betrag: ${(data.amount || 0).toFixed(2)} €
 Zahlungsdatum: ${data.paymentDate}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    orderDeleted: `
+Auftrag gelöscht
+
+Auftragsnummer: ${data.orderId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    invoiceDeleted: `
+Rechnung gelöscht
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    invoiceOverdue: `
+Rechnung überfällig
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Fälligkeitsdatum: ${data.dueDate}
+Tage überfällig: ${data.daysPastDue}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `
   };
   
@@ -115,7 +187,10 @@ export function getNotificationSubject(type, data) {
     newCustomer: `Neuer Kunde: ${data.customerName}`,
     newOrder: `Neuer Auftrag: ${data.orderId}`,
     newInvoice: `Neue Rechnung: ${data.invoiceId}`,
-    paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`
+    paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`,
+    orderDeleted: `Auftrag gelöscht: ${data.orderId}`,
+    invoiceDeleted: `Rechnung gelöscht: ${data.invoiceId}`,
+    invoiceOverdue: `Rechnung überfällig: ${data.invoiceId}`
   };
   
   return subjects[type] || 'KA System Benachrichtigung';
@@ -132,7 +207,10 @@ export function showEmailNotificationWarning(itemType = 'Element', notificationT
       newOrder: 'für neue Aufträge',
       newInvoice: 'für neue Rechnungen',
       newCustomer: 'für neue Kunden',
-      paymentReceived: 'für Zahlungseingänge'
+      paymentReceived: 'für Zahlungseingänge',
+      orderDeleted: 'für gelöschte Aufträge',
+      invoiceDeleted: 'für gelöschte Rechnungen',
+      invoiceOverdue: 'für überfällige Rechnungen'
     };
     const typeLabel = typeLabels[notificationType] || 'für diesen Typ';
     alert(`⚠️ Hinweis: E-Mail-Benachrichtigungen ${typeLabel} sind deaktiviert.\n\n${itemType} wurde erfolgreich gespeichert, aber es wurde keine E-Mail-Benachrichtigung versendet.\n\nBitte aktivieren Sie diese Benachrichtigungen in den Einstellungen, wenn Sie automatische Benachrichtigungen erhalten möchten.`);

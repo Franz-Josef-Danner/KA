@@ -9,6 +9,8 @@ import { rowMatchesSearch } from './auftraege-search.js';
 import { updateUndoRedoButtons } from './auftraege-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
+import { notifyOrderDeleted } from './email-notifications.js';
+import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -192,6 +194,19 @@ export function render() {
     minus.addEventListener("click", () => {
       const ok = confirm("Sind Sie sicher, dass Sie diesen Auftrag löschen möchten?");
       if (!ok) return;
+      
+      // Calculate total before deletion for notification
+      const orderItems = row.Artikel || [];
+      const total = calculateItemsTotal(orderItems);
+      
+      // Send deletion notification
+      notifyOrderDeleted({
+        orderId: row.Auftrags_ID || '',
+        customerName: row.Firma || '',
+        total: total,
+        items: orderItems
+      });
+      
       rows.splice(idx, 1);
       setRows(rows);
       save();

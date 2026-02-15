@@ -31,3 +31,16 @@ export async function enrichInvoiceWithPaymentTerms(invoiceRow) {
   
   return enriched;
 }
+
+/**
+ * Calculate total from invoice or order items
+ * @param {Array} items - Array of items with Gesamtpreis property
+ * @returns {number} - Total sum of all items
+ */
+export function calculateItemsTotal(items) {
+  if (!Array.isArray(items)) return 0;
+  
+  return items.reduce((sum, item) => {
+    return sum + (parseFloat(item.Gesamtpreis) || 0);
+  }, 0);
+}

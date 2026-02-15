@@ -5,7 +5,9 @@ import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyInvoiceI
 import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewInvoice, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
+import { notifyNewInvoice, notifyPaymentReceived, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
+import { clearInvoiceFromNotified } from './overdue-invoice-checker.js';
+import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -731,6 +733,15 @@ function saveInvoice() {
   
   const isNewInvoice = (currentEditingRowIndex === null);
   
+  // Check if payment status changed from unpaid to paid
+  let paymentStatusChanged = false;
+  if (!isNewInvoice) {
+    const oldInvoice = rows[currentEditingRowIndex];
+    const oldBezahlt = oldInvoice?.Bezahlt || 'unbezahlt';
+    const newBezahlt = formData.Bezahlt || 'unbezahlt';
+    paymentStatusChanged = (oldBezahlt === 'unbezahlt' && newBezahlt === 'bezahlt');
+  }
+  
   if (isNewInvoice) {
     // New invoice - add to beginning
     rows.unshift(formData);
@@ -745,9 +756,7 @@ function saveInvoice() {
   // Send email notification for new invoices
   if (isNewInvoice) {
     const invoiceItems = formData.Artikel || [];
-    const total = invoiceItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.Gesamtpreis) || 0);
-    }, 0);
+    const total = calculateItemsTotal(invoiceItems);
     
     const notificationResult = notifyNewInvoice({
       invoiceId: formData.Rechnungs_ID || 'N/A',
@@ -765,6 +774,27 @@ function saveInvoice() {
       showEmailNotificationWarning('Die Rechnung', 'newInvoice');
     } else {
       showEmailNotificationQueued('Die Rechnung');
+    }
+  } else if (paymentStatusChanged) {
+    // Send payment received notification when invoice is marked as paid
+    const invoiceItems = formData.Artikel || [];
+    const total = calculateItemsTotal(invoiceItems);
+    
+    const notificationResult = notifyPaymentReceived({
+      invoiceId: formData.Rechnungs_ID || 'N/A',
+      customerName: formData.Firma || 'Unbekannt',
+      amount: total,
+      paymentDate: new Date().toLocaleDateString('de-DE')
+    });
+    
+    // Clear from overdue notifications list if it was there
+    clearInvoiceFromNotified(formData.Rechnungs_ID);
+    
+    // Show feedback about notification status
+    if (!notificationResult) {
+      showEmailNotificationWarning('Die Zahlung', 'paymentReceived');
+    } else {
+      showEmailNotificationQueued('Die Zahlung');
     }
   }
   
