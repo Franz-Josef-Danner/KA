@@ -762,6 +762,14 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
   // Parse items from documentData
   let items = [];
   
+  console.log('DEBUG: renderItemsTableWithFooter called with documentData:', {
+    hasItems: !!documentData.items,
+    itemsIsArray: Array.isArray(documentData.items),
+    itemsLength: documentData.items ? documentData.items.length : 0,
+    hasArtikel: !!documentData.Artikel,
+    sampleItem: documentData.items && documentData.items[0] ? documentData.items[0] : null
+  });
+  
   if (documentData.items && Array.isArray(documentData.items)) {
     // New format with items array
     items = documentData.items.map(item => ({
@@ -788,6 +796,11 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
       }];
     }
   }
+  
+  console.log('DEBUG: Parsed items for PDF:', {
+    itemsLength: items.length,
+    items: items
+  });
 
   // Calculate dynamic column widths based on content
   const colWidths = calculateColumnWidths(doc, items, width);

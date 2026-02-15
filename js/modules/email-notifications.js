@@ -31,11 +31,18 @@ export async function notifyNewOrder(orderData) {
   let pdfBase64 = null;
   let pdfFilename = null;
   try {
+    console.log('DEBUG: Generating PDF for order with data:', {
+      hasItems: !!orderData.items,
+      itemsLength: orderData.items ? orderData.items.length : 0,
+      items: orderData.items,
+      orderId: orderData.Auftrags_ID || orderData.orderId
+    });
     const pdfDoc = await generatePDF('auftrag', orderData);
     if (pdfDoc) {
       const pdfBlob = pdfDoc.output('blob');
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Auftrag_${orderData.orderId || orderData.Auftrags_ID || 'unbekannt'}.pdf`;
+      console.log('DEBUG: PDF generated successfully, size:', pdfBlob.size);
     }
   } catch (error) {
     console.error('Failed to generate PDF for order notification:', error);
@@ -72,11 +79,18 @@ export async function notifyNewInvoice(invoiceData) {
   let pdfBase64 = null;
   let pdfFilename = null;
   try {
+    console.log('DEBUG: Generating PDF for invoice with data:', {
+      hasItems: !!invoiceData.items,
+      itemsLength: invoiceData.items ? invoiceData.items.length : 0,
+      items: invoiceData.items,
+      invoiceId: invoiceData.Rechnungs_ID || invoiceData.invoiceId
+    });
     const pdfDoc = await generatePDF('rechnung', invoiceData);
     if (pdfDoc) {
       const pdfBlob = pdfDoc.output('blob');
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Rechnung_${invoiceData.invoiceId || invoiceData.Rechnungs_ID || 'unbekannt'}.pdf`;
+      console.log('DEBUG: PDF generated successfully, size:', pdfBlob.size);
     }
   } catch (error) {
     console.error('Failed to generate PDF for invoice notification:', error);
