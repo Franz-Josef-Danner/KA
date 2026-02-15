@@ -27,13 +27,21 @@ export async function notifyNewOrder(orderData) {
     return false;
   }
   
+  console.log('notifyNewOrder called with data:', { 
+    hasItems: !!orderData.items, 
+    orderId: orderData.Auftrags_ID || orderData.orderId 
+  });
+  
   // Generate PDF for the order
   let pdfBase64 = null;
   let pdfFilename = null;
+  
   try {
     // Use same parameters as preview/download for consistency
     // 5th parameter = true means use standard template (guaranteed to have items table)
+    console.log('Generating PDF for order...');
     const pdfDoc = await generatePDF('order', orderData, false, null, true);
+    
     if (pdfDoc) {
       // Add small delay to ensure PDF rendering is fully committed
       // jsPDF may need time to finalize document state after addImage calls
@@ -43,11 +51,15 @@ export async function notifyNewOrder(orderData) {
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Auftrag_${orderData.orderId || orderData.Auftrags_ID || 'unbekannt'}.pdf`;
       console.log('PDF für Auftrag generiert:', pdfFilename, 'Größe:', pdfBlob.size, 'bytes');
+    } else {
+      console.warn('PDF generation returned null for order');
     }
   } catch (error) {
     console.error('Failed to generate PDF for order notification:', error);
+    // Continue anyway - we still want to queue the email even without PDF
   }
   
+  // Prepare notification data
   const notificationData = {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
@@ -64,9 +76,17 @@ export async function notifyNewOrder(orderData) {
       content: pdfBase64,
       encoding: 'base64'
     }];
+    console.log('PDF attachment added to notification');
+  } else {
+    console.warn('No PDF attachment - queuing email without attachment');
   }
   
-  return queueEmailNotification('newOrder', notificationData);
+  // Queue the notification
+  console.log('Calling queueEmailNotification...');
+  const result = queueEmailNotification('newOrder', notificationData);
+  console.log('queueEmailNotification result:', result);
+  
+  return result;
 }
 
 // Send notification when a new invoice is created
@@ -75,13 +95,21 @@ export async function notifyNewInvoice(invoiceData) {
     return false;
   }
   
+  console.log('notifyNewInvoice called with data:', { 
+    hasItems: !!invoiceData.items, 
+    invoiceId: invoiceData.Rechnungs_ID || invoiceData.invoiceId 
+  });
+  
   // Generate PDF for the invoice
   let pdfBase64 = null;
   let pdfFilename = null;
+  
   try {
     // Use same parameters as preview/download for consistency
     // 5th parameter = true means use standard template (guaranteed to have items table)
+    console.log('Generating PDF for invoice...');
     const pdfDoc = await generatePDF('invoice', invoiceData, false, null, true);
+    
     if (pdfDoc) {
       // Add small delay to ensure PDF rendering is fully committed
       // jsPDF may need time to finalize document state after addImage calls
@@ -91,11 +119,15 @@ export async function notifyNewInvoice(invoiceData) {
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Rechnung_${invoiceData.invoiceId || invoiceData.Rechnungs_ID || 'unbekannt'}.pdf`;
       console.log('PDF für Rechnung generiert:', pdfFilename, 'Größe:', pdfBlob.size, 'bytes');
+    } else {
+      console.warn('PDF generation returned null for invoice');
     }
   } catch (error) {
     console.error('Failed to generate PDF for invoice notification:', error);
+    // Continue anyway - we still want to queue the email even without PDF
   }
   
+  // Prepare notification data
   const notificationData = {
     invoiceId: invoiceData.invoiceId || '',
     customerName: invoiceData.customerName || '',
@@ -112,9 +144,17 @@ export async function notifyNewInvoice(invoiceData) {
       content: pdfBase64,
       encoding: 'base64'
     }];
+    console.log('PDF attachment added to notification');
+  } else {
+    console.warn('No PDF attachment - queuing email without attachment');
   }
   
-  return queueEmailNotification('newInvoice', notificationData);
+  // Queue the notification
+  console.log('Calling queueEmailNotification...');
+  const result = queueEmailNotification('newInvoice', notificationData);
+  console.log('queueEmailNotification result:', result);
+  
+  return result;
 }
 
 // Send notification when a payment is received
