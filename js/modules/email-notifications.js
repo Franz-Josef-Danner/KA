@@ -47,10 +47,18 @@ export async function notifyNewOrder(orderData) {
     
     const pdfDoc = await generatePDF('auftrag', orderData);
     if (pdfDoc) {
+      // Add small delay to ensure PDF rendering is fully committed
+      // jsPDF may need time to finalize document state after addImage calls
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const pdfBlob = pdfDoc.output('blob');
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Auftrag_${orderData.orderId || orderData.Auftrags_ID || 'unbekannt'}.pdf`;
-      console.log('DEBUG: PDF generated successfully, size:', pdfBlob.size);
+      console.log('DEBUG: PDF generated successfully', {
+        blobSize: pdfBlob.size,
+        base64Length: pdfBase64.length,
+        filename: pdfFilename
+      });
     }
   } catch (error) {
     console.error('Failed to generate PDF for order notification:', error);
@@ -103,10 +111,18 @@ export async function notifyNewInvoice(invoiceData) {
     
     const pdfDoc = await generatePDF('rechnung', invoiceData);
     if (pdfDoc) {
+      // Add small delay to ensure PDF rendering is fully committed
+      // jsPDF may need time to finalize document state after addImage calls
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const pdfBlob = pdfDoc.output('blob');
       pdfBase64 = await blobToBase64(pdfBlob);
       pdfFilename = `Rechnung_${invoiceData.invoiceId || invoiceData.Rechnungs_ID || 'unbekannt'}.pdf`;
-      console.log('DEBUG: PDF generated successfully, size:', pdfBlob.size);
+      console.log('DEBUG: PDF generated successfully', {
+        blobSize: pdfBlob.size,
+        base64Length: pdfBase64.length,
+        filename: pdfFilename
+      });
     }
   } catch (error) {
     console.error('Failed to generate PDF for invoice notification:', error);
