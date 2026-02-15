@@ -33,10 +33,18 @@ export async function notifyNewOrder(orderData) {
   try {
     console.log('DEBUG: Generating PDF for order with data:', {
       hasItems: !!orderData.items,
+      itemsIsArray: Array.isArray(orderData.items),
       itemsLength: orderData.items ? orderData.items.length : 0,
       items: orderData.items,
-      orderId: orderData.Auftrags_ID || orderData.orderId
+      orderId: orderData.Auftrags_ID || orderData.orderId,
+      allKeys: Object.keys(orderData)
     });
+    
+    // Warn if items array is empty
+    if (!orderData.items || orderData.items.length === 0) {
+      console.warn('WARNING: Order has no items! PDF will be incomplete.');
+    }
+    
     const pdfDoc = await generatePDF('auftrag', orderData);
     if (pdfDoc) {
       const pdfBlob = pdfDoc.output('blob');
@@ -81,10 +89,18 @@ export async function notifyNewInvoice(invoiceData) {
   try {
     console.log('DEBUG: Generating PDF for invoice with data:', {
       hasItems: !!invoiceData.items,
+      itemsIsArray: Array.isArray(invoiceData.items),
       itemsLength: invoiceData.items ? invoiceData.items.length : 0,
       items: invoiceData.items,
-      invoiceId: invoiceData.Rechnungs_ID || invoiceData.invoiceId
+      invoiceId: invoiceData.Rechnungs_ID || invoiceData.invoiceId,
+      allKeys: Object.keys(invoiceData)
     });
+    
+    // Warn if items array is empty
+    if (!invoiceData.items || invoiceData.items.length === 0) {
+      console.warn('WARNING: Invoice has no items! PDF will be incomplete.');
+    }
+    
     const pdfDoc = await generatePDF('rechnung', invoiceData);
     if (pdfDoc) {
       const pdfBlob = pdfDoc.output('blob');
