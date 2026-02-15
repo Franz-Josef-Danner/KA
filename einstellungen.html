@@ -218,6 +218,15 @@
         </div>
       </form>
     </div>
+
+    <!-- Email Queue Manager Section -->
+    <div class="settings-card" style="margin-top: 30px;">
+      <h2 style="margin-bottom: 20px;">E-Mail-Warteschlange</h2>
+      <p style="color: #7f8c8d; margin-bottom: 20px;">
+        Hier sehen Sie alle wartenden E-Mail-Benachrichtigungen. Sie können E-Mails genehmigen und versenden.
+      </p>
+      <div id="email-queue-container"></div>
+    </div>
   </div>
 
   <script type="module">
@@ -239,6 +248,7 @@
       validateEmailConfig
     } from './js/modules/email-config.js';
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
+    import { initEmailQueueManager } from './js/modules/email-queue-manager.js';
     
     (() => {
       try {
@@ -254,6 +264,9 @@
         
         // Initialize email error display
         initEmailErrorDisplay();
+        
+        // Initialize email queue manager
+        initEmailQueueManager('email-queue-container');
       } catch (error) {
         // Authentication failed or a redirect is in progress
         console.error('Authentication error on settings page:', error);
