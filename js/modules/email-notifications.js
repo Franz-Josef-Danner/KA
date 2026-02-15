@@ -14,6 +14,103 @@ function confirmNotification(message) {
   return confirm(message);
 }
 
+// Helper to get email queue
+function getEmailQueue() {
+  try {
+    const raw = localStorage.getItem('ka_email_queue');
+    return raw ? JSON.parse(raw) : [];
+  } catch (error) {
+    console.error('Failed to load email queue:', error);
+    return [];
+  }
+}
+
+// Get notification template for email body
+export function getNotificationTemplate(type, data) {
+  const templates = {
+    newCustomer: `
+Neuer Kunde erstellt
+
+Kunde: ${data.customerName}
+Ansprechpartner: ${data.contactPerson}
+E-Mail: ${data.email}
+Telefon: ${data.phone}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    newOrder: `
+Neuer Auftrag erstellt
+
+Auftragsnummer: ${data.orderId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    newInvoice: `
+Neue Rechnung erstellt
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Fälligkeitsdatum: ${data.dueDate}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    paymentReceived: `
+Zahlung eingegangen
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Betrag: ${(data.amount || 0).toFixed(2)} €
+Zahlungsdatum: ${data.paymentDate}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    orderDeleted: `
+Auftrag gelöscht
+
+Auftragsnummer: ${data.orderId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    invoiceDeleted: `
+Rechnung gelöscht
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    invoiceOverdue: `
+Rechnung überfällig
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Fälligkeitsdatum: ${data.dueDate}
+Tage überfällig: ${data.daysPastDue}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`
+  };
+  
+  return templates[type] || '';
+}
+
+// Get notification subject line
+export function getNotificationSubject(type, data) {
+  const subjects = {
+    newCustomer: `Neuer Kunde: ${data.customerName}`,
+    newOrder: `Neuer Auftrag: ${data.orderId}`,
+    newInvoice: `Neue Rechnung: ${data.invoiceId}`,
+    paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`,
+    orderDeleted: `Auftrag gelöscht: ${data.orderId}`,
+    invoiceDeleted: `Rechnung gelöscht: ${data.invoiceId}`,
+    invoiceOverdue: `Rechnung überfällig: ${data.invoiceId}`
+  };
+  
+  return subjects[type] || 'KA System Benachrichtigung';
+}
+
 /**
  * Queue and immediately send a notification
  * This is used when the user confirms sending an email - we want to send it immediately
@@ -83,17 +180,6 @@ async function queueAndSendImmediately(type, data) {
     console.error('Error sending email:', error);
     alert(`E-Mail konnte nicht versendet werden:\n\n${error.message}\n\nDie Benachrichtigung bleibt in der Warteschlange und kann später über das Dashboard versendet werden.`);
     return false;
-  }
-}
-
-// Helper to get email queue
-function getEmailQueue() {
-  try {
-    const raw = localStorage.getItem('ka_email_queue');
-    return raw ? JSON.parse(raw) : [];
-  } catch (error) {
-    console.error('Failed to load email queue:', error);
-    return [];
   }
 }
 
@@ -256,92 +342,6 @@ export function notifyInvoiceOverdue(invoiceData) {
     daysPastDue: invoiceData.daysPastDue || 0,
     timestamp: new Date().toISOString()
   });
-}
-
-// Get notification template for email body
-export function getNotificationTemplate(type, data) {
-  const templates = {
-    newCustomer: `
-Neuer Kunde erstellt
-
-Kunde: ${data.customerName}
-Ansprechpartner: ${data.contactPerson}
-E-Mail: ${data.email}
-Telefon: ${data.phone}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
-    newOrder: `
-Neuer Auftrag erstellt
-
-Auftragsnummer: ${data.orderId}
-Kunde: ${data.customerName}
-Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Anzahl Artikel: ${data.items?.length ?? 0}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
-    newInvoice: `
-Neue Rechnung erstellt
-
-Rechnungsnummer: ${data.invoiceId}
-Kunde: ${data.customerName}
-Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Fälligkeitsdatum: ${data.dueDate}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
-    paymentReceived: `
-Zahlung eingegangen
-
-Rechnungsnummer: ${data.invoiceId}
-Kunde: ${data.customerName}
-Betrag: ${(data.amount || 0).toFixed(2)} €
-Zahlungsdatum: ${data.paymentDate}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
-    orderDeleted: `
-Auftrag gelöscht
-
-Auftragsnummer: ${data.orderId}
-Kunde: ${data.customerName}
-Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Anzahl Artikel: ${data.items?.length ?? 0}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
-    invoiceDeleted: `
-Rechnung gelöscht
-
-Rechnungsnummer: ${data.invoiceId}
-Kunde: ${data.customerName}
-Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
-    invoiceOverdue: `
-Rechnung überfällig
-
-Rechnungsnummer: ${data.invoiceId}
-Kunde: ${data.customerName}
-Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Fälligkeitsdatum: ${data.dueDate}
-Tage überfällig: ${data.daysPastDue}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`
-  };
-  
-  return templates[type] || '';
-}
-
-// Get notification subject line
-export function getNotificationSubject(type, data) {
-  const subjects = {
-    newCustomer: `Neuer Kunde: ${data.customerName}`,
-    newOrder: `Neuer Auftrag: ${data.orderId}`,
-    newInvoice: `Neue Rechnung: ${data.invoiceId}`,
-    paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`,
-    orderDeleted: `Auftrag gelöscht: ${data.orderId}`,
-    invoiceDeleted: `Rechnung gelöscht: ${data.invoiceId}`,
-    invoiceOverdue: `Rechnung überfällig: ${data.invoiceId}`
-  };
-  
-  return subjects[type] || 'KA System Benachrichtigung';
 }
 
 // Show warning when email notification failed
