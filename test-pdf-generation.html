@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Generation Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #output {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f0f0f0;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF Generation Test</h1>
+  <p>Test PDF generation with sample invoice and order data to verify items are included.</p>
+  
+  <button onclick="testInvoicePDF()">Test Invoice PDF</button>
+  <button onclick="testOrderPDF()">Test Order PDF</button>
+  
+  <div id="output">Console output will appear here...</div>
+
+  <script type="module">
+    import { generatePDF } from './js/modules/pdf-generator.js';
+    
+    // Make functions globally available
+    window.testInvoicePDF = testInvoicePDF;
+    window.testOrderPDF = testOrderPDF;
+    
+    function log(message) {
+      const output = document.getElementById('output');
+      output.textContent += message + '\n';
+      console.log(message);
+    }
+    
+    async function testInvoicePDF() {
+      log('=== Testing Invoice PDF Generation ===');
+      
+      const testInvoiceData = {
+        Rechnungs_ID: 'TEST-RE-001',
+        Rechnungsdatum: '2024-02-15',
+        Firma: 'Test Firma GmbH',
+        Firmen_ID: 'TEST001',
+        Firmenadresse: 'Teststraße 123\n1010 Wien\nÖsterreich',
+        Firmen_Email: 'test@firma.at',
+        Ansprechpartner: 'Max Mustermann',
+        Projekt: 'Test Projekt',
+        Kommentare: 'Test Kommentar',
+        Rabatt: '10',
+        Bezahlt: 'unbezahlt',
+        items: [
+          {
+            Artikel: 'Test Artikel 1',
+            Beschreibung: 'Beschreibung für Test Artikel 1',
+            Menge: '2',
+            Einheit: 'Stk',
+            Einzelpreis: '100.00',
+            Gesamtpreis: '200.00'
+          },
+          {
+            Artikel: 'Test Artikel 2',
+            Beschreibung: 'Beschreibung für Test Artikel 2',
+            Menge: '1',
+            Einheit: 'Stk',
+            Einzelpreis: '50.00',
+            Gesamtpreis: '50.00'
+          }
+        ]
+      };
+      
+      log('Invoice data:');
+      log('- Has items: ' + !!testInvoiceData.items);
+      log('- Items count: ' + (testInvoiceData.items ? testInvoiceData.items.length : 0));
+      log('- Items: ' + JSON.stringify(testInvoiceData.items, null, 2));
+      
+      try {
+        log('Generating PDF...');
+        const pdfDoc = await generatePDF('rechnung', testInvoiceData);
+        
+        if (pdfDoc) {
+          const pdfBlob = pdfDoc.output('blob');
+          log('✓ PDF generated successfully!');
+          log('- PDF size: ' + pdfBlob.size + ' bytes');
+          
+          // Download the PDF for inspection
+          const url = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'test-invoice.pdf';
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          log('✓ PDF downloaded as test-invoice.pdf');
+          log('→ Please open the PDF and verify that items table is present!');
+        } else {
+          log('✗ PDF generation returned null');
+        }
+      } catch (error) {
+        log('✗ Error generating PDF: ' + error.message);
+        console.error(error);
+      }
+    }
+    
+    async function testOrderPDF() {
+      log('\n=== Testing Order PDF Generation ===');
+      
+      const testOrderData = {
+        Auftrags_ID: 'TEST-AU-001',
+        Auftragsdatum: '2024-02-15',
+        Firma: 'Test Firma GmbH',
+        Firmen_ID: 'TEST001',
+        Firmenadresse: 'Teststraße 123\n1010 Wien\nÖsterreich',
+        Firmen_Email: 'test@firma.at',
+        Ansprechpartner: 'Max Mustermann',
+        Projekt: 'Test Projekt',
+        Kommentare: 'Test Kommentar',
+        Status: 'offen',
+        Rabatt: '5',
+        items: [
+          {
+            Artikel: 'Test Artikel A',
+            Beschreibung: 'Beschreibung für Test Artikel A',
+            Menge: '3',
+            Einheit: 'Stk',
+            Einzelpreis: '75.00',
+            Gesamtpreis: '225.00'
+          },
+          {
+            Artikel: 'Test Artikel B',
+            Beschreibung: 'Beschreibung für Test Artikel B',
+            Menge: '2',
+            Einheit: 'Stk',
+            Einzelpreis: '120.00',
+            Gesamtpreis: '240.00'
+          }
+        ]
+      };
+      
+      log('Order data:');
+      log('- Has items: ' + !!testOrderData.items);
+      log('- Items count: ' + (testOrderData.items ? testOrderData.items.length : 0));
+      log('- Items: ' + JSON.stringify(testOrderData.items, null, 2));
+      
+      try {
+        log('Generating PDF...');
+        const pdfDoc = await generatePDF('auftrag', testOrderData);
+        
+        if (pdfDoc) {
+          const pdfBlob = pdfDoc.output('blob');
+          log('✓ PDF generated successfully!');
+          log('- PDF size: ' + pdfBlob.size + ' bytes');
+          
+          // Download the PDF for inspection
+          const url = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'test-order.pdf';
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          log('✓ PDF downloaded as test-order.pdf');
+          log('→ Please open the PDF and verify that items table is present!');
+        } else {
+          log('✗ PDF generation returned null');
+        }
+      } catch (error) {
+        log('✗ Error generating PDF: ' + error.message);
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
