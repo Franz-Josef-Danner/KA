@@ -191,11 +191,11 @@ export function checkOverdueInvoices(force = false) {
     
     // Send notification
     const notificationResult = notifyInvoiceOverdue({
-      invoiceId: invoiceId,
-      customerName: customerName,
-      total: total,
+      invoiceId,
+      customerName,
+      total,
       dueDate: formatDateDDMMYYYY(deadline),
-      daysPastDue: daysPastDue
+      daysPastDue
     });
     
     if (notificationResult) {
