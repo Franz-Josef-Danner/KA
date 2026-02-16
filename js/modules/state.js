@@ -419,11 +419,11 @@ function autoPopulateGender(row) {
   const gender = (row.Gender || "").trim();
   
   // Check if Gender contains the old format "Sehr geehrte Frau" - convert to "Frau"
-  if (gender.startsWith("Sehr geehrte Frau") || gender === "Sehr geehrte Frau") {
+  if (gender.startsWith("Sehr geehrte Frau")) {
     row.Gender = "Frau";
   }
   // Check if Gender contains the old format "Sehr geehrter Herr" - convert to "Mann"
-  else if (gender.startsWith("Sehr geehrter Herr") || gender === "Sehr geehrter Herr") {
+  else if (gender.startsWith("Sehr geehrter Herr")) {
     row.Gender = "Mann";
   }
   // If Gender is already "Mann" or "Frau" or empty, leave it as is
