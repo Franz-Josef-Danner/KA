@@ -153,11 +153,11 @@ export async function saveEmailConfigAsync(config) {
 }
 
 // Validate email configuration
+// Note: Kept for compatibility with einstellungen.html form validation.
+// Currently no validation is needed since testEmail was removed.
+// Customer email validation happens at notification time in queueEmailNotification().
 export function validateEmailConfig(config) {
   const errors = [];
-  
-  // No validation needed since testEmail is removed
-  
   return errors;
 }
 

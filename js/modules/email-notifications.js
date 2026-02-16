@@ -6,6 +6,10 @@
 import { queueEmailNotification, isEmailConfigured, getEmailConfig, markNotificationAsSent } from './email-config.js';
 import { generatePDF } from './pdf-generator.js';
 
+// Constants for error messages
+const MISSING_EMAIL_ALERT_MESSAGE = 'E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.';
+const SEND_FAILED_ALERT_MESSAGE = 'E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.';
+
 /**
  * Helper function to ask user if they want to send a notification
  * @param {string} message - Confirmation message
@@ -283,7 +287,7 @@ export async function notifyNewCustomer(customerData) {
   });
   
   if (!result) {
-    alert('E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.');
+    alert(SEND_FAILED_ALERT_MESSAGE);
   }
   
   return result;
@@ -335,7 +339,7 @@ export async function notifyNewOrder(orderData, fullDocument = null) {
   }, pdfAttachment);
   
   if (!result) {
-    alert('E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.');
+    alert(SEND_FAILED_ALERT_MESSAGE);
   }
   
   return result;
@@ -386,7 +390,7 @@ export async function notifyNewInvoice(invoiceData, fullDocument = null) {
   }, pdfAttachment);
   
   if (!result) {
-    alert('E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.');
+    alert(SEND_FAILED_ALERT_MESSAGE);
   }
   
   return result;
@@ -425,7 +429,7 @@ export async function notifyPaymentReceived(paymentData) {
   });
   
   if (!result) {
-    alert('E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.');
+    alert(SEND_FAILED_ALERT_MESSAGE);
   }
   
   return result;
@@ -473,7 +477,7 @@ export async function notifyOrderDeleted(orderData, fullDocument = null) {
   }, pdfAttachment);
   
   if (!result) {
-    alert('E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.');
+    alert(SEND_FAILED_ALERT_MESSAGE);
   }
   
   return result;
@@ -520,7 +524,7 @@ export async function notifyInvoiceDeleted(invoiceData, fullDocument = null) {
   }, pdfAttachment);
   
   if (!result) {
-    alert('E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.');
+    alert(SEND_FAILED_ALERT_MESSAGE);
   }
   
   return result;
