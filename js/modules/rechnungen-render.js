@@ -270,7 +270,7 @@ export async function render() {
         invoiceId: row.Rechnungs_ID || '',
         customerName: row.Firma || '',
         total: total
-      });
+      }, row); // Pass full row for PDF generation
       
       rows.splice(idx, 1);
       setRows(rows);

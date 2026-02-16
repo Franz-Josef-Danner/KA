@@ -767,7 +767,7 @@ async function saveInvoice() {
       project: formData.Projekt || '',
       orderId: formData.Auftrags_ID || '',
       dueDate: '' // Could calculate this if needed
-    });
+    }, formData); // Pass full formData for PDF generation
     
     // Show feedback about notification status
     if (!notificationResult) {

@@ -24,9 +24,10 @@ use PHPMailer\PHPMailer\Exception;
  * @param string $body Email body (plain text)
  * @param string|null $from From address (defaults to config email)
  * @param bool $verbose Enable verbose logging
+ * @param array|null $attachment Optional PDF attachment as ['data' => base64_string, 'filename' => string]
  * @return array Result with 'success', 'error', and 'log' keys
  */
-function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbose = false) {
+function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbose = false, $attachment = null) {
     $smtp = $config['smtp'];
     $host = $smtp['host'];
     $port = isset($smtp['port']) ? $smtp['port'] : 587;
@@ -86,6 +87,19 @@ function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbos
         $mail->CharSet = 'UTF-8';
         $mail->Subject = $subject;
         $mail->Body    = $body;
+        
+        // Add PDF attachment if provided
+        if ($attachment && isset($attachment['data']) && isset($attachment['filename'])) {
+            $log[] = "📎 Adding PDF attachment: " . $attachment['filename'];
+            // Decode base64 data
+            $pdfData = base64_decode($attachment['data']);
+            if ($pdfData !== false) {
+                $mail->addStringAttachment($pdfData, $attachment['filename'], 'base64', 'application/pdf');
+                $log[] = "   ✓ Attachment added successfully";
+            } else {
+                $log[] = "   ⚠ Warning: Could not decode attachment data";
+            }
+        }
         
         // Send
         $log[] = "";

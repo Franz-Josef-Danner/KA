@@ -100,13 +100,19 @@ foreach ($approvedEmails as $email) {
     $subject = isset($email['subject']) ? $email['subject'] : 'KA System Benachrichtigung';
     $body = isset($email['body']) ? $email['body'] : (isset($email['message']) ? $email['message'] : '');
     
+    // Check for PDF attachment
+    $attachment = null;
+    if (isset($email['attachment']) && is_array($email['attachment'])) {
+        $attachment = $email['attachment'];
+    }
+    
     // If no recipient specified, use the configured email as fallback (send to self for notifications)
     if (empty($to)) {
         $to = $config['email']; // Use configured email as default recipient
     }
     
     // Send email via SMTP using PHPMailer (verbose mode for debugging)
-    $result = sendEmailPHPMailer($config, $to, $subject, $body, null, true);
+    $result = sendEmailPHPMailer($config, $to, $subject, $body, null, true, $attachment);
     
     // Log to file for persistence
     writeSmtpLog($result);
