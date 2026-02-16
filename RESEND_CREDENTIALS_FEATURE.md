@@ -11,7 +11,7 @@ Diese Funktion ermöglicht es Administratoren, Zugangsdaten für Kunden erneut p
 1. Navigieren Sie zu **Kundenbereiche** im Hauptmenü
 2. Suchen Sie den gewünschten Kunden in der Liste
 3. Klicken Sie auf den Button **"Zugangsdaten"** in der Zeile des Kunden
-4. Im geöffneten Modal-Dialog sehen Sie den neuen Button **"Zugangsdaten per E-Mail senden"**
+4. Im geöffneten Modal-Dialog sehen Sie den neuen Button **"Zugang senden"**
 
 ### Funktionsweise
 
@@ -42,7 +42,7 @@ Diese Funktion ermöglicht es Administratoren, Zugangsdaten für Kunden erneut p
 #### Datei: `js/modules/kundenbereiche-render.js`
 
 **Neue UI-Elemente**:
-- Button "Zugangsdaten per E-Mail senden" im Credentials-Modal
+- Button "Zugang senden" im Credentials-Modal
 - Platzierung: Links im Modal, prominent positioniert
 
 **Funktionen**:
@@ -103,7 +103,7 @@ Die Funktion behandelt folgende Fehlerszenarien:
 1. Administrator öffnet **Kundenbereiche**
 2. Sucht den Kunden (z.B. "Musterfirma GmbH")
 3. Klickt auf **"Zugangsdaten"**
-4. Klickt auf **"Zugangsdaten per E-Mail senden"**
+4. Klickt auf **"Zugang senden"**
 5. Bestätigt den Dialog
 6. System generiert neues Passwort und sendet E-Mail
 7. Kunde erhält E-Mail mit neuen Zugangsdaten
