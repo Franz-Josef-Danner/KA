@@ -780,7 +780,7 @@ async function saveInvoice() {
     const invoiceItems = formData.items || [];
     const total = calculateItemsTotal(invoiceItems);
     
-    const notificationResult = notifyPaymentReceived({
+    const notificationResult = await notifyPaymentReceived({
       invoiceId: formData.Rechnungs_ID || 'N/A',
       customerName: formData.Firma || 'Unbekannt',
       amount: total,
