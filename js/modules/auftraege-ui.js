@@ -803,7 +803,7 @@ async function saveOrder() {
       return sum + (parseFloat(item.Gesamtpreis) || 0);
     }, 0);
     
-    const notificationResult = notifyNewOrder({
+    const notificationResult = await notifyNewOrder({
       orderId: formData.Auftrags_ID || 'N/A',
       customerName: formData.Firma || 'Unbekannt',
       contactPerson: formData.Ansprechpartner || '',

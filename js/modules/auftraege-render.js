@@ -191,7 +191,7 @@ export function render() {
     minus.textContent = "−";
     minus.title = "Zeile löschen";
     minus.className = "danger";
-    minus.addEventListener("click", () => {
+    minus.addEventListener("click", async () => {
       const ok = confirm("Sind Sie sicher, dass Sie diesen Auftrag löschen möchten?");
       if (!ok) return;
       
@@ -200,7 +200,7 @@ export function render() {
       const total = calculateItemsTotal(orderItems);
       
       // Send deletion notification
-      notifyOrderDeleted({
+      await notifyOrderDeleted({
         orderId: row.Auftrags_ID || '',
         customerName: row.Firma || '',
         total: total,

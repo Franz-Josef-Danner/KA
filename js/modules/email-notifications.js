@@ -202,12 +202,12 @@ function showEmailSendingError(errorMessage) {
 }
 
 // Send notification when a new customer is created
-export function notifyNewCustomer(customerData) {
+export async function notifyNewCustomer(customerData) {
   if (!isEmailConfigured()) {
     return false;
   }
   
-  // Ask for confirmation before queuing
+  // Ask for confirmation before sending
   const shouldSend = confirmNotification(
     `Möchten Sie eine E-Mail-Benachrichtigung für den neuen Kunden "${customerData.firma || 'Unbekannt'}" senden?`
   );
@@ -216,7 +216,8 @@ export function notifyNewCustomer(customerData) {
     return false;
   }
   
-  return queueEmailNotification('newCustomer', {
+  // Queue and send immediately
+  return await queueAndSendImmediately('newCustomer', {
     customerName: customerData.firma || 'Unbekannt',
     contactPerson: customerData.ansprechpartner || '',
     email: customerData.email || '',
@@ -226,12 +227,12 @@ export function notifyNewCustomer(customerData) {
 }
 
 // Send notification when a new order is created
-export function notifyNewOrder(orderData) {
+export async function notifyNewOrder(orderData) {
   if (!isEmailConfigured()) {
     return false;
   }
   
-  // Ask for confirmation before queuing
+  // Ask for confirmation before sending
   const shouldSend = confirmNotification(
     `Möchten Sie eine E-Mail-Benachrichtigung für den neuen Auftrag "${orderData.orderId || 'N/A'}" senden?`
   );
@@ -240,7 +241,8 @@ export function notifyNewOrder(orderData) {
     return false;
   }
   
-  return queueEmailNotification('newOrder', {
+  // Queue and send immediately
+  return await queueAndSendImmediately('newOrder', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
     total: orderData.total || 0,
@@ -275,12 +277,12 @@ export async function notifyNewInvoice(invoiceData) {
 }
 
 // Send notification when a payment is received
-export function notifyPaymentReceived(paymentData) {
+export async function notifyPaymentReceived(paymentData) {
   if (!isEmailConfigured()) {
     return false;
   }
   
-  // Ask for confirmation before queuing
+  // Ask for confirmation before sending
   const shouldSend = confirmNotification(
     `Möchten Sie eine E-Mail-Benachrichtigung für den Zahlungseingang der Rechnung "${paymentData.invoiceId || 'N/A'}" senden?`
   );
@@ -289,7 +291,8 @@ export function notifyPaymentReceived(paymentData) {
     return false;
   }
   
-  return queueEmailNotification('paymentReceived', {
+  // Queue and send immediately
+  return await queueAndSendImmediately('paymentReceived', {
     invoiceId: paymentData.invoiceId || '',
     customerName: paymentData.customerName || '',
     amount: paymentData.amount || 0,
@@ -299,12 +302,12 @@ export function notifyPaymentReceived(paymentData) {
 }
 
 // Send notification when an order is deleted
-export function notifyOrderDeleted(orderData) {
+export async function notifyOrderDeleted(orderData) {
   if (!isEmailConfigured()) {
     return false;
   }
   
-  // Ask for confirmation before queuing
+  // Ask for confirmation before sending
   const shouldSend = confirmNotification(
     `Möchten Sie eine E-Mail-Benachrichtigung für den gelöschten Auftrag "${orderData.orderId || 'N/A'}" senden?`
   );
@@ -313,7 +316,8 @@ export function notifyOrderDeleted(orderData) {
     return false;
   }
   
-  return queueEmailNotification('orderDeleted', {
+  // Queue and send immediately
+  return await queueAndSendImmediately('orderDeleted', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
     total: orderData.total || 0,

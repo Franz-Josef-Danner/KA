@@ -286,7 +286,7 @@ async function syncFirmenIds(rowsToSync) {
           }
         }
         // Send email notification for new customer
-        const notificationResult = notifyNewCustomer({
+        const notificationResult = await notifyNewCustomer({
           firma: firmenName,
           ansprechpartner: row.Ansprechpartner || '',
           email: email,
