@@ -5,6 +5,7 @@
 
 import { queueEmailNotification, isEmailConfigured, getEmailConfig, markNotificationAsSent } from './email-config.js';
 import { generatePDF } from './pdf-generator.js';
+import { getRows as getFirmenRows, ensureInitialized as ensureFirmenInitialized } from './state.js';
 
 // Constants for error messages
 const MISSING_EMAIL_ALERT_MESSAGE = 'E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.';
@@ -74,8 +75,86 @@ function getEmailQueue() {
   }
 }
 
+/**
+ * Get company data from Firmenliste by company name
+ * @param {string} firmaName - Company name to search for
+ * @returns {Promise<object|null>} - Company data or null if not found
+ */
+async function getCompanyData(firmaName) {
+  try {
+    await ensureFirmenInitialized();
+    const companies = getFirmenRows();
+    const company = companies.find(c => c.Firma === firmaName);
+    return company || null;
+  } catch (error) {
+    console.error('Failed to get company data:', error);
+    return null;
+  }
+}
+
+/**
+ * Generate personalized greeting based on company data
+ * Uses the same logic as kampagnen module for consistency
+ * @param {object} company - Company data from Firmenliste
+ * @returns {string} - Personalized greeting
+ */
+function generateGreeting(company) {
+  if (!company) {
+    return 'Sehr geehrte Damen und Herren';
+  }
+  
+  const geschlecht = company.Geschlecht?.trim();
+  const nachname = company.Nachname?.trim() || '';
+  const vorname = company.Vorname?.trim() || '';
+  const firma = company.Firma?.trim() || '';
+  const persoenlich = company.Persönlich === 'true' || company.Persönlich === true;
+  
+  if (!geschlecht) {
+    // No gender selected: use company team greeting
+    if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
+  } else if (geschlecht === 'Mann') {
+    // Male: check if personal checkbox is activated
+    if (persoenlich && vorname) {
+      return `Lieber ${vorname}`;
+    } else if (nachname) {
+      return `Sehr geehrter Herr ${nachname}`;
+    } else if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
+  } else if (geschlecht === 'Frau') {
+    // Female: check if personal checkbox is activated
+    if (persoenlich && vorname) {
+      return `Liebe ${vorname}`;
+    } else if (nachname) {
+      return `Sehr geehrte Frau ${nachname}`;
+    } else if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
+  }
+  
+  // Fallback to generic greeting
+  if (firma) {
+    return `Liebes ${firma}-Team`;
+  } else {
+    return 'Sehr geehrte Damen und Herren';
+  }
+}
+
 // Get notification template for email body
-export function getNotificationTemplate(type, data) {
+export async function getNotificationTemplate(type, data) {
+  // Get company data to check Persönlich checkbox
+  const company = data.customerName ? await getCompanyData(data.customerName) : null;
+  const isPersoenlich = company ? (company.Persönlich === 'true' || company.Persönlich === true) : false;
+  const greeting = generateGreeting(company);
+  
   const templates = {
     newCustomer: `
 Neuer Kunde erstellt
@@ -86,24 +165,66 @@ E-Mail: ${data.email}
 Telefon: ${data.phone}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
-    newOrder: `
-Neuer Auftrag erstellt
+    newOrder: isPersoenlich ? `${greeting},
+
+ich habe den folgenden Auftrag angelegt.
 
 Auftragsnummer: ${data.orderId}
 Kunde: ${data.customerName}
 Gesamtsumme: ${(data.total || 0).toFixed(2)} €
 Anzahl Artikel: ${data.items?.length ?? 0}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
-    newInvoice: `
-Neue Rechnung erstellt
+
+Bei Unklarheiten bitte einfach melden.
+
+LG
+Franz` : `${greeting},
+
+der folgende Auftrag wurde erfolgreich angelegt.
+
+Auftragsnummer: ${data.orderId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+
+Diese Nachricht dient als automatische Bestätigung der Auftragserfassung.
+
+Bei Rückfragen antworten Sie bitte direkt auf diese E-Mail.
+
+Mit freundlichen Grüßen
+Franz Josef Danner`,
+    newInvoice: isPersoenlich ? `${greeting},
+
+hier ist die aktuelle Rechnung.
 
 Rechnungsnummer: ${data.invoiceId}
 Kunde: ${data.customerName}
 Gesamtsumme: ${(data.total || 0).toFixed(2)} €
-Fälligkeitsdatum: ${data.dueDate}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
-`,
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}${data.dueDate ? `
+Fälligkeitsdatum: ${data.dueDate}` : ''}
+
+Sollte etwas nicht stimmen, bitte Bescheid geben.
+
+LG
+Franz` : `${greeting},
+
+eine neue Rechnung wurde erfolgreich erstellt.
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}${data.dueDate ? `
+Fälligkeitsdatum: ${data.dueDate}` : ''}
+
+Bitte überweisen Sie den Betrag fristgerecht.
+
+Bei Fragen stehen wir gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+Franz Josef Danner`,
     paymentReceived: `
 Zahlung eingegangen
 
@@ -207,7 +328,7 @@ async function queueAndSendImmediately(type, data, attachment = null) {
   
   // Prepare email data for backend
   const subject = getNotificationSubject(type, data);
-  const body = getNotificationTemplate(type, data);
+  const body = await getNotificationTemplate(type, data);
   const to = notification.recipientEmail || '';
   
   // Validate recipient email
@@ -347,7 +468,7 @@ export async function sendCustomerWelcomeEmail(customerData) {
   try {
     // Prepare email data
     const subject = getNotificationSubject('customerWelcome', {});
-    const body = getNotificationTemplate('customerWelcome', {
+    const body = await getNotificationTemplate('customerWelcome', {
       username: username,
       password: password,
       loginLink: CUSTOMER_LOGIN_URL,
