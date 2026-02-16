@@ -295,8 +295,10 @@ async function showCredentialsModal(firmenId, email, firma) {
       
       if (!newPassword) {
         alert('Fehler beim Generieren eines neuen Passworts. Bitte versuchen Sie es erneut.');
-        btn.disabled = false;
-        btn.textContent = originalText;
+        if (btn.isConnected) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
         return;
       }
       
@@ -311,17 +313,23 @@ async function showCredentialsModal(firmenId, email, firma) {
       if (emailSent) {
         alert(`Zugangsdaten erfolgreich an ${email} gesendet!\n\nDer Kunde hat ein neues Passwort erhalten.`);
         // Close the modal after successful send
-        document.body.removeChild(overlay);
+        if (overlay.isConnected) {
+          document.body.removeChild(overlay);
+        }
       } else {
         alert(`Fehler beim Versenden der E-Mail an ${email}.\n\nBitte überprüfen Sie die E-Mail-Konfiguration in den Einstellungen.\n\nEin neues Passwort wurde generiert. Bitte setzen Sie das Passwort erneut zurück und teilen Sie es dem Kunden manuell mit.`);
-        btn.disabled = false;
-        btn.textContent = originalText;
+        if (btn.isConnected) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
       }
     } catch (error) {
       console.error('Error resending credentials:', error);
       alert('Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
-      btn.disabled = false;
-      btn.textContent = originalText;
+      if (btn.isConnected) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
     }
   });
   
