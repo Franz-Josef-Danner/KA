@@ -47,15 +47,21 @@ export async function render() {
   }
 
   // Auto-populate Geschlecht column based on Gender column if needed
+  // Only auto-populate if the field is missing (undefined/null), not empty string
   let hasChanges = false;
   rows.forEach(row => {
-    if (!row["Geschlecht"]) {
+    // Only populate if field doesn't exist or is null/undefined (not empty string)
+    if (row["Geschlecht"] === undefined || row["Geschlecht"] === null) {
       const genderValue = String(row["Gender"] || "").trim();
       if (genderValue === "Sehr geehrter Herr") {
         row["Geschlecht"] = "Mann";
         hasChanges = true;
       } else if (genderValue === "Sehr geehrte Frau") {
         row["Geschlecht"] = "Frau";
+        hasChanges = true;
+      } else {
+        // Set to empty string to mark as processed
+        row["Geschlecht"] = "";
         hasChanges = true;
       }
     }
