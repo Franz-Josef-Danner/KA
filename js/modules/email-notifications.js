@@ -23,8 +23,8 @@ function confirmNotification(message) {
  */
 async function generatePDFAttachment(documentType, documentData) {
   try {
-    // Generate the PDF document
-    const pdfDoc = await generatePDF(documentType, documentData, false, null, false);
+    // Generate the PDF document using standard template for customer-facing emails
+    const pdfDoc = await generatePDF(documentType, documentData, false, null, true);
     
     if (!pdfDoc) {
       console.error('Failed to generate PDF for email attachment');
