@@ -1,7 +1,7 @@
 // -----------------------------
 // Rendering Module
 // -----------------------------
-import { COLUMNS, STATUS_OPTIONS } from './config.js';
+import { COLUMNS, STATUS_OPTIONS, GENDER_OPTIONS } from './config.js';
 import { getRows, setRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
@@ -79,8 +79,34 @@ export function render() {
       const value = String(row[col] ?? "").trim();
       const isDuplicate = value && duplicateMap.has(col) && duplicateMap.get(col).has(value);
       
-      // Special handling for Status column - use dropdown
-      if (col === "Status") {
+      // Special handling for Gender column - use dropdown
+      if (col === "Gender") {
+        const select = document.createElement("select");
+        select.className = "gender-select";
+        select.setAttribute("aria-label", "Geschlecht");
+        
+        // Add all gender options
+        GENDER_OPTIONS.forEach(option => {
+          const optionElement = document.createElement("option");
+          optionElement.value = option;
+          optionElement.textContent = option;
+          if (row[col] === option) {
+            optionElement.selected = true;
+          }
+          select.appendChild(optionElement);
+        });
+        
+        // Handle change event
+        select.addEventListener("change", async (e) => {
+          const currentRows = getRows();
+          currentRows[idx][col] = e.target.value;
+          await setRows(currentRows);
+          await save();
+          render();
+        });
+        
+        td.appendChild(select);
+      } else if (col === "Status") {
         const select = document.createElement("select");
         select.className = "status-select";
         select.setAttribute("aria-label", "Status");
