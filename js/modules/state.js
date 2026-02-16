@@ -7,7 +7,7 @@ import { escapeHtml } from '../utils/sanitize.js';
 import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
 import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
 import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js';
-import { notifyNewCustomer, sendCustomerWelcomeEmail } from './email-notifications.js';
+import { sendCustomerWelcomeEmail } from './email-notifications.js';
 import { isEmailConfigured } from './email-config.js';
 
 // API endpoints
@@ -297,22 +297,6 @@ async function syncFirmenIds(rowsToSync) {
             } else {
               console.warn(`Failed to send welcome email to ${email}`);
             }
-          }
-        }
-        // Send email notification for new customer
-        const notificationResult = await notifyNewCustomer({
-          firma: firmenName,
-          ansprechpartner: row.Ansprechpartner || '',
-          email: email,
-          telefon: row.Telefon || ''
-        });
-        
-        // Show warning if notification was not queued
-        if (!notificationResult) {
-          if (!isEmailConfigured()) {
-            console.warn('E-Mail-Benachrichtigung für neuen Kunden nicht gesendet: E-Mail-Benachrichtigungen sind nicht aktiviert.');
-          } else {
-            console.warn('E-Mail-Benachrichtigung für neuen Kunden konnte nicht versendet werden.');
           }
         }
       } else {

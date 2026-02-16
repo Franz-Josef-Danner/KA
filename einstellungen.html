@@ -173,10 +173,6 @@
             <div class="form-group">
               <label><strong>Benachrichtigungen senden für:</strong></label>
               <label>
-                <input type="checkbox" id="notifyNewCustomer" name="notifyNewCustomer" checked />
-                Neue Kunden
-              </label>
-              <label>
                 <input type="checkbox" id="notifyNewOrder" name="notifyNewOrder" checked />
                 Neue Aufträge
               </label>
@@ -369,7 +365,6 @@
           const emailConfig = {
             enabled: emailEnabled.checked,
             notificationSettings: {
-              newCustomer: document.getElementById('notifyNewCustomer').checked,
               newOrder: document.getElementById('notifyNewOrder').checked,
               newInvoice: document.getElementById('notifyNewInvoice').checked,
               paymentReceived: document.getElementById('notifyPaymentReceived').checked,
@@ -450,7 +445,6 @@
           const emailConfig = await loadEmailConfigAsync();
           emailEnabled.checked = emailConfig.enabled;
           emailConfigSection.style.display = emailConfig.enabled ? 'block' : 'none';
-          document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
           document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;
           document.getElementById('notifyNewInvoice').checked = emailConfig.notificationSettings?.newInvoice !== false;
           document.getElementById('notifyPaymentReceived').checked = emailConfig.notificationSettings?.paymentReceived !== false;
