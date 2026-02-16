@@ -8,7 +8,7 @@ export function findDuplicates(dataRows) {
   const duplicateMap = new Map();
   
   // Columns to exclude from duplicate detection
-  const excludedColumns = ["Gender", "Titel", "Status", "Kommentare", "Vorname", "Nachname"];
+  const excludedColumns = ["Titel", "Status", "Kommentare", "Vorname", "Nachname"];
   
   for (const col of COLUMNS) {
     // Skip excluded columns

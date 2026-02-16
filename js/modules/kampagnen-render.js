@@ -77,7 +77,7 @@ function renderMailInterface() {
         <label for="email-body">Nachricht:</label>
         <textarea 
           id="email-body" 
-          placeholder="Guten Tag {{Gender}} {{Nachname}},
+          placeholder="Guten Tag {{Geschlecht}} {{Nachname}},
 
 vielen Dank für Ihr Interesse an {{Firma}}...
 
