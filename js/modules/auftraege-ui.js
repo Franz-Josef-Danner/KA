@@ -518,9 +518,10 @@ export function openOrderModal(rowIndex) {
   // Show modal
   modal.style.display = "flex";
   
-  // Focus first input
+  // Focus first input (Firma field is now at the top)
   setTimeout(() => {
-    document.getElementById("edit_Auftrags_ID").focus();
+    const firstInput = document.getElementById("edit_Firma");
+    if (firstInput) firstInput.focus();
   }, 100);
 }
 
