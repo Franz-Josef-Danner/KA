@@ -205,7 +205,7 @@ export function render() {
         customerName: row.Firma || '',
         total: total,
         items: orderItems
-      });
+      }, row); // Pass full row for PDF generation
       
       rows.splice(idx, 1);
       setRows(rows);

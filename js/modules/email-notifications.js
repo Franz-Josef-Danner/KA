@@ -4,6 +4,7 @@
 // Integrates email notifications with various system events
 
 import { queueEmailNotification, isEmailConfigured, getEmailConfig, markNotificationAsSent } from './email-config.js';
+import { generatePDF } from './pdf-generator.js';
 
 /**
  * Helper function to ask user if they want to send a notification
@@ -12,6 +13,47 @@ import { queueEmailNotification, isEmailConfigured, getEmailConfig, markNotifica
  */
 function confirmNotification(message) {
   return confirm(message);
+}
+
+/**
+ * Generate PDF and convert to base64 for email attachment
+ * @param {string} documentType - 'invoice' or 'order'
+ * @param {object} documentData - The document data
+ * @returns {Promise<object|null>} - Object with {data: base64String, filename: string} or null on error
+ */
+async function generatePDFAttachment(documentType, documentData) {
+  try {
+    // Generate the PDF document using standard template for customer-facing emails
+    const pdfDoc = await generatePDF(documentType, documentData, false, null, true);
+    
+    if (!pdfDoc) {
+      console.error('Failed to generate PDF for email attachment');
+      return null;
+    }
+    
+    // Convert PDF to base64
+    const pdfBase64 = pdfDoc.output('datauristring'); // Returns "data:application/pdf;base64,..."
+    const base64Data = pdfBase64.split(',')[1]; // Extract just the base64 part
+    
+    // Generate filename
+    const dateString = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+    let filename;
+    if (documentType === 'invoice' || documentType === 'rechnung') {
+      const invoiceId = documentData.invoiceId || documentData.Rechnungs_ID || 'N-A';
+      filename = `Rechnung_${invoiceId}_${dateString}.pdf`;
+    } else {
+      const orderId = documentData.orderId || documentData.Auftrags_ID || 'N-A';
+      filename = `Auftrag_${orderId}_${dateString}.pdf`;
+    }
+    
+    return {
+      data: base64Data,
+      filename: filename
+    };
+  } catch (error) {
+    console.error('Error generating PDF attachment:', error);
+    return null;
+  }
 }
 
 // Helper to get email queue
@@ -117,9 +159,10 @@ export function getNotificationSubject(type, data) {
  * instead of requiring them to go to the dashboard to approve and send it manually
  * @param {string} type - Notification type
  * @param {object} data - Notification data
+ * @param {object|null} attachment - Optional PDF attachment with {data: base64, filename: string}
  * @returns {Promise<boolean>} - True if notification was sent successfully
  */
-async function queueAndSendImmediately(type, data) {
+async function queueAndSendImmediately(type, data, attachment = null) {
   // Queue the notification with bypassing notification settings check
   // since the user has already confirmed via dialog
   const notificationId = queueEmailNotification(type, data, true);
@@ -155,6 +198,11 @@ async function queueAndSendImmediately(type, data) {
     body: body,
     notificationId: notificationId
   };
+  
+  // Add attachment if provided
+  if (attachment) {
+    emailToSend.attachment = attachment;
+  }
   
   try {
     // Call backend API to send the email immediately
@@ -228,7 +276,7 @@ export async function notifyNewCustomer(customerData) {
 }
 
 // Send notification when a new order is created
-export async function notifyNewOrder(orderData) {
+export async function notifyNewOrder(orderData, fullDocument = null) {
   if (!isEmailConfigured()) {
     return false;
   }
@@ -242,18 +290,31 @@ export async function notifyNewOrder(orderData) {
     return false;
   }
   
-  // Queue and send immediately
+  // Generate PDF attachment for the order
+  // Use fullDocument if provided (should always be provided in practice),
+  // otherwise construct a minimal document from orderData as fallback
+  const documentForPdf = fullDocument || {
+    Auftrags_ID: orderData.orderId,
+    Firma: orderData.customerName,
+    Ansprechpartner: orderData.contactPerson,
+    Artikel: orderData.items,
+    Projekt: orderData.project,
+    Status: orderData.status
+  };
+  const pdfAttachment = await generatePDFAttachment('order', documentForPdf);
+  
+  // Queue and send immediately with attachment
   return await queueAndSendImmediately('newOrder', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
     total: orderData.total || 0,
     items: orderData.items || [],
     timestamp: new Date().toISOString()
-  });
+  }, pdfAttachment);
 }
 
 // Send notification when a new invoice is created
-export async function notifyNewInvoice(invoiceData) {
+export async function notifyNewInvoice(invoiceData, fullDocument = null) {
   if (!isEmailConfigured()) {
     return false;
   }
@@ -267,14 +328,26 @@ export async function notifyNewInvoice(invoiceData) {
     return false;
   }
   
-  // Queue and send immediately
+  // Generate PDF attachment for the invoice
+  // Use fullDocument if provided, otherwise construct from invoiceData
+  const documentForPdf = fullDocument || {
+    Rechnungs_ID: invoiceData.invoiceId,
+    Firma: invoiceData.customerName,
+    Ansprechpartner: invoiceData.contactPerson,
+    items: invoiceData.items,
+    Projekt: invoiceData.project,
+    Auftrags_ID: invoiceData.orderId
+  };
+  const pdfAttachment = await generatePDFAttachment('invoice', documentForPdf);
+  
+  // Queue and send immediately with attachment
   return await queueAndSendImmediately('newInvoice', {
     invoiceId: invoiceData.invoiceId || '',
     customerName: invoiceData.customerName || '',
     total: invoiceData.total || 0,
     dueDate: invoiceData.dueDate || '',
     timestamp: new Date().toISOString()
-  });
+  }, pdfAttachment);
 }
 
 // Send notification when a payment is received
@@ -303,7 +376,7 @@ export async function notifyPaymentReceived(paymentData) {
 }
 
 // Send notification when an order is deleted
-export async function notifyOrderDeleted(orderData) {
+export async function notifyOrderDeleted(orderData, fullDocument = null) {
   if (!isEmailConfigured()) {
     return false;
   }
@@ -317,18 +390,27 @@ export async function notifyOrderDeleted(orderData) {
     return false;
   }
   
-  // Queue and send immediately
+  // Generate PDF attachment for the deleted order
+  // Use fullDocument if provided, otherwise construct from orderData
+  const documentForPdf = fullDocument || {
+    Auftrags_ID: orderData.orderId,
+    Firma: orderData.customerName,
+    Artikel: orderData.items
+  };
+  const pdfAttachment = await generatePDFAttachment('order', documentForPdf);
+  
+  // Queue and send immediately with attachment
   return await queueAndSendImmediately('orderDeleted', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
     total: orderData.total || 0,
     items: orderData.items || [],
     timestamp: new Date().toISOString()
-  });
+  }, pdfAttachment);
 }
 
 // Send notification when an invoice is deleted
-export async function notifyInvoiceDeleted(invoiceData) {
+export async function notifyInvoiceDeleted(invoiceData, fullDocument = null) {
   if (!isEmailConfigured()) {
     return false;
   }
@@ -342,13 +424,22 @@ export async function notifyInvoiceDeleted(invoiceData) {
     return false;
   }
   
-  // Queue and send immediately
+  // Generate PDF attachment for the deleted invoice
+  // Use fullDocument if provided, otherwise construct from invoiceData
+  const documentForPdf = fullDocument || {
+    Rechnungs_ID: invoiceData.invoiceId,
+    Firma: invoiceData.customerName,
+    items: invoiceData.items
+  };
+  const pdfAttachment = await generatePDFAttachment('invoice', documentForPdf);
+  
+  // Queue and send immediately with attachment
   return await queueAndSendImmediately('invoiceDeleted', {
     invoiceId: invoiceData.invoiceId || '',
     customerName: invoiceData.customerName || '',
     total: invoiceData.total || 0,
     timestamp: new Date().toISOString()
-  });
+  }, pdfAttachment);
 }
 
 // Send notification when an invoice is overdue

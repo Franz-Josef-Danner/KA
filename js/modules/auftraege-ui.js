@@ -811,7 +811,7 @@ async function saveOrder() {
       items: orderItems,
       project: formData.Projekt || '',
       status: formData.Status || ''
-    });
+    }, formData); // Pass full formData for PDF generation
     
     // Show feedback about notification status
     if (!notificationResult) {
