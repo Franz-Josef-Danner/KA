@@ -722,7 +722,7 @@ function closeModal() {
   currentEditingRowIndex = null;
 }
 
-function saveInvoice() {
+async function saveInvoice() {
   // Validate form before saving
   if (!validateForm()) {
     return false;
@@ -758,7 +758,7 @@ function saveInvoice() {
     const invoiceItems = formData.items || [];
     const total = calculateItemsTotal(invoiceItems);
     
-    const notificationResult = notifyNewInvoice({
+    const notificationResult = await notifyNewInvoice({
       invoiceId: formData.Rechnungs_ID || 'N/A',
       customerName: formData.Firma || 'Unbekannt',
       contactPerson: formData.Ansprechpartner || '',

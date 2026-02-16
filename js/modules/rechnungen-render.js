@@ -257,16 +257,16 @@ export async function render() {
     minus.textContent = "−";
     minus.title = "Zeile löschen";
     minus.className = "danger";
-    minus.addEventListener("click", () => {
+    minus.addEventListener("click", async () => {
       const ok = confirm("Sind Sie sicher, dass Sie diese Rechnung löschen möchten?");
       if (!ok) return;
       
       // Calculate total before deletion for notification
-      const invoiceItems = row.Artikel || [];
+      const invoiceItems = row.items || [];
       const total = calculateItemsTotal(invoiceItems);
       
-      // Send deletion notification
-      notifyInvoiceDeleted({
+      // Send deletion notification (async)
+      await notifyInvoiceDeleted({
         invoiceId: row.Rechnungs_ID || '',
         customerName: row.Firma || '',
         total: total
