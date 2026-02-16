@@ -47,7 +47,8 @@ export async function render() {
   }
 
   // Auto-populate Geschlecht column based on Gender column if needed
-  // Only auto-populate if the field is missing (undefined/null), not empty string
+  // This migration logic runs once per row - after the first render, all rows
+  // will have a Geschlecht value (either "Mann", "Frau", or "") and won't be processed again
   let hasChanges = false;
   rows.forEach(row => {
     // Only populate if field doesn't exist or is null/undefined (not empty string)
@@ -60,9 +61,8 @@ export async function render() {
         row["Geschlecht"] = "Frau";
         hasChanges = true;
       } else {
-        // Set to empty string to mark as processed
+        // Set to empty string to mark as processed (but don't mark as changed)
         row["Geschlecht"] = "";
-        hasChanges = true;
       }
     }
   });
