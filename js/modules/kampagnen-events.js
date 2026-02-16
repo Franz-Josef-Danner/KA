@@ -436,15 +436,35 @@ function generateGreeting(company) {
   
   if (!geschlecht) {
     // No gender selected: use company team greeting
-    return `Liebes ${firma}-Team`;
+    if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
   } else if (geschlecht === 'Mann') {
-    // Male: use formal male greeting
-    return `Sehr geehrter Herr ${nachname}`;
+    // Male: use formal male greeting if last name exists
+    if (nachname) {
+      return `Sehr geehrter Herr ${nachname}`;
+    } else if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
   } else if (geschlecht === 'Frau') {
-    // Female: use formal female greeting
-    return `Sehr geehrte Frau ${nachname}`;
+    // Female: use formal female greeting if last name exists
+    if (nachname) {
+      return `Sehr geehrte Frau ${nachname}`;
+    } else if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
   }
   
-  // Fallback to company team greeting
-  return `Liebes ${firma}-Team`;
+  // Fallback to generic greeting
+  if (firma) {
+    return `Liebes ${firma}-Team`;
+  } else {
+    return 'Sehr geehrte Damen und Herren';
+  }
 }
