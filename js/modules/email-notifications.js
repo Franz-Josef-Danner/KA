@@ -141,7 +141,7 @@ Tage überfällig: ${data.daysPastDue}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
     customerWelcome: `
-Sehr geehrte Damen und Herren${data.customerName ? ` von ${data.customerName}` : ''},
+${data.customerName ? `Guten Tag,` : `Sehr geehrte Damen und Herren,`}
 
 willkommen bei unserem Kundenbereich!
 
@@ -316,14 +316,23 @@ export async function notifyNewCustomer(customerData) {
 
 /**
  * Send welcome email with credentials to a new customer
+ * 
+ * SECURITY NOTE: This function sends passwords in plain text via email.
+ * While not ideal from a security perspective, this matches the existing
+ * pattern in the codebase where passwords are shown to admins in the UI.
+ * For improved security, consider implementing:
+ * - A temporary one-time password that expires after first login
+ * - A secure password reset link instead of sending the password
+ * - Allowing users to set their own password upon first login
+ * 
  * @param {object} customerData - Customer data including email, password, and username
  * @returns {Promise<boolean>} - True if email was sent successfully
  */
 export async function sendCustomerWelcomeEmail(customerData) {
-  const customerEmail = customerData.email || '';
+  const customerEmail = customerData.email;
   const username = customerData.username || customerEmail;
-  const password = customerData.password || '';
-  const customerName = customerData.customerName || '';
+  const password = customerData.password;
+  const customerName = customerData.customerName;
   
   if (!customerEmail) {
     console.error('Cannot send welcome email: No customer email provided');
