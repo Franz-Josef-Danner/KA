@@ -10,6 +10,9 @@ import { generatePDF } from './pdf-generator.js';
 const MISSING_EMAIL_ALERT_MESSAGE = 'E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.';
 const SEND_FAILED_ALERT_MESSAGE = 'E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.';
 
+// Customer portal login URL
+const CUSTOMER_LOGIN_URL = 'https://www.franzjosef-danner.at/accounting/kundenbereiche.html';
+
 /**
  * Helper function to ask user if they want to send a notification
  * @param {string} message - Confirmation message
@@ -138,7 +141,7 @@ Tage überfällig: ${data.daysPastDue}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
     customerWelcome: `
-Sehr geehrte Damen und Herren,
+Sehr geehrte Damen und Herren${data.customerName ? ` von ${data.customerName}` : ''},
 
 willkommen bei unserem Kundenbereich!
 
@@ -320,7 +323,7 @@ export async function sendCustomerWelcomeEmail(customerData) {
   const customerEmail = customerData.email || '';
   const username = customerData.username || customerEmail;
   const password = customerData.password || '';
-  const loginLink = 'https://www.franzjosef-danner.at/accounting/kundenbereiche.html';
+  const customerName = customerData.customerName || '';
   
   if (!customerEmail) {
     console.error('Cannot send welcome email: No customer email provided');
@@ -338,7 +341,8 @@ export async function sendCustomerWelcomeEmail(customerData) {
     const body = getNotificationTemplate('customerWelcome', {
       username: username,
       password: password,
-      loginLink: loginLink
+      loginLink: CUSTOMER_LOGIN_URL,
+      customerName: customerName
     });
     
     const emailData = {
