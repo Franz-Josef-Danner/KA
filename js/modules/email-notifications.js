@@ -600,6 +600,7 @@ export async function notifyNewInvoice(invoiceData, fullDocument = null) {
     customerName: invoiceData.customerName || '',
     customerEmail: customerEmail,
     total: invoiceData.total || 0,
+    items: invoiceData.items || [],
     dueDate: invoiceData.dueDate || '',
     timestamp: new Date().toISOString()
   }, pdfAttachment);
