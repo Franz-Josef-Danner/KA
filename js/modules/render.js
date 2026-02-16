@@ -1,7 +1,7 @@
 // -----------------------------
 // Rendering Module
 // -----------------------------
-import { COLUMNS, STATUS_OPTIONS } from './config.js';
+import { COLUMNS, STATUS_OPTIONS, GESCHLECHT_OPTIONS } from './config.js';
 import { getRows, setRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
@@ -14,7 +14,7 @@ import { validateStatusChange } from './validation.js';
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
-export function render() {
+export async function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
 
@@ -34,7 +34,7 @@ export function render() {
     addButton.addEventListener("click", async () => {
       await setRows([newEmptyRow()]);
       await save();
-      render();
+      await render();
     });
     
     td.appendChild(addButton);
@@ -44,6 +44,38 @@ export function render() {
     // Update undo/redo button states after render
     updateUndoRedoButtons();
     return;
+  }
+
+  // Auto-populate Geschlecht column based on Gender column if needed
+  // This runs at render time but only processes rows where Geschlecht is undefined/null.
+  // After processing, each row will have a value (either "Mann", "Frau", or ""), 
+  // so it won't be processed again on subsequent renders.
+  let hasChanges = false;
+  rows.forEach(row => {
+    // Only populate if field doesn't exist or is null/undefined (not empty string)
+    if (row["Geschlecht"] === undefined || row["Geschlecht"] === null) {
+      const genderValue = String(row["Gender"] || "").trim();
+      if (genderValue === "Sehr geehrter Herr") {
+        row["Geschlecht"] = "Mann";
+        hasChanges = true;
+      } else if (genderValue === "Sehr geehrte Frau") {
+        row["Geschlecht"] = "Frau";
+        hasChanges = true;
+      } else {
+        // Set to empty string to mark as processed (but don't mark as changed)
+        row["Geschlecht"] = "";
+      }
+    }
+  });
+  
+  // Save auto-populated values if any meaningful changes were made
+  if (hasChanges) {
+    try {
+      await setRows(rows);
+      await save();
+    } catch (error) {
+      console.error('Failed to save auto-populated Geschlecht values:', error);
+    }
   }
 
   // Find duplicates in all rows (before filtering by search)
@@ -130,7 +162,42 @@ export function render() {
           await setRows(currentRows);
           await save();
           // Re-render to update Firmen_ID based on new status
-          render();
+          await render();
+        });
+        
+        td.appendChild(select);
+      } else if (col === "Geschlecht") {
+        // Special handling for Geschlecht column - use dropdown
+        const select = document.createElement("select");
+        select.className = "geschlecht-select";
+        select.setAttribute("aria-label", "Geschlecht");
+        
+        // Add empty option first
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "";
+        select.appendChild(emptyOption);
+        
+        // Add all Geschlecht options
+        GESCHLECHT_OPTIONS.forEach(option => {
+          const optionElement = document.createElement("option");
+          optionElement.value = option;
+          optionElement.textContent = option;
+          select.appendChild(optionElement);
+        });
+        
+        // Set selected value (auto-population happens at the start of render())
+        const geschlechtValue = row[col] || "";
+        if (geschlechtValue) {
+          select.value = geschlechtValue;
+        }
+        
+        // Handle change event
+        select.addEventListener("change", async (e) => {
+          const currentRows = getRows();
+          currentRows[idx][col] = e.target.value;
+          await setRows(currentRows);
+          await save();
         });
         
         td.appendChild(select);
@@ -193,7 +260,7 @@ export function render() {
       rows.splice(idx + 1, 0, newEmptyRow());
       await setRows(rows);
       await save();
-      render();
+      await render();
     });
     act.appendChild(plus);
     
@@ -208,7 +275,7 @@ export function render() {
       rows.splice(idx, 1);
       await setRows(rows);
       await save();
-      render();
+      await render();
     });
     act.appendChild(minus);
     
