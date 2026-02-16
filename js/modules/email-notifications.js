@@ -120,8 +120,9 @@ export function getNotificationSubject(type, data) {
  * @returns {Promise<boolean>} - True if notification was sent successfully
  */
 async function queueAndSendImmediately(type, data) {
-  // Queue the notification
-  const notificationId = queueEmailNotification(type, data);
+  // Queue the notification with bypassing notification settings check
+  // since the user has already confirmed via dialog
+  const notificationId = queueEmailNotification(type, data, true);
   
   if (!notificationId) {
     return false;

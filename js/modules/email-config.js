@@ -181,10 +181,16 @@ export function isEmailConfigured() {
 // Queue email notification
 // Note: This is a placeholder for future backend integration
 // Frontend cannot send emails directly
-export function queueEmailNotification(type, data) {
+export function queueEmailNotification(type, data, bypassNotificationSettings = false) {
   const config = getEmailConfig();
   
-  if (!config.enabled || !config.notificationSettings[type]) {
+  // Check if email is enabled
+  if (!config.enabled) {
+    return false;
+  }
+  
+  // Check notification settings unless explicitly bypassed (e.g., when user confirms via dialog)
+  if (!bypassNotificationSettings && !config.notificationSettings[type]) {
     return false;
   }
   
