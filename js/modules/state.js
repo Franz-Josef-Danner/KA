@@ -359,6 +359,8 @@ export function newEmptyRow() {
     // Set default value for Status column
     if (c === "Status") {
       obj[c] = "offen";
+    } else if (c === "Persönlich") {
+      obj[c] = "false";
     } else {
       obj[c] = "";
     }
