@@ -291,7 +291,8 @@ export async function notifyNewOrder(orderData, fullDocument = null) {
   }
   
   // Generate PDF attachment for the order
-  // Use fullDocument if provided, otherwise construct from orderData
+  // Use fullDocument if provided (should always be provided in practice),
+  // otherwise construct a minimal document from orderData as fallback
   const documentForPdf = fullDocument || {
     Auftrags_ID: orderData.orderId,
     Firma: orderData.customerName,

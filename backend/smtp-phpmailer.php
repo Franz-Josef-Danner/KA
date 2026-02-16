@@ -91,10 +91,10 @@ function sendEmailPHPMailer($config, $to, $subject, $body, $from = null, $verbos
         // Add PDF attachment if provided
         if ($attachment && isset($attachment['data']) && isset($attachment['filename'])) {
             $log[] = "📎 Adding PDF attachment: " . $attachment['filename'];
-            // Decode base64 data from frontend
+            // Decode base64 data from frontend to get binary PDF data
             $pdfData = base64_decode($attachment['data']);
             if ($pdfData !== false) {
-                // addStringAttachment: $string (binary), $filename, $encoding (how to encode for email - base64 is standard), $type (MIME type)
+                // addStringAttachment: Pass binary data; PHPMailer will base64-encode it for the MIME part
                 $mail->addStringAttachment($pdfData, $attachment['filename'], 'base64', 'application/pdf');
                 $log[] = "   ✓ Attachment added successfully";
             } else {
