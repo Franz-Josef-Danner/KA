@@ -812,6 +812,7 @@ async function saveOrder() {
         orderId: formData.Auftrags_ID || 'N/A',
         customerName: formData.Firma || 'Unbekannt',
         contactPerson: formData.Ansprechpartner || '',
+        customerEmail: formData.Firmen_Email || '',
         total: total,
         items: orderItems,
         project: formData.Projekt || '',

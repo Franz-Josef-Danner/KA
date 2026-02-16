@@ -32,7 +32,6 @@ export function getEmailConfig() {
 function getDefaultEmailConfig() {
   return {
     enabled: false,
-    testEmail: '', // Test email address for development/testing purposes
     notificationSettings: {
       newCustomer: true,
       newOrder: true,
@@ -154,14 +153,11 @@ export async function saveEmailConfigAsync(config) {
 }
 
 // Validate email configuration
+// Note: Kept for compatibility with einstellungen.html form validation.
+// Currently no validation is needed since testEmail was removed.
+// Customer email validation happens at notification time in queueEmailNotification().
 export function validateEmailConfig(config) {
   const errors = [];
-  
-  // Only validate test email if provided
-  if (config.testEmail && !isValidEmail(config.testEmail)) {
-    errors.push('Bitte geben Sie eine gültige Test-E-Mail-Adresse ein.');
-  }
-  
   return errors;
 }
 
@@ -194,8 +190,20 @@ export function queueEmailNotification(type, data, bypassNotificationSettings = 
     return false;
   }
   
-  // Use helper function to get the effective recipient email
-  const recipientEmail = getRecipientEmail();
+  // Get customer email - this is now the ONLY recipient
+  const customerEmail = data.customerEmail || '';
+  
+  // Validate customer email exists
+  if (!customerEmail) {
+    console.error('Cannot queue email notification: No customer email address provided');
+    return false;
+  }
+  
+  // Validate email format
+  if (!isValidEmail(customerEmail)) {
+    console.error('Cannot queue email notification: Invalid customer email address format');
+    return false;
+  }
   
   // Generate unique ID for notification
   const id = `${type}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
@@ -206,7 +214,7 @@ export function queueEmailNotification(type, data, bypassNotificationSettings = 
     id,
     type,
     data,
-    recipientEmail: recipientEmail,
+    recipientEmail: customerEmail, // Always use customer email
     timestamp: new Date().toISOString(),
     status: 'pending',
     retryCount: 0
@@ -214,7 +222,7 @@ export function queueEmailNotification(type, data, bypassNotificationSettings = 
   saveEmailQueue(queue);
   
   console.log(`Email notification queued: ${type}`, data);
-  console.log(`Recipient: ${recipientEmail || 'Backend default'}${config.testEmail ? ' (Test Mode)' : ''}`);
+  console.log(`Recipient: ${customerEmail}`);
   return id; // Return ID for tracking
 }
 
@@ -321,29 +329,5 @@ export function getEmailErrorSummary() {
     count: failed.length,
     latest: failed[failed.length - 1],
     message: `${failed.length} E-Mail-Benachrichtigung${failed.length > 1 ? 'en' : ''} konnte${failed.length > 1 ? 'n' : ''} nicht gesendet werden.`
-  };
-}
-
-// Get the effective recipient email (test email if set, otherwise backend default)
-export function getRecipientEmail() {
-  const config = getEmailConfig();
-  return config.testEmail || null; // Returns test email or null (backend will use default)
-}
-
-// Test email configuration
-// Note: This only validates the configuration format
-export function testEmailConfig(config) {
-  const errors = validateEmailConfig(config);
-  
-  if (errors.length > 0) {
-    return {
-      success: false,
-      errors
-    };
-  }
-  
-  return {
-    success: true,
-    message: 'Konfiguration ist gültig. Die Server-Verbindung wird vom Backend verwaltet.'
   };
 }

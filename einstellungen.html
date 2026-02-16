@@ -159,7 +159,7 @@
           <h2>E-Mail-Benachrichtigungen</h2>
           <div class="form-hint" style="margin-bottom: 15px;">
             <strong>ℹ️ Hinweis:</strong> Die Server-Verbindung (IMAP/SMTP) wird über das Backend verwaltet. 
-            Hier können Sie nur die Test-E-Mail-Adresse für Entwicklungszwecke konfigurieren.
+            E-Mail-Benachrichtigungen werden an die E-Mail-Adresse des jeweiligen Kunden gesendet.
           </div>
           
           <div class="form-group">
@@ -170,17 +170,6 @@
           </div>
 
           <div id="emailConfigSection" style="display: none;">
-            <div class="form-group">
-              <label for="testEmail">Test-E-Mail-Adresse (optional)</label>
-              <input 
-                type="email" 
-                id="testEmail" 
-                name="testEmail" 
-                placeholder="scener@gmx.net"
-              />
-              <div class="form-hint">Wenn ausgefüllt, werden alle Benachrichtigungen an diese Adresse gesendet (für Testzwecke). Ansonsten werden die Benachrichtigungen an die im Backend konfigurierte E-Mail-Adresse gesendet.</div>
-            </div>
-
             <div class="form-group">
               <label><strong>Benachrichtigungen senden für:</strong></label>
               <label>
@@ -379,7 +368,6 @@
           // Get email configuration
           const emailConfig = {
             enabled: emailEnabled.checked,
-            testEmail: document.getElementById('testEmail').value.trim(),
             notificationSettings: {
               newCustomer: document.getElementById('notifyNewCustomer').checked,
               newOrder: document.getElementById('notifyNewOrder').checked,
@@ -462,7 +450,6 @@
           const emailConfig = await loadEmailConfigAsync();
           emailEnabled.checked = emailConfig.enabled;
           emailConfigSection.style.display = emailConfig.enabled ? 'block' : 'none';
-          document.getElementById('testEmail').value = emailConfig.testEmail || '';
           document.getElementById('notifyNewCustomer').checked = emailConfig.notificationSettings?.newCustomer !== false;
           document.getElementById('notifyNewOrder').checked = emailConfig.notificationSettings?.newOrder !== false;
           document.getElementById('notifyNewInvoice').checked = emailConfig.notificationSettings?.newInvoice !== false;

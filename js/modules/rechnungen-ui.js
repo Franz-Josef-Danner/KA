@@ -767,6 +767,7 @@ async function saveInvoice() {
         invoiceId: formData.Rechnungs_ID || 'N/A',
         customerName: formData.Firma || 'Unbekannt',
         contactPerson: formData.Ansprechpartner || '',
+        customerEmail: formData.Firmen_Email || '',
         total: total,
         items: invoiceItems,
         project: formData.Projekt || '',
@@ -788,6 +789,7 @@ async function saveInvoice() {
       const notificationResult = await notifyPaymentReceived({
         invoiceId: formData.Rechnungs_ID || 'N/A',
         customerName: formData.Firma || 'Unbekannt',
+        customerEmail: formData.Firmen_Email || '',
         amount: total,
         paymentDate: new Date().toLocaleDateString('de-DE')
       });

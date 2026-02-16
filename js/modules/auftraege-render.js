@@ -208,6 +208,7 @@ export function render() {
         await notifyOrderDeleted({
           orderId: row.Auftrags_ID || '',
           customerName: row.Firma || '',
+          customerEmail: row.Firmen_Email || '',
           total: total,
           items: orderItems
         }, row); // Pass full row for PDF generation

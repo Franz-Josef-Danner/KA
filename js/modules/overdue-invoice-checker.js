@@ -166,6 +166,7 @@ export function checkOverdueInvoices(force = false) {
     const invoiceId = invoice.Rechnungs_ID;
     const invoiceDate = invoice.Rechnungsdatum;
     const customerName = invoice.Firma || 'Unbekannt';
+    const customerEmail = invoice.Firmen_Email || '';
     
     // Skip if already notified
     if (notifiedInvoices.has(invoiceId)) return;
@@ -193,6 +194,7 @@ export function checkOverdueInvoices(force = false) {
     const notificationResult = notifyInvoiceOverdue({
       invoiceId,
       customerName,
+      customerEmail,
       total,
       dueDate: formatDateDDMMYYYY(deadline),
       daysPastDue

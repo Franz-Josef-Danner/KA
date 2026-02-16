@@ -6,6 +6,10 @@
 import { queueEmailNotification, isEmailConfigured, getEmailConfig, markNotificationAsSent } from './email-config.js';
 import { generatePDF } from './pdf-generator.js';
 
+// Constants for error messages
+const MISSING_EMAIL_ALERT_MESSAGE = 'E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.';
+const SEND_FAILED_ALERT_MESSAGE = 'E-Mail-Benachrichtigung konnte nicht gesendet werden. Bitte überprüfen Sie die E-Mail-Adresse.';
+
 /**
  * Helper function to ask user if they want to send a notification
  * @param {string} message - Confirmation message
@@ -256,9 +260,16 @@ export async function notifyNewCustomer(customerData) {
     return false;
   }
   
+  // Check if customer email exists
+  const customerEmail = customerData.email || '';
+  if (!customerEmail) {
+    alert('E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.');
+    return false;
+  }
+  
   // Ask for confirmation before sending
   const shouldSend = confirmNotification(
-    `Möchten Sie eine E-Mail-Benachrichtigung für den neuen Kunden "${customerData.firma || 'Unbekannt'}" senden?`
+    `Möchten Sie eine E-Mail-Benachrichtigung an ${customerEmail} für den neuen Kunden "${customerData.firma || 'Unbekannt'}" senden?`
   );
   
   if (!shouldSend) {
@@ -266,13 +277,20 @@ export async function notifyNewCustomer(customerData) {
   }
   
   // Queue and send immediately
-  return await queueAndSendImmediately('newCustomer', {
+  const result = await queueAndSendImmediately('newCustomer', {
     customerName: customerData.firma || 'Unbekannt',
     contactPerson: customerData.ansprechpartner || '',
-    email: customerData.email || '',
+    email: customerEmail,
+    customerEmail: customerEmail,
     phone: customerData.telefon || '',
     timestamp: new Date().toISOString()
   });
+  
+  if (!result) {
+    alert(SEND_FAILED_ALERT_MESSAGE);
+  }
+  
+  return result;
 }
 
 // Send notification when a new order is created
@@ -281,9 +299,16 @@ export async function notifyNewOrder(orderData, fullDocument = null) {
     return false;
   }
   
+  // Check if customer email exists
+  const customerEmail = orderData.customerEmail || '';
+  if (!customerEmail) {
+    alert('E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.');
+    return false;
+  }
+  
   // Ask for confirmation before sending
   const shouldSend = confirmNotification(
-    `Möchten Sie eine E-Mail-Benachrichtigung für den neuen Auftrag "${orderData.orderId || 'N/A'}" senden?`
+    `Möchten Sie eine E-Mail-Benachrichtigung an ${customerEmail} für den neuen Auftrag "${orderData.orderId || 'N/A'}" senden?`
   );
   
   if (!shouldSend) {
@@ -304,13 +329,20 @@ export async function notifyNewOrder(orderData, fullDocument = null) {
   const pdfAttachment = await generatePDFAttachment('order', documentForPdf);
   
   // Queue and send immediately with attachment
-  return await queueAndSendImmediately('newOrder', {
+  const result = await queueAndSendImmediately('newOrder', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
+    customerEmail: customerEmail,
     total: orderData.total || 0,
     items: orderData.items || [],
     timestamp: new Date().toISOString()
   }, pdfAttachment);
+  
+  if (!result) {
+    alert(SEND_FAILED_ALERT_MESSAGE);
+  }
+  
+  return result;
 }
 
 // Send notification when a new invoice is created
@@ -319,9 +351,16 @@ export async function notifyNewInvoice(invoiceData, fullDocument = null) {
     return false;
   }
   
+  // Check if customer email exists
+  const customerEmail = invoiceData.customerEmail || '';
+  if (!customerEmail) {
+    alert('E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.');
+    return false;
+  }
+  
   // Ask for confirmation before sending
   const shouldSend = confirmNotification(
-    `Möchten Sie eine E-Mail-Benachrichtigung für die neue Rechnung "${invoiceData.invoiceId || 'N/A'}" senden?`
+    `Möchten Sie eine E-Mail-Benachrichtigung an ${customerEmail} für die neue Rechnung "${invoiceData.invoiceId || 'N/A'}" senden?`
   );
   
   if (!shouldSend) {
@@ -341,13 +380,20 @@ export async function notifyNewInvoice(invoiceData, fullDocument = null) {
   const pdfAttachment = await generatePDFAttachment('invoice', documentForPdf);
   
   // Queue and send immediately with attachment
-  return await queueAndSendImmediately('newInvoice', {
+  const result = await queueAndSendImmediately('newInvoice', {
     invoiceId: invoiceData.invoiceId || '',
     customerName: invoiceData.customerName || '',
+    customerEmail: customerEmail,
     total: invoiceData.total || 0,
     dueDate: invoiceData.dueDate || '',
     timestamp: new Date().toISOString()
   }, pdfAttachment);
+  
+  if (!result) {
+    alert(SEND_FAILED_ALERT_MESSAGE);
+  }
+  
+  return result;
 }
 
 // Send notification when a payment is received
@@ -356,9 +402,16 @@ export async function notifyPaymentReceived(paymentData) {
     return false;
   }
   
+  // Check if customer email exists
+  const customerEmail = paymentData.customerEmail || '';
+  if (!customerEmail) {
+    alert('E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.');
+    return false;
+  }
+  
   // Ask for confirmation before sending
   const shouldSend = confirmNotification(
-    `Möchten Sie eine E-Mail-Benachrichtigung für den Zahlungseingang der Rechnung "${paymentData.invoiceId || 'N/A'}" senden?`
+    `Möchten Sie eine E-Mail-Benachrichtigung an ${customerEmail} für den Zahlungseingang der Rechnung "${paymentData.invoiceId || 'N/A'}" senden?`
   );
   
   if (!shouldSend) {
@@ -366,13 +419,20 @@ export async function notifyPaymentReceived(paymentData) {
   }
   
   // Queue and send immediately
-  return await queueAndSendImmediately('paymentReceived', {
+  const result = await queueAndSendImmediately('paymentReceived', {
     invoiceId: paymentData.invoiceId || '',
     customerName: paymentData.customerName || '',
+    customerEmail: customerEmail,
     amount: paymentData.amount || 0,
     paymentDate: paymentData.paymentDate || '',
     timestamp: new Date().toISOString()
   });
+  
+  if (!result) {
+    alert(SEND_FAILED_ALERT_MESSAGE);
+  }
+  
+  return result;
 }
 
 // Send notification when an order is deleted
@@ -381,9 +441,16 @@ export async function notifyOrderDeleted(orderData, fullDocument = null) {
     return false;
   }
   
+  // Check if customer email exists
+  const customerEmail = orderData.customerEmail || '';
+  if (!customerEmail) {
+    alert('E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.');
+    return false;
+  }
+  
   // Ask for confirmation before sending
   const shouldSend = confirmNotification(
-    `Möchten Sie eine E-Mail-Benachrichtigung für den gelöschten Auftrag "${orderData.orderId || 'N/A'}" senden?`
+    `Möchten Sie eine E-Mail-Benachrichtigung an ${customerEmail} für den gelöschten Auftrag "${orderData.orderId || 'N/A'}" senden?`
   );
   
   if (!shouldSend) {
@@ -400,13 +467,20 @@ export async function notifyOrderDeleted(orderData, fullDocument = null) {
   const pdfAttachment = await generatePDFAttachment('order', documentForPdf);
   
   // Queue and send immediately with attachment
-  return await queueAndSendImmediately('orderDeleted', {
+  const result = await queueAndSendImmediately('orderDeleted', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
+    customerEmail: customerEmail,
     total: orderData.total || 0,
     items: orderData.items || [],
     timestamp: new Date().toISOString()
   }, pdfAttachment);
+  
+  if (!result) {
+    alert(SEND_FAILED_ALERT_MESSAGE);
+  }
+  
+  return result;
 }
 
 // Send notification when an invoice is deleted
@@ -415,9 +489,16 @@ export async function notifyInvoiceDeleted(invoiceData, fullDocument = null) {
     return false;
   }
   
+  // Check if customer email exists
+  const customerEmail = invoiceData.customerEmail || '';
+  if (!customerEmail) {
+    alert('E-Mail-Benachrichtigung kann nicht gesendet werden: Keine E-Mail-Adresse für diesen Kunden vorhanden.');
+    return false;
+  }
+  
   // Ask for confirmation before sending
   const shouldSend = confirmNotification(
-    `Möchten Sie eine E-Mail-Benachrichtigung für die gelöschte Rechnung "${invoiceData.invoiceId || 'N/A'}" senden?`
+    `Möchten Sie eine E-Mail-Benachrichtigung an ${customerEmail} für die gelöschte Rechnung "${invoiceData.invoiceId || 'N/A'}" senden?`
   );
   
   if (!shouldSend) {
@@ -434,12 +515,19 @@ export async function notifyInvoiceDeleted(invoiceData, fullDocument = null) {
   const pdfAttachment = await generatePDFAttachment('invoice', documentForPdf);
   
   // Queue and send immediately with attachment
-  return await queueAndSendImmediately('invoiceDeleted', {
+  const result = await queueAndSendImmediately('invoiceDeleted', {
     invoiceId: invoiceData.invoiceId || '',
     customerName: invoiceData.customerName || '',
+    customerEmail: customerEmail,
     total: invoiceData.total || 0,
     timestamp: new Date().toISOString()
   }, pdfAttachment);
+  
+  if (!result) {
+    alert(SEND_FAILED_ALERT_MESSAGE);
+  }
+  
+  return result;
 }
 
 // Send notification when an invoice is overdue
@@ -448,9 +536,17 @@ export function notifyInvoiceOverdue(invoiceData) {
     return false;
   }
   
+  // Check if customer email exists
+  const customerEmail = invoiceData.customerEmail || '';
+  if (!customerEmail) {
+    console.error('Overdue invoice notification cannot be sent: No customer email address');
+    return false;
+  }
+  
   return queueEmailNotification('invoiceOverdue', {
     invoiceId: invoiceData.invoiceId || '',
     customerName: invoiceData.customerName || '',
+    customerEmail: customerEmail,
     total: invoiceData.total || 0,
     dueDate: invoiceData.dueDate || '',
     daysPastDue: invoiceData.daysPastDue || 0,
