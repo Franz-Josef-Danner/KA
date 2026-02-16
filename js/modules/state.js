@@ -413,6 +413,25 @@ function loadSync() {
   }
 }
 
+// Helper function to auto-populate Gender based on Titel
+function autoPopulateGender(row) {
+  // Only auto-populate if Gender is empty
+  if (!row.Gender || row.Gender.trim() === "") {
+    const titel = row.Titel || "";
+    
+    // Check for "Sehr geehrte Frau" - set Gender to "Frau"
+    if (titel.includes("Sehr geehrte Frau")) {
+      row.Gender = "Frau";
+    }
+    // Check for "Sehr geehrter Herr" - set Gender to "Mann"
+    else if (titel.includes("Sehr geehrter Herr")) {
+      row.Gender = "Mann";
+    }
+  }
+  
+  return row;
+}
+
 // Normalize rows: ensure all columns exist and validate data
 function normalizeRows(data) {
   if (!Array.isArray(data)) return [];
@@ -430,6 +449,10 @@ function normalizeRows(data) {
         }
       }
     }
+    
+    // Auto-populate Gender based on Titel if Gender is empty
+    autoPopulateGender(row);
+    
     return row;
   });
   
