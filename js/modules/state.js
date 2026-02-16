@@ -427,8 +427,8 @@ function normalizeRows(data) {
   const normalizedRows = data.map(r => {
     const row = newEmptyRow();
     for (const c of COLUMNS) {
-      // Skip Geschlecht if not present in source data (leave undefined for auto-population)
-      if (c === "Geschlecht" && (r?.[c] === undefined || r?.[c] === null)) {
+      // Skip Geschlecht if not present or empty in source data (leave undefined for auto-population)
+      if (c === "Geschlecht" && (r?.[c] === undefined || r?.[c] === null || r?.[c] === "")) {
         continue;
       }
       row[c] = sanitizeText(r?.[c] ?? "");
