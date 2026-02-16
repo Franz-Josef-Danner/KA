@@ -724,15 +724,15 @@ function closeModal() {
 }
 
 async function saveInvoice() {
-  // Show loading overlay
+  // Validate form before saving
+  if (!validateForm()) {
+    return false;
+  }
+  
+  // Show loading overlay after validation
   showLoadingOverlay("Rechnung wird gespeichert...");
   
   try {
-    // Validate form before saving
-    if (!validateForm()) {
-      return false;
-    }
-    
     const formData = getFormData();
     const rows = getRows();
     

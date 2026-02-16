@@ -776,15 +776,15 @@ function closeModal() {
 }
 
 async function saveOrder() {
-  // Show loading overlay
+  // Validate form before saving
+  if (!validateForm()) {
+    return false;
+  }
+  
+  // Show loading overlay after validation
   showLoadingOverlay("Auftrag wird gespeichert...");
   
   try {
-    // Validate form before saving
-    if (!validateForm()) {
-      return false;
-    }
-    
     const formData = getFormData();
     const rows = getRows();
     
