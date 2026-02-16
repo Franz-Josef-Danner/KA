@@ -254,7 +254,7 @@ async function showCredentialsModal(firmenId, email, firma) {
       <strong>Letzte Aktualisierung:</strong> ${new Date(account.updatedAt).toLocaleString('de-DE')}
     </div>
     <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
-      <button class="btn-primary" id="resendCredentialsBtn" style="background: #007bff;">Zugangsdaten per E-Mail senden</button>
+      <button class="btn-primary" id="resendCredentialsBtn">Zugangsdaten per E-Mail senden</button>
       <div style="display: flex; gap: 0.5rem;">
         <button class="btn-secondary" id="closeCredentialsModal">Schließen</button>
         <button class="btn-primary" id="resetPasswordBtn">Passwort zurücksetzen</button>
@@ -313,12 +313,13 @@ async function showCredentialsModal(firmenId, email, firma) {
         // Close the modal after successful send
         document.body.removeChild(overlay);
       } else {
-        alert(`Fehler beim Versenden der E-Mail an ${email}.\n\nBitte überprüfen Sie die E-Mail-Konfiguration in den Einstellungen.\n\nDas neue Passwort lautet: ${newPassword}\nBitte notieren Sie es und teilen Sie es dem Kunden manuell mit.`);
+        alert(`Fehler beim Versenden der E-Mail an ${email}.\n\nBitte überprüfen Sie die E-Mail-Konfiguration in den Einstellungen.\n\nEin neues Passwort wurde generiert. Bitte setzen Sie das Passwort erneut zurück und teilen Sie es dem Kunden manuell mit.`);
+        btn.disabled = false;
+        btn.textContent = originalText;
       }
     } catch (error) {
       console.error('Error resending credentials:', error);
       alert('Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
-    } finally {
       btn.disabled = false;
       btn.textContent = originalText;
     }
