@@ -253,9 +253,12 @@ async function showCredentialsModal(firmenId, email, firma) {
     <div style="margin-bottom: 1.5rem;">
       <strong>Letzte Aktualisierung:</strong> ${new Date(account.updatedAt).toLocaleString('de-DE')}
     </div>
-    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-      <button class="btn-secondary" id="closeCredentialsModal">Schließen</button>
-      <button class="btn-primary" id="resetPasswordBtn">Passwort zurücksetzen</button>
+    <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
+      <button class="btn-primary" id="resendCredentialsBtn">Zugang senden</button>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn-secondary" id="closeCredentialsModal">Schließen</button>
+        <button class="btn-primary" id="resetPasswordBtn">Passwort zurücksetzen</button>
+      </div>
     </div>
   `;
   
@@ -272,6 +275,62 @@ async function showCredentialsModal(firmenId, email, firma) {
   // Close button handler
   document.getElementById('closeCredentialsModal').addEventListener('click', () => {
     document.body.removeChild(overlay);
+  });
+  
+  // Resend credentials button handler
+  document.getElementById('resendCredentialsBtn').addEventListener('click', async () => {
+    if (!confirm(`Möchten Sie die Zugangsdaten für ${firma} per E-Mail versenden?\n\nDa das Passwort aus Sicherheitsgründen verschlüsselt gespeichert ist, wird ein neues Passwort generiert und an den Kunden gesendet.\n\nDer Kunde erhält eine E-Mail mit:\n- Benutzername (E-Mail)\n- Neues Passwort\n- Link zum Kundenbereich`)) {
+      return;
+    }
+    
+    // Disable button during processing
+    const btn = document.getElementById('resendCredentialsBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sende E-Mail...';
+    
+    try {
+      // Generate new password
+      const newPassword = await resetCustomerPassword(firmenId);
+      
+      if (!newPassword) {
+        alert('Fehler beim Generieren eines neuen Passworts. Bitte versuchen Sie es erneut.');
+        if (btn.isConnected) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+        return;
+      }
+      
+      // Send welcome email with credentials
+      const emailSent = await sendCustomerWelcomeEmail({
+        email: email,
+        username: email,
+        password: newPassword,
+        customerName: firma
+      });
+      
+      if (emailSent) {
+        alert(`Zugangsdaten erfolgreich an ${email} gesendet!\n\nDer Kunde hat ein neues Passwort erhalten.`);
+        // Close the modal after successful send
+        if (overlay.isConnected) {
+          document.body.removeChild(overlay);
+        }
+      } else {
+        alert(`Fehler beim Versenden der E-Mail an ${email}.\n\nBitte überprüfen Sie die E-Mail-Konfiguration in den Einstellungen.\n\nEin neues Passwort wurde generiert. Bitte setzen Sie das Passwort erneut zurück und teilen Sie es dem Kunden manuell mit.`);
+        if (btn.isConnected) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      }
+    } catch (error) {
+      console.error('Error resending credentials:', error);
+      alert('Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+      if (btn.isConnected) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
   });
   
   // Reset password button handler - firma is plain text, safe for confirm()
