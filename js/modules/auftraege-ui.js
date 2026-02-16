@@ -6,7 +6,7 @@ import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-confi
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen, ensureInitialized as ensureRechnungenInitialized } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
+import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued, sendOrderToCustomer } from './email-notifications.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
@@ -955,12 +955,65 @@ async function convertToInvoice() {
   }
 }
 
+/**
+ * Handler for sending order to customer
+ */
+async function sendOrderToCustomerHandler() {
+  try {
+    // Get current order data from form
+    const firmaInput = document.getElementById("edit_Firma");
+    const firma = firmaInput ? firmaInput.value : "";
+    
+    if (!firma) {
+      alert("Bitte wählen Sie zuerst eine Firma aus.");
+      return;
+    }
+    
+    // Get company email
+    const company = getCompanyByName(firma);
+    const customerEmail = company ? company["E-mail"] : "";
+    
+    if (!customerEmail) {
+      alert("Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.");
+      return;
+    }
+    
+    // Collect current order data from form
+    const orderData = {};
+    for (const col of COLUMNS) {
+      const input = document.getElementById(`edit_${col}`);
+      if (input && col !== "Artikel" && col !== "Beschreibung") {
+        orderData[col] = input.value || "";
+      }
+    }
+    
+    // Add order items
+    orderData.items = currentOrderItems;
+    
+    // Show loading overlay
+    showLoadingOverlay('PDF wird generiert und E-Mail wird versendet...');
+    
+    // Send order to customer
+    const success = await sendOrderToCustomer(orderData, customerEmail);
+    
+    if (!success) {
+      console.log('Failed to send order to customer');
+    }
+  } catch (error) {
+    console.error('Error in sendOrderToCustomerHandler:', error);
+    alert('Fehler beim Versenden des Auftrags: ' + error.message);
+  } finally {
+    hideLoadingOverlay();
+  }
+}
+
 // Initialize modal event handlers
 function initModalHandlers() {
   const modalClose = document.getElementById("modalClose");
   const modalCancel = document.getElementById("modalCancel");
   const modalSave = document.getElementById("modalSave");
   const convertToInvoiceBtn = document.getElementById("convertToInvoiceBtn");
+  const sendToCustomerBtn = document.getElementById("sendToCustomerBtn");
   const modal = document.getElementById("orderModal");
   
   // Close button
@@ -984,6 +1037,13 @@ function initModalHandlers() {
   if (convertToInvoiceBtn) {
     convertToInvoiceBtn.addEventListener("click", async () => {
       await convertToInvoice();
+    });
+  }
+  
+  // Send to Customer button
+  if (sendToCustomerBtn) {
+    sendToCustomerBtn.addEventListener("click", async () => {
+      await sendOrderToCustomerHandler();
     });
   }
   

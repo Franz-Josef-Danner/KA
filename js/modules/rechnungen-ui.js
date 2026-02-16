@@ -5,7 +5,7 @@ import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyInvoiceI
 import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewInvoice, notifyPaymentReceived, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
+import { notifyNewInvoice, notifyPaymentReceived, showEmailNotificationWarning, showEmailNotificationQueued, sendInvoiceToCustomer } from './email-notifications.js';
 import { clearInvoiceFromNotified } from './overdue-invoice-checker.js';
 import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
@@ -814,11 +814,64 @@ async function saveInvoice() {
   }
 }
 
+/**
+ * Handler for sending invoice to customer
+ */
+async function sendInvoiceToCustomerHandler() {
+  try {
+    // Get current invoice data from form
+    const firmaInput = document.getElementById("edit_Firma");
+    const firma = firmaInput ? firmaInput.value : "";
+    
+    if (!firma) {
+      alert("Bitte wählen Sie zuerst eine Firma aus.");
+      return;
+    }
+    
+    // Get company email
+    const company = getCompanyByName(firma);
+    const customerEmail = company ? company["E-mail"] : "";
+    
+    if (!customerEmail) {
+      alert("Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.");
+      return;
+    }
+    
+    // Collect current invoice data from form
+    const invoiceData = {};
+    for (const col of COLUMNS) {
+      const input = document.getElementById(`edit_${col}`);
+      if (input && col !== "Artikel" && col !== "Beschreibung") {
+        invoiceData[col] = input.value || "";
+      }
+    }
+    
+    // Add invoice items
+    invoiceData.items = currentInvoiceItems;
+    
+    // Show loading overlay
+    showLoadingOverlay('PDF wird generiert und E-Mail wird versendet...');
+    
+    // Send invoice to customer
+    const success = await sendInvoiceToCustomer(invoiceData, customerEmail);
+    
+    if (!success) {
+      console.log('Failed to send invoice to customer');
+    }
+  } catch (error) {
+    console.error('Error in sendInvoiceToCustomerHandler:', error);
+    alert('Fehler beim Versenden der Rechnung: ' + error.message);
+  } finally {
+    hideLoadingOverlay();
+  }
+}
+
 // Initialize modal event handlers
 function initModalHandlers() {
   const modalClose = document.getElementById("modalClose");
   const modalCancel = document.getElementById("modalCancel");
   const modalSave = document.getElementById("modalSave");
+  const sendToCustomerBtn = document.getElementById("sendToCustomerBtn");
   const modal = document.getElementById("invoiceModal");
   
   // Close button
@@ -835,6 +888,13 @@ function initModalHandlers() {
   if (modalSave) {
     modalSave.addEventListener("click", () => {
       saveInvoice();
+    });
+  }
+  
+  // Send to Customer button
+  if (sendToCustomerBtn) {
+    sendToCustomerBtn.addEventListener("click", async () => {
+      await sendInvoiceToCustomerHandler();
     });
   }
   
