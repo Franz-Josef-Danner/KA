@@ -667,6 +667,13 @@ td.readonly:hover {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
+/* Order and Invoice modal content - 75% width */
+.order-modal-content,
+.invoice-modal-content {
+  width: 75%;
+  max-width: 1200px;
+}
+
 .modal-header {
   padding: 20px 24px;
   border-bottom: 1px solid #e5e5e5;
@@ -1564,7 +1571,7 @@ td.readonly:hover {
   z-index: 1000;
 }
 
-.modal {
+.modal-overlay .modal {
   background: #fff;
   border-radius: 8px;
   padding: 24px;
@@ -1572,25 +1579,25 @@ td.readonly:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-.modal h3 {
+.modal-overlay .modal h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
   font-weight: 600;
 }
 
-.modal p {
+.modal-overlay .modal p {
   margin: 0 0 20px 0;
   color: #666;
   line-height: 1.5;
 }
 
-.modal-actions {
+.modal-overlay .modal-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
 }
 
-.modal-actions button {
+.modal-overlay .modal-actions button {
   padding: 8px 16px;
   border: 1px solid #d0d0d0;
   border-radius: 4px;
@@ -1600,17 +1607,17 @@ td.readonly:hover {
   transition: all 0.2s ease;
 }
 
-.modal-actions button:hover {
+.modal-overlay .modal-actions button:hover {
   background: #f0f0f0;
 }
 
-.modal-actions button.primary {
+.modal-overlay .modal-actions button.primary {
   background: #1890ff;
   border-color: #1890ff;
   color: #fff;
 }
 
-.modal-actions button.primary:hover {
+.modal-overlay .modal-actions button.primary:hover {
   background: #096dd9;
   border-color: #096dd9;
 }
