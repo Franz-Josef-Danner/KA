@@ -46,6 +46,26 @@ export function render() {
     return;
   }
 
+  // Auto-populate Geschlecht column based on Gender column if needed
+  let hasChanges = false;
+  rows.forEach(row => {
+    if (!row["Geschlecht"]) {
+      const genderValue = String(row["Gender"] || "").trim();
+      if (genderValue === "Sehr geehrter Herr") {
+        row["Geschlecht"] = "Mann";
+        hasChanges = true;
+      } else if (genderValue === "Sehr geehrte Frau") {
+        row["Geschlecht"] = "Frau";
+        hasChanges = true;
+      }
+    }
+  });
+  
+  // Save auto-populated values if any changes were made
+  if (hasChanges) {
+    setRows(rows).then(() => save());
+  }
+
   // Find duplicates in all rows (before filtering by search)
   const duplicateMap = findDuplicates(rows);
   const rowsWithDuplicates = getRowsWithDuplicates(duplicateMap);
@@ -154,23 +174,8 @@ export function render() {
           select.appendChild(optionElement);
         });
         
-        // Auto-populate based on Gender column value if Geschlecht is empty
-        let geschlechtValue = row[col] || "";
-        if (!geschlechtValue) {
-          const genderValue = String(row["Gender"] || "").trim();
-          if (genderValue === "Sehr geehrter Herr") {
-            geschlechtValue = "Mann";
-          } else if (genderValue === "Sehr geehrte Frau") {
-            geschlechtValue = "Frau";
-          }
-          
-          // Update the row data with the auto-populated value
-          if (geschlechtValue) {
-            row[col] = geschlechtValue;
-          }
-        }
-        
-        // Set selected value
+        // Set selected value (auto-population happens at the start of render())
+        const geschlechtValue = row[col] || "";
         if (geschlechtValue) {
           select.value = geschlechtValue;
         }
