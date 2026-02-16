@@ -43,6 +43,9 @@ function renderMailInterface() {
   // Get available template variables from Firmenliste columns
   const templateVariables = COLUMNS.filter(col => col !== 'Firmen_ID').map(col => `{{${col}}}`).join(', ');
   
+  // Add special placeholder for greeting
+  const allVariables = templateVariables + ', {{Begrüßung}}';
+  
   // Generate status options HTML
   const statusOptionsHtml = STATUS_OPTIONS.map(status => 
     `<option value="${status}" ${status === currentStatusFilter ? 'selected' : ''}>${status}</option>`
@@ -52,8 +55,13 @@ function renderMailInterface() {
     <div class="mail-form">
       <div class="template-variables">
         <h3>Verfügbare Platzhalter:</h3>
-        <p class="variables-list">${templateVariables}</p>
+        <p class="variables-list">${allVariables}</p>
         <p class="variables-hint">Verwenden Sie diese Platzhalter in Ihrer Nachricht. Sie werden automatisch mit den Daten aus der Firmenliste ersetzt.</p>
+        <p class="variables-hint"><strong>{{Begrüßung}}</strong> - Generiert automatisch die passende Anrede basierend auf dem Geschlecht:
+          <br>• Kein Geschlecht: "Liebes {{Firma}}-Team"
+          <br>• Mann: "Sehr geehrter Herr {{Nachname}}"
+          <br>• Frau: "Sehr geehrte Frau {{Nachname}}"
+        </p>
       </div>
       
       <div class="form-group">
@@ -77,11 +85,13 @@ function renderMailInterface() {
         <label for="email-body">Nachricht:</label>
         <textarea 
           id="email-body" 
-          placeholder="Guten Tag {{Geschlecht}} {{Nachname}},
+          placeholder="{{Begrüßung}},
 
-vielen Dank für Ihr Interesse an {{Firma}}...
+vielen Dank für Ihr Interesse an unseren Dienstleistungen...
 
-Verwenden Sie {{Platzhalter}} für dynamische Inhalte."
+Mit freundlichen Grüßen
+
+Hinweis: {{Begrüßung}} wird automatisch durch die passende Anrede ersetzt."
           class="form-textarea"
           rows="15"
         ></textarea>
@@ -199,6 +209,12 @@ export function renderDraftsList() {
 function replaceTemplateVariables(message, company) {
   let result = message;
   
+  // Handle special {{Begrüßung}} placeholder first
+  if (result.includes('{{Begrüßung}}')) {
+    const greeting = generateGreeting(company);
+    result = result.replace(/\{\{Begrüßung\}\}/g, greeting);
+  }
+  
   // Replace each column variable
   COLUMNS.forEach(column => {
     const placeholder = `{{${column}}}`;
@@ -207,6 +223,29 @@ function replaceTemplateVariables(message, company) {
   });
   
   return result;
+}
+
+/**
+ * Generate personalized greeting based on gender
+ */
+function generateGreeting(company) {
+  const geschlecht = company.Geschlecht?.trim();
+  const nachname = company.Nachname?.trim() || '';
+  const firma = company.Firma?.trim() || '';
+  
+  if (!geschlecht) {
+    // No gender selected: use company team greeting
+    return `Liebes ${firma}-Team`;
+  } else if (geschlecht === 'Mann') {
+    // Male: use formal male greeting
+    return `Sehr geehrter Herr ${nachname}`;
+  } else if (geschlecht === 'Frau') {
+    // Female: use formal female greeting
+    return `Sehr geehrte Frau ${nachname}`;
+  }
+  
+  // Fallback to company team greeting
+  return `Liebes ${firma}-Team`;
 }
 
 /**
