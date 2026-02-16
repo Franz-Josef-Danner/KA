@@ -772,7 +772,7 @@ async function saveInvoice() {
         items: invoiceItems,
         project: formData.Projekt || '',
         orderId: formData.Auftrags_ID || '',
-        dueDate: '' // Could calculate this if needed
+        dueDate: formData.Deadline || '' // Use the Deadline field from the invoice
       }, formData); // Pass full formData for PDF generation
       
       // Show feedback about notification status

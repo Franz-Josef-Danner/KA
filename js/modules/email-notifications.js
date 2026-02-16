@@ -215,7 +215,8 @@ Rechnungsnummer: ${data.invoiceId}
 Kunde: ${data.customerName}
 Gesamtsumme: ${(data.total || 0).toFixed(2)} €
 Anzahl Artikel: ${data.items?.length ?? 0}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}${data.dueDate ? `
+Fälligkeitsdatum: ${data.dueDate}` : ''}
 
 Bitte überweisen Sie den Betrag fristgerecht.
 
