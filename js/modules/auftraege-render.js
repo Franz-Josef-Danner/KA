@@ -11,6 +11,7 @@ import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
 import { notifyOrderDeleted } from './email-notifications.js';
 import { calculateItemsTotal } from '../utils/invoice-helpers.js';
+import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -195,22 +196,30 @@ export function render() {
       const ok = confirm("Sind Sie sicher, dass Sie diesen Auftrag löschen möchten?");
       if (!ok) return;
       
-      // Calculate total before deletion for notification
-      const orderItems = row.Artikel || [];
-      const total = calculateItemsTotal(orderItems);
+      // Show loading overlay
+      showLoadingOverlay("Auftrag wird gelöscht...");
       
-      // Send deletion notification
-      await notifyOrderDeleted({
-        orderId: row.Auftrags_ID || '',
-        customerName: row.Firma || '',
-        total: total,
-        items: orderItems
-      }, row); // Pass full row for PDF generation
-      
-      rows.splice(idx, 1);
-      setRows(rows);
-      save();
-      render();
+      try {
+        // Calculate total before deletion for notification
+        const orderItems = row.Artikel || [];
+        const total = calculateItemsTotal(orderItems);
+        
+        // Send deletion notification
+        await notifyOrderDeleted({
+          orderId: row.Auftrags_ID || '',
+          customerName: row.Firma || '',
+          total: total,
+          items: orderItems
+        }, row); // Pass full row for PDF generation
+        
+        rows.splice(idx, 1);
+        setRows(rows);
+        save();
+        render();
+      } finally {
+        // Always hide loading overlay
+        hideLoadingOverlay();
+      }
     });
     act.appendChild(minus);
     

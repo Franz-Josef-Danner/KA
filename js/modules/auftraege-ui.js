@@ -7,6 +7,7 @@ import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen, ensureInitialized as ensureRechnungenInitialized } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
+import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -775,57 +776,65 @@ function closeModal() {
 }
 
 async function saveOrder() {
-  // Validate form before saving
-  if (!validateForm()) {
-    return false;
-  }
+  // Show loading overlay
+  showLoadingOverlay("Auftrag wird gespeichert...");
   
-  const formData = getFormData();
-  const rows = getRows();
-  
-  const isNewOrder = (currentEditingRowIndex === null);
-  
-  if (isNewOrder) {
-    // New order - add to beginning
-    rows.unshift(formData);
-  } else {
-    // Edit existing order
-    rows[currentEditingRowIndex] = formData;
-  }
-  
-  setRows(rows);
-  await save();
-  
-  // Send email notification for new orders
-  if (isNewOrder) {
-    const orderItems = formData.items || [];
-    const total = orderItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.Gesamtpreis) || 0);
-    }, 0);
-    
-    const notificationResult = await notifyNewOrder({
-      orderId: formData.Auftrags_ID || 'N/A',
-      customerName: formData.Firma || 'Unbekannt',
-      contactPerson: formData.Ansprechpartner || '',
-      total: total,
-      items: orderItems,
-      project: formData.Projekt || '',
-      status: formData.Status || ''
-    }, formData); // Pass full formData for PDF generation
-    
-    // Show feedback about notification status
-    if (!notificationResult) {
-      showEmailNotificationWarning('Der Auftrag', 'newOrder');
-    } else {
-      showEmailNotificationQueued('Der Auftrag');
+  try {
+    // Validate form before saving
+    if (!validateForm()) {
+      return false;
     }
+    
+    const formData = getFormData();
+    const rows = getRows();
+    
+    const isNewOrder = (currentEditingRowIndex === null);
+    
+    if (isNewOrder) {
+      // New order - add to beginning
+      rows.unshift(formData);
+    } else {
+      // Edit existing order
+      rows[currentEditingRowIndex] = formData;
+    }
+    
+    setRows(rows);
+    await save();
+    
+    // Send email notification for new orders
+    if (isNewOrder) {
+      const orderItems = formData.items || [];
+      const total = orderItems.reduce((sum, item) => {
+        return sum + (parseFloat(item.Gesamtpreis) || 0);
+      }, 0);
+      
+      const notificationResult = await notifyNewOrder({
+        orderId: formData.Auftrags_ID || 'N/A',
+        customerName: formData.Firma || 'Unbekannt',
+        contactPerson: formData.Ansprechpartner || '',
+        total: total,
+        items: orderItems,
+        project: formData.Projekt || '',
+        status: formData.Status || ''
+      }, formData); // Pass full formData for PDF generation
+      
+      // Show feedback about notification status
+      if (!notificationResult) {
+        showEmailNotificationWarning('Der Auftrag', 'newOrder');
+      } else {
+        showEmailNotificationQueued('Der Auftrag');
+      }
+    }
+    
+    // Trigger render event - avoid circular dependency by using custom event
+    window.dispatchEvent(new Event('ordersChanged'));
+    
+    closeModal();
+    return true;
+  } finally {
+    // Always hide loading overlay
+    hideLoadingOverlay();
   }
-  
-  // Trigger render event - avoid circular dependency by using custom event
-  window.dispatchEvent(new Event('ordersChanged'));
-  
-  closeModal();
-  return true;
 }
 
 // Function to convert current order to invoice
@@ -840,6 +849,9 @@ async function convertToInvoice() {
     alert("Bitte speichern Sie den Auftrag zuerst, bevor Sie ihn in eine Rechnung umwandeln.");
     return false;
   }
+  
+  // Show loading overlay
+  showLoadingOverlay("Rechnung wird erstellt...");
   
   const formData = getFormData();
   
@@ -937,6 +949,9 @@ async function convertToInvoice() {
     console.error('Error converting order to invoice:', error);
     alert('Fehler beim Erstellen der Rechnung. Bitte versuchen Sie es erneut.');
     return false;
+  } finally {
+    // Always hide loading overlay
+    hideLoadingOverlay();
   }
 }
 
