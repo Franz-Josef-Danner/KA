@@ -7,7 +7,7 @@ import { escapeHtml } from '../utils/sanitize.js';
 import { pushState, undo as historyUndo, redo as historyRedo, canUndo, canRedo } from './history.js';
 import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from './artikellisten-state.js';
 import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js';
-import { notifyNewCustomer } from './email-notifications.js';
+import { sendCustomerWelcomeEmail } from './email-notifications.js';
 import { isEmailConfigured } from './email-config.js';
 
 // API endpoints
@@ -283,22 +283,20 @@ async function syncFirmenIds(rowsToSync) {
           // Show password notification if a new password was generated
           if (generatedPassword) {
             showNewCustomerPasswordNotification(firmenName, email, generatedPassword);
-          }
-        }
-        // Send email notification for new customer
-        const notificationResult = await notifyNewCustomer({
-          firma: firmenName,
-          ansprechpartner: row.Ansprechpartner || '',
-          email: email,
-          telefon: row.Telefon || ''
-        });
-        
-        // Show warning if notification was not queued
-        if (!notificationResult) {
-          if (!isEmailConfigured()) {
-            console.warn('E-Mail-Benachrichtigung für neuen Kunden nicht gesendet: E-Mail-Benachrichtigungen sind nicht aktiviert.');
-          } else {
-            console.warn('E-Mail-Benachrichtigung für neuen Kunden konnte nicht versendet werden.');
+            
+            // Send welcome email to customer with credentials
+            const welcomeEmailSent = await sendCustomerWelcomeEmail({
+              email: email,
+              username: email,
+              password: generatedPassword,
+              customerName: firmenName
+            });
+            
+            if (welcomeEmailSent) {
+              console.log(`Welcome email sent to ${email}`);
+            } else {
+              console.warn(`Failed to send welcome email to ${email}`);
+            }
           }
         }
       } else {
@@ -316,6 +314,20 @@ async function syncFirmenIds(rowsToSync) {
           // Show password notification if a new password was generated (e.g., email changed)
           if (generatedPassword) {
             showNewCustomerPasswordNotification(row.Firma || 'Unbekannt', email, generatedPassword);
+            
+            // Send welcome email to customer with new credentials
+            const welcomeEmailSent = await sendCustomerWelcomeEmail({
+              email: email,
+              username: email,
+              password: generatedPassword,
+              customerName: row.Firma || 'Unbekannt'
+            });
+            
+            if (welcomeEmailSent) {
+              console.log(`Welcome email sent to ${email}`);
+            } else {
+              console.warn(`Failed to send welcome email to ${email}`);
+            }
           }
         }
       }

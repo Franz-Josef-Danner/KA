@@ -33,7 +33,6 @@ function getDefaultEmailConfig() {
   return {
     enabled: false,
     notificationSettings: {
-      newCustomer: true,
       newOrder: true,
       newInvoice: true,
       paymentReceived: true,
