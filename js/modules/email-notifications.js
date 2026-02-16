@@ -136,6 +136,23 @@ Gesamtsumme: ${(data.total || 0).toFixed(2)} €
 Fälligkeitsdatum: ${data.dueDate}
 Tage überfällig: ${data.daysPastDue}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+`,
+    customerWelcome: `
+Sehr geehrte Damen und Herren,
+
+willkommen bei unserem Kundenbereich!
+
+Ihre Zugangsdaten lauten:
+
+Benutzername: ${data.username}
+Passwort: ${data.password}
+
+Sie können sich unter folgendem Link einloggen:
+${data.loginLink}
+
+Bitte bewahren Sie diese Zugangsdaten sicher auf.
+
+Mit freundlichen Grüßen
 `
   };
   
@@ -151,7 +168,8 @@ export function getNotificationSubject(type, data) {
     paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`,
     orderDeleted: `Auftrag gelöscht: ${data.orderId}`,
     invoiceDeleted: `Rechnung gelöscht: ${data.invoiceId}`,
-    invoiceOverdue: `Rechnung überfällig: ${data.invoiceId}`
+    invoiceOverdue: `Rechnung überfällig: ${data.invoiceId}`,
+    customerWelcome: `Willkommen - Ihre Zugangsdaten zum Kundenbereich`
   };
   
   return subjects[type] || 'KA System Benachrichtigung';
@@ -291,6 +309,69 @@ export async function notifyNewCustomer(customerData) {
   }
   
   return result;
+}
+
+/**
+ * Send welcome email with credentials to a new customer
+ * @param {object} customerData - Customer data including email, password, and username
+ * @returns {Promise<boolean>} - True if email was sent successfully
+ */
+export async function sendCustomerWelcomeEmail(customerData) {
+  const customerEmail = customerData.email || '';
+  const username = customerData.username || customerEmail;
+  const password = customerData.password || '';
+  const loginLink = 'https://www.franzjosef-danner.at/accounting/kundenbereiche.html';
+  
+  if (!customerEmail) {
+    console.error('Cannot send welcome email: No customer email provided');
+    return false;
+  }
+  
+  if (!password) {
+    console.error('Cannot send welcome email: No password provided');
+    return false;
+  }
+  
+  try {
+    // Prepare email data
+    const subject = getNotificationSubject('customerWelcome', {});
+    const body = getNotificationTemplate('customerWelcome', {
+      username: username,
+      password: password,
+      loginLink: loginLink
+    });
+    
+    const emailData = {
+      to: customerEmail,
+      subject: subject,
+      body: body
+    };
+    
+    // Send email via backend
+    const response = await fetch('api/send-approved-emails-inline.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        approvedEmails: [emailData]
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      console.log(`Welcome email sent successfully to ${customerEmail}`);
+      return true;
+    } else {
+      const errorMessage = result.error || result.message || 'Fehler beim Versenden der E-Mail.';
+      console.error('Welcome email sending failed:', errorMessage);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    return false;
+  }
 }
 
 // Send notification when a new order is created

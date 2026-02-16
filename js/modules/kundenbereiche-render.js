@@ -8,6 +8,7 @@ import { escapeHtml } from '../utils/sanitize.js';
 import { getSearchTerm } from './kundenbereiche-search.js';
 import { ACTIVE_ORDER_STATUSES } from './auftraege-config.js';
 import { getCustomerAccountByFirmenId, resetCustomerPassword } from './auth.js';
+import { sendCustomerWelcomeEmail } from './email-notifications.js';
 
 
 export function render() {
@@ -282,6 +283,20 @@ async function showCredentialsModal(firmenId, email, firma) {
     const newPassword = await resetCustomerPassword(firmenId);
     
     if (newPassword) {
+      // Send welcome email to customer with new credentials
+      const welcomeEmailSent = await sendCustomerWelcomeEmail({
+        email: email,
+        username: email,
+        password: newPassword,
+        customerName: firma
+      });
+      
+      if (welcomeEmailSent) {
+        console.log(`Welcome email with new password sent to ${email}`);
+      } else {
+        console.warn(`Failed to send welcome email to ${email}`);
+      }
+      
       // Update modal to show new password
       modal.innerHTML = `
         <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: #28a745;">Neues Passwort generiert</h2>
