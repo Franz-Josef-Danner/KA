@@ -169,6 +169,29 @@ export async function render() {
         });
         
         td.appendChild(select);
+      } else if (col === "Persönlich") {
+        // Special handling for Persönlich column - use checkbox
+        td.setAttribute("contenteditable", "false");
+        td.style.textAlign = "center";
+        
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "personlich-checkbox";
+        checkbox.setAttribute("aria-label", "Persönlich");
+        
+        // Set checked state based on stored value
+        const isChecked = row[col] === "true" || row[col] === true;
+        checkbox.checked = isChecked;
+        
+        // Handle change event
+        checkbox.addEventListener("change", async (e) => {
+          const currentRows = getRows();
+          currentRows[idx][col] = e.target.checked ? "true" : "false";
+          await setRows(currentRows);
+          await save();
+        });
+        
+        td.appendChild(checkbox);
       } else if (col === "Firmen_ID") {
         // Firmen_ID column is read-only - auto-generated based on Status
         td.setAttribute("contenteditable", "false");

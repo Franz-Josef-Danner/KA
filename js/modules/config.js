@@ -5,7 +5,7 @@ export const STORAGE_KEY = "firmen_tabelle_v1";
 
 export const COLUMNS = [
   "Firmen_ID","Firma","Geschlecht","Titel","Vorname","Nachname","E-mail","Tell","Webseite",
-  "Kommentare","Status","Adresse"
+  "Kommentare","Status","Adresse","Persönlich"
 ];
 
 // Status column dropdown options
