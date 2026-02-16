@@ -476,3 +476,139 @@ export function showEmailNotificationQueued(itemType = 'Element') {
   // No need to show feedback for user-confirmed notifications
   // The user already knows they confirmed sending the email
 }
+
+/**
+ * Send invoice to customer
+ * @param {object} invoiceData - The complete invoice data
+ * @param {string} customerEmail - Customer's email address
+ * @returns {Promise<boolean>} - True if sent successfully
+ */
+export async function sendInvoiceToCustomer(invoiceData, customerEmail) {
+  // Confirm before sending
+  const shouldSend = confirm(
+    `Rechnung "${invoiceData.Rechnungs_ID || 'N/A'}" an ${customerEmail} senden?`
+  );
+  
+  if (!shouldSend) {
+    return false;
+  }
+  
+  try {
+    // Generate PDF attachment
+    const pdfAttachment = await generatePDFAttachment('invoice', invoiceData);
+    
+    if (!pdfAttachment) {
+      alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+      return false;
+    }
+    
+    // Prepare email data
+    const subject = `Rechnung ${invoiceData.Rechnungs_ID || 'N/A'}`;
+    const body = `Sehr geehrte Damen und Herren,
+
+anbei erhalten Sie die Rechnung ${invoiceData.Rechnungs_ID || 'N/A'}.
+
+Mit freundlichen Grüßen`;
+    
+    const emailData = {
+      to: customerEmail,
+      subject: subject,
+      body: body,
+      attachment: pdfAttachment
+    };
+    
+    // Send email via backend
+    const response = await fetch('api/send-approved-emails-inline.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        approvedEmails: [emailData]
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      alert(`Rechnung erfolgreich an ${customerEmail} gesendet!`);
+      return true;
+    } else {
+      const errorMessage = result.error || result.message || 'Unbekannter Fehler';
+      alert(`Fehler beim Versenden der E-Mail:\n\n${errorMessage}`);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error sending invoice to customer:', error);
+    alert(`Fehler beim Versenden der E-Mail:\n\n${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Send order to customer
+ * @param {object} orderData - The complete order data
+ * @param {string} customerEmail - Customer's email address
+ * @returns {Promise<boolean>} - True if sent successfully
+ */
+export async function sendOrderToCustomer(orderData, customerEmail) {
+  // Confirm before sending
+  const shouldSend = confirm(
+    `Auftrag "${orderData.Auftrags_ID || 'N/A'}" an ${customerEmail} senden?`
+  );
+  
+  if (!shouldSend) {
+    return false;
+  }
+  
+  try {
+    // Generate PDF attachment
+    const pdfAttachment = await generatePDFAttachment('order', orderData);
+    
+    if (!pdfAttachment) {
+      alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
+      return false;
+    }
+    
+    // Prepare email data
+    const subject = `Auftrag ${orderData.Auftrags_ID || 'N/A'}`;
+    const body = `Sehr geehrte Damen und Herren,
+
+anbei erhalten Sie den Auftrag ${orderData.Auftrags_ID || 'N/A'}.
+
+Mit freundlichen Grüßen`;
+    
+    const emailData = {
+      to: customerEmail,
+      subject: subject,
+      body: body,
+      attachment: pdfAttachment
+    };
+    
+    // Send email via backend
+    const response = await fetch('api/send-approved-emails-inline.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        approvedEmails: [emailData]
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      alert(`Auftrag erfolgreich an ${customerEmail} gesendet!`);
+      return true;
+    } else {
+      const errorMessage = result.error || result.message || 'Unbekannter Fehler';
+      alert(`Fehler beim Versenden der E-Mail:\n\n${errorMessage}`);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error sending order to customer:', error);
+    alert(`Fehler beim Versenden der E-Mail:\n\n${error.message}`);
+    return false;
+  }
+}
