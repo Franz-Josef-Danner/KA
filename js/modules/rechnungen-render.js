@@ -13,6 +13,7 @@ import { enrichInvoiceWithPaymentTerms, calculateItemsTotal } from '../utils/inv
 import { getArtikelliste } from './artikellisten-state.js';
 import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 import { notifyInvoiceDeleted } from './email-notifications.js';
+import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 
 // Payment status display configuration
 const PAYMENT_STATUS_CONFIG = {
@@ -261,21 +262,29 @@ export async function render() {
       const ok = confirm("Sind Sie sicher, dass Sie diese Rechnung löschen möchten?");
       if (!ok) return;
       
-      // Calculate total before deletion for notification
-      const invoiceItems = row.items || [];
-      const total = calculateItemsTotal(invoiceItems);
+      // Show loading overlay
+      showLoadingOverlay("Rechnung wird gelöscht...");
       
-      // Send deletion notification (async)
-      await notifyInvoiceDeleted({
-        invoiceId: row.Rechnungs_ID || '',
-        customerName: row.Firma || '',
-        total: total
-      }, row); // Pass full row for PDF generation
-      
-      rows.splice(idx, 1);
-      setRows(rows);
-      save();
-      render();
+      try {
+        // Calculate total before deletion for notification
+        const invoiceItems = row.items || [];
+        const total = calculateItemsTotal(invoiceItems);
+        
+        // Send deletion notification (async)
+        await notifyInvoiceDeleted({
+          invoiceId: row.Rechnungs_ID || '',
+          customerName: row.Firma || '',
+          total: total
+        }, row); // Pass full row for PDF generation
+        
+        rows.splice(idx, 1);
+        setRows(rows);
+        save();
+        render();
+      } finally {
+        // Always hide loading overlay
+        hideLoadingOverlay();
+      }
     });
     act.appendChild(minus);
     

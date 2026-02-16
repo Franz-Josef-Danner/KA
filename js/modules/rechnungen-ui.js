@@ -8,6 +8,7 @@ import { sanitizeText } from '../utils/sanitize.js';
 import { notifyNewInvoice, notifyPaymentReceived, showEmailNotificationWarning, showEmailNotificationQueued } from './email-notifications.js';
 import { clearInvoiceFromNotified } from './overdue-invoice-checker.js';
 import { calculateItemsTotal } from '../utils/invoice-helpers.js';
+import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -728,81 +729,89 @@ async function saveInvoice() {
     return false;
   }
   
-  const formData = getFormData();
-  const rows = getRows();
+  // Show loading overlay after validation
+  showLoadingOverlay("Rechnung wird gespeichert...");
   
-  const isNewInvoice = (currentEditingRowIndex === null);
-  
-  // Check if payment status changed from unpaid to paid
-  let paymentStatusChanged = false;
-  if (!isNewInvoice) {
-    const oldInvoice = rows[currentEditingRowIndex];
-    const oldBezahlt = oldInvoice?.Bezahlt || 'unbezahlt';
-    const newBezahlt = formData.Bezahlt || 'unbezahlt';
-    paymentStatusChanged = (oldBezahlt === 'unbezahlt' && newBezahlt === 'bezahlt');
-  }
-  
-  if (isNewInvoice) {
-    // New invoice - add to beginning
-    rows.unshift(formData);
-  } else {
-    // Edit existing invoice
-    rows[currentEditingRowIndex] = formData;
-  }
-  
-  setRows(rows);
-  save();
-  
-  // Send email notification for new invoices
-  if (isNewInvoice) {
-    const invoiceItems = formData.items || [];
-    const total = calculateItemsTotal(invoiceItems);
+  try {
+    const formData = getFormData();
+    const rows = getRows();
     
-    const notificationResult = await notifyNewInvoice({
-      invoiceId: formData.Rechnungs_ID || 'N/A',
-      customerName: formData.Firma || 'Unbekannt',
-      contactPerson: formData.Ansprechpartner || '',
-      total: total,
-      items: invoiceItems,
-      project: formData.Projekt || '',
-      orderId: formData.Auftrags_ID || '',
-      dueDate: '' // Could calculate this if needed
-    }, formData); // Pass full formData for PDF generation
+    const isNewInvoice = (currentEditingRowIndex === null);
     
-    // Show feedback about notification status
-    if (!notificationResult) {
-      showEmailNotificationWarning('Die Rechnung', 'newInvoice');
-    } else {
-      showEmailNotificationQueued('Die Rechnung');
+    // Check if payment status changed from unpaid to paid
+    let paymentStatusChanged = false;
+    if (!isNewInvoice) {
+      const oldInvoice = rows[currentEditingRowIndex];
+      const oldBezahlt = oldInvoice?.Bezahlt || 'unbezahlt';
+      const newBezahlt = formData.Bezahlt || 'unbezahlt';
+      paymentStatusChanged = (oldBezahlt === 'unbezahlt' && newBezahlt === 'bezahlt');
     }
-  } else if (paymentStatusChanged) {
-    // Send payment received notification when invoice is marked as paid
-    const invoiceItems = formData.items || [];
-    const total = calculateItemsTotal(invoiceItems);
     
-    const notificationResult = await notifyPaymentReceived({
-      invoiceId: formData.Rechnungs_ID || 'N/A',
-      customerName: formData.Firma || 'Unbekannt',
-      amount: total,
-      paymentDate: new Date().toLocaleDateString('de-DE')
-    });
-    
-    // Clear from overdue notifications list if it was there
-    clearInvoiceFromNotified(formData.Rechnungs_ID);
-    
-    // Show feedback about notification status
-    if (!notificationResult) {
-      showEmailNotificationWarning('Die Zahlung', 'paymentReceived');
+    if (isNewInvoice) {
+      // New invoice - add to beginning
+      rows.unshift(formData);
     } else {
-      showEmailNotificationQueued('Die Zahlung');
+      // Edit existing invoice
+      rows[currentEditingRowIndex] = formData;
     }
+    
+    setRows(rows);
+    save();
+    
+    // Send email notification for new invoices
+    if (isNewInvoice) {
+      const invoiceItems = formData.items || [];
+      const total = calculateItemsTotal(invoiceItems);
+      
+      const notificationResult = await notifyNewInvoice({
+        invoiceId: formData.Rechnungs_ID || 'N/A',
+        customerName: formData.Firma || 'Unbekannt',
+        contactPerson: formData.Ansprechpartner || '',
+        total: total,
+        items: invoiceItems,
+        project: formData.Projekt || '',
+        orderId: formData.Auftrags_ID || '',
+        dueDate: '' // Could calculate this if needed
+      }, formData); // Pass full formData for PDF generation
+      
+      // Show feedback about notification status
+      if (!notificationResult) {
+        showEmailNotificationWarning('Die Rechnung', 'newInvoice');
+      } else {
+        showEmailNotificationQueued('Die Rechnung');
+      }
+    } else if (paymentStatusChanged) {
+      // Send payment received notification when invoice is marked as paid
+      const invoiceItems = formData.items || [];
+      const total = calculateItemsTotal(invoiceItems);
+      
+      const notificationResult = await notifyPaymentReceived({
+        invoiceId: formData.Rechnungs_ID || 'N/A',
+        customerName: formData.Firma || 'Unbekannt',
+        amount: total,
+        paymentDate: new Date().toLocaleDateString('de-DE')
+      });
+      
+      // Clear from overdue notifications list if it was there
+      clearInvoiceFromNotified(formData.Rechnungs_ID);
+      
+      // Show feedback about notification status
+      if (!notificationResult) {
+        showEmailNotificationWarning('Die Zahlung', 'paymentReceived');
+      } else {
+        showEmailNotificationQueued('Die Zahlung');
+      }
+    }
+    
+    // Trigger render event - avoid circular dependency by using custom event
+    window.dispatchEvent(new Event('invoicesChanged'));
+    
+    closeModal();
+    return true;
+  } finally {
+    // Always hide loading overlay
+    hideLoadingOverlay();
   }
-  
-  // Trigger render event - avoid circular dependency by using custom event
-  window.dispatchEvent(new Event('invoicesChanged'));
-  
-  closeModal();
-  return true;
 }
 
 // Initialize modal event handlers
