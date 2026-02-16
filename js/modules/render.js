@@ -1,7 +1,7 @@
 // -----------------------------
 // Rendering Module
 // -----------------------------
-import { COLUMNS, STATUS_OPTIONS } from './config.js';
+import { COLUMNS, STATUS_OPTIONS, GESCHLECHT_OPTIONS } from './config.js';
 import { getRows, setRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
@@ -131,6 +131,56 @@ export function render() {
           await save();
           // Re-render to update Firmen_ID based on new status
           render();
+        });
+        
+        td.appendChild(select);
+      } else if (col === "Geschlecht") {
+        // Special handling for Geschlecht column - use dropdown
+        const select = document.createElement("select");
+        select.className = "geschlecht-select";
+        select.setAttribute("aria-label", "Geschlecht");
+        
+        // Add empty option first
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "";
+        select.appendChild(emptyOption);
+        
+        // Add all Geschlecht options
+        GESCHLECHT_OPTIONS.forEach(option => {
+          const optionElement = document.createElement("option");
+          optionElement.value = option;
+          optionElement.textContent = option;
+          select.appendChild(optionElement);
+        });
+        
+        // Auto-populate based on Gender column value if Geschlecht is empty
+        let geschlechtValue = row[col] || "";
+        if (!geschlechtValue) {
+          const genderValue = String(row["Gender"] || "").trim();
+          if (genderValue === "Sehr geehrter Herr") {
+            geschlechtValue = "Mann";
+          } else if (genderValue === "Sehr geehrte Frau") {
+            geschlechtValue = "Frau";
+          }
+          
+          // Update the row data with the auto-populated value
+          if (geschlechtValue) {
+            row[col] = geschlechtValue;
+          }
+        }
+        
+        // Set selected value
+        if (geschlechtValue) {
+          select.value = geschlechtValue;
+        }
+        
+        // Handle change event
+        select.addEventListener("change", async (e) => {
+          const currentRows = getRows();
+          currentRows[idx][col] = e.target.value;
+          await setRows(currentRows);
+          await save();
         });
         
         td.appendChild(select);
