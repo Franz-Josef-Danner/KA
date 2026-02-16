@@ -270,6 +270,7 @@ export async function notifyNewCustomer(customerData) {
     customerName: customerData.firma || 'Unbekannt',
     contactPerson: customerData.ansprechpartner || '',
     email: customerData.email || '',
+    customerEmail: customerData.email || '', // Also store as recipient email
     phone: customerData.telefon || '',
     timestamp: new Date().toISOString()
   });

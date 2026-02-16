@@ -274,6 +274,7 @@ export async function render() {
         await notifyInvoiceDeleted({
           invoiceId: row.Rechnungs_ID || '',
           customerName: row.Firma || '',
+          customerEmail: row.Firmen_Email || '',
           total: total
         }, row); // Pass full row for PDF generation
         

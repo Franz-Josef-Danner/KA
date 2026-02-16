@@ -194,8 +194,13 @@ export function queueEmailNotification(type, data, bypassNotificationSettings = 
     return false;
   }
   
-  // Use helper function to get the effective recipient email
-  const recipientEmail = getRecipientEmail();
+  // Determine recipient email:
+  // 1. If test email is configured, use it (test mode)
+  // 2. Otherwise, use customer email from data if available
+  // 3. Fall back to null (backend will use default)
+  const testEmail = config.testEmail;
+  const customerEmail = data.customerEmail || '';
+  const recipientEmail = testEmail || customerEmail || null;
   
   // Generate unique ID for notification
   const id = `${type}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
@@ -214,7 +219,7 @@ export function queueEmailNotification(type, data, bypassNotificationSettings = 
   saveEmailQueue(queue);
   
   console.log(`Email notification queued: ${type}`, data);
-  console.log(`Recipient: ${recipientEmail || 'Backend default'}${config.testEmail ? ' (Test Mode)' : ''}`);
+  console.log(`Recipient: ${recipientEmail || 'Backend default'}${testEmail ? ' (Test Mode)' : ''}`);
   return id; // Return ID for tracking
 }
 
