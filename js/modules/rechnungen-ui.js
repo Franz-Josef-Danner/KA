@@ -818,46 +818,42 @@ async function saveInvoice() {
  * Handler for sending invoice to customer
  */
 async function sendInvoiceToCustomerHandler() {
+  // Get current invoice data from form
+  const firmaInput = document.getElementById("edit_Firma");
+  const firma = firmaInput ? firmaInput.value : "";
+  
+  if (!firma) {
+    alert("Bitte wählen Sie zuerst eine Firma aus.");
+    return;
+  }
+  
+  // Get company email
+  const company = getCompanyByName(firma);
+  const customerEmail = company ? company["E-mail"] : "";
+  
+  if (!customerEmail) {
+    alert("Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.");
+    return;
+  }
+  
+  // Collect current invoice data from form
+  const invoiceData = {};
+  for (const col of COLUMNS) {
+    const input = document.getElementById(`edit_${col}`);
+    if (input && col !== "Artikel" && col !== "Beschreibung") {
+      invoiceData[col] = input.value || "";
+    }
+  }
+  
+  // Add invoice items
+  invoiceData.items = currentInvoiceItems;
+  
+  // Show loading overlay
+  showLoadingOverlay('PDF wird generiert und E-Mail wird versendet...');
+  
   try {
-    // Get current invoice data from form
-    const firmaInput = document.getElementById("edit_Firma");
-    const firma = firmaInput ? firmaInput.value : "";
-    
-    if (!firma) {
-      alert("Bitte wählen Sie zuerst eine Firma aus.");
-      return;
-    }
-    
-    // Get company email
-    const company = getCompanyByName(firma);
-    const customerEmail = company ? company["E-mail"] : "";
-    
-    if (!customerEmail) {
-      alert("Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.");
-      return;
-    }
-    
-    // Collect current invoice data from form
-    const invoiceData = {};
-    for (const col of COLUMNS) {
-      const input = document.getElementById(`edit_${col}`);
-      if (input && col !== "Artikel" && col !== "Beschreibung") {
-        invoiceData[col] = input.value || "";
-      }
-    }
-    
-    // Add invoice items
-    invoiceData.items = currentInvoiceItems;
-    
-    // Show loading overlay
-    showLoadingOverlay('PDF wird generiert und E-Mail wird versendet...');
-    
     // Send invoice to customer
-    const success = await sendInvoiceToCustomer(invoiceData, customerEmail);
-    
-    if (!success) {
-      console.log('Failed to send invoice to customer');
-    }
+    await sendInvoiceToCustomer(invoiceData, customerEmail);
   } catch (error) {
     console.error('Error in sendInvoiceToCustomerHandler:', error);
     alert('Fehler beim Versenden der Rechnung: ' + error.message);

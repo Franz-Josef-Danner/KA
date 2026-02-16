@@ -484,11 +484,6 @@ export function showEmailNotificationQueued(itemType = 'Element') {
  * @returns {Promise<boolean>} - True if sent successfully
  */
 export async function sendInvoiceToCustomer(invoiceData, customerEmail) {
-  if (!customerEmail) {
-    alert('Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.');
-    return false;
-  }
-  
   // Confirm before sending
   const shouldSend = confirm(
     `Rechnung "${invoiceData.Rechnungs_ID || 'N/A'}" an ${customerEmail} senden?`
@@ -497,10 +492,6 @@ export async function sendInvoiceToCustomer(invoiceData, customerEmail) {
   if (!shouldSend) {
     return false;
   }
-  
-  // Show loading state
-  const loadingMessage = 'PDF wird generiert und E-Mail wird versendet...';
-  console.log(loadingMessage);
   
   try {
     // Generate PDF attachment
@@ -561,11 +552,6 @@ Mit freundlichen Grüßen`;
  * @returns {Promise<boolean>} - True if sent successfully
  */
 export async function sendOrderToCustomer(orderData, customerEmail) {
-  if (!customerEmail) {
-    alert('Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.');
-    return false;
-  }
-  
   // Confirm before sending
   const shouldSend = confirm(
     `Auftrag "${orderData.Auftrags_ID || 'N/A'}" an ${customerEmail} senden?`
@@ -574,10 +560,6 @@ export async function sendOrderToCustomer(orderData, customerEmail) {
   if (!shouldSend) {
     return false;
   }
-  
-  // Show loading state
-  const loadingMessage = 'PDF wird generiert und E-Mail wird versendet...';
-  console.log(loadingMessage);
   
   try {
     // Generate PDF attachment

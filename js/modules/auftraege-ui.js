@@ -959,46 +959,42 @@ async function convertToInvoice() {
  * Handler for sending order to customer
  */
 async function sendOrderToCustomerHandler() {
+  // Get current order data from form
+  const firmaInput = document.getElementById("edit_Firma");
+  const firma = firmaInput ? firmaInput.value : "";
+  
+  if (!firma) {
+    alert("Bitte wählen Sie zuerst eine Firma aus.");
+    return;
+  }
+  
+  // Get company email
+  const company = getCompanyByName(firma);
+  const customerEmail = company ? company["E-mail"] : "";
+  
+  if (!customerEmail) {
+    alert("Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.");
+    return;
+  }
+  
+  // Collect current order data from form
+  const orderData = {};
+  for (const col of COLUMNS) {
+    const input = document.getElementById(`edit_${col}`);
+    if (input && col !== "Artikel" && col !== "Beschreibung") {
+      orderData[col] = input.value || "";
+    }
+  }
+  
+  // Add order items
+  orderData.items = currentOrderItems;
+  
+  // Show loading overlay
+  showLoadingOverlay('PDF wird generiert und E-Mail wird versendet...');
+  
   try {
-    // Get current order data from form
-    const firmaInput = document.getElementById("edit_Firma");
-    const firma = firmaInput ? firmaInput.value : "";
-    
-    if (!firma) {
-      alert("Bitte wählen Sie zuerst eine Firma aus.");
-      return;
-    }
-    
-    // Get company email
-    const company = getCompanyByName(firma);
-    const customerEmail = company ? company["E-mail"] : "";
-    
-    if (!customerEmail) {
-      alert("Keine E-Mail-Adresse für diesen Kunden vorhanden. Bitte fügen Sie eine E-Mail-Adresse in der Firmenliste hinzu.");
-      return;
-    }
-    
-    // Collect current order data from form
-    const orderData = {};
-    for (const col of COLUMNS) {
-      const input = document.getElementById(`edit_${col}`);
-      if (input && col !== "Artikel" && col !== "Beschreibung") {
-        orderData[col] = input.value || "";
-      }
-    }
-    
-    // Add order items
-    orderData.items = currentOrderItems;
-    
-    // Show loading overlay
-    showLoadingOverlay('PDF wird generiert und E-Mail wird versendet...');
-    
     // Send order to customer
-    const success = await sendOrderToCustomer(orderData, customerEmail);
-    
-    if (!success) {
-      console.log('Failed to send order to customer');
-    }
+    await sendOrderToCustomer(orderData, customerEmail);
   } catch (error) {
     console.error('Error in sendOrderToCustomerHandler:', error);
     alert('Fehler beim Versenden des Auftrags: ' + error.message);
