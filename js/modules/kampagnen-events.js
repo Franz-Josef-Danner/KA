@@ -410,6 +410,12 @@ function initBulkSendHandler() {
 function applyVariableSubstitution(template, dataRecord) {
   let output = template;
   
+  // Handle special {{Begrüßung}} placeholder first
+  if (output.includes('{{Begrüßung}}')) {
+    const greeting = generateGreeting(dataRecord);
+    output = output.split('{{Begrüßung}}').join(greeting);
+  }
+  
   COLUMNS.forEach(columnName => {
     const variablePattern = `{{${columnName}}}`;
     const replacementValue = dataRecord[columnName] || '';
@@ -418,4 +424,47 @@ function applyVariableSubstitution(template, dataRecord) {
   });
   
   return output;
+}
+
+/**
+ * Generate personalized greeting based on gender
+ */
+function generateGreeting(company) {
+  const geschlecht = company.Geschlecht?.trim();
+  const nachname = company.Nachname?.trim() || '';
+  const firma = company.Firma?.trim() || '';
+  
+  if (!geschlecht) {
+    // No gender selected: use company team greeting
+    if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
+  } else if (geschlecht === 'Mann') {
+    // Male: use formal male greeting if last name exists
+    if (nachname) {
+      return `Sehr geehrter Herr ${nachname}`;
+    } else if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
+  } else if (geschlecht === 'Frau') {
+    // Female: use formal female greeting if last name exists
+    if (nachname) {
+      return `Sehr geehrte Frau ${nachname}`;
+    } else if (firma) {
+      return `Liebes ${firma}-Team`;
+    } else {
+      return 'Sehr geehrte Damen und Herren';
+    }
+  }
+  
+  // Fallback to generic greeting
+  if (firma) {
+    return `Liebes ${firma}-Team`;
+  } else {
+    return 'Sehr geehrte Damen und Herren';
+  }
 }
