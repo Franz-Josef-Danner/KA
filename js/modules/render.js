@@ -83,7 +83,7 @@ export function render() {
       if (col === "Gender") {
         const select = document.createElement("select");
         select.className = "gender-select";
-        select.setAttribute("aria-label", "Geschlecht");
+        select.setAttribute("aria-label", "Gender");
         
         // Add all gender options
         GENDER_OPTIONS.forEach(option => {
