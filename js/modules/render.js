@@ -46,38 +46,6 @@ export async function render() {
     return;
   }
 
-  // Auto-populate Geschlecht column based on Gender column if needed
-  // This runs at render time but only processes rows where Geschlecht is undefined/null.
-  // After processing, each row will have a value (either "Mann", "Frau", or ""), 
-  // so it won't be processed again on subsequent renders.
-  let hasChanges = false;
-  rows.forEach(row => {
-    // Only populate if field doesn't exist or is null/undefined (not empty string)
-    if (row["Geschlecht"] === undefined || row["Geschlecht"] === null) {
-      const genderValue = String(row["Gender"] || "").trim();
-      if (genderValue === "Sehr geehrter Herr") {
-        row["Geschlecht"] = "Mann";
-        hasChanges = true;
-      } else if (genderValue === "Sehr geehrte Frau") {
-        row["Geschlecht"] = "Frau";
-        hasChanges = true;
-      } else {
-        // Set to empty string to mark as processed (but don't mark as changed)
-        row["Geschlecht"] = "";
-      }
-    }
-  });
-  
-  // Save auto-populated values if any meaningful changes were made
-  if (hasChanges) {
-    try {
-      await setRows(rows);
-      await save();
-    } catch (error) {
-      console.error('Failed to save auto-populated Geschlecht values:', error);
-    }
-  }
-
   // Find duplicates in all rows (before filtering by search)
   const duplicateMap = findDuplicates(rows);
   const rowsWithDuplicates = getRowsWithDuplicates(duplicateMap);

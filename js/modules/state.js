@@ -359,9 +359,6 @@ export function newEmptyRow() {
     // Set default value for Status column
     if (c === "Status") {
       obj[c] = "offen";
-    } else if (c === "Geschlecht") {
-      // Leave Geschlecht undefined to trigger auto-population from Gender
-      // (will be set during render if Gender has a value)
     } else {
       obj[c] = "";
     }
@@ -427,10 +424,6 @@ function normalizeRows(data) {
   const normalizedRows = data.map(r => {
     const row = newEmptyRow();
     for (const c of COLUMNS) {
-      // Skip Geschlecht if not present or empty in source data (leave undefined for auto-population)
-      if (c === "Geschlecht" && !r?.[c]) {
-        continue;
-      }
       row[c] = sanitizeText(r?.[c] ?? "");
       // Normalize Status: trim whitespace and validate
       if (c === "Status") {
