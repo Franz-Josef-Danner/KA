@@ -202,7 +202,8 @@ Rechnungsnummer: ${data.invoiceId}
 Kunde: ${data.customerName}
 Gesamtsumme: ${(data.total || 0).toFixed(2)} €
 Anzahl Artikel: ${data.items?.length ?? 0}
-Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}${data.dueDate ? `
+Fälligkeitsdatum: ${data.dueDate}` : ''}
 
 Sollte etwas nicht stimmen, bitte Bescheid geben.
 
