@@ -226,12 +226,12 @@ export function notifyNewCustomer(customerData) {
 }
 
 // Send notification when a new order is created
-export function notifyNewOrder(orderData) {
+export async function notifyNewOrder(orderData) {
   if (!isEmailConfigured()) {
     return false;
   }
   
-  // Ask for confirmation before queuing
+  // Ask for confirmation before sending
   const shouldSend = confirmNotification(
     `Möchten Sie eine E-Mail-Benachrichtigung für den neuen Auftrag "${orderData.orderId || 'N/A'}" senden?`
   );
@@ -240,7 +240,8 @@ export function notifyNewOrder(orderData) {
     return false;
   }
   
-  return queueEmailNotification('newOrder', {
+  // Queue and send immediately
+  return await queueAndSendImmediately('newOrder', {
     orderId: orderData.orderId || '',
     customerName: orderData.customerName || '',
     total: orderData.total || 0,
