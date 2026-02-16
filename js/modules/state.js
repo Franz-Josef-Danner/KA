@@ -417,19 +417,17 @@ function loadSync() {
 function autoPopulateGender(row) {
   // Only auto-populate if Gender is empty
   if (!row.Gender || row.Gender.trim() === "") {
-    const titel = row.Titel || "";
+    const titel = (row.Titel || "").trim();
     
-    // Check for "Sehr geehrte Frau" - set Gender to "Frau"
-    if (titel.includes("Sehr geehrte Frau")) {
+    // Check for "Sehr geehrte Frau" at the start - set Gender to "Frau"
+    if (titel.startsWith("Sehr geehrte Frau")) {
       row.Gender = "Frau";
     }
-    // Check for "Sehr geehrter Herr" - set Gender to "Mann"
-    else if (titel.includes("Sehr geehrter Herr")) {
+    // Check for "Sehr geehrter Herr" at the start - set Gender to "Mann"
+    else if (titel.startsWith("Sehr geehrter Herr")) {
       row.Gender = "Mann";
     }
   }
-  
-  return row;
 }
 
 // Normalize rows: ensure all columns exist and validate data
