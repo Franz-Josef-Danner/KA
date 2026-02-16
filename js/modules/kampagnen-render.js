@@ -48,20 +48,8 @@ function renderMailInterface() {
     `<option value="${status}" ${status === currentStatusFilter ? 'selected' : ''}>${status}</option>`
   ).join('');
   
-  // Check for test email mode
-  const emailConfig = getEmailConfig();
-  const testEmailOverride = emailConfig.testEmail?.trim();
-  const testModeWarning = testEmailOverride 
-    ? `<div class="test-mode-warning" style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-         <strong>⚠️ TEST-MODUS AKTIV</strong><br>
-         Alle E-Mails werden an <strong>${escapeHtml(testEmailOverride)}</strong> gesendet.<br>
-         <small>Ändern Sie die Test-E-Mail-Adresse in <a href="einstellungen.html">Einstellungen</a> oder lassen Sie das Feld leer, um an echte Empfänger zu senden.</small>
-       </div>`
-    : '';
-  
   container.innerHTML = `
     <div class="mail-form">
-      ${testModeWarning}
       <div class="template-variables">
         <h3>Verfügbare Platzhalter:</h3>
         <p class="variables-list">${templateVariables}</p>
