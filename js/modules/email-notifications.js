@@ -36,14 +36,14 @@ async function generatePDFAttachment(documentType, documentData) {
     const base64Data = pdfBase64.split(',')[1]; // Extract just the base64 part
     
     // Generate filename
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+    const dateString = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
     let filename;
     if (documentType === 'invoice' || documentType === 'rechnung') {
       const invoiceId = documentData.invoiceId || documentData.Rechnungs_ID || 'N-A';
-      filename = `Rechnung_${invoiceId}_${timestamp}.pdf`;
+      filename = `Rechnung_${invoiceId}_${dateString}.pdf`;
     } else {
       const orderId = documentData.orderId || documentData.Auftrags_ID || 'N-A';
-      filename = `Auftrag_${orderId}_${timestamp}.pdf`;
+      filename = `Auftrag_${orderId}_${dateString}.pdf`;
     }
     
     return {
