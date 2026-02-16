@@ -413,21 +413,20 @@ function loadSync() {
   }
 }
 
-// Helper function to auto-populate Gender based on Titel
+// Helper function to migrate Gender column from old text format to new dropdown format
 function autoPopulateGender(row) {
-  // Only auto-populate if Gender is empty
-  if (!row.Gender || row.Gender.trim() === "") {
-    const titel = (row.Titel || "").trim();
-    
-    // Check for "Sehr geehrte Frau" at the start - set Gender to "Frau"
-    if (titel.startsWith("Sehr geehrte Frau")) {
-      row.Gender = "Frau";
-    }
-    // Check for "Sehr geehrter Herr" at the start - set Gender to "Mann"
-    else if (titel.startsWith("Sehr geehrter Herr")) {
-      row.Gender = "Mann";
-    }
+  // Migrate Gender column if it contains the old salutation text format
+  const gender = (row.Gender || "").trim();
+  
+  // Check if Gender contains the old format "Sehr geehrte Frau" - convert to "Frau"
+  if (gender.startsWith("Sehr geehrte Frau") || gender === "Sehr geehrte Frau") {
+    row.Gender = "Frau";
   }
+  // Check if Gender contains the old format "Sehr geehrter Herr" - convert to "Mann"
+  else if (gender.startsWith("Sehr geehrter Herr") || gender === "Sehr geehrter Herr") {
+    row.Gender = "Mann";
+  }
+  // If Gender is already "Mann" or "Frau" or empty, leave it as is
 }
 
 // Normalize rows: ensure all columns exist and validate data
