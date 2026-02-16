@@ -254,7 +254,7 @@ async function showCredentialsModal(firmenId, email, firma) {
       <strong>Letzte Aktualisierung:</strong> ${new Date(account.updatedAt).toLocaleString('de-DE')}
     </div>
     <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
-      <button class="btn-primary" id="resendCredentialsBtn">Zugangsdaten per E-Mail senden</button>
+      <button class="btn-primary" id="resendCredentialsBtn">Zugang senden</button>
       <div style="display: flex; gap: 0.5rem;">
         <button class="btn-secondary" id="closeCredentialsModal">Schließen</button>
         <button class="btn-primary" id="resetPasswordBtn">Passwort zurücksetzen</button>
