@@ -12,7 +12,7 @@ async function init() {
   // Initialize event handlers
   initEventHandlers();
   // Render the UI
-  render();
+  await render();
 }
 
 // ES6 modules are deferred by default; at this point the DOM is ready, so start the application

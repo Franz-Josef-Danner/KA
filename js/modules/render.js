@@ -14,7 +14,7 @@ import { validateStatusChange } from './validation.js';
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
-export function render() {
+export async function render() {
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
 
@@ -34,7 +34,7 @@ export function render() {
     addButton.addEventListener("click", async () => {
       await setRows([newEmptyRow()]);
       await save();
-      render();
+      await render();
     });
     
     td.appendChild(addButton);
@@ -63,7 +63,12 @@ export function render() {
   
   // Save auto-populated values if any changes were made
   if (hasChanges) {
-    setRows(rows).then(() => save());
+    try {
+      await setRows(rows);
+      await save();
+    } catch (error) {
+      console.error('Failed to save auto-populated Geschlecht values:', error);
+    }
   }
 
   // Find duplicates in all rows (before filtering by search)
@@ -150,7 +155,7 @@ export function render() {
           await setRows(currentRows);
           await save();
           // Re-render to update Firmen_ID based on new status
-          render();
+          await render();
         });
         
         td.appendChild(select);
@@ -248,7 +253,7 @@ export function render() {
       rows.splice(idx + 1, 0, newEmptyRow());
       await setRows(rows);
       await save();
-      render();
+      await render();
     });
     act.appendChild(plus);
     
@@ -263,7 +268,7 @@ export function render() {
       rows.splice(idx, 1);
       await setRows(rows);
       await save();
-      render();
+      await render();
     });
     act.appendChild(minus);
     
