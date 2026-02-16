@@ -59,8 +59,10 @@ function renderMailInterface() {
         <p class="variables-hint">Verwenden Sie diese Platzhalter in Ihrer Nachricht. Sie werden automatisch mit den Daten aus der Firmenliste ersetzt.</p>
         <p class="variables-hint"><strong>{{Begrüßung}}</strong> - Generiert automatisch die passende Anrede basierend auf dem Geschlecht:
           <br>• Kein Geschlecht: "Liebes {{Firma}}-Team"
-          <br>• Mann: "Sehr geehrter Herr {{Nachname}}"
-          <br>• Frau: "Sehr geehrte Frau {{Nachname}}"
+          <br>• Mann mit Persönlich-Checkbox: "Lieber {{Vorname}}"
+          <br>• Mann ohne Persönlich-Checkbox: "Sehr geehrter Herr {{Nachname}}"
+          <br>• Frau mit Persönlich-Checkbox: "Liebe {{Vorname}}"
+          <br>• Frau ohne Persönlich-Checkbox: "Sehr geehrte Frau {{Nachname}}"
         </p>
       </div>
       
@@ -231,7 +233,9 @@ function replaceTemplateVariables(message, company) {
 function generateGreeting(company) {
   const geschlecht = company.Geschlecht?.trim();
   const nachname = company.Nachname?.trim() || '';
+  const vorname = company.Vorname?.trim() || '';
   const firma = company.Firma?.trim() || '';
+  const persoenlich = company.Persönlich === 'true' || company.Persönlich === true;
   
   if (!geschlecht) {
     // No gender selected: use company team greeting
@@ -241,8 +245,10 @@ function generateGreeting(company) {
       return 'Sehr geehrte Damen und Herren';
     }
   } else if (geschlecht === 'Mann') {
-    // Male: use formal male greeting if last name exists
-    if (nachname) {
+    // Male: check if personal checkbox is activated
+    if (persoenlich && vorname) {
+      return `Lieber ${vorname}`;
+    } else if (nachname) {
       return `Sehr geehrter Herr ${nachname}`;
     } else if (firma) {
       return `Liebes ${firma}-Team`;
@@ -250,8 +256,10 @@ function generateGreeting(company) {
       return 'Sehr geehrte Damen und Herren';
     }
   } else if (geschlecht === 'Frau') {
-    // Female: use formal female greeting if last name exists
-    if (nachname) {
+    // Female: check if personal checkbox is activated
+    if (persoenlich && vorname) {
+      return `Liebe ${vorname}`;
+    } else if (nachname) {
       return `Sehr geehrte Frau ${nachname}`;
     } else if (firma) {
       return `Liebes ${firma}-Team`;
