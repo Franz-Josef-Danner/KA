@@ -80,18 +80,18 @@
           <!-- Order Items Section -->
           <div class="form-group" style="grid-column: 1 / -1;">
             <label style="font-weight: bold; margin-bottom: 8px; display: block;">Artikel / Positionen:</label>
-            <button type="button" id="addOrderItemBtn" class="btn-secondary" style="margin-bottom: 8px;">+ Artikel hinzufügen</button>
-            <div id="orderItemsContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
-              <table id="orderItemsTable" style="width: 100%; border-collapse: collapse;">
+            <button type="button" id="addOrderItemBtn" class="btn-secondary" style="margin-bottom: 8px; width: auto;">+ Artikel hinzufügen</button>
+            <div id="orderItemsContainer" style="max-height: 300px; overflow: auto; border: 1px solid #ddd; border-radius: 4px;">
+              <table id="orderItemsTable" style="width: 100%; min-width: auto; border-collapse: collapse; table-layout: fixed;">
                 <thead>
                   <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Artikel</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Beschreibung</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Menge</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Einheit</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 120px;">Einzelpreis (€)</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 120px;">Gesamtpreis (€)</th>
-                    <th style="padding: 8px; text-align: center; width: 80px;">Aktion</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 18%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Artikel</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 35%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Beschreibung</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 6%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Menge</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 12%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Einheit</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 12%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Einzelpreis (€)</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 12%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Gesamtpreis (€)</th>
+                    <th style="padding: 8px; text-align: center; width: 5%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Aktion</th>
                   </tr>
                 </thead>
                 <tbody id="orderItemsTableBody">
