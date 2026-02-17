@@ -78,16 +78,16 @@
             <label style="font-weight: bold; margin-bottom: 8px; display: block;">Artikel / Positionen:</label>
             <button type="button" id="addInvoiceItemBtn" class="btn-secondary" style="margin-bottom: 8px;">+ Artikel hinzufügen</button>
             <div id="invoiceItemsContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
-              <table id="invoiceItemsTable" style="width: 100%; border-collapse: collapse;">
+              <table id="invoiceItemsTable" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                 <thead>
                   <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Artikel</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Beschreibung</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Menge</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 100px;">Einheit</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 120px;">Einzelpreis (€)</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 120px;">Gesamtpreis (€)</th>
-                    <th style="padding: 8px; text-align: center; width: 80px;">Aktion</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 18%;">Artikel</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 35%;">Beschreibung</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 6%;">Menge</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 12%;">Einheit</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 12%;">Einzelpreis (€)</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 12%;">Gesamtpreis (€)</th>
+                    <th style="padding: 8px; text-align: center; width: 5%;">Aktion</th>
                   </tr>
                 </thead>
                 <tbody id="invoiceItemsTableBody">
