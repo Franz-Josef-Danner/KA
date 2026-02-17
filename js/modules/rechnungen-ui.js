@@ -246,6 +246,7 @@ function renderInvoiceItemsTable() {
     const artikelTd = document.createElement("td");
     artikelTd.style.padding = "8px";
     artikelTd.style.borderRight = "1px solid #ddd";
+    artikelTd.style.boxSizing = "border-box";
     
     const artikelSelect = document.createElement("select");
     artikelSelect.style.width = "100%";
@@ -320,6 +321,7 @@ function renderInvoiceItemsTable() {
     const beschreibungTd = document.createElement("td");
     beschreibungTd.style.padding = "8px";
     beschreibungTd.style.borderRight = "1px solid #ddd";
+    beschreibungTd.style.boxSizing = "border-box";
     
     const beschreibungInput = document.createElement("input");
     beschreibungInput.type = "text";
@@ -341,6 +343,7 @@ function renderInvoiceItemsTable() {
     const mengeTd = document.createElement("td");
     mengeTd.style.padding = "8px";
     mengeTd.style.borderRight = "1px solid #ddd";
+    mengeTd.style.boxSizing = "border-box";
     
     const mengeInput = document.createElement("input");
     mengeInput.type = "text";
@@ -368,6 +371,7 @@ function renderInvoiceItemsTable() {
     const einheitTd = document.createElement("td");
     einheitTd.style.padding = "8px";
     einheitTd.style.borderRight = "1px solid #ddd";
+    einheitTd.style.boxSizing = "border-box";
     
     const einheitInput = document.createElement("input");
     einheitInput.type = "text";
@@ -389,6 +393,7 @@ function renderInvoiceItemsTable() {
     const einzelpreisTd = document.createElement("td");
     einzelpreisTd.style.padding = "8px";
     einzelpreisTd.style.borderRight = "1px solid #ddd";
+    einzelpreisTd.style.boxSizing = "border-box";
     
     const einzelpreisInput = document.createElement("input");
     einzelpreisInput.type = "text";
@@ -419,6 +424,7 @@ function renderInvoiceItemsTable() {
     gesamtpreisTd.style.backgroundColor = "#f5f5f5";
     gesamtpreisTd.style.fontWeight = "600";
     gesamtpreisTd.style.textAlign = "right";
+    gesamtpreisTd.style.boxSizing = "border-box";
     gesamtpreisTd.textContent = (item.Gesamtpreis || "0.00") + " €";
     
     tr.appendChild(gesamtpreisTd);
@@ -427,6 +433,7 @@ function renderInvoiceItemsTable() {
     const actionTd = document.createElement("td");
     actionTd.style.padding = "8px";
     actionTd.style.textAlign = "center";
+    actionTd.style.boxSizing = "border-box";
     
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "−";
