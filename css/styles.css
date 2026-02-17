@@ -796,6 +796,23 @@ td.readonly:hover {
 #grid tbody tr:hover {
   background-color: #f8f9ff;
 }
+
+/* ===========================
+   Invoice Items Table Styles
+   =========================== */
+
+/* Container for invoice items table */
+#invoiceItemsContainer {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Invoice items table */
+#invoiceItemsTable th,
+#invoiceItemsTable td {
+  box-sizing: border-box;
+}
+
 /* ===========================
    Preislisten Styles
    =========================== */
