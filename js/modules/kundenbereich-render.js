@@ -96,7 +96,7 @@ function renderOrders(firmenId, firmaName) {
   if (customerOrders.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+        <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
           Keine Aufträge vorhanden.
         </td>
       </tr>
@@ -108,6 +108,13 @@ function renderOrders(firmenId, firmaName) {
     const auftragId = escapeHtml(order.Auftrags_ID || '');
     const datum = escapeHtml(order.Auftragsdatum || '');
     const projekt = escapeHtml(order.Projekt || '');
+    
+    // Determine order status
+    const status = order.Status || 'in Arbeit';
+    const isCompleted = status.toLowerCase() === 'abgeschlossen';
+    const statusBadgeClass = isCompleted ? 'status-badge-completed' : 'status-badge-in-progress';
+    const statusText = isCompleted ? 'Abgeschlossen' : 'In Arbeit';
+    const rowClass = isCompleted ? 'order-completed' : 'order-in-progress';
     
     // Calculate subtotal from order items
     let subtotal = 0;
@@ -127,10 +134,11 @@ function renderOrders(firmenId, firmaName) {
     const formattedTotal = total.toFixed(2).replace('.', ',') + ' €';
 
     return `
-      <tr>
+      <tr class="${rowClass}">
         <td>${auftragId}</td>
         <td>${datum}</td>
         <td>${projekt}</td>
+        <td><span class="status-badge ${statusBadgeClass}">${statusText}</span></td>
         <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-order-pdf" data-order-id="${auftragId}">PDF anzeigen</button>
@@ -210,7 +218,7 @@ function renderInvoices(firmenId, firmaName) {
   if (customerInvoices.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+        <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
           Keine Rechnungen vorhanden.
         </td>
       </tr>
@@ -222,6 +230,12 @@ function renderInvoices(firmenId, firmaName) {
     const rechnungId = escapeHtml(invoice.Rechnungs_ID || '');
     const datum = escapeHtml(invoice.Rechnungsdatum || '');
     const projekt = escapeHtml(invoice.Projekt || '');
+    
+    // Determine payment status
+    const bezahlt = invoice.Bezahlt || 'unbezahlt';
+    const isPaid = bezahlt === 'bezahlt';
+    const statusColor = isPaid ? '#10b981' : '#f59e0b';
+    const statusText = isPaid ? 'Bezahlt' : 'Unbezahlt';
     
     // Calculate subtotal from invoice items
     let subtotal = 0;
@@ -245,6 +259,7 @@ function renderInvoices(firmenId, firmaName) {
         <td>${rechnungId}</td>
         <td>${datum}</td>
         <td>${projekt}</td>
+        <td><span style="font-weight: 500; color: ${statusColor};">${statusText}</span></td>
         <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-invoice-pdf" data-invoice-id="${rechnungId}">PDF anzeigen</button>
