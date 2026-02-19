@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Passwort zurücksetzen - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="login-page">
+  <div class="login-container">
+    <div class="login-card">
+      <h1>Neues Passwort vergeben</h1>
+      <p class="login-subtitle" id="subtitle">Bitte geben Sie Ihr neues Passwort ein.</p>
+
+      <form id="resetForm" class="login-form" style="display: none;">
+        <div class="form-group">
+          <label for="newPassword">Neues Passwort</label>
+          <input
+            type="password"
+            id="newPassword"
+            name="newPassword"
+            required
+            placeholder="Mindestens 8 Zeichen"
+            autocomplete="new-password"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="newPasswordConfirm">Passwort bestätigen</label>
+          <input
+            type="password"
+            id="newPasswordConfirm"
+            name="newPasswordConfirm"
+            required
+            placeholder="Passwort wiederholen"
+            autocomplete="new-password"
+          />
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="successMessage" class="message success-message" style="display: none;"></div>
+
+        <button type="submit" class="login-btn" id="submitBtn">Passwort speichern</button>
+      </form>
+
+      <div id="invalidToken" style="display: none; text-align: center;">
+        <p class="error-message" style="display: block; margin-bottom: 20px;">
+          Dieser Reset-Link ist ungültig oder abgelaufen.
+          Bitte fordern Sie einen neuen an.
+        </p>
+        <a href="passwort-vergessen.html" class="login-btn" style="display: inline-block; text-decoration: none;">
+          Neuen Link anfordern
+        </a>
+      </div>
+
+      <p style="text-align: center; margin-top: 20px; font-size: 14px;">
+        <a href="index.html" style="color: #667eea; text-decoration: none;">← Zurück zur Anmeldung</a>
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    const params    = new URLSearchParams(window.location.search);
+    const token     = params.get('token');
+    const form      = document.getElementById('resetForm');
+    const invalid   = document.getElementById('invalidToken');
+    const errorMsg  = document.getElementById('errorMessage');
+    const successMsg = document.getElementById('successMessage');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (!token) {
+      invalid.style.display = 'block';
+    } else {
+      form.style.display = 'flex';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      errorMsg.style.display  = 'none';
+      successMsg.style.display = 'none';
+
+      const newPassword        = document.getElementById('newPassword').value;
+      const newPasswordConfirm = document.getElementById('newPasswordConfirm').value;
+
+      if (newPassword.length < 8) {
+        errorMsg.textContent = 'Das Passwort muss mindestens 8 Zeichen lang sein.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      if (newPassword !== newPasswordConfirm) {
+        errorMsg.textContent = 'Die Passwörter stimmen nicht überein.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled    = true;
+      submitBtn.textContent = 'Wird gespeichert…';
+
+      try {
+        const response = await fetch('./api/reset-password.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newPassword }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          form.style.display = 'none';
+          document.getElementById('subtitle').textContent = '';
+          successMsg.textContent = 'Ihr Passwort wurde erfolgreich zurückgesetzt. Sie können sich jetzt anmelden.';
+          successMsg.style.display = 'block';
+          setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+        } else {
+          if (result.errorCode === 'TOKEN_INVALID') {
+            form.style.display   = 'none';
+            invalid.style.display = 'block';
+          } else {
+            errorMsg.textContent = result.error || 'Ein Fehler ist aufgetreten.';
+            errorMsg.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Verbindungsfehler. Bitte versuchen Sie es später erneut.';
+        errorMsg.style.display = 'block';
+      } finally {
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Passwort speichern';
+      }
+    });
+  </script>
+</body>
+</html>
