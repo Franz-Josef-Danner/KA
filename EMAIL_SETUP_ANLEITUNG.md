@@ -303,3 +303,71 @@ Fügen Sie hinzu (alle 5 Minuten):
 - [ ] E-Mail-Versand aus Dashboard funktioniert?
 
 Wenn alle Punkte ✅ sind, sollten E-Mails erfolgreich versendet werden!
+
+---
+
+## ⚡ Schnell-Referenz
+
+### 3-Schritte-Setup (Zusammenfassung)
+
+```bash
+# 1. Config erstellen
+cd backend
+cp config.example.json config.json
+
+# 2. Config bearbeiten (mit Ihren Zugangsdaten)
+nano config.json  # oder mit einem Editor Ihrer Wahl
+
+# 3. Dependencies installieren
+npm install
+```
+
+### Testen
+
+```bash
+cd backend
+node email-sender.js
+```
+
+**Erwartete Ausgabe bei Erfolg:**
+```
+🚀 Starting email queue processor...
+⏰ Time: ...
+📭 Queue is empty. Nothing to send.
+✨ Done!
+```
+
+### E-Mails senden
+
+1. Dashboard öffnen
+2. E-Mails genehmigen (✓ Genehmigen)
+3. "📤 E-Mail senden" klicken
+4. Fertig! E-Mail wird versendet
+
+### Häufigste Fehler-Codes
+
+| Code | Bedeutung | Lösung |
+|------|-----------|--------|
+| 535 | Authentication failed | Passwort prüfen |
+| 550 | Sender rejected | FROM-Adresse muss existierende Mailbox sein |
+| 554 | Connection refused | Host/Port falsch |
+| 454 | TLS not available | Port ändern (587 für STARTTLS) |
+
+### SMTP-Ports
+
+- **Port 587** + `secure: false` = STARTTLS (✅ empfohlen)
+- **Port 465** + `secure: true` = SSL/TLS
+
+### Sicherheit
+
+- ✅ config.json ist in .gitignore
+- ✅ Wird NICHT zu Git hinzugefügt
+- ⚠️ Verwenden Sie starke Passwörter
+- ⚠️ Bei Gmail: Verwenden Sie App-Passwort
+
+### Weitere Hilfe
+
+- **EMAIL_SENDING_DIAGNOSTIC_GUIDE.md** - Umfassende Fehlerdiagnose
+- **EMAIL_PROBLEM_ERKLAERUNG.md** - Problem-Erklärung mit Diagrammen
+- **WORLD4YOU_INSTALLATION.md** - Spezifisch für World4You Hosting
+- **backend/README.md** - Backend-Details

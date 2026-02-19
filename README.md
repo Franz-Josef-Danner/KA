@@ -6,10 +6,10 @@ Eine browserbasierte Anwendung zur Verwaltung von Firmenkontakten, Artikellisten
 
 **Wenn E-Mails nicht ankommen, obwohl das System "Erfolg" meldet:**
 
-➡️ **Siehe [WORLD4YOU_INLINE_FIX.md](WORLD4YOU_INLINE_FIX.md)** für die kritische Lösung!
+➡️ **Siehe [WORLD4YOU_INSTALLATION.md](WORLD4YOU_INSTALLATION.md)** für die kritische Lösung!
 
 **Problem:** World4You blockiert `exec()` - E-Mails werden nie versendet (Silent Failure)  
-**Lösung:** Inline SMTP-Versand (kein `exec()` mehr) - **funktioniert auf World4You!**
+**Lösung:** PHPMailer mit Inline SMTP-Versand (kein `exec()` mehr) - **funktioniert auf World4You!**
 
 ## Projekt-Struktur
 
