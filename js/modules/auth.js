@@ -10,14 +10,22 @@ const CUSTOMER_ACCOUNTS_KEY = 'ka_customer_accounts';
 const API_BASE_URL = './api';
 const SAVE_CUSTOMER_ACCOUNTS_ENDPOINT = `${API_BASE_URL}/save-customer-accounts.php`;
 const LOAD_CUSTOMER_ACCOUNTS_ENDPOINT = `${API_BASE_URL}/load-customer-accounts.php`;
+const SAVE_ADMIN_USERS_ENDPOINT = `${API_BASE_URL}/save-admin-users.php`;
+const LOAD_ADMIN_USERS_ENDPOINT = `${API_BASE_URL}/load-admin-users.php`;
 
 // Flag to track if we're using API storage
 let usingApiStorage = true;
+let usingApiStorageForAdmin = true;
 
 // Initialize customer accounts - will be loaded asynchronously
 let customerAccountsCache = null;
 let initializationPromise = null;
 let isInitialized = false;
+
+// Initialize admin users - will be loaded asynchronously
+let adminUsersCache = null;
+let adminInitializationPromise = null;
+let isAdminInitialized = false;
 
 /**
  * Ensure customer accounts are initialized before use
@@ -169,9 +177,175 @@ async function simpleHash(password) {
   return hashHex;
 }
 
+/**
+ * Ensure admin users are initialized before use
+ */
+async function ensureAdminUsersInitialized() {
+  if (adminInitializationPromise) {
+    return adminInitializationPromise;
+  }
+  if (isAdminInitialized) {
+    return;
+  }
+  adminInitializationPromise = (async () => {
+    adminUsersCache = await loadAdminUsersFromServerOrLocalStorage();
+    isAdminInitialized = true;
+  })();
+  await adminInitializationPromise;
+  adminInitializationPromise = null;
+}
+
+/**
+ * Save admin users to server via API
+ * @param {Array} users - Admin users array
+ * @returns {Promise<boolean>} - True if successful, false otherwise
+ */
+async function saveAdminUsersToServer(users) {
+  try {
+    const response = await fetch(SAVE_ADMIN_USERS_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(users),
+    });
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+    return true;
+  } catch (error) {
+    console.error('Failed to save admin users to server:', error);
+    return false;
+  }
+}
+
+/**
+ * Load admin users from server via API
+ * @returns {Promise<Array|null>} - Admin users array or null if failed
+ */
+async function loadAdminUsersFromServer() {
+  try {
+    const response = await fetch(LOAD_ADMIN_USERS_ENDPOINT, { method: 'GET' });
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown server error');
+    }
+    return result.data;
+  } catch (error) {
+    console.error('Failed to load admin users from server:', error);
+    return null;
+  }
+}
+
+/**
+ * Load admin users from server or localStorage as fallback
+ * Migrates data from localStorage to server if needed
+ * @returns {Promise<Array>} - Admin users array (empty array if no data found)
+ */
+async function loadAdminUsersFromServerOrLocalStorage() {
+  const serverData = await loadAdminUsersFromServer();
+
+  if (serverData !== null && serverData.length > 0) {
+    // Server has actual data – use it as the authoritative source
+    console.log('Loaded admin users from server');
+    usingApiStorageForAdmin = true;
+    try {
+      localStorage.setItem(USERS_KEY, JSON.stringify(serverData));
+    } catch (e) {
+      console.warn('Failed to update localStorage cache for admin users:', e);
+    }
+    return serverData;
+  }
+
+  // Server returned null (network error) OR an empty array.
+  // In both cases we check localStorage first so that credentials stored there
+  // (either from the old localStorage-only system or from a failed server write)
+  // are not silently lost and can be migrated to the server.
+  const localData = getUsersSync();
+  if (localData && localData.length > 0) {
+    console.log('Migrating admin users from localStorage to server...');
+    const migrationSuccess = await saveAdminUsersToServer(localData);
+    if (migrationSuccess) {
+      console.log('✓ Successfully migrated admin users to server');
+      usingApiStorageForAdmin = true;
+    } else {
+      console.warn('⚠ Failed to migrate admin users to server, will continue using localStorage');
+      usingApiStorageForAdmin = false;
+    }
+    return localData;
+  }
+
+  // No data found anywhere, return empty array
+  console.log('No existing admin users found, starting fresh');
+  usingApiStorageForAdmin = true;
+  return [];
+}
+
+/**
+ * Synchronous load of admin users from localStorage (doesn't update from server)
+ */
+function getUsersSync() {
+  try {
+    const raw = localStorage.getItem(USERS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get admin users from cache (async, ensures initialization)
+ */
+async function getUsers() {
+  await ensureAdminUsersInitialized();
+  return adminUsersCache || [];
+}
+
+/**
+ * Save admin users to server and localStorage cache
+ */
+async function saveAdminUsers(users) {
+  adminUsersCache = users;
+  let saveSuccess = false;
+
+  if (usingApiStorageForAdmin) {
+    saveSuccess = await saveAdminUsersToServer(users);
+    if (!saveSuccess) {
+      console.warn('Failed to save admin users to server, falling back to localStorage');
+      usingApiStorageForAdmin = false;
+    }
+  }
+
+  if (!usingApiStorageForAdmin || !saveSuccess) {
+    try {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      saveSuccess = true;
+    } catch (error) {
+      console.error('Failed to save admin users to localStorage:', error);
+      return false;
+    }
+  }
+
+  if (usingApiStorageForAdmin && saveSuccess) {
+    try {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    } catch (e) {
+      console.warn('Failed to update localStorage cache for admin users:', e);
+    }
+  }
+
+  return saveSuccess;
+}
+
 // Initialize with a default user if no users exist
 async function initializeUsers() {
-  const users = getUsers();
+  const users = await getUsers();
   if (users.length === 0) {
     // Create a default demo user (admin)
     const defaultUser = {
@@ -180,22 +354,10 @@ async function initializeUsers() {
       role: 'admin'
     };
     users.push(defaultUser);
-    try {
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    } catch (error) {
-      console.error('Failed to initialize users in localStorage:', error);
+    const saved = await saveAdminUsers(users);
+    if (!saved) {
       throw new Error('Storage initialization failed. Please check browser storage settings.');
     }
-  }
-}
-
-function getUsers() {
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
   }
 }
 
@@ -245,7 +407,7 @@ async function saveCustomerAccounts(accounts) {
 
 export async function login(email, password) {
   await initializeUsers();
-  const users = getUsers();
+  const users = await getUsers();
   const customerAccounts = await getCustomerAccounts();
   const passwordHash = await simpleHash(password);
   
@@ -463,7 +625,7 @@ export async function resetCustomerPassword(firmenId) {
 // Returns true on success, false if current password is wrong
 export async function changeAdminCredentials(currentPassword, newEmail, newPassword) {
   await initializeUsers();
-  const users = getUsers();
+  const users = await getUsers();
   const currentUser = getCurrentUser();
   if (!currentUser) return false;
 
@@ -492,10 +654,9 @@ export async function changeAdminCredentials(currentPassword, newEmail, newPassw
     password: passwordHash
   };
 
-  try {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  } catch (error) {
-    console.error('Failed to save updated admin credentials:', error);
+  const saved = await saveAdminUsers(users);
+  if (!saved) {
+    console.error('Failed to save updated admin credentials');
     return false;
   }
 
