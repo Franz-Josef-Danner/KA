@@ -51,14 +51,18 @@ Das Zahlungsziel wird aus folgenden Quellen ermittelt (in dieser Reihenfolge):
 
 Die Überprüfung auf überfällige Rechnungen erfolgt automatisch, wenn:
 
-- Ein Benutzer das **Dashboard** (`dashboard.html`) besucht
-- Seit der letzten Überprüfung **mindestens 24 Stunden** vergangen sind
+- Ein Benutzer das **Dashboard** (`dashboard.html`) besucht, ODER
+- Ein Benutzer die **Rechnungen-Seite** (`rechnungen.html`) öffnet
+- **UND** seit der letzten Überprüfung **mindestens 24 Stunden** vergangen sind
+
+**Hinweis:** Die Prüfung erfolgt also bei jedem Besuch einer dieser beiden Seiten, aber maximal einmal pro Tag, um Redundanz zu vermeiden.
 
 ### Ablauf der Überprüfung
 
 ```
 ┌─────────────────────────────────────────┐
-│  Benutzer öffnet Dashboard              │
+│  Benutzer öffnet Dashboard ODER         │
+│  Rechnungen-Seite                       │
 └────────────────┬────────────────────────┘
                  │
                  ↓
@@ -207,6 +211,55 @@ emailConfig.notificationSettings.invoiceOverdue === true
 | E-Mail-Adresse vorhanden | ✅ Ja | Fehler im Console Log |
 | E-Mail-System konfiguriert | ✅ Ja | Keine Aktion |
 | Benachrichtigungstyp aktiviert | ✅ Ja | Keine Aktion |
+
+---
+
+## Sonderfälle und Spezialszenarien
+
+### Rechnung wird nach Mahnung bezahlt
+
+Wenn eine Rechnung, für die bereits eine Mahnung versendet wurde, als **"bezahlt"** markiert wird:
+
+1. ✅ Die Rechnung wird **automatisch** aus der Liste der gemahnten Rechnungen entfernt
+2. ✅ Falls die Rechnung später wieder auf "unbezahlt" gesetzt wird (z.B. bei Zahlungsrückbuchung), kann sie erneut gemahnt werden
+3. ✅ Keine manuelle Aktion erforderlich - das System aktualisiert sich automatisch
+
+**Technischer Ablauf:**
+
+```javascript
+// Automatisch beim Speichern einer Rechnung mit Status "bezahlt"
+if (invoice.Bezahlt === "bezahlt") {
+  clearInvoiceFromNotified(invoice.Rechnungs_ID);
+}
+```
+
+### Rechnung wird gelöscht
+
+Wenn eine Rechnung gelöscht wird:
+
+- Die Rechnung bleibt in der Liste der gemahnten Rechnungen (hat keine Auswirkung, da die Rechnung nicht mehr existiert)
+- Bei Neuanlage einer Rechnung mit gleicher ID kann diese unabhängig gemahnt werden
+
+### Zahlungsziel nachträglich geändert
+
+Wenn das Zahlungsziel einer Artikelliste nachträglich geändert wird:
+
+- ⚠️ Bereits erstellte Rechnungen behalten ihr **ursprüngliches Fälligkeitsdatum**
+- ✅ Neue Rechnungen verwenden das **neue Zahlungsziel**
+- Das System speichert keine Zahlungsziel-Historie für bestehende Rechnungen
+
+### Mehrfache Mahnungen
+
+Das System verhindert automatisch mehrfache Mahnungen für dieselbe Rechnung:
+
+- ✅ Pro Rechnung wird **maximal eine** Mahnung automatisch versendet
+- ❌ Keine automatischen Folge-Mahnungen (2. Mahnung, 3. Mahnung)
+- 💡 Für weitere Mahnungen: Manuelle E-Mail über Email Queue Manager oder direkte Kommunikation
+
+**Für manuelle Folge-Mahnungen:**
+1. Öffnen Sie die Rechnungen-Seite
+2. Klicken Sie auf "E-Mail senden" bei der entsprechenden Rechnung
+3. Passen Sie den E-Mail-Text für die 2. oder 3. Mahnung an
 
 ---
 
@@ -602,26 +655,117 @@ console.log('Mahnungen in Warteschlange:', overdueEmails);
 1. **Regelmäßige Dashboard-Besuche**
    - Mindestens einmal täglich Dashboard aufrufen
    - System prüft automatisch auf überfällige Rechnungen
+   - Alternativ: Rechnungen-Seite direkt öffnen
 
 2. **Email Queue Manager überwachen**
-   - Neue Mahnungen zeitnah prüfen
+   - Neue Mahnungen zeitnah prüfen (erscheinen im Dashboard)
    - E-Mails vor Versand auf Korrektheit überprüfen
+   - Bei Bedarf E-Mail-Text anpassen oder ablehnen
 
 3. **Zahlungsziele klar definieren**
    - Einheitliche Zahlungsziele in Artikellisten festlegen
    - Standard: 30 Tage für Standardkunden
+   - Individuelle Zahlungsziele für spezielle Kundenvereinbarungen
 
 4. **Kundendaten pflegen**
    - E-Mail-Adressen aktuell halten
    - Fehlende E-Mail-Adressen ergänzen
+   - Ungültige E-Mail-Adressen korrigieren
 
-### Mahnstufen-Konzept (optional)
+5. **Rechnungsstatus aktuell halten**
+   - Zahlungseingänge zeitnah als "bezahlt" markieren
+   - Verhindert unnötige Mahnungen
+   - System entfernt bezahlte Rechnungen automatisch aus der Mahnliste
 
-Das System unterstützt aktuell **eine automatische Mahnstufe**. Für mehrstufige Mahnprozesse:
+### Mahnstufen-Konzept (Empfehlung)
 
-**Erste Mahnung:** Automatisch via System
-**Zweite Mahnung:** Manuelle E-Mail nach 7-14 Tagen
-**Dritte Mahnung:** Persönlicher Kontakt oder Inkasso
+Das System unterstützt aktuell **eine automatische Mahnstufe**. Für mehrstufige Mahnprozesse empfehlen wir:
+
+**1. Mahnung (Automatisch):**
+- Ausgelöst durch das System
+- Freundliche Zahlungserinnerung
+- Versand über E-Mail-Warteschlange
+
+**2. Mahnung (Manuell nach 7-14 Tagen):**
+- Manuelle E-Mail über Rechnungen-Seite
+- Bestimmterer Ton
+- Hinweis auf Verzugszinsen (falls zutreffend)
+- Ankündigung weiterer Schritte
+
+**3. Mahnung (Manuell nach weiteren 7-14 Tagen):**
+- Letzte Zahlungsaufforderung
+- Fristsetzung (z.B. 7 Tage)
+- Ankündigung rechtlicher Schritte
+- Optional: Telefonsicher Kontakt
+
+**Inkasso/Rechtliche Schritte:**
+- Bei Fristüberschreitung nach 3. Mahnung
+- Persönlicher Kontakt oder Übergabe an Inkassobüro
+
+### Zeitplan-Beispiel
+
+```
+Tag 0:  Rechnung erstellt (Fälligkeitsdatum: Tag 30)
+Tag 30: Fälligkeit erreicht
+Tag 31: 1. Mahnung automatisch (System)
+        → "Ihre Rechnung ist seit gestern fällig..."
+
+Tag 45: 2. Mahnung manuell (nach 14 Tagen)
+        → "Trotz unserer Zahlungserinnerung vom..."
+
+Tag 59: 3. Mahnung manuell (nach 14 Tagen)
+        → "Letzte Aufforderung zur Zahlung innerhalb von 7 Tagen..."
+
+Tag 66: Inkasso oder rechtliche Schritte
+```
+
+### E-Mail-Text Empfehlungen
+
+#### 1. Mahnung (Automatisch)
+
+Die automatische E-Mail enthält:
+- Rechnungsnummer
+- Fälligkeitsdatum
+- Offener Betrag
+- Tage überfällig
+- Freundlicher Ton
+
+**Empfehlung:** Text in `email-notifications.js` anpassen für persönlichere Formulierung.
+
+#### 2. Mahnung (Manuell)
+
+Beispieltext:
+```
+Sehr geehrte Damen und Herren,
+
+trotz unserer Zahlungserinnerung vom [Datum 1. Mahnung] haben wir bisher 
+keinen Zahlungseingang für die Rechnung [Rechnungs-ID] über [Betrag] feststellen können.
+
+Wir bitten Sie höflich, den ausstehenden Betrag innerhalb der nächsten 7 Tage 
+zu überweisen. Sollte die Zahlung bereits erfolgt sein, betrachten Sie 
+dieses Schreiben bitte als gegenstandslos.
+
+Mit freundlichen Grüßen
+```
+
+#### 3. Mahnung (Manuell)
+
+Beispieltext:
+```
+Sehr geehrte Damen und Herren,
+
+trotz zweifacher Mahnung ist die Zahlung der Rechnung [Rechnungs-ID] 
+über [Betrag] bisher nicht eingegangen.
+
+Wir fordern Sie hiermit letztmalig auf, den offenen Betrag bis zum 
+[Datum + 7 Tage] zu überweisen. Andernfalls sehen wir uns gezwungen, 
+rechtliche Schritte einzuleiten.
+
+Sollte die Zahlung zwischenzeitlich erfolgt sein, bitten wir um 
+entsprechende Mitteilung.
+
+Mit freundlichen Grüßen
+```
 
 ---
 
