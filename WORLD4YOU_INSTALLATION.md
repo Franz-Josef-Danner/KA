@@ -1,11 +1,48 @@
-# World4You Hosting - Node.js und Nodemailer Installation
+# World4You Hosting - Kompletter Einrichtungs-Guide
 
-## Problem
-Sie verwenden World4You Hosting und sehen im Dashboard:
+## ⚠️ KRITISCH: World4You Shared Hosting und E-Mail-Versand
+
+**Wenn E-Mails nicht ankommen, obwohl das System "Erfolg" meldet:**
+
+### Das Problem
+Auf World4You Shared Hosting sind **exec(), shell_exec(), system()** standardmäßig **DEAKTIVIERT**.
+
+Das bedeutet:
+- ❌ PHP kann keine externen Prozesse starten
+- ❌ `exec("php backend/php-email-sender.php")` wird ignoriert
+- ❌ Keine Fehlermeldung, keine Exception
+- ❌ UI zeigt "Erfolg" aber nichts passiert
+- ❌ **Silent Failure** - E-Mails werden NIE versendet
+
+### Die Lösung: PHPMailer mit Inline SMTP
+
+**✅ Das System verwendet jetzt PHPMailer mit direktem SMTP-Versand:**
+
+```php
+// FUNKTIONIERT auf World4You:
+require_once 'backend/smtp-phpmailer.php';
+$result = sendEmailPHPMailer($config, $to, $subject, $body, null, true);
+// ↑ Alles im selben PHP-Prozess, keine exec() Aufrufe!
+```
+
+**Vorteile:**
+- ✅ Funktioniert auf World4You Shared Hosting
+- ✅ Keine Silent Failures mehr
+- ✅ Sofortiges Feedback
+- ✅ Detaillierte Logs
+
+Siehe auch: [PHPMAILER_INTEGRATION.md](PHPMAILER_INTEGRATION.md)
+
+---
+
+## Node.js und Nodemailer auf World4You
+
+### Problem
+Sie sehen im Dashboard:
 - ❌ Node.js: Nicht verfügbar
 - ❌ Nodemailer: Fehlt
 
-## Wichtig zu wissen über World4You Hosting
+### Wichtig zu wissen über World4You Hosting
 
 World4You bietet verschiedene Hosting-Pakete an:
 
@@ -65,8 +102,44 @@ Bei Standard Webhosting-Paketen können Sie Node.js nicht installieren.
 - Node.js + alle Module
 - Bessere Performance
 
-#### Option B: PHP-basierter E-Mail-Versand
-**Einfache Alternative ohne Node.js**
+#### Option B: PHP-basierter E-Mail-Versand mit PHPMailer
+**✅ EMPFOHLEN: Funktioniert auf World4You Shared Hosting**
+
+Das System verwendet jetzt PHPMailer für den E-Mail-Versand. Diese Lösung:
+- ✅ Funktioniert auf World4You ohne Node.js
+- ✅ Keine exec() Aufrufe (vermeidet Silent Failures)
+- ✅ Bewährte, robuste Bibliothek
+- ✅ Automatisch integriert im Dashboard
+
+**Setup:**
+1. PHPMailer ist bereits im Verzeichnis `backend/PHPMailer/` enthalten
+2. Konfigurieren Sie `backend/config.json`:
+```json
+{
+  "email": "office@franzjosef-danner.at",
+  "password": "IHR_MAILBOX_PASSWORT",
+  "fromName": "KA System",
+  "smtp": {
+    "host": "smtp.world4you.com",
+    "port": 587,
+    "secure": false
+  }
+}
+```
+
+**World4You spezifische Anforderungen:**
+- ✅ Port **587** (nicht 465)
+- ✅ `"secure": false` (STARTTLS wird automatisch aktiviert)
+- ✅ From-Adresse = existierende Mailbox (World4You Anforderung!)
+- ✅ Mailbox-Passwort (nicht Kundenlogin!)
+
+**Verwendung:**
+Das Dashboard sendet E-Mails automatisch über PHPMailer. Keine weitere Aktion erforderlich!
+
+Siehe: [PHPMAILER_INTEGRATION.md](PHPMAILER_INTEGRATION.md) für Details.
+
+#### Option B-Alt: Einfaches PHP mail()
+**Nur als Fallback - PHPMailer ist besser**
 
 Sie können E-Mails direkt mit PHP versenden, ohne Node.js:
 

@@ -4,6 +4,41 @@
 
 Das System verwendet jetzt PHPMailer anstelle der benutzerdefinierten PHP-Socket-Implementierung, da PHPMailer **nachweislich mit World4You funktioniert**.
 
+## ✅ Installation & Verifizierung
+
+PHPMailer ist bereits im Repository enthalten unter `backend/PHPMailer/` (Version 7.0.2).
+
+### Verzeichnisstruktur
+
+```
+backend/
+├── PHPMailer/                    ← PHPMailer Installation
+│   ├── src/
+│   │   ├── PHPMailer.php        ← Hauptklasse (ca. 190 KB)
+│   │   ├── SMTP.php             ← SMTP Implementation (ca. 53 KB)
+│   │   ├── Exception.php        ← Exception Handling (ca. 1.3 KB)
+│   │   └── ... (weitere Dateien)
+│   ├── language/                 ← Sprachdateien
+│   ├── LICENSE
+│   ├── README.md
+│   ├── VERSION
+│   └── composer.json
+├── smtp-phpmailer.php           ← Wrapper-Funktion
+├── config.json                   ← SMTP-Konfiguration
+└── smtp-debug.log               ← Debug-Logs
+```
+
+### Pfad-Verifizierung
+
+Alle Code-Referenzen verweisen korrekt auf `backend/PHPMailer/`:
+
+**In backend/smtp-phpmailer.php:**
+```php
+require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/PHPMailer/src/Exception.php';
+```
+
 ## Warum PHPMailer?
 
 Der Benutzer hat gezeigt, dass dieser Code funktioniert:
@@ -21,18 +56,6 @@ $mail->SMTPSecure = false; // STARTTLS intern bei World4You
 
 **Dies ist die EINZIGE Methode, die funktioniert:** "das hier und nur das hier funktioniert"
 
-## Installation
-
-PHPMailer ist bereits im Repository enthalten:
-```
-backend/PHPMailer/src/
-  ├── PHPMailer.php
-  ├── SMTP.php
-  └── Exception.php
-```
-
-Keine zusätzliche Installation erforderlich!
-
 ## Verwendung
 
 ### 1. In API Endpoints
@@ -48,8 +71,65 @@ $result = sendEmailPHPMailer($config, $to, $subject, $body, null, true);
 
 ### 2. Standalone Testing
 
-Verwenden Sie `test-phpmailer.php`:
+Verwenden Sie `test-phpmailer.php` für schnelle Tests:
 
+```php
+<?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+require __DIR__ . '/backend/PHPMailer/src/PHPMailer.php';
+require __DIR__ . '/backend/PHPMailer/src/SMTP.php';
+require __DIR__ . '/backend/PHPMailer/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+
+// Load configuration
+$configFile = __DIR__ . '/backend/config.json';
+if (!file_exists($configFile)) {
+    die("❌ ERROR: backend/config.json not found!");
+}
+
+$config = json_decode(file_get_contents($configFile), true);
+
+$mail = new PHPMailer(true);
+
+try {
+    $mail->SMTPDebug = 2;
+    $mail->Debugoutput = 'html';
+    
+    $mail->isSMTP();
+    $mail->Host       = $config['smtp']['host'];
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $config['email'];
+    $mail->Password   = $config['password'];
+    $mail->Port       = isset($config['smtp']['port']) ? $config['smtp']['port'] : 587;
+    $mail->SMTPSecure = false; // STARTTLS intern bei World4You
+    
+    $mail->setFrom($config['email'], isset($config['fromName']) ? $config['fromName'] : 'SMTP Test');
+    $mail->addAddress('ihre.test@email.com'); // ← ÄNDERN SIE DIES!
+    
+    $mail->isHTML(false);
+    $mail->Subject = 'PHPMailer SMTP Test';
+    $mail->Body    = 'Wenn Sie diese E-Mail erhalten, funktioniert PHPMailer perfekt!';
+    
+    $mail->send();
+    
+    echo "\n\n<div style='background:#d4edda;color:#155724;padding:20px;margin:20px;border:2px solid #28a745;'>";
+    echo "<h2>✅ MAIL OK</h2>";
+    echo "<p>E-Mail wurde erfolgreich versendet!</p>";
+    echo "</div>";
+    
+} catch (Exception $e) {
+    echo "\n\n<div style='background:#f8d7da;color:#721c24;padding:20px;margin:20px;border:2px solid #dc3545;'>";
+    echo "<h2>❌ FEHLER</h2>";
+    echo "<p>PHPMailer Error: {$mail->ErrorInfo}</p>";
+    echo "<p>Exception: {$e->getMessage()}</p>";
+    echo "</div>";
+}
+```
+
+**Testschritte:**
 ```bash
 # 1. Datei hochladen
 # 2. Browser öffnen: https://ihre-domain.at/test-phpmailer.php
@@ -167,6 +247,44 @@ Keine Migration erforderlich! Das System verwendet automatisch PHPMailer:
 ```bash
 ls backend/PHPMailer/src/
 # Sollte zeigen: PHPMailer.php, SMTP.php, Exception.php
+```
+
+**Verifizierung via PHP:**
+```php
+<?php
+// Erstellen Sie check-phpmailer.php zum Testen
+$files = [
+    'backend/PHPMailer/src/PHPMailer.php',
+    'backend/PHPMailer/src/SMTP.php',
+    'backend/PHPMailer/src/Exception.php'
+];
+
+echo "<h2>PHPMailer Datei-Überprüfung</h2><pre>";
+
+foreach ($files as $file) {
+    if (file_exists($file)) {
+        $size = filesize($file);
+        echo "✅ $file (Größe: " . number_format($size) . " bytes)\n";
+    } else {
+        echo "❌ $file FEHLT!\n";
+    }
+}
+
+// Versuche PHPMailer zu laden
+try {
+    require 'backend/PHPMailer/src/PHPMailer.php';
+    require 'backend/PHPMailer/src/SMTP.php';
+    require 'backend/PHPMailer/src/Exception.php';
+    
+    echo "\n✅ PHPMailer erfolgreich geladen!\n";
+    
+    $version = \PHPMailer\PHPMailer\PHPMailer::VERSION;
+    echo "📦 PHPMailer Version: $version\n";
+    
+} catch (Exception $e) {
+    echo "\n❌ Fehler beim Laden: " . $e->getMessage() . "\n";
+}
+echo "</pre>";
 ```
 
 ### "SMTP connect() failed"
