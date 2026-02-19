@@ -2171,4 +2171,9 @@ td.readonly:hover {
     color: #667eea;
     border-color: transparent;
   }
+
+  .order-modal-content .modal-footer,
+  .invoice-modal-content .modal-footer {
+    flex-direction: column;
+  }
 }
