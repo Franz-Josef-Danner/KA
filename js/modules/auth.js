@@ -175,8 +175,8 @@ async function initializeUsers() {
   if (users.length === 0) {
     // Create a default demo user (admin)
     const defaultUser = {
-      email: 'demo@example.com',
-      password: await simpleHash('demo123'), // Hash the password
+      email: 'office@franzjosef-danner.at',
+      password: await simpleHash('5.z3LPg2TE:HvWK'), // Hash the password
       role: 'admin'
     };
     users.push(defaultUser);
