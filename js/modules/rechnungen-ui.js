@@ -251,6 +251,7 @@ function renderInvoiceItemsTable() {
     const datumInput = document.createElement("input");
     datumInput.type = "date";
     datumInput.style.width = "100%";
+    datumInput.style.boxSizing = "border-box";
     datumInput.style.padding = "4px";
     datumInput.value = item.Datum || "";
     datumInput.dataset.itemIndex = idx;
