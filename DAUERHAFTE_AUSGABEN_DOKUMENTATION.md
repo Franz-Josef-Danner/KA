@@ -67,7 +67,7 @@ The **Gesamtsumme** field allows you to set up installment payments that automat
 
 ### Automatic Triggering
 
-The system automatically checks for and generates due recurring expenses when the **Dashboard** is loaded. No manual cronjob setup is required - the generation happens automatically in the background whenever a user accesses the dashboard.
+The system automatically checks for and generates due recurring expenses when the **Dashboard** is loaded. The generation happens automatically in the background whenever a user accesses the dashboard.
 
 ### How It Works
 
@@ -76,28 +76,6 @@ The system automatically checks for and generates due recurring expenses when th
 3. If due and not already generated, a new regular expense is created automatically
 4. The generated expense is marked as "bezahlt" (paid)
 5. The process runs silently in the background without disrupting the dashboard display
-
-### Manual Triggering (Optional)
-
-If you prefer to run the generation manually or via a scheduled task, you can use the cronjob script:
-
-```bash
-cd /path/to/KA
-php generate-recurring-expenses.php
-```
-
-Or set up a cronjob to run it daily:
-
-```bash
-crontab -e
-```
-
-Add this line to run daily at midnight:
-```bash
-0 0 * * * /usr/bin/php /path/to/KA/generate-recurring-expenses.php >> /var/log/ka-recurring-expenses.log 2>&1
-```
-
-**Note:** Manual cronjob setup is optional. The system automatically generates expenses when the dashboard is accessed.
 
 ### Technical Details
 
@@ -111,23 +89,6 @@ Add this line to run daily at midnight:
    - Status automatically set to "bezahlt" (paid)
    - A comment indicating it was auto-generated
    - A tracking field linking it to the recurring expense
-
-### Logs
-
-The script logs all activities to `data/recurring-expenses.log`. Check this file to:
-- Monitor script execution
-- Verify expense generation
-- Troubleshoot issues
-
-Example log output:
-```
-[2026-01-18 00:00:00] Starting recurring expenses generation
-[2026-01-18 00:00:00] Loaded 5 recurring expenses
-[2026-01-18 00:00:00] Loaded 120 existing expenses
-[2026-01-18 00:00:00] Generated new expense for recurring ID DAUS-123: AUS-456
-[2026-01-18 00:00:00] Successfully generated and saved 1 new expenses
-[2026-01-18 00:00:00] Recurring expenses generation completed successfully
-```
 
 ## Data Storage
 
@@ -222,22 +183,16 @@ Result: The system generates 3 payments: €175 + €175 + €150 = €500 (fina
 
 ### Expenses Not Being Generated
 
-1. **Check the cronjob is running**: View cron logs
-   ```bash
-   grep CRON /var/log/syslog
-   ```
+1. **Check the dashboard**: Ensure you've accessed the dashboard recently to trigger generation
 
-2. **Check script logs**: View the recurring expenses log
-   ```bash
-   cat data/recurring-expenses.log
-   ```
+2. **Check browser console**: Open developer tools (F12) and check for errors when loading the dashboard
 
 3. **Run script manually**: Test the script execution
    ```bash
    php generate-recurring-expenses.php
    ```
 
-4. **Verify recurring expense data**: Check that the recurring expense has:
+3. **Verify recurring expense data**: Check that the recurring expense has:
    - A valid start date
    - Correct stichtag value
    - Start date is not in the future
