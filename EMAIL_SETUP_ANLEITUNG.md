@@ -249,33 +249,10 @@ npm install
 - Installieren Sie Node.js (siehe Schritt 1)
 - Stellen Sie sicher, dass `node` im PATH ist
 
-## Automatischer Versand (Optional)
-
-Wenn Sie möchten, dass E-Mails automatisch alle paar Minuten versendet werden:
-
-### Cronjob einrichten (Linux/Mac)
-
-```bash
-crontab -e
-```
-
-Fügen Sie hinzu (alle 5 Minuten):
-```bash
-*/5 * * * * cd /absoluter/pfad/zu/KA/backend && node email-sender.js >> /var/log/ka-email.log 2>&1
-```
-
-### Task Scheduler (Windows)
-
-1. Öffnen Sie "Aufgabenplanung"
-2. Erstellen Sie eine neue Aufgabe
-3. Trigger: Alle 5 Minuten
-4. Aktion: `node.exe` mit Argument `C:\pfad\zu\KA\backend\email-sender.js`
-
 ## Hilfe und Support
 
 **Weitere Dokumentation:**
 - `backend/README.md` - Ausführliche Backend-Dokumentation
-- `backend/CRONJOB_SETUP.md` - Cronjob-Einrichtung
 - `EMAIL_CONFIGURATION.md` - E-Mail-Konfiguration
 - `EMAIL_QUEUE_MANAGER_DOKUMENTATION.md` - Warteschlangen-Verwaltung
 

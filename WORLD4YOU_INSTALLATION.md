@@ -206,17 +206,9 @@ echo "   ❌ Fehlgeschlagen: $failed\n";
 
 **Verwendung:**
 ```bash
-# Manuell ausführen via Browser oder Cronjob
+# Manuell ausführen via Browser
 php backend/php-email-sender.php
 ```
-
-**Cronjob einrichten (World4You Admin-Panel):**
-1. Login in World4You Kundenbereich
-2. Navigation → Cronjobs
-3. Neuer Cronjob:
-   - Befehl: `php /pfad/zu/KA/backend/php-email-sender.php`
-   - Intervall: Alle 5 Minuten
-   - E-Mail-Benachrichtigung: Nein
 
 **Nachteile dieser Methode:**
 - Weniger Kontrolle über E-Mail-Formatierung
@@ -378,21 +370,7 @@ Erwartete Ausgabe:
 ✨ Done!
 ```
 
-#### Schritt 6: Cronjob einrichten (automatisch E-Mails versenden)
-
-```bash
-# Cronjob-Editor öffnen
-crontab -e
-
-# Fügen Sie diese Zeile hinzu (alle 5 Minuten):
-*/5 * * * * cd /var/www/html/KA/backend && /usr/bin/node email-sender.js >> /var/log/ka-email.log 2>&1
-```
-
-**Pfad anpassen:**
-- Ersetzen Sie `/var/www/html/KA` mit Ihrem tatsächlichen Pfad
-- Node.js-Pfad finden mit: `which node`
-
-#### Schritt 7: Firewall-Einstellungen (falls nötig)
+#### Schritt 6: Firewall-Einstellungen (falls nötig)
 
 ```bash
 # Ports für SMTP öffnen
@@ -513,5 +491,4 @@ sudo ufw status
 - [ ] Dependencies installieren: `npm install`
 - [ ] Config erstellen und ausfüllen
 - [ ] Testen: `node email-sender.js`
-- [ ] Cronjob einrichten (optional)
 - [ ] Dashboard überprüfen → Backend-Status sollte grün sein ✅
