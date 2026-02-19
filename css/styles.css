@@ -6,7 +6,7 @@ h1 { margin: 0 0 12px; font-size: 18px; }
 .hidden { display: none !important; }
 .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 14px; }
 .bar button, .bar input[type="file"], .bar .import-btn {
-  padding: 8px 10px; border: 1px solid #ccc; background: #fff; border-radius: 8px;
+  padding: 10px 20px; border: 1px solid #ccc; background: #fff; border-radius: 8px;
   cursor: pointer; font-size: 14px;
 }
 .bar button:hover, .bar .import-btn:hover { border-color: #999; }
@@ -984,8 +984,8 @@ td.readonly:hover {
   background-color: #667eea;
   color: white;
   border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.2s ease;
@@ -999,10 +999,10 @@ td.readonly:hover {
   background-color: #fff;
   color: #667eea;
   border: 1px solid #667eea;
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   transition: all 0.2s ease;
 }
 
@@ -1135,7 +1135,7 @@ td.readonly:hover {
 }
 
 .logo-preview button {
-  padding: 8px 16px;
+  padding: 10px 20px;
 }
 
 .form-actions {
@@ -1145,7 +1145,7 @@ td.readonly:hover {
 }
 
 .form-actions button {
-  padding: 10px 24px;
+  padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
 }
@@ -1880,7 +1880,7 @@ td.readonly:hover {
 }
 
 .btn {
-  padding: 10px 16px;
+  padding: 10px 20px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 14px;
