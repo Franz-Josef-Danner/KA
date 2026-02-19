@@ -55,6 +55,7 @@ KA/
   - Login/Logout-Funktionalität
   - Session-Management mit LocalStorage
   - Seitenschutz (requireAuth)
+  - Administrator-Zugangsdaten ändern (changeAdminCredentials)
   - Demo-User: demo@example.com / demo123
 
 - **navigation.js**: Navigationsmenü
@@ -175,6 +176,25 @@ Die Anwendung kann direkt im Browser geöffnet werden:
    - Alle seine Aufträge (schreibgeschützt)
    - Alle seine Rechnungen (schreibgeschützt)
 7. Admins können in **Kundenbereiche** alle Kunden verwalten und deren Portale einsehen
+
+### Administrator-Zugangsdaten ändern
+
+**Wo ändert man die Login-Daten für den Administrator?**
+
+1. Melden Sie sich als Administrator an
+2. Öffnen Sie **Einstellungen** über das Navigationsmenü
+3. Scrollen Sie zum Abschnitt **"Administrator-Zugangsdaten ändern"**
+4. Füllen Sie die gewünschten Felder aus:
+   - **Aktuelles Passwort** (Pflichtfeld zur Verifikation)
+   - **Neue E-Mail-Adresse** (leer lassen, um die aktuelle beizubehalten)
+   - **Neues Passwort** (leer lassen, um das aktuelle beizubehalten; mindestens 8 Zeichen)
+   - **Neues Passwort bestätigen**
+5. Klicken Sie auf **"Zugangsdaten ändern"**
+
+**Hinweise:**
+- Das aktuelle Passwort wird zur Sicherheit immer benötigt
+- Sie können E-Mail-Adresse und Passwort einzeln oder gleichzeitig ändern
+- Nach einer E-Mail-Änderung wird die laufende Session automatisch aktualisiert
 
 ### Kunden-Zugangsdaten finden und verwalten
 

@@ -459,6 +459,62 @@ export async function resetCustomerPassword(firmenId) {
   return null;
 }
 
+// Change admin credentials (email and/or password)
+// Returns true on success, false if current password is wrong
+export async function changeAdminCredentials(currentPassword, newEmail, newPassword) {
+  await initializeUsers();
+  const users = getUsers();
+  const currentUser = getCurrentUser();
+  if (!currentUser) return false;
+
+  // Find user by email first, then verify password separately to avoid leaking info via timing
+  const userIndex = users.findIndex(u => u.email === currentUser.email);
+  if (userIndex < 0) return false;
+
+  const currentHash = await simpleHash(currentPassword);
+  if (users[userIndex].password !== currentHash) return false;
+
+  // Validate new email format if provided
+  if (newEmail) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail.trim())) return false;
+    // Ensure no duplicate email among existing users
+    const duplicate = users.find((u, i) => i !== userIndex && u.email === newEmail.trim());
+    if (duplicate) return false;
+  }
+
+  const emailToSet = newEmail ? newEmail.trim() : users[userIndex].email;
+  const passwordHash = newPassword ? await simpleHash(newPassword) : users[userIndex].password;
+
+  users[userIndex] = {
+    ...users[userIndex],
+    email: emailToSet,
+    password: passwordHash
+  };
+
+  try {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  } catch (error) {
+    console.error('Failed to save updated admin credentials:', error);
+    return false;
+  }
+
+  // Update active session email if it changed
+  if (emailToSet !== currentUser.email) {
+    try {
+      const session = JSON.parse(localStorage.getItem(AUTH_KEY));
+      if (session) {
+        session.email = emailToSet;
+        localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+      }
+    } catch {
+      // Session update failure is non-fatal
+    }
+  }
+
+  return true;
+}
+
 // Check if user is admin
 export function isAdmin() {
   const user = getCurrentUser();
