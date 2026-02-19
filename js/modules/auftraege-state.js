@@ -215,6 +215,7 @@ export function newEmptyRow() {
 // Create a new empty order item
 export function newEmptyOrderItem() {
   return {
+    Datum: new Date().toISOString().split('T')[0],
     Artikel: "",
     Beschreibung: "",
     Menge: "",

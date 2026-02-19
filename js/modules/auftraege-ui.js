@@ -242,6 +242,28 @@ function renderOrderItemsTable() {
     const tr = document.createElement("tr");
     tr.style.borderBottom = "1px solid #ddd";
     
+    // Datum column - date input
+    const datumTd = document.createElement("td");
+    datumTd.style.padding = "8px";
+    datumTd.style.borderRight = "1px solid #ddd";
+    datumTd.style.boxSizing = "border-box";
+
+    const datumInput = document.createElement("input");
+    datumInput.type = "date";
+    datumInput.style.width = "100%";
+    datumInput.style.padding = "4px";
+    datumInput.value = item.Datum || "";
+    datumInput.dataset.itemIndex = idx;
+    datumInput.dataset.field = "Datum";
+    datumInput.setAttribute("aria-label", `Datum für Artikel ${idx + 1}`);
+    datumInput.addEventListener("change", (e) => {
+      const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+      currentOrderItems[itemIndex].Datum = e.target.value;
+    });
+
+    datumTd.appendChild(datumInput);
+    tr.appendChild(datumTd);
+
     // Artikel column - dropdown
     const artikelTd = document.createElement("td");
     artikelTd.style.padding = "8px";
@@ -747,6 +769,7 @@ function getFormData() {
   
   // Add order items to formData with all fields
   formData.items = currentOrderItems.map(item => ({
+    Datum: sanitizeText(item.Datum || ""),
     Artikel: sanitizeText(item.Artikel || ""),
     Beschreibung: sanitizeText(item.Beschreibung || ""),
     Menge: sanitizeText(item.Menge || ""),

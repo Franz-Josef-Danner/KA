@@ -214,6 +214,7 @@ export function newEmptyRow() {
 // Create a new empty invoice item
 export function newEmptyInvoiceItem() {
   return {
+    Datum: new Date().toISOString().split('T')[0],
     Artikel: "",
     Beschreibung: "",
     Menge: "",
