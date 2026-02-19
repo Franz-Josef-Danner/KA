@@ -249,7 +249,9 @@ async function loadAdminUsersFromServer() {
  */
 async function loadAdminUsersFromServerOrLocalStorage() {
   const serverData = await loadAdminUsersFromServer();
-  if (serverData !== null) {
+
+  if (serverData !== null && serverData.length > 0) {
+    // Server has actual data – use it as the authoritative source
     console.log('Loaded admin users from server');
     usingApiStorageForAdmin = true;
     try {
@@ -260,7 +262,10 @@ async function loadAdminUsersFromServerOrLocalStorage() {
     return serverData;
   }
 
-  // Server failed, fall back to localStorage
+  // Server returned null (network error) OR an empty array.
+  // In both cases we check localStorage first so that credentials stored there
+  // (either from the old localStorage-only system or from a failed server write)
+  // are not silently lost and can be migrated to the server.
   const localData = getUsersSync();
   if (localData && localData.length > 0) {
     console.log('Migrating admin users from localStorage to server...');
@@ -275,6 +280,7 @@ async function loadAdminUsersFromServerOrLocalStorage() {
     return localData;
   }
 
+  // No data found anywhere, return empty array
   console.log('No existing admin users found, starting fresh');
   usingApiStorageForAdmin = true;
   return [];
