@@ -678,6 +678,7 @@ function calculateColumnWidths(doc, items, tableWidth) {
   // Description column will be flexible and fill remaining space
   let maxPos = 0;
   let maxDatum = 0;
+  let maxArtikel = 0;
   let maxMenge = 0;
   let maxEinheit = 0;
   let maxEinzelpreis = 0;
@@ -687,6 +688,7 @@ function calculateColumnWidths(doc, items, tableWidth) {
   doc.setFont('helvetica', 'bold');
   maxPos = Math.max(maxPos, doc.getTextWidth('Pos.') + CELL_PADDING);
   maxDatum = Math.max(maxDatum, doc.getTextWidth('Datum') + CELL_PADDING);
+  maxArtikel = Math.max(maxArtikel, doc.getTextWidth('Artikel') + CELL_PADDING);
   maxMenge = Math.max(maxMenge, doc.getTextWidth('Menge') + CELL_PADDING);
   maxEinheit = Math.max(maxEinheit, doc.getTextWidth('Einheit') + CELL_PADDING);
   maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth('Einzelpreis') + CELL_PADDING);
@@ -698,6 +700,7 @@ function calculateColumnWidths(doc, items, tableWidth) {
   items.forEach((item, index) => {
     const posText = String(item.position || index + 1);
     const datumText = item.datum || '';
+    const artikelText = item.artikel || '';
     const mengeText = String(item.menge || '1');
     const einheitText = item.einheit || 'Stk';
     const einzelpreisText = formatCurrency(item.einzelpreis);
@@ -705,6 +708,7 @@ function calculateColumnWidths(doc, items, tableWidth) {
     
     maxPos = Math.max(maxPos, doc.getTextWidth(posText) + CELL_PADDING);
     maxDatum = Math.max(maxDatum, doc.getTextWidth(datumText) + CELL_PADDING);
+    maxArtikel = Math.max(maxArtikel, doc.getTextWidth(artikelText) + CELL_PADDING);
     maxMenge = Math.max(maxMenge, doc.getTextWidth(mengeText) + CELL_PADDING);
     maxEinheit = Math.max(maxEinheit, doc.getTextWidth(einheitText) + CELL_PADDING);
     maxEinzelpreis = Math.max(maxEinzelpreis, doc.getTextWidth(einzelpreisText) + CELL_PADDING);
@@ -714,6 +718,7 @@ function calculateColumnWidths(doc, items, tableWidth) {
   // Ensure minimum column widths
   maxPos = Math.max(maxPos, minColumnWidth);
   maxDatum = Math.max(maxDatum, minColumnWidth);
+  maxArtikel = Math.max(maxArtikel, minColumnWidth);
   maxMenge = Math.max(maxMenge, minColumnWidth);
   maxEinheit = Math.max(maxEinheit, minColumnWidth);
   maxEinzelpreis = Math.max(maxEinzelpreis, minColumnWidth);
@@ -722,12 +727,13 @@ function calculateColumnWidths(doc, items, tableWidth) {
   // NEW RULE: Description column is the only column that adjusts to fill full table width
   // All other columns use their content-based width
   // Description column gets all remaining space (expanding or shrinking as needed)
-  const usedWidth = maxPos + maxDatum + maxMenge + maxEinheit + maxEinzelpreis + maxGesamtpreis;
+  const usedWidth = maxPos + maxDatum + maxArtikel + maxMenge + maxEinheit + maxEinzelpreis + maxGesamtpreis;
   const beschreibungWidth = Math.max(minColumnWidth, tableWidth - usedWidth);
   
   return {
     pos: maxPos,
     datum: maxDatum,
+    artikel: maxArtikel,
     beschreibung: beschreibungWidth,
     menge: maxMenge,
     einheit: maxEinheit,
@@ -821,6 +827,8 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
     headerColX += colWidths.pos;
     doc.text('Datum', headerColX + 2, headerY + 6);
     headerColX += colWidths.datum;
+    doc.text('Artikel', headerColX + 2, headerY + 6);
+    headerColX += colWidths.artikel;
     doc.text('Beschreibung', headerColX + 2, headerY + 6);
     headerColX += colWidths.beschreibung;
     doc.text('Menge', headerColX + 2, headerY + 6);
@@ -845,7 +853,7 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
   
   items.forEach((item, index) => {
     // Calculate row height based on description text wrapping
-    const beschreibung = item.beschreibung || item.artikel || '';
+    const beschreibung = item.beschreibung || '';
     const rowHeight = calculateRowHeight(doc, beschreibung, colWidths.beschreibung, baseRowHeight);
     
     // Check if there's enough space for this row before the footer
@@ -883,6 +891,10 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
     // Date (single line, vertically centered)
     doc.text(item.datum || '', colX + 2, rowY + 5.5);
     colX += colWidths.datum;
+    
+    // Article name (single line, vertically centered)
+    doc.text(item.artikel || '', colX + 2, rowY + 5.5);
+    colX += colWidths.artikel;
     
     // Description (with text wrapping if needed)
     // Subtract CELL_PADDING to account for left/right margins within the cell
@@ -988,6 +1000,8 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     headerColX += colWidths.pos;
     doc.text('Datum', headerColX + 2, headerY + 6);
     headerColX += colWidths.datum;
+    doc.text('Artikel', headerColX + 2, headerY + 6);
+    headerColX += colWidths.artikel;
     doc.text('Beschreibung', headerColX + 2, headerY + 6);
     headerColX += colWidths.beschreibung;
     doc.text('Menge', headerColX + 2, headerY + 6);
@@ -1013,7 +1027,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
   
   items.forEach((item, index) => {
     // Calculate row height based on description text wrapping
-    const beschreibung = item.beschreibung || item.artikel || '';
+    const beschreibung = item.beschreibung || '';
     const rowHeight = calculateRowHeight(doc, beschreibung, colWidths.beschreibung, baseRowHeight);
     
     // Check if there's enough space for this row on the current page
@@ -1052,6 +1066,10 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     // Date (single line, vertically centered)
     doc.text(item.datum || '', colX + 2, rowY + 5.5);
     colX += colWidths.datum;
+    
+    // Article name (single line, vertically centered)
+    doc.text(item.artikel || '', colX + 2, rowY + 5.5);
+    colX += colWidths.artikel;
     
     // Description (with text wrapping if needed)
     // Subtract CELL_PADDING to account for left/right margins within the cell
