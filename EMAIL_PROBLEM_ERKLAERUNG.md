@@ -222,8 +222,6 @@ Erfolgreiche Ausgabe zeigt:
 
 **Nein!** Wenn Sie im Dashboard auf "Senden" klicken, wird das Backend automatisch aufgerufen.
 
-Sie können aber auch einen Cronjob einrichten (optional), der automatisch alle paar Minuten läuft.
-
 ### "Kann ich die E-Mails im Dashboard sehen bevor sie versendet werden?"
 
 **Ja!** Klicken Sie auf "👁 Vorschau" bei jeder E-Mail, um den vollständigen Inhalt zu sehen.
@@ -265,7 +263,6 @@ Sie bekommen eine Fehlermeldung mit Anweisungen. Die E-Mail bleibt genehmigt und
 Detaillierte Dokumentation:
 - `EMAIL_SETUP_ANLEITUNG.md` - Schritt-für-Schritt Setup
 - `backend/README.md` - Backend-Dokumentation
-- `backend/CRONJOB_SETUP.md` - Automatisierung
 - `EMAIL_QUEUE_MANAGER_DOKUMENTATION.md` - Warteschlangen-Verwaltung
 
 Bei Problemen:

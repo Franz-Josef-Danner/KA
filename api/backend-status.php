@@ -18,14 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $backendDir = __DIR__ . '/../backend';
 $configFile = $backendDir . '/config.json';
-$queueFile = $backendDir . '/email-queue.json';
 
 $status = [
     'configured' => false,
     'phpAvailable' => false,
-    'phpEmailSenderExists' => false,
+    'smtpInlineExists' => false,
     'ready' => false,
-    'queuedEmails' => 0,
     'issues' => []
 ];
 
@@ -33,16 +31,16 @@ $status = [
 $status['phpAvailable'] = true;
 $status['phpVersion'] = PHP_VERSION;
 
-// Check if PHP email sender exists
-$phpEmailSender = $backendDir . '/php-email-sender.php';
-if (file_exists($phpEmailSender)) {
-    $status['phpEmailSenderExists'] = true;
+// Check if PHP SMTP inline sender exists
+$smtpInlineFile = $backendDir . '/smtp-inline.php';
+if (file_exists($smtpInlineFile)) {
+    $status['smtpInlineExists'] = true;
 } else {
     $status['issues'][] = [
-        'type' => 'php_sender_missing',
+        'type' => 'smtp_inline_missing',
         'severity' => 'critical',
-        'message' => 'PHP E-Mail-Sender fehlt',
-        'solution' => 'Die Datei backend/php-email-sender.php muss existieren'
+        'message' => 'PHP SMTP-Inline-Sender fehlt',
+        'solution' => 'Die Datei backend/smtp-inline.php muss existieren'
     ];
 }
 if (!file_exists($configFile)) {
@@ -178,32 +176,8 @@ if (!file_exists($configFile)) {
     }
 }
 
-// Check queue
-if (file_exists($queueFile)) {
-    try {
-        $queue = json_decode(file_get_contents($queueFile), true);
-        if (is_array($queue)) {
-            $pendingEmails = array_filter($queue, function($item) {
-                return isset($item['status']) && in_array($item['status'], ['pending', 'approved']);
-            });
-            $status['queuedEmails'] = count($pendingEmails);
-            
-            if ($status['queuedEmails'] > 0 && !$status['configured']) {
-                $status['issues'][] = [
-                    'type' => 'emails_waiting',
-                    'severity' => 'warning',
-                    'message' => $status['queuedEmails'] . ' E-Mail(s) warten auf Versand',
-                    'solution' => 'Konfigurieren Sie das Backend, um E-Mails zu versenden'
-                ];
-            }
-        }
-    } catch (Exception $e) {
-        // Ignore queue parsing errors
-    }
-}
-
 // Determine if ready (PHP + configured)
-$status['ready'] = $status['phpAvailable'] && $status['phpEmailSenderExists'] && $status['configured'];
+$status['ready'] = $status['phpAvailable'] && $status['smtpInlineExists'] && $status['configured'];
 
 // Add setup instructions if not ready
 if (!$status['ready']) {
@@ -226,19 +200,11 @@ if (!$status['ready']) {
             [
                 'number' => 3,
                 'title' => 'Testen',
-                'command' => 'php backend/php-email-sender.php',
-                'description' => 'Testen Sie die E-Mail-Konfiguration'
-            ],
-            [
-                'number' => 4,
-                'title' => 'Optional: Cronjob einrichten',
-                'description' => 'Für automatischen Versand richten Sie einen Cronjob ein (alle 5 Minuten)',
-                'command' => '*/5 * * * * cd /pfad/zu/KA/backend && php php-email-sender.php'
+                'description' => 'Testen Sie die E-Mail-Konfiguration durch das Versenden einer Test-E-Mail im Dashboard'
             ]
         ],
         'documentation' => [
             'EMAIL_SETUP_ANLEITUNG.md' => 'Vollständige Setup-Anleitung',
-            'EMAIL_SCHNELL_REFERENZ.md' => 'Schnell-Referenz',
             'WORLD4YOU_INSTALLATION.md' => 'World4You Hosting-spezifische Anleitung'
         ]
     ];

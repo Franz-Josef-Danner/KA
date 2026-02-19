@@ -168,11 +168,6 @@ Die Verwaltung arbeitet mit dem bestehenden Backend:
 2. In echter Implementierung: Backend-API-Aufruf
 3. Backend-Script `backend/email-sender.js` verarbeitet Queue
 
-**Cronjob** (optional):
-```bash
-*/5 * * * * cd /path/to/KA/backend && node email-sender.js
-```
-
 ## Vorteile
 
 ✅ **Volle Kontrolle**: Kein automatischer Versand ohne Genehmigung  

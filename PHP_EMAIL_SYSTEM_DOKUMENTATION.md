@@ -39,9 +39,6 @@
 ```bash
 # Manuell ausführen
 php backend/php-email-sender.php
-
-# Via Cronjob (alle 5 Minuten)
-# */5 * * * * cd /pfad/zu/KA/backend && php php-email-sender.php >> /var/log/ka-email.log 2>&1
 ```
 
 ### 2. API-Endpunkt aktualisiert (`api/send-approved-emails.php`)
@@ -288,21 +285,6 @@ Erwartete Ausgabe:
 ```bash
 php backend/php-email-sender.php
 ```
-
-### Cronjob (automatisch)
-
-**Crontab:**
-```bash
-crontab -e
-# Fügen Sie hinzu:
-# */5 * * * * cd /pfad/zu/KA/backend && php php-email-sender.php >> /var/log/ka-email.log 2>&1
-```
-
-**World4You Admin-Panel:**
-1. Login → Cronjobs
-2. Neuer Cronjob
-3. Befehl: `php /pfad/zu/KA/backend/php-email-sender.php`
-4. Intervall: Alle 5 Minuten
 
 ---
 
