@@ -187,11 +187,6 @@ Result: The system generates 3 payments: €175 + €175 + €150 = €500 (fina
 
 2. **Check browser console**: Open developer tools (F12) and check for errors when loading the dashboard
 
-3. **Run script manually**: Test the script execution
-   ```bash
-   php generate-recurring-expenses.php
-   ```
-
 3. **Verify recurring expense data**: Check that the recurring expense has:
    - A valid start date
    - Correct stichtag value
@@ -199,13 +194,13 @@ Result: The system generates 3 payments: €175 + €175 + €150 = €500 (fina
 
 ### Duplicate Expenses
 
-The script includes duplicate detection. It checks if an expense with the same recurring ID and date already exists before creating a new one.
+The generation process includes duplicate detection. It checks if an expense with the same recurring ID and date already exists before creating a new one.
 
 ## Technical Details
 
 ### Recurrence Calculation
 
-The script uses PHP's DateTime class to calculate due dates:
+The generation process uses PHP's DateTime class to calculate due dates:
 
 - **Daily**: Every day starting from the begin date
 - **Weekly**: Specific day of the week (1-7)
