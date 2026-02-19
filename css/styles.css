@@ -2107,3 +2107,68 @@ td.readonly:hover {
   color: #333;
   font-weight: 500;
 }
+
+/* ===========================
+   Mobile Navigation (≤ 768px)
+   =========================== */
+@media (max-width: 768px) {
+  body.mobile-nav-active {
+    padding-bottom: 64px;
+  }
+
+  .main-nav.mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    border-top: 2px solid #e5e5e5;
+    border-bottom: none;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    z-index: 100;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .main-nav.mobile .nav-list {
+    justify-content: space-around;
+  }
+
+  .main-nav.mobile .nav-item a {
+    padding: 10px 8px;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: none;
+    border-top: 3px solid transparent;
+  }
+
+  .main-nav.mobile .nav-item a:hover {
+    border-bottom: none;
+  }
+
+  .main-nav.mobile .nav-item.active a {
+    color: #667eea;
+    border-top-color: #667eea;
+    border-bottom-color: transparent;
+  }
+
+  .main-nav.mobile .nav-logout {
+    margin-left: 0;
+  }
+
+  .main-nav.mobile .logout-btn {
+    padding: 10px 8px;
+    border: none;
+    border-radius: 0;
+    font-size: 12px;
+    background: transparent;
+    color: #666;
+  }
+
+  .main-nav.mobile .logout-btn:hover {
+    background: #f8f8f8;
+    color: #667eea;
+    border-color: transparent;
+  }
+}

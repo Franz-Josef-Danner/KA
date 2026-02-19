@@ -15,6 +15,22 @@ const ADMIN_NAV_ITEMS = [
   { label: 'Einstellungen', href: 'einstellungen.html' }
 ];
 
+const MOBILE_ADMIN_NAV_ITEMS = [
+  { label: 'Dashboard', href: 'dashboard.html' },
+  { label: 'Aufträge', href: 'auftraege.html' },
+  { label: 'Rechnungen', href: 'rechnungen.html' },
+  { label: 'Kundenbereich', href: 'kundenbereiche.html' },
+  { label: 'Einstellungen', href: 'einstellungen.html' }
+];
+
+function isMobileDevice() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function shouldUseMobileNav() {
+  return isAdmin() && isMobileDevice();
+}
+
 const CUSTOMER_NAV_ITEMS = [
   { label: 'Mein Kundenbereich', href: 'kundenbereich.html' }
 ];
@@ -121,8 +137,14 @@ export function renderNavigation(currentPage = '') {
   const navList = document.createElement('ul');
   navList.className = 'nav-list';
   
-  // Select appropriate menu items based on user role
-  const navItems = isAdmin() ? ADMIN_NAV_ITEMS : CUSTOMER_NAV_ITEMS;
+  // Select appropriate menu items based on user role and device
+  const mobile = shouldUseMobileNav();
+  if (mobile) {
+    nav.classList.add('mobile');
+  }
+  const navItems = isAdmin()
+    ? (mobile ? MOBILE_ADMIN_NAV_ITEMS : ADMIN_NAV_ITEMS)
+    : CUSTOMER_NAV_ITEMS;
   
   // Add menu items
   navItems.forEach(item => {
@@ -170,6 +192,9 @@ export function renderNavigation(currentPage = '') {
 export function initNavigation(currentPage = '') {
   const navContainer = document.getElementById('nav-container');
   if (navContainer) {
+    if (shouldUseMobileNav()) {
+      document.body.classList.add('mobile-nav-active');
+    }
     const nav = renderNavigation(currentPage);
     navContainer.appendChild(nav);
   }
