@@ -240,6 +240,121 @@ Wenn Sie weitere Hilfe benötigen:
 
 ---
 
+## Spezialfall: E-Mail-Versand funktioniert, aber Empfänger-Adresse ungültig
+
+### Bounce-Message erklärt
+
+Wenn Sie eine Bounce-Message wie diese erhalten:
+
+```
+SMTP error from remote mail server after RCPT TO:<IHRE_EMAIL@gmail.com>:
+550-5.1.1 The email account that you tried to reach does not exist.
+```
+
+**Das bedeutet:**
+- ✅ Ihr Server hat die E-Mail ERFOLGREICH an Gmail gesendet
+- ✅ Gmail hat die Verbindung akzeptiert
+- ❌ Gmail sagt: "Diese E-Mail-Adresse existiert nicht"
+- ❌ Deshalb wurde die E-Mail zurückgeschickt (Bounce)
+
+**Das ist GENAU das erwartete Verhalten!** Ihre SMTP-Konfiguration funktioniert perfekt!
+
+### Häufige Fehler beim Testen
+
+#### Problem: Verwendung von Platzhalter-Adressen
+
+Wenn Sie eine Test-E-Mail mit einer Platzhalter-Adresse wie `IHRE_EMAIL@gmail.com` senden:
+- Die E-Mail wird versendet ✅
+- Aber Gmail lehnt sie ab, weil die Adresse nicht existiert ❌
+- Sie erhalten eine Bounce-Message als "Beweis", dass der Versand funktioniert
+
+#### Lösung: Verwenden Sie echte E-Mail-Adressen
+
+**Beste Option:**
+Verwenden Sie eine E-Mail-Adresse Ihrer eigenen Domain:
+```
+office@ihre-domain.at
+```
+
+**Alternative:**
+Ihre persönliche E-Mail:
+```
+ihr.name@gmail.com
+```
+
+**Achtung:** Gmail kann E-Mails von unbekannten Servern manchmal als Spam markieren! Prüfen Sie den Spam-Ordner.
+
+---
+
+## SMTP Debug Log
+
+### Log-Datei Erstellung und Zugriff
+
+Die Datei `backend/smtp-debug.log` wird automatisch erstellt beim:
+- ✅ Ersten API-Aufruf für E-Mail-Versand
+- ✅ Ausführen von `bash backend/setup.sh`
+- ✅ Ersten Aufruf von `writeSmtpLog()`
+
+### Log-Datei prüfen
+
+```bash
+# Log-Datei anzeigen
+cat backend/smtp-debug.log
+
+# Neueste Einträge (letzte 50 Zeilen)
+tail -n 50 backend/smtp-debug.log
+
+# Log in Echtzeit überwachen
+tail -f backend/smtp-debug.log
+```
+
+### Was im Log zu suchen
+
+Wenn E-Mail-Versand fehlschlägt, suchen Sie nach:
+
+1. **Zeitstempel**: Wann wurde der Versuch gemacht?
+2. **SMTP Antworten**: Was sagt der Server?
+3. **Fehlercodes**:
+   - `535` = Authentifizierung fehlgeschlagen (Passwort falsch)
+   - `550` = Absender abgelehnt (FROM-Adresse ungültig)
+   - `554` = Verbindung abgelehnt (Host/Port falsch)
+   - `454` = TLS not available (falscher Port)
+
+### Log-Datei Inhalt
+
+Die Datei enthält einen hilfreichen Header:
+
+```
+# SMTP Debug Log
+# ================================================================================
+# This file logs all SMTP email sending operations for debugging purposes.
+# Each log entry includes timestamp, configuration, and detailed SMTP conversation.
+#
+# Usage:
+# - Check this file when email sending fails
+# - Look for error messages and SMTP response codes
+# - Common SMTP errors:
+#   * 535 Authentication failed - Wrong username/password
+#   * 550 Sender rejected - Invalid FROM address (must be existing mailbox)
+#   * 554 Connection refused - Wrong host or port
+#   * 454 TLS not available - Wrong port (use 587 for STARTTLS)
+# ================================================================================
+```
+
+### Sicherheit
+
+**backend/.htaccess** schützt Log-Dateien:
+```apache
+# Deny access to log files (contain sensitive information)
+<FilesMatch "\.log$">
+    Require all denied
+</FilesMatch>
+```
+
+Log-Dateien können nicht direkt über den Browser aufgerufen werden.
+
+---
+
 ## Sicherheitshinweis ⚠️
 
 **Nach erfolgreicher Diagnose:**
