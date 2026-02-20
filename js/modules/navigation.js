@@ -15,14 +15,6 @@ const ADMIN_NAV_ITEMS = [
   { label: 'Einstellungen', href: 'einstellungen.html' }
 ];
 
-const MOBILE_ADMIN_NAV_ITEMS = [
-  { label: 'Dashboard', href: 'dashboard.html' },
-  { label: 'Aufträge', href: 'auftraege.html' },
-  { label: 'Rechnungen', href: 'rechnungen.html' },
-  { label: 'Kundenbereich', href: 'kundenbereiche.html' },
-  { label: 'Einstellungen', href: 'einstellungen.html' }
-];
-
 function isMobileDevice() {
   return window.matchMedia('(max-width: 768px)').matches;
 }
@@ -142,9 +134,7 @@ export function renderNavigation(currentPage = '') {
   if (mobile) {
     nav.classList.add('mobile');
   }
-  const navItems = isAdmin()
-    ? (mobile ? MOBILE_ADMIN_NAV_ITEMS : ADMIN_NAV_ITEMS)
-    : CUSTOMER_NAV_ITEMS;
+  const navItems = isAdmin() ? ADMIN_NAV_ITEMS : CUSTOMER_NAV_ITEMS;
   
   // Add menu items
   navItems.forEach(item => {
@@ -191,11 +181,53 @@ export function renderNavigation(currentPage = '') {
 
 export function initNavigation(currentPage = '') {
   const navContainer = document.getElementById('nav-container');
-  if (navContainer) {
-    if (shouldUseMobileNav()) {
+  if (navContainer && !navContainer.dataset.navInitialized) {
+    navContainer.dataset.navInitialized = 'true';
+    const mobile = shouldUseMobileNav();
+    if (mobile) {
       document.body.classList.add('mobile-nav-active');
     }
     const nav = renderNavigation(currentPage);
     navContainer.appendChild(nav);
+
+    if (mobile) {
+      // Create overlay backdrop
+      const overlay = document.createElement('div');
+      overlay.className = 'nav-overlay';
+      navContainer.appendChild(overlay);
+
+      // Create hamburger button
+      const hamburgerBtn = document.createElement('button');
+      hamburgerBtn.className = 'hamburger-btn';
+      hamburgerBtn.setAttribute('aria-label', 'Menü öffnen');
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
+      hamburgerBtn.setAttribute('aria-controls', 'main-nav-sidebar');
+      hamburgerBtn.innerHTML =
+        '<span class="hamburger-line"></span>' +
+        '<span class="hamburger-line"></span>' +
+        '<span class="hamburger-line"></span>';
+      nav.id = 'main-nav-sidebar';
+      navContainer.appendChild(hamburgerBtn);
+
+      const toggleNav = (open) => {
+        nav.classList.toggle('open', open);
+        overlay.classList.toggle('active', open);
+        hamburgerBtn.setAttribute('aria-expanded', String(open));
+        hamburgerBtn.setAttribute('aria-label', open ? 'Menü schließen' : 'Menü öffnen');
+      };
+
+      hamburgerBtn.addEventListener('click', () => {
+        toggleNav(!nav.classList.contains('open'));
+      });
+
+      overlay.addEventListener('click', () => toggleNav(false));
+
+      const onKeyDown = (e) => {
+        if (e.key === 'Escape' && nav.classList.contains('open')) {
+          toggleNav(false);
+        }
+      };
+      document.addEventListener('keydown', onKeyDown);
+    }
   }
 }
