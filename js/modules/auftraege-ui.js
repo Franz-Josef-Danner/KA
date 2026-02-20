@@ -384,7 +384,13 @@ function renderOrderItemsTable() {
         currentOrderItems[itemIndex].Menge,
         currentOrderItems[itemIndex].Einzelpreis
       );
-      renderOrderItemsTable();
+      const row = e.target.closest("tr");
+      if (row) {
+        const gesamtpreisTd = row.querySelector('[data-field="Gesamtpreis"]');
+        if (gesamtpreisTd) {
+          gesamtpreisTd.textContent = (currentOrderItems[itemIndex].Gesamtpreis || "0.00") + " €";
+        }
+      }
     });
     
     mengeTd.appendChild(mengeInput);
@@ -434,7 +440,13 @@ function renderOrderItemsTable() {
         currentOrderItems[itemIndex].Menge,
         currentOrderItems[itemIndex].Einzelpreis
       );
-      renderOrderItemsTable();
+      const row = e.target.closest("tr");
+      if (row) {
+        const gesamtpreisTd = row.querySelector('[data-field="Gesamtpreis"]');
+        if (gesamtpreisTd) {
+          gesamtpreisTd.textContent = (currentOrderItems[itemIndex].Gesamtpreis || "0.00") + " €";
+        }
+      }
     });
     
     einzelpreisTd.appendChild(einzelpreisInput);
@@ -448,6 +460,7 @@ function renderOrderItemsTable() {
     gesamtpreisTd.style.fontWeight = "600";
     gesamtpreisTd.style.textAlign = "right";
     gesamtpreisTd.style.boxSizing = "border-box";
+    gesamtpreisTd.dataset.field = "Gesamtpreis";
     gesamtpreisTd.textContent = (item.Gesamtpreis || "0.00") + " €";
     
     tr.appendChild(gesamtpreisTd);
