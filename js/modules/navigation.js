@@ -15,6 +15,14 @@ const ADMIN_NAV_ITEMS = [
   { label: 'Einstellungen', href: 'einstellungen.html' }
 ];
 
+const MOBILE_ADMIN_NAV_ITEMS = [
+  { label: 'Dashboard', href: 'dashboard.html' },
+  { label: 'Aufträge', href: 'auftraege.html' },
+  { label: 'Rechnungen', href: 'rechnungen.html' },
+  { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
+  { label: 'Einstellungen', href: 'einstellungen.html' }
+];
+
 function isMobileDevice() {
   return window.matchMedia('(max-width: 768px)').matches;
 }
@@ -134,7 +142,9 @@ export function renderNavigation(currentPage = '') {
   if (mobile) {
     nav.classList.add('mobile');
   }
-  const navItems = isAdmin() ? ADMIN_NAV_ITEMS : CUSTOMER_NAV_ITEMS;
+  const navItems = isAdmin()
+    ? (mobile ? MOBILE_ADMIN_NAV_ITEMS : ADMIN_NAV_ITEMS)
+    : CUSTOMER_NAV_ITEMS;
   
   // Add menu items
   navItems.forEach(item => {
