@@ -251,6 +251,7 @@ function renderOrderItemsTable() {
     const datumInput = document.createElement("input");
     datumInput.type = "date";
     datumInput.style.width = "100%";
+    datumInput.style.minWidth = "114px";
     datumInput.style.boxSizing = "border-box";
     datumInput.style.padding = "4px";
     datumInput.value = item.Datum || "";
