@@ -13,6 +13,7 @@ import { validateStatusChange } from './validation.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
+const entryCountEl = document.getElementById("entry-count");
 
 // Sort state
 let sortColumn = null;
@@ -128,6 +129,7 @@ export async function render() {
     
     // Update undo/redo button states after render
     updateUndoRedoButtons();
+    if (entryCountEl) entryCountEl.textContent = '0 Einträge';
     return;
   }
 
@@ -159,9 +161,11 @@ export async function render() {
     orderedIndices = [...duplicateIndices, ...nonDuplicateIndices];
   }
 
+  let visibleCount = 0;
   orderedIndices.forEach((idx) => {
     const row = rows[idx];
     if (!rowMatchesSearch(row, q, [...searchColumns])) return;
+    visibleCount++;
 
     const tr = document.createElement("tr");
 
@@ -404,6 +408,11 @@ export async function render() {
 
     tbody.appendChild(tr);
   });
+
+  // Update entry counter
+  if (entryCountEl) {
+    entryCountEl.textContent = `${visibleCount} ${visibleCount === 1 ? 'Eintrag' : 'Einträge'}`;
+  }
   
   // Update undo/redo button states after render
   updateUndoRedoButtons();
