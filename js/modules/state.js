@@ -23,6 +23,13 @@ let rows = [];
 let initializationPromise = null;
 let isInitialized = false;
 
+// Flag to track unsaved changes
+let isDirty = false;
+
+export function hasDirtyChanges() {
+  return isDirty;
+}
+
 // Ensure state is initialized before use
 export async function ensureInitialized() {
   // If already initializing, return the existing promise
@@ -348,6 +355,7 @@ async function syncFirmenIds(rowsToSync) {
 export async function setRows(newRows, skipHistory = false) {
   // Sync Firmen_IDs based on Status before setting rows
   rows = await syncFirmenIds(newRows);
+  isDirty = true;
   if (!skipHistory) {
     pushState(rows);
   }
@@ -400,6 +408,10 @@ export async function save() {
     } catch (e) {
       console.warn('Failed to update localStorage cache:', e);
     }
+  }
+  
+  if (saveSuccess) {
+    isDirty = false;
   }
   
   return saveSuccess;

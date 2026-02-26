@@ -1,11 +1,68 @@
 // -----------------------------
 // Event Handlers
 // -----------------------------
-import { getRows, setRows, save, undo, redo, canUndo, canRedo } from './state.js';
+import { getRows, setRows, save, undo, redo, canUndo, canRedo, hasDirtyChanges } from './state.js';
 import { toCSV, parseCSV } from '../utils/csv.js';
 import { downloadText } from '../utils/helpers.js';
 import { render } from './render.js';
 import { updateUndoRedoButtons } from './ui.js';
+
+/**
+ * Show a dialog asking the user what to do with unsaved changes.
+ * Returns a Promise that resolves with 'save', 'discard', or 'cancel'.
+ */
+function showUnsavedChangesDialog() {
+  const modal = document.createElement('div');
+  modal.className = 'logout-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-labelledby', 'unsaved-changes-title');
+  modal.setAttribute('aria-modal', 'true');
+
+  modal.innerHTML = `
+    <div class="logout-modal-overlay"></div>
+    <div class="logout-modal-content">
+      <h2 id="unsaved-changes-title">Ungespeicherte Änderungen</h2>
+      <p>Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern?</p>
+      <div class="logout-modal-buttons">
+        <button class="modal-btn modal-btn-cancel">Abbrechen</button>
+        <button class="modal-btn modal-btn-discard">Verwerfen</button>
+        <button class="modal-btn modal-btn-confirm">Speichern</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  return new Promise((resolve) => {
+    const cleanup = () => document.body.removeChild(modal);
+
+    const cancelBtn = modal.querySelector('.modal-btn-cancel');
+    const discardBtn = modal.querySelector('.modal-btn-discard');
+    const saveBtn = modal.querySelector('.modal-btn-confirm');
+    const overlay = modal.querySelector('.logout-modal-overlay');
+
+    const resolveWith = (value) => {
+      document.removeEventListener('keydown', handleEscape);
+      cleanup();
+      resolve(value);
+    };
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        resolveWith('cancel');
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    saveBtn.addEventListener('click', () => resolveWith('save'));
+    discardBtn.addEventListener('click', () => resolveWith('discard'));
+    cancelBtn.addEventListener('click', () => resolveWith('cancel'));
+    overlay.addEventListener('click', () => resolveWith('cancel'));
+
+    // Focus the safe default (cancel)
+    cancelBtn.focus();
+  });
+}
 
 export function initEventHandlers() {
   // Import CSV - trigger file input when file is selected
@@ -97,6 +154,42 @@ export function initEventHandlers() {
   
   // Initial button state update
   updateUndoRedoButtons();
+
+  // Warn before closing/refreshing the tab when there are unsaved changes
+  window.addEventListener('beforeunload', (e) => {
+    if (hasDirtyChanges()) {
+      e.preventDefault();
+    }
+  });
+
+  // Intercept navigation link clicks when there are unsaved changes
+  document.addEventListener('click', async (e) => {
+    const link = e.target.closest('a[href]');
+    if (!link || !hasDirtyChanges()) return;
+
+    const href = link.getAttribute('href');
+    // Only intercept relative-path and same-protocol navigation; skip anchors and non-http(s) schemes
+    if (!href || href.startsWith('#')) return;
+    try {
+      const url = new URL(href, window.location.href);
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+    } catch {
+      return;
+    }
+
+    e.preventDefault();
+
+    const choice = await showUnsavedChangesDialog();
+    if (choice === 'save') {
+      const saved = await save();
+      if (saved) {
+        window.location.href = href;
+      }
+    } else if (choice === 'discard') {
+      window.location.href = href;
+    }
+    // 'cancel': do nothing, stay on page
+  });
 }
 
 async function importCSV(file, fileInput) {

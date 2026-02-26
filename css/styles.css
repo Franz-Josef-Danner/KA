@@ -767,6 +767,20 @@ td.readonly:hover {
   outline-offset: 2px;
 }
 
+.modal-btn-discard {
+  background: #e53e3e;
+  color: #fff;
+}
+
+.modal-btn-discard:hover {
+  background: #c53030;
+}
+
+.modal-btn-discard:focus {
+  outline: 2px solid #e53e3e;
+  outline-offset: 2px;
+}
+
 /* Order Edit Modal */
 .modal {
   display: none;
