@@ -14,7 +14,65 @@ import { validateStatusChange } from './validation.js';
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
+// Sort state
+let sortColumn = null;
+let sortDirection = null; // 'asc', 'desc', or null
+
+function renderSortHeaders() {
+  const headerRow = document.querySelector('#grid thead tr');
+  if (!headerRow) return;
+
+  const ths = headerRow.querySelectorAll('th');
+  ths.forEach((th, idx) => {
+    if (th.classList.contains('actions')) return;
+    const col = COLUMNS[idx];
+    if (!col) return;
+
+    // Remove existing sort controls to avoid duplicates
+    const existing = th.querySelector('.sort-controls');
+    if (existing) existing.remove();
+
+    const controls = document.createElement('div');
+    controls.className = 'sort-controls';
+
+    const btnAsc = document.createElement('button');
+    btnAsc.className = 'sort-btn' + (sortColumn === col && sortDirection === 'asc' ? ' active' : '');
+    btnAsc.textContent = '↑';
+    btnAsc.title = 'Aufsteigend sortieren (A–Z)';
+    btnAsc.addEventListener('click', () => {
+      if (sortColumn === col && sortDirection === 'asc') {
+        sortColumn = null;
+        sortDirection = null;
+      } else {
+        sortColumn = col;
+        sortDirection = 'asc';
+      }
+      render();
+    });
+
+    const btnDesc = document.createElement('button');
+    btnDesc.className = 'sort-btn' + (sortColumn === col && sortDirection === 'desc' ? ' active' : '');
+    btnDesc.textContent = '↓';
+    btnDesc.title = 'Absteigend sortieren (Z–A)';
+    btnDesc.addEventListener('click', () => {
+      if (sortColumn === col && sortDirection === 'desc') {
+        sortColumn = null;
+        sortDirection = null;
+      } else {
+        sortColumn = col;
+        sortDirection = 'desc';
+      }
+      render();
+    });
+
+    controls.appendChild(btnAsc);
+    controls.appendChild(btnDesc);
+    th.insertBefore(controls, th.firstChild);
+  });
+}
+
 export async function render() {
+  renderSortHeaders();
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
 
@@ -62,7 +120,17 @@ export async function render() {
     }
   });
   
-  const orderedIndices = [...duplicateIndices, ...nonDuplicateIndices];
+  let orderedIndices;
+  if (sortColumn) {
+    orderedIndices = [...duplicateIndices, ...nonDuplicateIndices].sort((a, b) => {
+      const valA = String(rows[a][sortColumn] ?? '').toLowerCase();
+      const valB = String(rows[b][sortColumn] ?? '').toLowerCase();
+      const cmp = valA.localeCompare(valB, 'de');
+      return sortDirection === 'asc' ? cmp : -cmp;
+    });
+  } else {
+    orderedIndices = [...duplicateIndices, ...nonDuplicateIndices];
+  }
 
   orderedIndices.forEach((idx) => {
     const row = rows[idx];
