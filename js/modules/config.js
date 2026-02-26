@@ -15,4 +15,4 @@ export const STATUS_OPTIONS = ["offen", "erste mail", "erster Anruf", "Laufend m
 export const GESCHLECHT_OPTIONS = ["Mann", "Frau"];
 
 // Kategorie column dropdown options
-export const KATEGORIE_OPTIONS = ["Produktion", "Schauspielschule", "Theater"];
+export const KATEGORIE_OPTIONS = ["Filmschule", "Produktion", "Schauspielschule", "Theater"];
