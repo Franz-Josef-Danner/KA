@@ -5,7 +5,6 @@ import { COLUMNS, STATUS_OPTIONS, GESCHLECHT_OPTIONS, KATEGORIE_OPTIONS } from '
 import { getRows, setRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
-import { debounce } from '../utils/helpers.js';
 import { findDuplicates, getRowsWithDuplicates } from './duplicates.js';
 import { rowMatchesSearch } from './search.js';
 import { updateUndoRedoButtons } from './ui.js';
@@ -384,7 +383,6 @@ export async function render() {
           // If validation passed (and confirmation given if required), proceed with the change
           currentRows[idx][col] = newStatus;
           await setRows(currentRows);
-          await save();
           // Re-render to update Firmen_ID based on new status
           await render();
         });
@@ -421,7 +419,6 @@ export async function render() {
           const currentRows = getRows();
           currentRows[idx][col] = e.target.value;
           await setRows(currentRows);
-          await save();
         });
         
         td.appendChild(select);
@@ -456,7 +453,6 @@ export async function render() {
           const currentRows = getRows();
           currentRows[idx][col] = e.target.value;
           await setRows(currentRows);
-          await save();
         });
         
         td.appendChild(select);
@@ -479,7 +475,6 @@ export async function render() {
           const currentRows = getRows();
           currentRows[idx][col] = e.target.checked ? "true" : "false";
           await setRows(currentRows);
-          await save();
         });
         
         td.appendChild(checkbox);
@@ -523,8 +518,6 @@ export async function render() {
           }
           
           td.innerHTML = toCellDisplay(col, currentRows[idx][col]);
-          // Use debounced render to avoid multiple rapid re-renders during editing
-          debouncedRender();
         });
       }
 
@@ -574,6 +567,3 @@ export async function render() {
   // Update undo/redo button states after render
   updateUndoRedoButtons();
 }
-
-// Create a debounced version of render to avoid multiple rapid re-renders
-export const debouncedRender = debounce(render, 300);
