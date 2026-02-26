@@ -22,6 +22,9 @@ let sortDirection = null; // 'asc', 'desc', or null
 // Columns selected for search filtering (empty = all columns)
 const searchColumns = new Set();
 
+// Currently visible row indices (updated on every render)
+let visibleRowIndices = [];
+
 function renderSortHeaders() {
   const headerRow = document.querySelector('#grid thead tr');
   if (!headerRow) return;
@@ -39,6 +42,10 @@ function renderSortHeaders() {
     // Remove existing search filter checkbox to avoid duplicates
     const existingFilter = th.querySelector('.col-search-filter');
     if (existingFilter) existingFilter.remove();
+
+    // Remove existing bulk edit button to avoid duplicates
+    const existingBulkBtn = th.querySelector('.bulk-edit-btn');
+    if (existingBulkBtn) existingBulkBtn.remove();
 
     const controls = document.createElement('div');
     controls.className = 'sort-controls';
@@ -96,13 +103,162 @@ function renderSortHeaders() {
 
     filterLabel.appendChild(filterCheckbox);
     th.insertBefore(filterLabel, th.firstChild);
+
+    // Add bulk edit button (skip read-only Firmen_ID column)
+    if (col !== 'Firmen_ID') {
+      const bulkBtn = document.createElement('button');
+      bulkBtn.className = 'bulk-edit-btn';
+      bulkBtn.textContent = '✎';
+      bulkBtn.title = `Massenänderung für Spalte „${col}"`;
+      bulkBtn.addEventListener('click', () => showBulkEditModal(col));
+      th.insertBefore(bulkBtn, th.firstChild);
+    }
   });
 }
+
+/**
+ * Show a modal dialog for bulk editing a column on all currently visible rows.
+ * @param {string} col - The column key to bulk-edit.
+ */
+function showBulkEditModal(col) {
+  const count = visibleRowIndices.length;
+
+  // Build overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'bulk-edit-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'bulk-edit-modal';
+
+  const title = document.createElement('h3');
+  title.textContent = `Massenänderung: ${col}`;
+  modal.appendChild(title);
+
+  const desc = document.createElement('p');
+  desc.className = 'bulk-edit-desc';
+  desc.textContent = `Änderung wird auf ${count} sichtbare ${count === 1 ? 'Eintrag' : 'Einträge'} angewendet.`;
+  modal.appendChild(desc);
+
+  // Input element depending on column type
+  let inputEl;
+  if (col === 'Status') {
+    inputEl = document.createElement('select');
+    inputEl.className = 'bulk-edit-input';
+    STATUS_OPTIONS.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
+      inputEl.appendChild(o);
+    });
+  } else if (col === 'Geschlecht') {
+    inputEl = document.createElement('select');
+    inputEl.className = 'bulk-edit-input';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '—';
+    inputEl.appendChild(emptyOpt);
+    GESCHLECHT_OPTIONS.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
+      inputEl.appendChild(o);
+    });
+  } else if (col === 'Kategorie') {
+    inputEl = document.createElement('select');
+    inputEl.className = 'bulk-edit-input';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '—';
+    inputEl.appendChild(emptyOpt);
+    KATEGORIE_OPTIONS.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
+      inputEl.appendChild(o);
+    });
+  } else if (col === 'Persönlich') {
+    inputEl = document.createElement('select');
+    inputEl.className = 'bulk-edit-input';
+    [['false', 'Nein'], ['true', 'Ja']].forEach(([val, label]) => {
+      const o = document.createElement('option');
+      o.value = val;
+      o.textContent = label;
+      inputEl.appendChild(o);
+    });
+  } else {
+    inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.className = 'bulk-edit-input';
+    inputEl.placeholder = `Neuer Wert für „${col}"`;
+  }
+  modal.appendChild(inputEl);
+
+  // Buttons
+  const btnRow = document.createElement('div');
+  btnRow.className = 'bulk-edit-btns';
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'bulk-edit-confirm';
+  confirmBtn.textContent = 'Übernehmen';
+  confirmBtn.addEventListener('click', async () => {
+    const value = inputEl.value;
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    try {
+      await applyBulkEdit(col, value);
+    } catch (err) {
+      console.error('Bulk edit failed:', err);
+      alert('Massenänderung fehlgeschlagen. Bitte versuchen Sie es erneut.');
+    }
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'bulk-edit-cancel';
+  cancelBtn.textContent = 'Abbrechen';
+  cancelBtn.addEventListener('click', () => {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  });
+
+  btnRow.appendChild(confirmBtn);
+  btnRow.appendChild(cancelBtn);
+  modal.appendChild(btnRow);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Close on backdrop click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  });
+
+  // Focus the input
+  inputEl.focus();
+}
+
+/**
+ * Apply a bulk edit value to all currently visible rows for the given column.
+ * @param {string} col - The column key.
+ * @param {string} value - The new value to set.
+ */
+async function applyBulkEdit(col, value) {
+  if (visibleRowIndices.length === 0) return;
+  const currentRows = getRows();
+  for (const idx of visibleRowIndices) {
+    currentRows[idx][col] = value;
+  }
+  await setRows(currentRows);
+  const saved = await save();
+  if (!saved) {
+    console.warn('Bulk edit: data updated but could not be saved');
+  }
+  await render();
+}
+
 
 export async function render() {
   renderSortHeaders();
   const q = (searchInput.value || "").trim().toLowerCase();
   tbody.innerHTML = "";
+  visibleRowIndices = [];
 
   const rows = getRows();
   
@@ -166,6 +322,7 @@ export async function render() {
     const row = rows[idx];
     if (!rowMatchesSearch(row, q, [...searchColumns])) return;
     visibleCount++;
+    visibleRowIndices.push(idx);
 
     const tr = document.createElement("tr");
 
