@@ -1,7 +1,7 @@
 // -----------------------------
 // Rendering Module
 // -----------------------------
-import { COLUMNS, STATUS_OPTIONS, GESCHLECHT_OPTIONS } from './config.js';
+import { COLUMNS, STATUS_OPTIONS, GESCHLECHT_OPTIONS, KATEGORIE_OPTIONS } from './config.js';
 import { getRows, setRows, newEmptyRow, save } from './state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { toCellDisplay } from '../utils/formatting.js';
@@ -158,6 +158,41 @@ export async function render() {
         const geschlechtValue = row[col] || "";
         if (geschlechtValue) {
           select.value = geschlechtValue;
+        }
+        
+        // Handle change event
+        select.addEventListener("change", async (e) => {
+          const currentRows = getRows();
+          currentRows[idx][col] = e.target.value;
+          await setRows(currentRows);
+          await save();
+        });
+        
+        td.appendChild(select);
+      } else if (col === "Kategorie") {
+        // Special handling for Kategorie column - use dropdown
+        const select = document.createElement("select");
+        select.className = "kategorie-select";
+        select.setAttribute("aria-label", "Kategorie");
+        
+        // Add empty option first
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "";
+        select.appendChild(emptyOption);
+        
+        // Add all Kategorie options
+        KATEGORIE_OPTIONS.forEach(option => {
+          const optionElement = document.createElement("option");
+          optionElement.value = option;
+          optionElement.textContent = option;
+          select.appendChild(optionElement);
+        });
+        
+        // Set selected value
+        const kategorieValue = row[col] || "";
+        if (kategorieValue) {
+          select.value = kategorieValue;
         }
         
         // Handle change event
