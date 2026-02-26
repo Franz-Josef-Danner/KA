@@ -20,7 +20,7 @@ h1 { margin: 0 0 12px; font-size: 18px; }
 }
 .hint { font-size: 12px; color: #555; margin: 6px 0 14px; }
 .wrap { overflow: auto; border: 1px solid #e5e5e5; border-radius: 10px; }
-table { border-collapse: collapse; width: 100%; min-width: 1600px; }
+table { border-collapse: collapse; width: 100%; }
 thead th {
   position: sticky; top: 0; background: #fafafa; z-index: 1;
   border-bottom: 1px solid #e5e5e5; font-weight: 600; font-size: 12px; text-align: left;
@@ -77,6 +77,51 @@ td.readonly:hover {
   outline: none;
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+.geschlecht-select, .kategorie-select {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+}
+.geschlecht-select:hover, .kategorie-select:hover {
+  border-color: #999;
+}
+.geschlecht-select:focus, .kategorie-select:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+/* Fixed-width columns: Geschlecht, Kategorie, Status */
+#grid th[data-col="Geschlecht"],
+#grid td[data-col="Geschlecht"] { width: 100px; }
+#grid th[data-col="Kategorie"],
+#grid td[data-col="Kategorie"] { width: 160px; }
+#grid th[data-col="Status"],
+#grid td[data-col="Status"] { width: 155px; }
+/* Responsive: progressively hide less important columns as window narrows */
+@media (max-width: 1500px) {
+  #grid th[data-col="Firmen_ID"],
+  #grid td[data-col="Firmen_ID"] { display: none; }
+}
+@media (max-width: 1350px) {
+  #grid th[data-col="Persönlich"],
+  #grid td[data-col="Persönlich"] { display: none; }
+}
+@media (max-width: 1200px) {
+  #grid th[data-col="Kommentare"],
+  #grid td[data-col="Kommentare"] { display: none; }
+}
+@media (max-width: 1050px) {
+  #grid th[data-col="Titel"],
+  #grid td[data-col="Titel"] { display: none; }
+}
+@media (max-width: 900px) {
+  #grid th[data-col="Webseite"],
+  #grid td[data-col="Webseite"] { display: none; }
 }
 .duplicate { 
   background-color: #ffcccc !important;
