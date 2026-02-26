@@ -120,6 +120,30 @@ td.readonly:hover {
 .danger { border-color: #ffb3b3 !important; }
 .danger:hover { background: #fff5f5; }
 .small { font-size: 12px; color: #666; }
+.sort-controls {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.sort-btn {
+  padding: 1px 5px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #999;
+}
+.sort-btn:hover {
+  border-color: #999;
+  color: #333;
+}
+.sort-btn.active {
+  border-color: #1890ff;
+  background: #e6f4ff;
+  color: #1890ff;
+}
 .pill {
   display: inline-block; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px;
   font-size: 12px; color: #333; background: #fff;
