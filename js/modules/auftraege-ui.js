@@ -6,7 +6,8 @@ import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-confi
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen, ensureInitialized as ensureRechnungenInitialized } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewOrder, showEmailNotificationWarning, showEmailNotificationQueued, sendOrderToCustomer } from './email-notifications.js';
+import { notifyNewOrder, notifyNewInvoice, showEmailNotificationWarning, showEmailNotificationQueued, sendOrderToCustomer } from './email-notifications.js';
+import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
@@ -969,6 +970,27 @@ async function convertToInvoice() {
     setRechnungenRows(updatedInvoices);
     await saveRechnungen();
     
+    // Send email notification for the new invoice (same as when creating a new invoice)
+    const invoiceItems = newInvoice.items || [];
+    const total = calculateItemsTotal(invoiceItems);
+    const notificationResult = await notifyNewInvoice({
+      invoiceId: newInvoice.Rechnungs_ID || 'N/A',
+      customerName: newInvoice.Firma || 'Unbekannt',
+      contactPerson: newInvoice.Ansprechpartner || '',
+      customerEmail: newInvoice.Firmen_Email || '',
+      total: total,
+      items: invoiceItems,
+      project: newInvoice.Projekt || '',
+      orderId: newInvoice.Auftrags_ID || '',
+      dueDate: newInvoice.Deadline || ''
+    }, newInvoice);
+
+    if (!notificationResult) {
+      showEmailNotificationWarning('Die Rechnung', 'newInvoice');
+    } else {
+      showEmailNotificationQueued('Die Rechnung');
+    }
+
     // Update the order status to "abgeschlossen" (completed)
     formData.Status = COMPLETED_STATUS;
     
