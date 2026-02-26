@@ -18,6 +18,9 @@ const searchInput = document.getElementById("search");
 let sortColumn = null;
 let sortDirection = null; // 'asc', 'desc', or null
 
+// Columns selected for search filtering (empty = all columns)
+const searchColumns = new Set();
+
 function renderSortHeaders() {
   const headerRow = document.querySelector('#grid thead tr');
   if (!headerRow) return;
@@ -31,6 +34,10 @@ function renderSortHeaders() {
     // Remove existing sort controls to avoid duplicates
     const existing = th.querySelector('.sort-controls');
     if (existing) existing.remove();
+
+    // Remove existing search filter checkbox to avoid duplicates
+    const existingFilter = th.querySelector('.col-search-filter');
+    if (existingFilter) existingFilter.remove();
 
     const controls = document.createElement('div');
     controls.className = 'sort-controls';
@@ -68,6 +75,26 @@ function renderSortHeaders() {
     controls.appendChild(btnAsc);
     controls.appendChild(btnDesc);
     th.insertBefore(controls, th.firstChild);
+
+    // Add search filter checkbox
+    const filterLabel = document.createElement('label');
+    filterLabel.className = 'col-search-filter';
+    filterLabel.title = 'Diese Spalte in die Suche einbeziehen';
+
+    const filterCheckbox = document.createElement('input');
+    filterCheckbox.type = 'checkbox';
+    filterCheckbox.checked = searchColumns.has(col);
+    filterCheckbox.addEventListener('change', () => {
+      if (filterCheckbox.checked) {
+        searchColumns.add(col);
+      } else {
+        searchColumns.delete(col);
+      }
+      render();
+    });
+
+    filterLabel.appendChild(filterCheckbox);
+    th.insertBefore(filterLabel, th.firstChild);
   });
 }
 
@@ -134,7 +161,7 @@ export async function render() {
 
   orderedIndices.forEach((idx) => {
     const row = rows[idx];
-    if (!rowMatchesSearch(row, q)) return;
+    if (!rowMatchesSearch(row, q, [...searchColumns])) return;
 
     const tr = document.createElement("tr");
 
