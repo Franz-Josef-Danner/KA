@@ -667,12 +667,14 @@
     
     (() => {
       try {
-        // Require authentication and admin role
+        // Require authentication
         requireAuth();
-        requireAdmin();
 
-        // Initialize navigation only after successful authentication
+        // Initialize navigation for authenticated users
         initNavigation('dashboard.html');
+
+        // Require admin role (redirects non-admins)
+        requireAdmin();
         
         // Initialize email error display
         initEmailErrorDisplay();

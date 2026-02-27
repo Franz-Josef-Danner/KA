@@ -310,12 +310,14 @@
     
     (() => {
       try {
-        // Require authentication and admin role
+        // Require authentication
         requireAuth();
-        requireAdmin();
 
-        // Initialize navigation only after successful authentication
+        // Initialize navigation for authenticated users
         initNavigation('einstellungen.html');
+
+        // Require admin role (redirects non-admins)
+        requireAdmin();
         
         // Initialize settings form
         initSettingsForm();
