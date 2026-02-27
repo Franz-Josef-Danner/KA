@@ -141,8 +141,8 @@ td.readonly:hover {
 }
 /* Hide Aktion column on viewports narrower than 1400 px */
 @media (max-width: 1399px) {
-  #grid th[data-col="Aktion"],
-  #grid td[data-col="Aktion"] { display: none; }
+  #grid th.actions,
+  #grid td.actions { display: none; }
 }
 .duplicate { 
   background-color: #ffcccc !important;
