@@ -97,14 +97,55 @@ td.readonly:hover {
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
-/* Fixed-width columns: Kategorie, Status (reduced by 20%) */
+/* Fixed-width columns must not grow or shrink; table-layout: fixed (inherited) locks them exactly */
 #grid th[data-col="Kategorie"],
-#grid td[data-col="Kategorie"] { width: 128px; }
+#grid td[data-col="Kategorie"] { width: 138px; min-width: 138px; max-width: 138px; }
 #grid th[data-col="Status"],
-#grid td[data-col="Status"] { width: 124px; }
-/* All other columns shrink proportionally; minimum 50 px before clipping */
-#grid th:not([data-col="Kategorie"]):not([data-col="Status"]),
-#grid td:not([data-col="Kategorie"]):not([data-col="Status"]) { min-width: 50px; }
+#grid td[data-col="Status"] { width: 124px; min-width: 124px; max-width: 124px; }
+#grid th[data-col="Firmen_ID"],
+#grid td[data-col="Firmen_ID"] { width: 50px; min-width: 50px; max-width: 50px; }
+#grid th[data-col="Geschlecht"],
+#grid td[data-col="Geschlecht"] { width: 75px; min-width: 75px; max-width: 75px; }
+#grid th[data-col="Persönlich"],
+#grid td[data-col="Persönlich"] { width: 50px; min-width: 50px; max-width: 50px; }
+/* Aktion column uses class="actions" (no data-col) */
+#grid th.actions,
+#grid td.actions { width: 50px; min-width: 50px; max-width: 50px; }
+/* Adaptive columns: no explicit width → share all remaining space equally (table-layout: fixed) */
+#grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions),
+#grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions) { min-width: 50px; }
+/* Hide Firmen_ID column on viewports narrower than 1900 px */
+@media (max-width: 1899px) {
+  #grid th[data-col="Firmen_ID"],
+  #grid td[data-col="Firmen_ID"] { display: none; }
+}
+/* Hide Titel column on viewports narrower than 1800 px */
+@media (max-width: 1799px) {
+  #grid th[data-col="Titel"],
+  #grid td[data-col="Titel"] { display: none; }
+}
+/* Hide Webseite column on viewports narrower than 1700 px */
+@media (max-width: 1699px) {
+  #grid th[data-col="Webseite"],
+  #grid td[data-col="Webseite"] { display: none; }
+}
+/* Hide Kommentare column on viewports narrower than 1600 px */
+@media (max-width: 1599px) {
+  #grid th[data-col="Kommentare"],
+  #grid td[data-col="Kommentare"] { display: none; }
+}
+/* Hide Persönlich column on viewports narrower than 1500 px */
+@media (max-width: 1499px) {
+  #grid th[data-col="Persönlich"],
+  #grid td[data-col="Persönlich"] { display: none; }
+}
+/* Hide Aktion and Geschlecht columns on viewports narrower than 1400 px */
+@media (max-width: 1399px) {
+  #grid th.actions,
+  #grid td.actions { display: none; }
+  #grid th[data-col="Geschlecht"],
+  #grid td[data-col="Geschlecht"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
