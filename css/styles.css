@@ -106,7 +106,7 @@ td.readonly:hover {
 #grid th[data-col="Firmen_ID"],
 #grid td[data-col="Firmen_ID"] { width: 50px; }
 #grid th[data-col="Geschlecht"],
-#grid td[data-col="Geschlecht"] { width: 100px; }
+#grid td[data-col="Geschlecht"] { width: 75px; }
 /* All other columns shrink proportionally; minimum 50 px before clipping */
 #grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]),
 #grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]) { min-width: 50px; }
