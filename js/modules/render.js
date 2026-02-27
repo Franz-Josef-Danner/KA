@@ -30,7 +30,7 @@ const PAGE_SIZE_DESKTOP = 200;
 const PAGE_SIZE_MOBILE = 50;
 
 function getPageSize() {
-  return window.innerWidth <= 768 ? PAGE_SIZE_MOBILE : PAGE_SIZE_DESKTOP;
+  return window.matchMedia('(max-width: 768px)').matches ? PAGE_SIZE_MOBILE : PAGE_SIZE_DESKTOP;
 }
 
 export function resetPage() {
@@ -74,6 +74,7 @@ function renderSortHeaders() {
         sortColumn = col;
         sortDirection = 'asc';
       }
+      currentPage = 0;
       render();
     });
 
@@ -89,6 +90,7 @@ function renderSortHeaders() {
         sortColumn = col;
         sortDirection = 'desc';
       }
+      currentPage = 0;
       render();
     });
 
@@ -110,6 +112,7 @@ function renderSortHeaders() {
       } else {
         searchColumns.delete(col);
       }
+      currentPage = 0;
       render();
     });
 
