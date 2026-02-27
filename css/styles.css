@@ -169,13 +169,13 @@ td.readonly:hover {
   #grid th[data-col="Status"],
   #grid td[data-col="Status"] { display: none; }
 }
-/* Hide Kategorie column on viewports narrower than 700 px */
-@media (max-width: 699px) {
+/* Hide Kategorie column on viewports narrower than 650 px */
+@media (max-width: 649px) {
   #grid th[data-col="Kategorie"],
   #grid td[data-col="Kategorie"] { display: none; }
 }
-/* Hide Tell column on viewports narrower than 600 px */
-@media (max-width: 599px) {
+/* Hide Tell column on viewports narrower than 550 px */
+@media (max-width: 549px) {
   #grid th[data-col="Tell"],
   #grid td[data-col="Tell"] { display: none; }
 }
