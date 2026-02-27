@@ -114,62 +114,68 @@ td.readonly:hover {
 /* Adaptive columns: no explicit width → share all remaining space equally (table-layout: fixed) */
 #grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions),
 #grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions) { min-width: 50px; }
-/* Hide Firmen_ID column on viewports narrower than 1900 px */
-@media (max-width: 1899px) {
+/* Hide Firmen_ID column on viewports narrower than 2100 px */
+@media (max-width: 2099px) {
   #grid th[data-col="Firmen_ID"],
   #grid td[data-col="Firmen_ID"] { display: none; }
+}
+/* Hide Webseite column on viewports narrower than 1900 px */
+@media (max-width: 1899px) {
+  #grid th[data-col="Webseite"],
+  #grid td[data-col="Webseite"] { display: none; }
 }
 /* Hide Titel column on viewports narrower than 1800 px */
 @media (max-width: 1799px) {
   #grid th[data-col="Titel"],
   #grid td[data-col="Titel"] { display: none; }
 }
-/* Hide Webseite column on viewports narrower than 1700 px */
+/* Hide Geschlecht column on viewports narrower than 1700 px */
 @media (max-width: 1699px) {
-  #grid th[data-col="Webseite"],
-  #grid td[data-col="Webseite"] { display: none; }
-}
-/* Hide Kommentare column on viewports narrower than 1600 px */
-@media (max-width: 1599px) {
-  #grid th[data-col="Kommentare"],
-  #grid td[data-col="Kommentare"] { display: none; }
-}
-/* Hide Persönlich column on viewports narrower than 1500 px */
-@media (max-width: 1499px) {
-  #grid th[data-col="Persönlich"],
-  #grid td[data-col="Persönlich"] { display: none; }
-}
-/* Hide Aktion and Geschlecht columns on viewports narrower than 1400 px */
-@media (max-width: 1399px) {
-  #grid th.actions,
-  #grid td.actions { display: none; }
   #grid th[data-col="Geschlecht"],
   #grid td[data-col="Geschlecht"] { display: none; }
 }
-/* Hide Vorname and Nachname columns on viewports narrower than 1300 px */
+/* Hide Persönlich column on viewports narrower than 1600 px */
+@media (max-width: 1599px) {
+  #grid th[data-col="Persönlich"],
+  #grid td[data-col="Persönlich"] { display: none; }
+}
+/* Hide Kommentare column on viewports narrower than 1500 px */
+@media (max-width: 1499px) {
+  #grid th[data-col="Kommentare"],
+  #grid td[data-col="Kommentare"] { display: none; }
+}
+/* Hide Aktion column on viewports narrower than 1400 px */
+@media (max-width: 1399px) {
+  #grid th.actions,
+  #grid td.actions { display: none; }
+}
+/* Hide Vorname column on viewports narrower than 1300 px */
 @media (max-width: 1299px) {
   #grid th[data-col="Vorname"],
   #grid td[data-col="Vorname"] { display: none; }
+}
+/* Hide Nachname column on viewports narrower than 1200 px */
+@media (max-width: 1199px) {
   #grid th[data-col="Nachname"],
   #grid td[data-col="Nachname"] { display: none; }
 }
-/* Hide Adresse column on viewports narrower than 1200 px */
-@media (max-width: 1199px) {
+/* Hide Adresse column on viewports narrower than 1100 px */
+@media (max-width: 1099px) {
   #grid th[data-col="Adresse"],
   #grid td[data-col="Adresse"] { display: none; }
 }
-/* Hide Status column on viewports narrower than 1100 px */
-@media (max-width: 1099px) {
+/* Hide Status column on viewports narrower than 900 px */
+@media (max-width: 899px) {
   #grid th[data-col="Status"],
   #grid td[data-col="Status"] { display: none; }
 }
-/* Hide Kategorie column on viewports narrower than 1000 px */
-@media (max-width: 999px) {
+/* Hide Kategorie column on viewports narrower than 800 px */
+@media (max-width: 799px) {
   #grid th[data-col="Kategorie"],
   #grid td[data-col="Kategorie"] { display: none; }
 }
-/* Hide Tell column on viewports narrower than 900 px */
-@media (max-width: 899px) {
+/* Hide Tell column on viewports narrower than 700 px */
+@media (max-width: 699px) {
   #grid th[data-col="Tell"],
   #grid td[data-col="Tell"] { display: none; }
 }
