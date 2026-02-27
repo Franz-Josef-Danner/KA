@@ -168,6 +168,11 @@ td.readonly:hover {
   #grid th[data-col="Kategorie"],
   #grid td[data-col="Kategorie"] { display: none; }
 }
+/* Hide Tell column on viewports narrower than 900 px */
+@media (max-width: 899px) {
+  #grid th[data-col="Tell"],
+  #grid td[data-col="Tell"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
