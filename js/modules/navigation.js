@@ -17,6 +17,7 @@ const ADMIN_NAV_ITEMS = [
 
 const MOBILE_ADMIN_NAV_ITEMS = [
   { label: 'Dashboard', href: 'dashboard.html' },
+  { label: 'Firmenliste', href: 'firmenliste.html' },
   { label: 'Aufträge', href: 'auftraege.html' },
   { label: 'Rechnungen', href: 'rechnungen.html' },
   { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
