@@ -102,14 +102,16 @@ td.readonly:hover {
 #grid td[data-col="Kategorie"] { width: 128px; }
 #grid th[data-col="Status"],
 #grid td[data-col="Status"] { width: 124px; }
-/* Fixed-width columns: Firmen_ID and Geschlecht (compact) */
+/* Fixed-width columns: Firmen_ID, Geschlecht and Persönlich (compact) */
 #grid th[data-col="Firmen_ID"],
 #grid td[data-col="Firmen_ID"] { width: 50px; }
 #grid th[data-col="Geschlecht"],
 #grid td[data-col="Geschlecht"] { width: 75px; }
+#grid th[data-col="Persönlich"],
+#grid td[data-col="Persönlich"] { width: 20px; }
 /* All other columns shrink proportionally; minimum 50 px before clipping */
-#grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]),
-#grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]) { min-width: 50px; }
+#grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]),
+#grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]) { min-width: 50px; }
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
