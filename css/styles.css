@@ -139,10 +139,12 @@ td.readonly:hover {
   #grid th[data-col="Persönlich"],
   #grid td[data-col="Persönlich"] { display: none; }
 }
-/* Hide Aktion column on viewports narrower than 1400 px */
+/* Hide Aktion and Geschlecht columns on viewports narrower than 1400 px */
 @media (max-width: 1399px) {
   #grid th.actions,
   #grid td.actions { display: none; }
+  #grid th[data-col="Geschlecht"],
+  #grid td[data-col="Geschlecht"] { display: none; }
 }
 .duplicate { 
   background-color: #ffcccc !important;
