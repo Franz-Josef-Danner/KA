@@ -153,6 +153,11 @@ td.readonly:hover {
   #grid th[data-col="Nachname"],
   #grid td[data-col="Nachname"] { display: none; }
 }
+/* Hide Adresse column on viewports narrower than 1200 px */
+@media (max-width: 1199px) {
+  #grid th[data-col="Adresse"],
+  #grid td[data-col="Adresse"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
