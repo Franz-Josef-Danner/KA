@@ -97,6 +97,8 @@ td.readonly:hover {
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
+/* Use auto layout so adaptive columns size to content and fill the full available width */
+#grid { table-layout: auto; }
 /* Fixed-width columns: Kategorie, Status (reduced by 20%) */
 #grid th[data-col="Kategorie"],
 #grid td[data-col="Kategorie"] { width: 128px; }
