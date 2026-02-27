@@ -158,6 +158,11 @@ td.readonly:hover {
   #grid th[data-col="Adresse"],
   #grid td[data-col="Adresse"] { display: none; }
 }
+/* Hide Status column on viewports narrower than 1100 px */
+@media (max-width: 1099px) {
+  #grid th[data-col="Status"],
+  #grid td[data-col="Status"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
