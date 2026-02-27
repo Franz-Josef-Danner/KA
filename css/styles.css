@@ -114,6 +114,11 @@ td.readonly:hover {
 /* Adaptive columns: no explicit width → share all remaining space equally (table-layout: fixed) */
 #grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions),
 #grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions) { min-width: 50px; }
+/* Hide Firmen_ID column on viewports narrower than 1900 px */
+@media (max-width: 1899px) {
+  #grid th[data-col="Firmen_ID"],
+  #grid td[data-col="Firmen_ID"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
