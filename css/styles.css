@@ -124,6 +124,11 @@ td.readonly:hover {
   #grid th[data-col="Titel"],
   #grid td[data-col="Titel"] { display: none; }
 }
+/* Hide Webseite column on viewports narrower than 1700 px */
+@media (max-width: 1699px) {
+  #grid th[data-col="Webseite"],
+  #grid td[data-col="Webseite"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
