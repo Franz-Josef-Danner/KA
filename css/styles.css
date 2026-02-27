@@ -114,8 +114,8 @@ td.readonly:hover {
 /* Adaptive columns: no explicit width → share all remaining space equally (table-layout: fixed) */
 #grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions),
 #grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions) { min-width: 50px; }
-/* Hide Firmen_ID column on viewports narrower than 2100 px */
-@media (max-width: 2099px) {
+/* Hide Firmen_ID column on viewports narrower than 2200 px */
+@media (max-width: 2199px) {
   #grid th[data-col="Firmen_ID"],
   #grid td[data-col="Firmen_ID"] { display: none; }
 }
@@ -154,28 +154,28 @@ td.readonly:hover {
   #grid th[data-col="Vorname"],
   #grid td[data-col="Vorname"] { display: none; }
 }
-/* Hide Nachname column on viewports narrower than 1200 px */
-@media (max-width: 1199px) {
+/* Hide Nachname column on viewports narrower than 1100 px */
+@media (max-width: 1099px) {
   #grid th[data-col="Nachname"],
   #grid td[data-col="Nachname"] { display: none; }
 }
-/* Hide Adresse column on viewports narrower than 1100 px */
-@media (max-width: 1099px) {
+/* Hide Adresse column on viewports narrower than 1000 px */
+@media (max-width: 999px) {
   #grid th[data-col="Adresse"],
   #grid td[data-col="Adresse"] { display: none; }
 }
-/* Hide Status column on viewports narrower than 900 px */
-@media (max-width: 899px) {
+/* Hide Status column on viewports narrower than 800 px */
+@media (max-width: 799px) {
   #grid th[data-col="Status"],
   #grid td[data-col="Status"] { display: none; }
 }
-/* Hide Kategorie column on viewports narrower than 800 px */
-@media (max-width: 799px) {
+/* Hide Kategorie column on viewports narrower than 700 px */
+@media (max-width: 699px) {
   #grid th[data-col="Kategorie"],
   #grid td[data-col="Kategorie"] { display: none; }
 }
-/* Hide Tell column on viewports narrower than 700 px */
-@media (max-width: 699px) {
+/* Hide Tell column on viewports narrower than 600 px */
+@media (max-width: 599px) {
   #grid th[data-col="Tell"],
   #grid td[data-col="Tell"] { display: none; }
 }
