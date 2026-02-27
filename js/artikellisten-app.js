@@ -141,7 +141,7 @@ async function render() {
     // Firma Name
     const tdName = document.createElement("td");
     const personName = [firma.Titel, firma.Vorname, firma.Nachname].filter(Boolean).join(" ").trim();
-    tdName.textContent = artikelliste.firmenName || firma.Firma || personName || '-';
+    tdName.textContent = firma.Firma || personName || artikelliste.firmenName || '-';
     tr.appendChild(tdName);
     
     // Anzahl Items
