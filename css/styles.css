@@ -97,11 +97,11 @@ td.readonly:hover {
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
-/* Fixed-width columns: Kategorie, Status */
+/* Fixed-width columns: Kategorie, Status (reduced by 20%) */
 #grid th[data-col="Kategorie"],
-#grid td[data-col="Kategorie"] { width: 160px; }
+#grid td[data-col="Kategorie"] { width: 128px; }
 #grid th[data-col="Status"],
-#grid td[data-col="Status"] { width: 155px; }
+#grid td[data-col="Status"] { width: 124px; }
 /* All other columns shrink proportionally; minimum 50 px before clipping */
 #grid th:not([data-col="Kategorie"]):not([data-col="Status"]),
 #grid td:not([data-col="Kategorie"]):not([data-col="Status"]) { min-width: 50px; }
