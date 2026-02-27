@@ -146,6 +146,13 @@ td.readonly:hover {
   #grid th[data-col="Geschlecht"],
   #grid td[data-col="Geschlecht"] { display: none; }
 }
+/* Hide Vorname and Nachname columns on viewports narrower than 1300 px */
+@media (max-width: 1299px) {
+  #grid th[data-col="Vorname"],
+  #grid td[data-col="Vorname"] { display: none; }
+  #grid th[data-col="Nachname"],
+  #grid td[data-col="Nachname"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
