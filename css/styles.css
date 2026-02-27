@@ -108,7 +108,7 @@ td.readonly:hover {
 #grid th[data-col="Geschlecht"],
 #grid td[data-col="Geschlecht"] { width: 75px; }
 #grid th[data-col="Persönlich"],
-#grid td[data-col="Persönlich"] { width: 20px; }
+#grid td[data-col="Persönlich"] { width: 50px; }
 /* All other columns shrink proportionally; minimum 50 px before clipping */
 #grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]),
 #grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]) { min-width: 50px; }
