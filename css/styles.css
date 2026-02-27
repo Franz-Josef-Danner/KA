@@ -20,18 +20,20 @@ h1 { margin: 0 0 12px; font-size: 18px; }
 }
 .hint { font-size: 12px; color: #555; margin: 6px 0 14px; }
 .wrap { overflow: auto; border: 1px solid #e5e5e5; border-radius: 10px; }
-table { border-collapse: collapse; width: 100%; min-width: 1600px; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; }
 thead th {
   position: sticky; top: 0; background: #fafafa; z-index: 1;
   border-bottom: 1px solid #e5e5e5; font-weight: 600; font-size: 12px; text-align: left;
   padding: 10px 10px;
   white-space: nowrap;
+  overflow: hidden;
 }
 tbody td {
   border-bottom: 1px solid #f0f0f0;
   padding: 8px 10px;
   font-size: 13px;
   vertical-align: top;
+  overflow: hidden;
 }
 tbody tr:hover { background: #fcfcfc; }
 td[contenteditable="true"] { 
@@ -78,6 +80,31 @@ td.readonly:hover {
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
+.geschlecht-select, .kategorie-select {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+}
+.geschlecht-select:hover, .kategorie-select:hover {
+  border-color: #999;
+}
+.geschlecht-select:focus, .kategorie-select:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+/* Fixed-width columns: Kategorie, Status (reduced by 20%) */
+#grid th[data-col="Kategorie"],
+#grid td[data-col="Kategorie"] { width: 128px; }
+#grid th[data-col="Status"],
+#grid td[data-col="Status"] { width: 124px; }
+/* All other columns shrink proportionally; minimum 50 px before clipping */
+#grid th:not([data-col="Kategorie"]):not([data-col="Status"]),
+#grid td:not([data-col="Kategorie"]):not([data-col="Status"]) { min-width: 50px; }
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
