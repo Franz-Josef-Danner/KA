@@ -40,18 +40,29 @@ function getCustomerCompanies() {
     if (!Array.isArray(companies)) return [];
     
     // Filter companies with Status = "Kunde" and return full company objects
+    // For private individuals without a Firma, construct name from Titel + Vorname + Nachname
     const customerCompanies = companies
-      .filter(company => company.Status === "Kunde" && company.Firma)
-      .map(company => ({
-        Firmen_ID: company.Firmen_ID || "",
-        Firma: (company.Firma || "").trim(),
-        Adresse: company.Adresse || "",
-        "E-mail": company["E-mail"] || "",
-        Titel: company.Titel || "",
-        Vorname: company.Vorname || "",
-        Nachname: company.Nachname || ""
-      }))
-      .filter(company => company.Firma); // Remove empty company names
+      .filter(company => company.Status === "Kunde")
+      .map(company => {
+        let displayName = (company.Firma || "").trim();
+        if (!displayName) {
+          const nameParts = [];
+          if (company.Titel) nameParts.push(company.Titel.trim());
+          if (company.Vorname) nameParts.push(company.Vorname.trim());
+          if (company.Nachname) nameParts.push(company.Nachname.trim());
+          displayName = nameParts.join(" ").trim();
+        }
+        return {
+          Firmen_ID: company.Firmen_ID || "",
+          Firma: displayName,
+          Adresse: company.Adresse || "",
+          "E-mail": company["E-mail"] || "",
+          Titel: company.Titel || "",
+          Vorname: company.Vorname || "",
+          Nachname: company.Nachname || ""
+        };
+      })
+      .filter(company => company.Firma); // Remove entries where no name could be determined
     
     // Sort by company name alphabetically
     return customerCompanies.sort((a, b) => a.Firma.localeCompare(b.Firma));

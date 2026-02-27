@@ -515,7 +515,26 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   // Support both old format (Firma, Ansprechpartner) and new format (customer object)
   const customer = documentData.customer || documentData;
   
-  if (customer.company || customer.Firma) {
+  // For private individuals (no original Firma in firmenliste), skip the company name line.
+  // Detect by looking up the Firmen_ID in the firmenliste stored in localStorage.
+  let showCompanyName = true;
+  const firmenId = customer.Firmen_ID || customer.firmenId;
+  if (firmenId) {
+    try {
+      const firmenData = localStorage.getItem("firmen_tabelle_v1");
+      if (firmenData) {
+        const allCompanies = JSON.parse(firmenData);
+        const originalCompany = allCompanies.find(c => c.Firmen_ID === firmenId);
+        if (originalCompany && !(originalCompany.Firma || "").trim()) {
+          showCompanyName = false; // Private individual – no company name to display
+        }
+      }
+    } catch (e) {
+      // On parse error, keep showing the company name
+    }
+  }
+
+  if (showCompanyName && (customer.company || customer.Firma)) {
     doc.setFont('helvetica', 'bold');
     doc.text(customer.company || customer.Firma, x + padding, offsetY);
     doc.setFont('helvetica', 'normal');
