@@ -62,19 +62,22 @@ function getCustomerCompanies() {
     if (!Array.isArray(companies)) return [];
     
     // Filter companies with Status = "Kunde" (including private persons without Firma)
+    // Accept companies with a non-empty Firma OR a non-empty Firmen_ID for backward compatibility
     const customerCompanies = companies
-      .filter(company => company.Status === "Kunde" && company.Firmen_ID?.trim())
+      .filter(company => company.Status === "Kunde" && (company.Firmen_ID?.trim() || company.Firma?.trim()))
       .map(company => ({
-        Firmen_ID: company.Firmen_ID || "",
+        Firmen_ID: (company.Firmen_ID || "").trim(),
         Firma: (company.Firma || "").trim(),
         displayName: getDisplayName(company),
+        // optionValue: prefer Firmen_ID if available, fall back to Firma name (backward compat)
+        optionValue: company.Firmen_ID || company.Firma,
         Adresse: company.Adresse || "",
         "E-mail": company["E-mail"] || "",
         Titel: company.Titel || "",
         Vorname: company.Vorname || "",
         Nachname: company.Nachname || ""
       }))
-      .filter(company => company.displayName); // Remove entries with no displayable name at all
+      .filter(company => company.displayName && company.optionValue); // Remove entries with no displayable name or value
     
     // Sort by display name alphabetically
     return customerCompanies.sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -615,56 +618,56 @@ function populateForm(rowData) {
         emptyOption.textContent = "-- Firma auswählen --";
         input.appendChild(emptyOption);
         
-        // Add customer companies – use Firmen_ID as value, displayName as label
+        // Add customer companies – use optionValue (Firmen_ID or Firma as fallback) as value
         const customerCompanies = getCustomerCompanies();
         customerCompanies.forEach(company => {
           const optionElement = document.createElement("option");
-          optionElement.value = company.Firmen_ID;
+          optionElement.value = company.optionValue;
           optionElement.textContent = company.displayName;
           input.appendChild(optionElement);
         });
         
-        // Determine the Firmen_ID to pre-select
-        let currentFirmenId = rowData.Firmen_ID || "";
+        // Determine the option value to pre-select (prefer Firmen_ID, fall back to Firma name)
+        let currentValue = rowData.Firmen_ID || "";
         
         // Backward compat: old records may only have Firma name, no Firmen_ID
-        if (!currentFirmenId && rowData.Firma) {
-          const match = customerCompanies.find(c => c.Firma === rowData.Firma);
-          if (match) currentFirmenId = match.Firmen_ID;
+        if (!currentValue && rowData.Firma) {
+          const match = customerCompanies.find(c => c.Firma === rowData.Firma || c.optionValue === rowData.Firma);
+          if (match) currentValue = match.optionValue;
         }
         
-        // If the resolved ID is not in the list, add it as a custom option
-        if (currentFirmenId && !customerCompanies.some(c => c.Firmen_ID === currentFirmenId)) {
-          const company = getCompanyById(currentFirmenId);
+        // If the resolved value is not in the list, add it as a custom option
+        if (currentValue && !customerCompanies.some(c => c.optionValue === currentValue)) {
+          const company = getCompanyById(currentValue);
           const customOption = document.createElement("option");
-          customOption.value = currentFirmenId;
-          customOption.textContent = (company ? getDisplayName(company) : currentFirmenId) + " (nicht in Kundenliste)";
+          customOption.value = currentValue;
+          customOption.textContent = (company ? getDisplayName(company) : currentValue) + " (nicht in Kundenliste)";
           input.appendChild(customOption);
-        } else if (!currentFirmenId && rowData.Firma) {
-          // No Firmen_ID and name lookup failed – show the stored name as a placeholder
+        } else if (!currentValue && rowData.Firma) {
+          // No match found – show the stored name as a placeholder
           const customOption = document.createElement("option");
           customOption.value = rowData.Firma;
           customOption.textContent = rowData.Firma + " (nicht in Kundenliste)";
           input.appendChild(customOption);
-          currentFirmenId = rowData.Firma;
+          currentValue = rowData.Firma;
         }
         
         // Set the value before cloning
-        input.value = currentFirmenId;
+        input.value = currentValue;
         
         // Remove any existing event listeners by cloning and replacing the element
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
         
         // Set the value again after cloning (cloneNode doesn't preserve value property)
-        newInput.value = currentFirmenId;
+        newInput.value = currentValue;
         
         // Add event listener for company selection change
         newInput.addEventListener("change", onCompanySelectionChange);
         
         // Trigger initial update if a company is already selected
-        if (currentFirmenId) {
-          updateCompanyInfo(currentFirmenId);
+        if (currentValue) {
+          updateCompanyInfo(currentValue);
         } else {
           hideCompanyInfo();
         }
@@ -703,7 +706,11 @@ function onCompanySelectionChange(event) {
 
 // Function to display company address and email – looks up by Firmen_ID
 function updateCompanyInfo(firmenId) {
-  const company = getCompanyById(firmenId);
+  // Try by Firmen_ID first; fall back to name lookup for backward compat
+  let company = getCompanyById(firmenId);
+  if (!company && firmenId) {
+    company = getCompanyByName(firmenId);
+  }
   
   const addressGroup = document.getElementById("company_address_group");
   const addressDiv = document.getElementById("company_address");
@@ -714,18 +721,18 @@ function updateCompanyInfo(firmenId) {
   if (company) {
     // Show and populate address
     if (company.Adresse) {
-      addressDiv.textContent = company.Adresse;
-      addressGroup.style.display = "block";
+      if (addressDiv) addressDiv.textContent = company.Adresse;
+      if (addressGroup) addressGroup.style.display = "block";
     } else {
-      addressGroup.style.display = "none";
+      if (addressGroup) addressGroup.style.display = "none";
     }
     
     // Show and populate email
     if (company["E-mail"]) {
-      emailDiv.textContent = company["E-mail"];
-      emailGroup.style.display = "block";
+      if (emailDiv) emailDiv.textContent = company["E-mail"];
+      if (emailGroup) emailGroup.style.display = "block";
     } else {
-      emailGroup.style.display = "none";
+      if (emailGroup) emailGroup.style.display = "none";
     }
     
     // Populate contact person field (Ansprechpartner) from Titel, Vorname, Nachname
@@ -779,10 +786,14 @@ function setFormInputsEnabled(enabled) {
 function getFormData() {
   const formData = {};
   
-  // Get the selected Firmen_ID from the dropdown (it is now the option value)
+  // Get the selected value from the dropdown (Firmen_ID if available, else Firma name)
   const firmaSelectEl = document.getElementById("edit_Firma");
-  const selectedFirmenId = firmaSelectEl?.value || "";
-  const selectedCompany = selectedFirmenId ? getCompanyById(selectedFirmenId) : null;
+  const selectedValue = firmaSelectEl?.value || "";
+  // Resolve company: try by Firmen_ID first, then by Firma name (backward compat)
+  let selectedCompany = selectedValue ? getCompanyById(selectedValue) : null;
+  if (!selectedCompany && selectedValue) {
+    selectedCompany = getCompanyByName(selectedValue);
+  }
   
   for (const col of COLUMNS) {
     // Skip Artikel and Beschreibung as they are now part of order items
@@ -795,8 +806,8 @@ function getFormData() {
     if (col === "Firma") {
       if (selectedCompany) {
         formData[col] = getDisplayName(selectedCompany);
-      } else if (selectedFirmenId) {
-        formData[col] = selectedFirmenId; // Fallback (backward compat)
+      } else if (selectedValue) {
+        formData[col] = selectedValue; // Fallback: use the stored value as-is
       } else {
         formData[col] = "";
       }
@@ -823,7 +834,7 @@ function getFormData() {
     }
   }
   
-  // Store Firmen_ID from the select value
+  // Store Firmen_ID from the resolved company
   formData.Firmen_ID = selectedCompany ? selectedCompany.Firmen_ID : "";
   
   // Add order items to formData with all fields
@@ -1068,8 +1079,8 @@ async function sendOrderToCustomerHandler() {
     return;
   }
   
-  // Get company email by Firmen_ID
-  const company = getCompanyById(firmenId);
+  // Get company email by Firmen_ID (or Firma name for backward compat)
+  const company = getCompanyById(firmenId) || getCompanyByName(firmenId);
   const customerEmail = company ? company["E-mail"] : "";
   
   if (!customerEmail) {
