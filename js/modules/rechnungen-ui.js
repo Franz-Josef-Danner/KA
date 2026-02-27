@@ -534,15 +534,24 @@ export function openInvoiceModal(rowIndex) {
     populateForm(row);
   }
   
+  // Lock Firma and Rechnungs_ID for existing invoices (rowIndex !== null means already saved)
+  const isExistingInvoice = rowIndex !== null;
+  const firmaSelect = document.getElementById("edit_Firma");
+  const rechnungsIdInput = document.getElementById("edit_Rechnungs_ID");
+  if (firmaSelect) firmaSelect.disabled = isExistingInvoice;
+  if (rechnungsIdInput) rechnungsIdInput.disabled = isExistingInvoice;
+  
   // Render invoice items table
   renderInvoiceItemsTable();
   
   // Show modal
   modal.style.display = "flex";
   
-  // Focus first input (Firma field is now at the top)
+  // Focus first editable input
   setTimeout(() => {
-    const firstInput = document.getElementById("edit_Firma");
+    const firstInput = isExistingInvoice
+      ? document.getElementById("edit_Rechnungsdatum")
+      : firmaSelect;
     if (firstInput) firstInput.focus();
   }, 100);
 }

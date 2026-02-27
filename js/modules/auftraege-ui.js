@@ -557,15 +557,24 @@ export function openOrderModal(rowIndex) {
     }
   }
   
+  // Lock Firma and Auftrags_ID for existing orders (rowIndex !== null means already saved)
+  const isExistingOrder = rowIndex !== null;
+  const firmaSelect = document.getElementById("edit_Firma");
+  const auftragsIdInput = document.getElementById("edit_Auftrags_ID");
+  if (firmaSelect) firmaSelect.disabled = isExistingOrder;
+  if (auftragsIdInput) auftragsIdInput.disabled = isExistingOrder;
+  
   // Render order items table
   renderOrderItemsTable();
   
   // Show modal
   modal.style.display = "flex";
   
-  // Focus first input (Firma field is now at the top)
+  // Focus first editable input
   setTimeout(() => {
-    const firstInput = document.getElementById("edit_Firma");
+    const firstInput = isExistingOrder
+      ? document.getElementById("edit_Auftragsdatum")
+      : firmaSelect;
     if (firstInput) firstInput.focus();
   }, 100);
 }
