@@ -30,6 +30,28 @@ function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
   selectElement.value = value;
 }
 
+// Helper: compute a display name for a company entry (falls back to Titel/Vorname/Nachname)
+function getDisplayName(company) {
+  if (!company) return '';
+  if (company.Firma) return company.Firma;
+  return [company.Titel, company.Vorname, company.Nachname].filter(Boolean).join(' ');
+}
+
+// Function to get a company entry by Firmen_ID
+function getCompanyById(firmenId) {
+  if (!firmenId) return null;
+  try {
+    const firmenData = localStorage.getItem("firmen_tabelle_v1");
+    if (!firmenData) return null;
+    const companies = JSON.parse(firmenData);
+    if (!Array.isArray(companies)) return null;
+    return companies.find(company => company.Firmen_ID === firmenId) || null;
+  } catch (error) {
+    console.error('Error loading company by ID:', error);
+    return null;
+  }
+}
+
 // Function to get companies with "Kunde" status from firmenliste
 function getCustomerCompanies() {
   try {
@@ -39,39 +61,39 @@ function getCustomerCompanies() {
     const companies = JSON.parse(firmenData);
     if (!Array.isArray(companies)) return [];
     
-    // Filter companies with Status = "Kunde" and return full company objects
+    // Filter companies with Status = "Kunde" (including private persons without Firma)
     const customerCompanies = companies
-      .filter(company => company.Status === "Kunde" && company.Firma)
+      .filter(company => company.Status === "Kunde" && company.Firmen_ID?.trim())
       .map(company => ({
         Firmen_ID: company.Firmen_ID || "",
         Firma: (company.Firma || "").trim(),
+        displayName: getDisplayName(company),
         Adresse: company.Adresse || "",
         "E-mail": company["E-mail"] || "",
         Titel: company.Titel || "",
         Vorname: company.Vorname || "",
         Nachname: company.Nachname || ""
       }))
-      .filter(company => company.Firma); // Remove empty company names
+      .filter(company => company.displayName); // Remove entries with no displayable name at all
     
-    // Sort by company name alphabetically
-    return customerCompanies.sort((a, b) => a.Firma.localeCompare(b.Firma));
+    // Sort by display name alphabetically
+    return customerCompanies.sort((a, b) => a.displayName.localeCompare(b.displayName));
   } catch (error) {
     console.error('Error loading customer companies:', error);
     return [];
   }
 }
 
-// Function to get company data by company name
+// Function to get company data by company name (kept for backward compatibility)
 function getCompanyByName(firmaName) {
   const companies = getCustomerCompanies();
-  return companies.find(company => company.Firma === firmaName);
+  return companies.find(company => company.Firma === firmaName) || null;
 }
 
-// Function to get articles from a company's article list (artikelliste)
-function getArticlesForCompany(firmaName) {
+// Function to get articles from a company's article list (artikelliste) – looks up by Firmen_ID
+function getArticlesForCompany(firmenId) {
   try {
-    const company = getCompanyByName(firmaName);
-    if (!company || !company.Firmen_ID) return [];
+    if (!firmenId) return [];
     
     const artikellistenData = localStorage.getItem(ARTIKELLISTEN_STORAGE_KEY);
     if (!artikellistenData) return [];
@@ -79,7 +101,7 @@ function getArticlesForCompany(firmaName) {
     const artikellisten = JSON.parse(artikellistenData);
     if (typeof artikellisten !== 'object' || artikellisten === null) return [];
     
-    const artikelliste = artikellisten[company.Firmen_ID];
+    const artikelliste = artikellisten[firmenId];
     if (!artikelliste || !Array.isArray(artikelliste.items)) return [];
     
     // Extract unique article names from the article list
@@ -95,11 +117,10 @@ function getArticlesForCompany(firmaName) {
   }
 }
 
-// Function to get full article data by name from a company's article list
-function getArticleDataByName(firmaName, artikelName) {
+// Function to get full article data by name from a company's article list – looks up by Firmen_ID
+function getArticleDataByName(firmenId, artikelName) {
   try {
-    const company = getCompanyByName(firmaName);
-    if (!company || !company.Firmen_ID) return null;
+    if (!firmenId) return null;
     
     const artikellistenData = localStorage.getItem(ARTIKELLISTEN_STORAGE_KEY);
     if (!artikellistenData) return null;
@@ -107,7 +128,7 @@ function getArticleDataByName(firmaName, artikelName) {
     const artikellisten = JSON.parse(artikellistenData);
     if (typeof artikellisten !== 'object' || artikellisten === null) return null;
     
-    const artikelliste = artikellisten[company.Firmen_ID];
+    const artikelliste = artikellisten[firmenId];
     if (!artikelliste || !Array.isArray(artikelliste.items)) return null;
     
     // Find the article by name
@@ -122,14 +143,9 @@ function getArticleDataByName(firmaName, artikelName) {
   }
 }
 
-// Function to generate invoice ID based on company selection
-function generateInvoiceId(firmaName) {
-  if (!firmaName) {
-    return "RE-" + Date.now();
-  }
-  
-  const company = getCompanyByName(firmaName);
-  if (!company || !company.Firmen_ID) {
+// Function to generate invoice ID based on Firmen_ID
+function generateInvoiceId(firmenId) {
+  if (!firmenId) {
     return "RE-" + Date.now();
   }
   
@@ -141,14 +157,14 @@ function generateInvoiceId(firmaName) {
   
   // Calculate sequence number: count existing invoices for this company today
   const rows = getRows();
-  const todayPrefix = company.Firmen_ID + "-" + dateStr + "-";
+  const todayPrefix = firmenId + "-" + dateStr + "-";
   const existingInvoicesToday = rows.filter(row => 
     row.Rechnungs_ID && row.Rechnungs_ID.startsWith(todayPrefix)
   );
   const sequenceNumber = (existingInvoicesToday.length + 1).toString().padStart(3, '0');
   
   // Format: Firmen_ID-YYYYMMDD-XXX
-  return `${company.Firmen_ID}-${dateStr}-${sequenceNumber}`;
+  return `${firmenId}-${dateStr}-${sequenceNumber}`;
 }
 
 export function updateUndoRedoButtons() {
@@ -576,40 +592,56 @@ function populateForm(rowData) {
         emptyOption.textContent = "-- Firma auswählen --";
         input.appendChild(emptyOption);
         
-        // Add customer companies
+        // Add customer companies – use Firmen_ID as value, displayName as label
         const customerCompanies = getCustomerCompanies();
         customerCompanies.forEach(company => {
           const optionElement = document.createElement("option");
-          optionElement.value = company.Firma;
-          optionElement.textContent = company.Firma;
+          optionElement.value = company.Firmen_ID;
+          optionElement.textContent = company.displayName;
           input.appendChild(optionElement);
         });
         
-        // If the current value is not in the list, add it as an option
-        const currentFirma = rowData[col] || "";
-        if (currentFirma && !customerCompanies.some(c => c.Firma === currentFirma)) {
+        // Determine the Firmen_ID to pre-select
+        let currentFirmenId = rowData.Firmen_ID || "";
+        
+        // Backward compat: old records may only have Firma name, no Firmen_ID
+        if (!currentFirmenId && rowData.Firma) {
+          const match = customerCompanies.find(c => c.Firma === rowData.Firma);
+          if (match) currentFirmenId = match.Firmen_ID;
+        }
+        
+        // If the resolved ID is not in the list, add it as a custom option
+        if (currentFirmenId && !customerCompanies.some(c => c.Firmen_ID === currentFirmenId)) {
+          const company = getCompanyById(currentFirmenId);
           const customOption = document.createElement("option");
-          customOption.value = currentFirma;
-          customOption.textContent = currentFirma + " (nicht in Kundenliste)";
+          customOption.value = currentFirmenId;
+          customOption.textContent = (company ? getDisplayName(company) : currentFirmenId) + " (nicht in Kundenliste)";
           input.appendChild(customOption);
+        } else if (!currentFirmenId && rowData.Firma) {
+          // No Firmen_ID and name lookup failed – show the stored name as a placeholder
+          const customOption = document.createElement("option");
+          customOption.value = rowData.Firma;
+          customOption.textContent = rowData.Firma + " (nicht in Kundenliste)";
+          input.appendChild(customOption);
+          currentFirmenId = rowData.Firma;
         }
         
         // Set the value before cloning
-        input.value = currentFirma;
+        input.value = currentFirmenId;
         
         // Remove any existing event listeners by cloning and replacing the element
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
         
         // Set the value again after cloning (cloneNode doesn't preserve value property)
-        newInput.value = currentFirma;
+        newInput.value = currentFirmenId;
         
         // Add event listener for company selection change
         newInput.addEventListener("change", onCompanySelectionChange);
         
         // Trigger initial update if a company is already selected
-        if (currentFirma) {
-          updateCompanyInfo(currentFirma);
+        if (currentFirmenId) {
+          updateCompanyInfo(currentFirmenId);
         } else {
           hideCompanyInfo();
         }
@@ -622,10 +654,10 @@ function populateForm(rowData) {
 
 // Function to update company info (address and email) when company is selected
 function onCompanySelectionChange(event) {
-  const selectedFirma = event.target.value;
+  const selectedFirmenId = event.target.value;
   
-  if (selectedFirma) {
-    updateCompanyInfo(selectedFirma);
+  if (selectedFirmenId) {
+    updateCompanyInfo(selectedFirmenId);
     
     // Re-render invoice items table to update article dropdowns
     renderInvoiceItemsTable();
@@ -634,7 +666,7 @@ function onCompanySelectionChange(event) {
     if (currentEditingRowIndex === null) {
       const rechnungsIdInput = document.getElementById("edit_Rechnungs_ID");
       if (rechnungsIdInput) {
-        rechnungsIdInput.value = generateInvoiceId(selectedFirma);
+        rechnungsIdInput.value = generateInvoiceId(selectedFirmenId);
       }
     }
   } else {
@@ -644,9 +676,9 @@ function onCompanySelectionChange(event) {
   }
 }
 
-// Function to display company address and email
-function updateCompanyInfo(firmaName) {
-  const company = getCompanyByName(firmaName);
+// Function to display company address and email – looks up by Firmen_ID
+function updateCompanyInfo(firmenId) {
+  const company = getCompanyById(firmenId);
   
   const emailGroup = document.getElementById("company_email_group");
   const emailDiv = document.getElementById("company_email");
@@ -687,6 +719,12 @@ function hideCompanyInfo() {
 
 function getFormData() {
   const formData = {};
+  
+  // Get the selected Firmen_ID from the dropdown (it is now the option value)
+  const firmaSelectEl = document.getElementById("edit_Firma");
+  const selectedFirmenId = firmaSelectEl?.value || "";
+  const selectedCompany = selectedFirmenId ? getCompanyById(selectedFirmenId) : null;
+  
   for (const col of COLUMNS) {
     // Skip Artikel and Beschreibung as they are now part of invoice items
     if (col === "Artikel" || col === "Beschreibung") {
@@ -694,35 +732,31 @@ function getFormData() {
       continue;
     }
     
-    // Handle Firmen_ID separately - get from company data based on selected Firma
-    if (col === "Firmen_ID") {
-      const firmaInput = document.getElementById("edit_Firma");
-      if (firmaInput && firmaInput.value) {
-        const company = getCompanyByName(firmaInput.value);
-        if (company && company.Firmen_ID) {
-          formData[col] = company.Firmen_ID;
-        } else {
-          formData[col] = "";
-        }
+    // Handle Firma – derive display name from company data (supports private persons)
+    if (col === "Firma") {
+      if (selectedCompany) {
+        formData[col] = getDisplayName(selectedCompany);
+      } else if (selectedFirmenId) {
+        formData[col] = selectedFirmenId; // Fallback (backward compat)
       } else {
         formData[col] = "";
       }
       continue;
     }
     
-    // Handle Firmenadresse and Firmen_Email separately - get from company data
+    // Handle Firmen_ID – the select value is already the ID
+    if (col === "Firmen_ID") {
+      formData[col] = selectedCompany ? selectedCompany.Firmen_ID : "";
+      continue;
+    }
+    
+    // Handle Firmenadresse and Firmen_Email – get from company data by ID
     if (col === "Firmenadresse" || col === "Firmen_Email") {
-      const firmaInput = document.getElementById("edit_Firma");
-      if (firmaInput && firmaInput.value) {
-        const company = getCompanyByName(firmaInput.value);
-        if (company) {
-          if (col === "Firmenadresse") {
-            formData[col] = sanitizeText(company.Adresse || "");
-          } else if (col === "Firmen_Email") {
-            formData[col] = sanitizeText(company["E-mail"] || "");
-          }
+      if (selectedCompany) {
+        if (col === "Firmenadresse") {
+          formData[col] = sanitizeText(selectedCompany.Adresse || "");
         } else {
-          formData[col] = "";
+          formData[col] = sanitizeText(selectedCompany["E-mail"] || "");
         }
       } else {
         formData[col] = "";
@@ -876,15 +910,15 @@ async function saveInvoice() {
 async function sendInvoiceToCustomerHandler() {
   // Get current invoice data from form
   const firmaInput = document.getElementById("edit_Firma");
-  const firma = firmaInput ? firmaInput.value : "";
+  const firmenId = firmaInput ? firmaInput.value : "";
   
-  if (!firma) {
+  if (!firmenId) {
     alert("Bitte wählen Sie zuerst eine Firma aus.");
     return;
   }
   
-  // Get company email
-  const company = getCompanyByName(firma);
+  // Get company email by Firmen_ID
+  const company = getCompanyById(firmenId);
   const customerEmail = company ? company["E-mail"] : "";
   
   if (!customerEmail) {

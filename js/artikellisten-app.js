@@ -138,9 +138,11 @@ async function render() {
     tdId.textContent = artikelliste.firmenId;
     tr.appendChild(tdId);
     
-    // Firma Name
+    // Firma Name – fall back to Titel/Vorname/Nachname for private persons
     const tdName = document.createElement("td");
-    tdName.textContent = artikelliste.firmenName || firma.Firma || '-';
+    const firmaDisplayName = firma.Firma ||
+      [firma.Titel, firma.Vorname, firma.Nachname].filter(Boolean).join(' ');
+    tdName.textContent = firmaDisplayName || '-';
     tr.appendChild(tdName);
     
     // Anzahl Items

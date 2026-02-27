@@ -28,6 +28,23 @@ const searchInput = document.getElementById("search");
 const HIDDEN_COLUMNS = ['Firmenadresse', 'Beschreibung', 'Rabatt', 'Firmen_ID', 'Firmen_Email', 'Ansprechpartner', 'Artikel', 'Auftrags_ID'];
 
 /**
+ * Look up a company in the firmenliste by Firmen_ID (reads from localStorage cache).
+ * Returns the raw company row or null.
+ */
+function getCompanyByFirmenId(firmenId) {
+  if (!firmenId) return null;
+  try {
+    const raw = localStorage.getItem("firmen_tabelle_v1");
+    if (!raw) return null;
+    const companies = JSON.parse(raw);
+    if (!Array.isArray(companies)) return null;
+    return companies.find(c => c.Firmen_ID === firmenId) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
  * Calculate deadline date based on invoice date and payment terms
  * @param {string} invoiceDate - Invoice date in YYYY-MM-DD format
  * @param {number} paymentTermDays - Number of days until payment is due
@@ -176,6 +193,20 @@ export async function render() {
         } else {
           // For paid invoices, show a dash
           td.innerHTML = '<span style="color: #999;">-</span>';
+        }
+      } else if (col === "Firma") {
+        // Show display name: use stored Firma, or fall back to Titel/Vorname/Nachname via Firmen_ID
+        const firmaValue = row.Firma || "";
+        if (!firmaValue && row.Firmen_ID) {
+          const company = getCompanyByFirmenId(row.Firmen_ID);
+          if (company) {
+            const displayParts = [company.Titel, company.Vorname, company.Nachname].filter(Boolean);
+            td.textContent = displayParts.join(' ') || '-';
+          } else {
+            td.innerHTML = toCellDisplay(col, row[col]);
+          }
+        } else {
+          td.innerHTML = toCellDisplay(col, row[col]);
         }
       } else {
         // Display formatted content (read-only)

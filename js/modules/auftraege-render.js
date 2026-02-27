@@ -19,6 +19,23 @@ const searchInput = document.getElementById("search");
 // Columns that are stored but not displayed in the table
 const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Status', 'Budget', 'Rabatt'];
 
+/**
+ * Look up a company in the firmenliste by Firmen_ID (reads from localStorage cache).
+ * Returns the raw company row or null.
+ */
+function getCompanyByFirmenId(firmenId) {
+  if (!firmenId) return null;
+  try {
+    const raw = localStorage.getItem("firmen_tabelle_v1");
+    if (!raw) return null;
+    const companies = JSON.parse(raw);
+    if (!Array.isArray(companies)) return null;
+    return companies.find(c => c.Firmen_ID === firmenId) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 // Helper function to create the Summe (total) cell
 function createSummeCell(row, idx) {
   const summeTd = document.createElement("td");
@@ -109,6 +126,20 @@ export function render() {
           td.innerHTML = `<span style="font-weight: 500;">${toCellDisplay(col, row.items[0].Artikel)}</span>`;
         } else {
           td.innerHTML = `<span style="font-weight: 500;">${itemCount} Artikel</span>`;
+        }
+      } else if (col === "Firma") {
+        // Show display name: use stored Firma, or fall back to Titel/Vorname/Nachname via Firmen_ID
+        const firmaValue = row.Firma || "";
+        if (!firmaValue && row.Firmen_ID) {
+          const company = getCompanyByFirmenId(row.Firmen_ID);
+          if (company) {
+            const displayParts = [company.Titel, company.Vorname, company.Nachname].filter(Boolean);
+            td.textContent = displayParts.join(' ') || '-';
+          } else {
+            td.innerHTML = toCellDisplay(col, row[col]);
+          }
+        } else {
+          td.innerHTML = toCellDisplay(col, row[col]);
         }
       } else {
         // Display formatted content (read-only)
