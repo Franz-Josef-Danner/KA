@@ -119,6 +119,11 @@ td.readonly:hover {
   #grid th[data-col="Firmen_ID"],
   #grid td[data-col="Firmen_ID"] { display: none; }
 }
+/* Hide Titel column on viewports narrower than 1800 px */
+@media (max-width: 1799px) {
+  #grid th[data-col="Titel"],
+  #grid td[data-col="Titel"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
