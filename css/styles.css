@@ -163,6 +163,11 @@ td.readonly:hover {
   #grid th[data-col="Status"],
   #grid td[data-col="Status"] { display: none; }
 }
+/* Hide Kategorie column on viewports narrower than 1000 px */
+@media (max-width: 999px) {
+  #grid th[data-col="Kategorie"],
+  #grid td[data-col="Kategorie"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
