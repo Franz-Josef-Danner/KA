@@ -129,6 +129,11 @@ td.readonly:hover {
   #grid th[data-col="Webseite"],
   #grid td[data-col="Webseite"] { display: none; }
 }
+/* Hide Kommentare column on viewports narrower than 1600 px */
+@media (max-width: 1599px) {
+  #grid th[data-col="Kommentare"],
+  #grid td[data-col="Kommentare"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
