@@ -99,7 +99,7 @@ td.readonly:hover {
 }
 /* Fixed-width columns must not grow or shrink; table-layout: fixed (inherited) locks them exactly */
 #grid th[data-col="Kategorie"],
-#grid td[data-col="Kategorie"] { width: 128px; min-width: 128px; max-width: 128px; }
+#grid td[data-col="Kategorie"] { width: 138px; min-width: 138px; max-width: 138px; }
 #grid th[data-col="Status"],
 #grid td[data-col="Status"] { width: 124px; min-width: 124px; max-width: 124px; }
 #grid th[data-col="Firmen_ID"],
