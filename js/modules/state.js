@@ -280,7 +280,7 @@ async function syncFirmenIds(rowsToSync) {
         maxId += 1;
         row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
         // Create empty article list for new customer
-        const firmenName = row.Firma || 'Unbekannt';
+        const firmenName = row.Firma || [row.Titel, row.Vorname, row.Nachname].filter(Boolean).join(" ").trim() || 'Unbekannt';
         await createEmptyArtikelliste(row.Firmen_ID, firmenName);
         // Create customer account
         const email = row['E-mail'] || '';
@@ -309,25 +309,25 @@ async function syncFirmenIds(rowsToSync) {
       } else {
         // Customer already has ID - ensure article list and account exist
         const articleListExists = await artikellisteExists(idStr);
+        const displayName = row.Firma || [row.Titel, row.Vorname, row.Nachname].filter(Boolean).join(" ").trim() || 'Unbekannt';
         if (!articleListExists) {
-          const firmenName = row.Firma || 'Unbekannt';
-          await createEmptyArtikelliste(idStr, firmenName);
+          await createEmptyArtikelliste(idStr, displayName);
         }
         // Update or create customer account
         const email = row['E-mail'] || '';
         if (email) {
-          const generatedPassword = await createOrUpdateCustomerAccount(idStr, email, row.Firma || 'Unbekannt');
+          const generatedPassword = await createOrUpdateCustomerAccount(idStr, email, displayName);
           
           // Show password notification if a new password was generated (e.g., email changed)
           if (generatedPassword) {
-            showNewCustomerPasswordNotification(row.Firma || 'Unbekannt', email, generatedPassword);
+            showNewCustomerPasswordNotification(displayName, email, generatedPassword);
             
             // Send welcome email to customer with new credentials
             const welcomeEmailSent = await sendCustomerWelcomeEmail({
               email: email,
               username: email,
               password: generatedPassword,
-              customerName: row.Firma || 'Unbekannt'
+              customerName: displayName
             });
             
             if (welcomeEmailSent) {

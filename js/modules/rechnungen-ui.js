@@ -31,6 +31,7 @@ function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
 }
 
 // Function to get companies with "Kunde" status from firmenliste
+// Also includes natural persons (customers without a company name)
 function getCustomerCompanies() {
   try {
     const firmenData = localStorage.getItem("firmen_tabelle_v1");
@@ -39,21 +40,32 @@ function getCustomerCompanies() {
     const companies = JSON.parse(firmenData);
     if (!Array.isArray(companies)) return [];
     
-    // Filter companies with Status = "Kunde" and return full company objects
+    // Filter companies with Status = "Kunde" (with or without Firma)
     const customerCompanies = companies
-      .filter(company => company.Status === "Kunde" && company.Firma)
-      .map(company => ({
-        Firmen_ID: company.Firmen_ID || "",
-        Firma: (company.Firma || "").trim(),
-        Adresse: company.Adresse || "",
-        "E-mail": company["E-mail"] || "",
-        Titel: company.Titel || "",
-        Vorname: company.Vorname || "",
-        Nachname: company.Nachname || ""
-      }))
-      .filter(company => company.Firma); // Remove empty company names
+      .filter(company => company.Status === "Kunde")
+      .map(company => {
+        const hasFirma = company.Firma && company.Firma.trim();
+        // For natural persons without a company name, generate display name from personal fields
+        const displayFirma = hasFirma
+          ? company.Firma.trim()
+          : [company.Titel, company.Vorname, company.Nachname].filter(Boolean).join(" ").trim();
+        
+        if (!displayFirma) return null; // Skip if no name at all
+        
+        return {
+          Firmen_ID: company.Firmen_ID || "",
+          Firma: displayFirma,
+          IstNatürlichePerson: !hasFirma,
+          Adresse: company.Adresse || "",
+          "E-mail": company["E-mail"] || "",
+          Titel: company.Titel || "",
+          Vorname: company.Vorname || "",
+          Nachname: company.Nachname || ""
+        };
+      })
+      .filter(company => company !== null);
     
-    // Sort by company name alphabetically
+    // Sort by display name alphabetically
     return customerCompanies.sort((a, b) => a.Firma.localeCompare(b.Firma));
   } catch (error) {
     console.error('Error loading customer companies:', error);
@@ -238,6 +250,10 @@ function renderInvoiceItemsTable() {
   const firmaInput = document.getElementById("edit_Firma");
   const selectedFirma = firmaInput ? firmaInput.value : "";
   
+  // Pre-compute available articles and a Set for O(1) conflict lookup
+  const availableArticlesList = selectedFirma ? getArticlesForCompany(selectedFirma) : [];
+  const availableArticlesSet = new Set(availableArticlesList);
+  
   currentInvoiceItems.forEach((item, idx) => {
     const tr = document.createElement("tr");
     tr.style.borderBottom = "1px solid #ddd";
@@ -285,9 +301,9 @@ function renderInvoiceItemsTable() {
     emptyOption.textContent = "-- Artikel auswählen --";
     artikelSelect.appendChild(emptyOption);
     
+    let artikelIsConflicting = false;
     if (selectedFirma) {
-      const articles = getArticlesForCompany(selectedFirma);
-      articles.forEach(article => {
+      availableArticlesList.forEach(article => {
         const option = document.createElement("option");
         option.value = article;
         option.textContent = article;
@@ -296,6 +312,16 @@ function renderInvoiceItemsTable() {
         }
         artikelSelect.appendChild(option);
       });
+      // Detect conflict: item has an Artikel value that is not in the available articles list
+      if (item.Artikel && item.Artikel.trim() && !availableArticlesSet.has(item.Artikel.trim())) {
+        artikelIsConflicting = true;
+        const conflictOption = document.createElement("option");
+        conflictOption.value = item.Artikel;
+        conflictOption.textContent = item.Artikel + " ⚠ (nicht verfügbar)";
+        conflictOption.selected = true;
+        conflictOption.style.color = "#dc2626";
+        artikelSelect.appendChild(conflictOption);
+      }
     }
     
     // Set current value
@@ -340,6 +366,12 @@ function renderInvoiceItemsTable() {
     
     artikelTd.appendChild(artikelSelect);
     tr.appendChild(artikelTd);
+    
+    // Mark the entire row in red if the article is not available for the selected company
+    if (artikelIsConflicting) {
+      tr.style.backgroundColor = "#fee2e2";
+      tr.title = "Dieser Artikel ist für den gewählten Empfänger nicht verfügbar. Bitte anpassen oder löschen.";
+    }
     
     // Beschreibung column - input
     const beschreibungTd = document.createElement("td");
@@ -695,8 +727,11 @@ function getFormData() {
         } else {
           formData[col] = "";
         }
+        // Store whether the recipient is a natural person (no company name)
+        formData.IstNatürlichePerson = company ? (company.IstNatürlichePerson || false) : false;
       } else {
         formData[col] = "";
+        formData.IstNatürlichePerson = false;
       }
       continue;
     }
@@ -755,6 +790,26 @@ function validateForm() {
     alert("Rechnungs-ID ist ein Pflichtfeld und muss ausgefüllt werden.");
     rechnungsId.focus();
     return false;
+  }
+  
+  // Block saving when article conflicts exist
+  const firmaInput = document.getElementById("edit_Firma");
+  const selectedFirma = firmaInput ? firmaInput.value : "";
+  if (selectedFirma) {
+    const availableArticles = getArticlesForCompany(selectedFirma);
+    if (availableArticles.length > 0) {
+      const availableSet = new Set(availableArticles);
+      const conflictingItems = currentInvoiceItems.filter(
+        item => item.Artikel && item.Artikel.trim() && !availableSet.has(item.Artikel.trim())
+      );
+      if (conflictingItems.length > 0) {
+        alert(
+          "Es gibt Artikel, die für den gewählten Empfänger nicht verfügbar sind (rot markiert).\n" +
+          "Bitte passen Sie diese Artikel an oder löschen Sie sie, bevor Sie speichern."
+        );
+        return false;
+      }
+    }
   }
   
   return true;

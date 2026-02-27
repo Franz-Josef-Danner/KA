@@ -10,7 +10,7 @@ import { updateUndoRedoButtons } from './auftraege-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
 import { notifyOrderDeleted } from './email-notifications.js';
-import { calculateItemsTotal } from '../utils/invoice-helpers.js';
+import { calculateItemsTotal, hasArticleConflicts } from '../utils/invoice-helpers.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 
 const tbody = document.getElementById("tbody");
@@ -79,6 +79,12 @@ export function render() {
     
     // Add cursor pointer style
     tr.style.cursor = "pointer";
+    
+    // Mark row in red if there are article conflicts (articles not available for this customer)
+    if (hasArticleConflicts(row)) {
+      tr.style.backgroundColor = "#fee2e2";
+      tr.title = "Dieser Auftrag enthält Artikel, die für den Empfänger nicht verfügbar sind. Bitte öffnen und anpassen.";
+    }
 
     for (const col of COLUMNS) {
       // Skip columns that are stored but not displayed in the table

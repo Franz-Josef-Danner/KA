@@ -46,7 +46,7 @@ export function render() {
   const invoices = getInvoices();
 
   tbody.innerHTML = filteredCustomers.map(customer => {
-    const firmenName = escapeHtml(customer.Firma || 'Unbekannt');
+    const firmenName = escapeHtml(customer.Firma || [customer.Titel, customer.Vorname, customer.Nachname].filter(Boolean).join(" ").trim() || 'Unbekannt');
     const firmenId = escapeHtml(customer.Firmen_ID || '');
     const email = escapeHtml(customer['E-mail'] || 'Keine E-Mail');
 

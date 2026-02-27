@@ -140,7 +140,8 @@ async function render() {
     
     // Firma Name
     const tdName = document.createElement("td");
-    tdName.textContent = artikelliste.firmenName || firma.Firma || '-';
+    const personName = [firma.Titel, firma.Vorname, firma.Nachname].filter(Boolean).join(" ").trim();
+    tdName.textContent = artikelliste.firmenName || firma.Firma || personName || '-';
     tr.appendChild(tdName);
     
     // Anzahl Items

@@ -515,7 +515,11 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   // Support both old format (Firma, Ansprechpartner) and new format (customer object)
   const customer = documentData.customer || documentData;
   
-  if (customer.company || customer.Firma) {
+  // For natural persons (IstNatürlichePerson flag), skip the company name line.
+  // The person's name is already shown via the Ansprechpartner field below.
+  const isNatürlichePerson = customer.IstNatürlichePerson === true;
+  
+  if (!isNatürlichePerson && (customer.company || customer.Firma)) {
     doc.setFont('helvetica', 'bold');
     doc.text(customer.company || customer.Firma, x + padding, offsetY);
     doc.setFont('helvetica', 'normal');

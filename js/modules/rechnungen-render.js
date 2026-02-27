@@ -9,7 +9,7 @@ import { rowMatchesSearch } from './rechnungen-search.js';
 import { updateUndoRedoButtons } from './rechnungen-ui.js';
 import { generatePDF, viewPDF, downloadPDF } from './pdf-generator.js';
 import { generatePdfFilename } from '../utils/pdf-helpers.js';
-import { enrichInvoiceWithPaymentTerms, calculateItemsTotal } from '../utils/invoice-helpers.js';
+import { enrichInvoiceWithPaymentTerms, calculateItemsTotal, hasArticleConflicts } from '../utils/invoice-helpers.js';
 import { getArtikelliste } from './artikellisten-state.js';
 import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './artikellisten-config.js';
 import { notifyInvoiceDeleted } from './email-notifications.js';
@@ -116,6 +116,12 @@ export async function render() {
     
     // Add cursor pointer style
     tr.style.cursor = "pointer";
+    
+    // Mark row in red if there are article conflicts (articles not available for this customer)
+    if (hasArticleConflicts(row)) {
+      tr.style.backgroundColor = "#fee2e2";
+      tr.title = "Diese Rechnung enthält Artikel, die für den Empfänger nicht verfügbar sind. Bitte öffnen und anpassen.";
+    }
 
     for (const col of COLUMNS) {
       // Skip columns that are stored but not displayed in the table
