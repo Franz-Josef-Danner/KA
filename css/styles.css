@@ -139,6 +139,11 @@ td.readonly:hover {
   #grid th[data-col="Persönlich"],
   #grid td[data-col="Persönlich"] { display: none; }
 }
+/* Hide Aktion column on viewports narrower than 1400 px */
+@media (max-width: 1399px) {
+  #grid th[data-col="Aktion"],
+  #grid td[data-col="Aktion"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
