@@ -24,6 +24,19 @@ const searchColumns = new Set();
 // Currently visible row indices (updated on every render)
 let visibleRowIndices = [];
 
+// Pagination state
+let currentPage = 0;
+const PAGE_SIZE_DESKTOP = 200;
+const PAGE_SIZE_MOBILE = 50;
+
+function getPageSize() {
+  return window.innerWidth <= 768 ? PAGE_SIZE_MOBILE : PAGE_SIZE_DESKTOP;
+}
+
+export function resetPage() {
+  currentPage = 0;
+}
+
 function renderSortHeaders() {
   const headerRow = document.querySelector('#grid thead tr');
   if (!headerRow) return;
@@ -252,6 +265,49 @@ async function applyBulkEdit(col, value) {
   await render();
 }
 
+/**
+ * Render pagination controls (prev/next buttons and range label).
+ * @param {number} total - Total number of filtered rows.
+ * @param {number} pageStart - Index of the first visible row (0-based).
+ * @param {number} pageEnd - Index after the last visible row (exclusive).
+ */
+function renderPagination(total, pageStart, pageEnd) {
+  const paginationEl = document.getElementById('pagination');
+  if (!paginationEl) return;
+
+  paginationEl.innerHTML = '';
+
+  const pageSize = getPageSize();
+  const totalPages = Math.ceil(total / pageSize) || 1;
+
+  if (totalPages <= 1) return;
+
+  const prevBtn = document.createElement('button');
+  prevBtn.textContent = '←';
+  prevBtn.title = 'Vorherige Seite';
+  prevBtn.disabled = currentPage === 0;
+  prevBtn.addEventListener('click', () => {
+    currentPage--;
+    render();
+  });
+
+  const rangeLabel = document.createElement('span');
+  rangeLabel.className = 'pagination-range';
+  rangeLabel.textContent = `${pageStart}–${pageEnd}`;
+
+  const nextBtn = document.createElement('button');
+  nextBtn.textContent = '→';
+  nextBtn.title = 'Nächste Seite';
+  nextBtn.disabled = currentPage >= totalPages - 1;
+  nextBtn.addEventListener('click', () => {
+    currentPage++;
+    render();
+  });
+
+  paginationEl.appendChild(prevBtn);
+  paginationEl.appendChild(rangeLabel);
+  paginationEl.appendChild(nextBtn);
+}
 
 export async function render() {
   renderSortHeaders();
@@ -316,12 +372,27 @@ export async function render() {
     orderedIndices = [...duplicateIndices, ...nonDuplicateIndices];
   }
 
-  let visibleCount = 0;
+  // First pass: collect all filtered indices (before pagination)
+  const allFilteredIndices = [];
   orderedIndices.forEach((idx) => {
     const row = rows[idx];
     if (!rowMatchesSearch(row, q, [...searchColumns])) return;
-    visibleCount++;
-    visibleRowIndices.push(idx);
+    allFilteredIndices.push(idx);
+  });
+
+  // Apply pagination
+  const pageSize = getPageSize();
+  const totalFiltered = allFilteredIndices.length;
+  const totalPages = Math.ceil(totalFiltered / pageSize) || 1;
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  if (currentPage < 0) currentPage = 0;
+  const pageStart = currentPage * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, totalFiltered);
+  visibleRowIndices = allFilteredIndices.slice(pageStart, pageEnd);
+
+  // Second pass: render rows for current page
+  visibleRowIndices.forEach((idx) => {
+    const row = rows[idx];
 
     const tr = document.createElement("tr");
 
@@ -561,8 +632,11 @@ export async function render() {
 
   // Update entry counter
   if (entryCountEl) {
-    entryCountEl.textContent = `${visibleCount} ${visibleCount === 1 ? 'Eintrag' : 'Einträge'}`;
+    entryCountEl.textContent = `${totalFiltered} ${totalFiltered === 1 ? 'Eintrag' : 'Einträge'}`;
   }
+
+  // Render pagination controls
+  renderPagination(totalFiltered, pageStart, pageEnd);
   
   // Update undo/redo button states after render
   updateUndoRedoButtons();

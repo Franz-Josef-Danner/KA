@@ -4,7 +4,7 @@
 import { getRows, setRows, save, undo, redo, canUndo, canRedo, hasDirtyChanges } from './state.js';
 import { toCSV, parseCSV } from '../utils/csv.js';
 import { downloadText } from '../utils/helpers.js';
-import { render } from './render.js';
+import { render, resetPage } from './render.js';
 import { updateUndoRedoButtons } from './ui.js';
 
 /**
@@ -102,7 +102,10 @@ export function initEventHandlers() {
   });
 
   // Search input
-  document.getElementById("search").addEventListener("input", () => render());
+  document.getElementById("search").addEventListener("input", () => {
+    resetPage();
+    render();
+  });
   
   // Undo button
   document.getElementById("undoBtn").addEventListener("click", async () => {
