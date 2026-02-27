@@ -134,6 +134,11 @@ td.readonly:hover {
   #grid th[data-col="Kommentare"],
   #grid td[data-col="Kommentare"] { display: none; }
 }
+/* Hide Persönlich column on viewports narrower than 1500 px */
+@media (max-width: 1499px) {
+  #grid th[data-col="Persönlich"],
+  #grid td[data-col="Persönlich"] { display: none; }
+}
 .duplicate { 
   background-color: #ffcccc !important;
   color: #cc0000;
