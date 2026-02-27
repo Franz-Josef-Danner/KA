@@ -55,7 +55,7 @@ function createBanner() {
   const banner = document.createElement('div');
   banner.id = ERROR_BANNER_ID;
   banner.style.cssText = `
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     right: 0;

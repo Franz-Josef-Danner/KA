@@ -218,13 +218,28 @@ async function loadFromServerOrLocalStorage() {
     // Server responded (even if with empty data), use it
     console.log('Loaded company list from server');
     usingApiStorage = true;
-    // Update localStorage cache
+    const syncedRows = await normalizeAndSyncRows(serverData);
+    // Persist synced rows (which may have newly assigned Firmen_IDs) back to
+    // localStorage so that they survive the next page load without re-triggering
+    // customer-account creation for every "Kunde" with an empty Firmen_ID.
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(serverData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(syncedRows));
     } catch (e) {
-      console.warn('Failed to update localStorage cache:', e);
+      console.warn('Failed to update localStorage cache after sync:', e);
     }
-    return await normalizeAndSyncRows(serverData);
+    // If any Firmen_IDs were newly assigned, persist them to the server too so
+    // that subsequent server loads already carry the correct IDs.
+    // Use a Set of the original IDs for a robust, order-independent comparison.
+    const originalFirmenIds = new Set(
+      serverData.map(r => r?.Firmen_ID || '').filter(Boolean)
+    );
+    const newIdRows = syncedRows.filter(row => row.Firmen_ID && !originalFirmenIds.has(row.Firmen_ID));
+    if (newIdRows.length > 0) {
+      saveToServer(syncedRows).catch(e =>
+        console.warn(`Failed to persist ${newIdRows.length} new Firmen_ID(s) to server:`, e)
+      );
+    }
+    return syncedRows;
   }
   
   // Server failed to respond, check if we have data in localStorage
@@ -272,80 +287,84 @@ async function syncFirmenIds(rowsToSync) {
   // Second pass: assign or remove IDs and manage article lists + customer accounts
   const updatedRows = [];
   for (const row of rowsToSync) {
-    if (row.Status === 'Kunde') {
-      // If status is "Kunde" and no ID exists, generate one
-      const idStr = typeof row.Firmen_ID === 'string' ? row.Firmen_ID : '';
-      const isNewCustomer = !idStr || idStr.trim() === '';
-      if (isNewCustomer) {
-        maxId += 1;
-        row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
-        // Create empty article list for new customer
-        const firmenName = row.Firma || 'Unbekannt';
-        await createEmptyArtikelliste(row.Firmen_ID, firmenName);
-        // Create customer account
-        const email = row['E-mail'] || '';
-        if (email) {
-          const generatedPassword = await createOrUpdateCustomerAccount(row.Firmen_ID, email, firmenName);
-          
-          // Show password notification if a new password was generated
-          if (generatedPassword) {
-            showNewCustomerPasswordNotification(firmenName, email, generatedPassword);
+    try {
+      if (row.Status === 'Kunde') {
+        // If status is "Kunde" and no ID exists, generate one
+        const idStr = typeof row.Firmen_ID === 'string' ? row.Firmen_ID : '';
+        const isNewCustomer = !idStr || idStr.trim() === '';
+        if (isNewCustomer) {
+          maxId += 1;
+          row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
+          // Create empty article list for new customer
+          const firmenName = row.Firma || 'Unbekannt';
+          await createEmptyArtikelliste(row.Firmen_ID, firmenName);
+          // Create customer account
+          const email = row['E-mail'] || '';
+          if (email) {
+            const generatedPassword = await createOrUpdateCustomerAccount(row.Firmen_ID, email, firmenName);
             
-            // Send welcome email to customer with credentials
-            const welcomeEmailSent = await sendCustomerWelcomeEmail({
-              email: email,
-              username: email,
-              password: generatedPassword,
-              customerName: firmenName
-            });
+            // Show password notification if a new password was generated
+            if (generatedPassword) {
+              showNewCustomerPasswordNotification(firmenName, email, generatedPassword);
+              
+              // Send welcome email to customer with credentials
+              const welcomeEmailSent = await sendCustomerWelcomeEmail({
+                email: email,
+                username: email,
+                password: generatedPassword,
+                customerName: firmenName
+              });
+              
+              if (welcomeEmailSent) {
+                console.log(`Welcome email sent to ${email}`);
+              } else {
+                console.warn(`Failed to send welcome email to ${email}`);
+              }
+            }
+          }
+        } else {
+          // Customer already has ID - ensure article list and account exist
+          const articleListExists = await artikellisteExists(idStr);
+          if (!articleListExists) {
+            const firmenName = row.Firma || 'Unbekannt';
+            await createEmptyArtikelliste(idStr, firmenName);
+          }
+          // Update or create customer account
+          const email = row['E-mail'] || '';
+          if (email) {
+            const generatedPassword = await createOrUpdateCustomerAccount(idStr, email, row.Firma || 'Unbekannt');
             
-            if (welcomeEmailSent) {
-              console.log(`Welcome email sent to ${email}`);
-            } else {
-              console.warn(`Failed to send welcome email to ${email}`);
+            // Show password notification if a new password was generated (e.g., email changed)
+            if (generatedPassword) {
+              showNewCustomerPasswordNotification(row.Firma || 'Unbekannt', email, generatedPassword);
+              
+              // Send welcome email to customer with new credentials
+              const welcomeEmailSent = await sendCustomerWelcomeEmail({
+                email: email,
+                username: email,
+                password: generatedPassword,
+                customerName: row.Firma || 'Unbekannt'
+              });
+              
+              if (welcomeEmailSent) {
+                console.log(`Welcome email sent to ${email}`);
+              } else {
+                console.warn(`Failed to send welcome email to ${email}`);
+              }
             }
           }
         }
       } else {
-        // Customer already has ID - ensure article list and account exist
-        const articleListExists = await artikellisteExists(idStr);
-        if (!articleListExists) {
-          const firmenName = row.Firma || 'Unbekannt';
-          await createEmptyArtikelliste(idStr, firmenName);
+        // If status is not "Kunde", remove any existing ID, article list, and customer account
+        const oldId = row.Firmen_ID;
+        if (oldId && typeof oldId === 'string' && oldId.trim() !== '') {
+          await deleteArtikelliste(oldId);
+          await deleteCustomerAccount(oldId);
         }
-        // Update or create customer account
-        const email = row['E-mail'] || '';
-        if (email) {
-          const generatedPassword = await createOrUpdateCustomerAccount(idStr, email, row.Firma || 'Unbekannt');
-          
-          // Show password notification if a new password was generated (e.g., email changed)
-          if (generatedPassword) {
-            showNewCustomerPasswordNotification(row.Firma || 'Unbekannt', email, generatedPassword);
-            
-            // Send welcome email to customer with new credentials
-            const welcomeEmailSent = await sendCustomerWelcomeEmail({
-              email: email,
-              username: email,
-              password: generatedPassword,
-              customerName: row.Firma || 'Unbekannt'
-            });
-            
-            if (welcomeEmailSent) {
-              console.log(`Welcome email sent to ${email}`);
-            } else {
-              console.warn(`Failed to send welcome email to ${email}`);
-            }
-          }
-        }
+        row.Firmen_ID = '';
       }
-    } else {
-      // If status is not "Kunde", remove any existing ID, article list, and customer account
-      const oldId = row.Firmen_ID;
-      if (oldId && typeof oldId === 'string' && oldId.trim() !== '') {
-        await deleteArtikelliste(oldId);
-        await deleteCustomerAccount(oldId);
-      }
-      row.Firmen_ID = '';
+    } catch (error) {
+      console.error('Error processing row in syncFirmenIds, continuing with other rows:', error, `Firmen_ID: ${row.Firmen_ID || '(none)'}`);
     }
     updatedRows.push(row);
   }
@@ -457,7 +476,12 @@ function normalizeRows(data) {
 // Normalize and sync rows with customer accounts
 async function normalizeAndSyncRows(data) {
   const normalized = normalizeRows(data);
-  return await syncFirmenIds(normalized);
+  try {
+    return await syncFirmenIds(normalized);
+  } catch (error) {
+    console.error('syncFirmenIds failed, returning normalized rows without sync:', error);
+    return normalized;
+  }
 }
 
 export async function load() {
@@ -465,7 +489,12 @@ export async function load() {
   if (!normalizedRows) return null;
   
   // Sync Firmen_IDs based on Status after loading
-  return await syncFirmenIds(normalizedRows);
+  try {
+    return await syncFirmenIds(normalizedRows);
+  } catch (error) {
+    console.error('syncFirmenIds failed in load(), returning normalized rows without sync:', error);
+    return normalizedRows;
+  }
 }
 
 // Undo/Redo functions
