@@ -9,6 +9,7 @@ import { createEmptyArtikelliste, deleteArtikelliste, artikellisteExists } from 
 import { createOrUpdateCustomerAccount, deleteCustomerAccount } from './auth.js';
 import { sendCustomerWelcomeEmail } from './email-notifications.js';
 import { isEmailConfigured } from './email-config.js';
+import { getCustomerDisplayName } from '../utils/helpers.js';
 
 // API endpoints
 const API_BASE_URL = './api';
@@ -280,7 +281,7 @@ async function syncFirmenIds(rowsToSync) {
         maxId += 1;
         row.Firmen_ID = `F-${maxId.toString().padStart(5, '0')}`;
         // Create empty article list for new customer
-        const firmenName = row.Firma || 'Unbekannt';
+        const firmenName = getCustomerDisplayName(row);
         await createEmptyArtikelliste(row.Firmen_ID, firmenName);
         // Create customer account
         const email = row['E-mail'] || '';
@@ -310,24 +311,25 @@ async function syncFirmenIds(rowsToSync) {
         // Customer already has ID - ensure article list and account exist
         const articleListExists = await artikellisteExists(idStr);
         if (!articleListExists) {
-          const firmenName = row.Firma || 'Unbekannt';
+          const firmenName = getCustomerDisplayName(row);
           await createEmptyArtikelliste(idStr, firmenName);
         }
         // Update or create customer account
         const email = row['E-mail'] || '';
         if (email) {
-          const generatedPassword = await createOrUpdateCustomerAccount(idStr, email, row.Firma || 'Unbekannt');
+          const firmenName = getCustomerDisplayName(row);
+          const generatedPassword = await createOrUpdateCustomerAccount(idStr, email, firmenName);
           
           // Show password notification if a new password was generated (e.g., email changed)
           if (generatedPassword) {
-            showNewCustomerPasswordNotification(row.Firma || 'Unbekannt', email, generatedPassword);
+            showNewCustomerPasswordNotification(firmenName, email, generatedPassword);
             
             // Send welcome email to customer with new credentials
             const welcomeEmailSent = await sendCustomerWelcomeEmail({
               email: email,
               username: email,
               password: generatedPassword,
-              customerName: row.Firma || 'Unbekannt'
+              customerName: firmenName
             });
             
             if (welcomeEmailSent) {

@@ -515,7 +515,23 @@ function renderCustomerInfo(doc, x, y, width, documentData) {
   // Support both old format (Firma, Ansprechpartner) and new format (customer object)
   const customer = documentData.customer || documentData;
   
-  if (customer.company || customer.Firma) {
+  // Detect natural person: look up customer by Firmen_ID and check if original has no Firma
+  const isNaturalPerson = (() => {
+    const firmenId = customer.Firmen_ID || documentData.Firmen_ID;
+    if (!firmenId) return false;
+    try {
+      const firmenData = localStorage.getItem("firmen_tabelle_v1");
+      if (!firmenData) return false;
+      const companies = JSON.parse(firmenData);
+      const orig = companies.find(c => c.Firmen_ID === firmenId);
+      return orig ? !(orig.Firma && orig.Firma.trim()) : false;
+    } catch {
+      return false;
+    }
+  })();
+
+  // Only show company name line if this is a company (not a natural person)
+  if (!isNaturalPerson && (customer.company || customer.Firma)) {
     doc.setFont('helvetica', 'bold');
     doc.text(customer.company || customer.Firma, x + padding, offsetY);
     doc.setFont('helvetica', 'normal');

@@ -1,6 +1,17 @@
 // -----------------------------
 // General Helper Functions
 // -----------------------------
+/**
+ * Returns the display name for a customer.
+ * Uses Firma if available; otherwise falls back to Titel + Vorname + Nachname.
+ */
+export function getCustomerDisplayName(customer) {
+  if (!customer) return 'Unbekannt';
+  if (customer.Firma && customer.Firma.trim()) return customer.Firma.trim();
+  const parts = [customer.Titel, customer.Vorname, customer.Nachname].filter(Boolean);
+  return parts.length > 0 ? parts.join(' ') : 'Unbekannt';
+}
+
 export function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {

@@ -40,20 +40,26 @@ function getCustomerCompanies() {
     if (!Array.isArray(companies)) return [];
     
     // Filter companies with Status = "Kunde" and return full company objects
+    // Include natural persons (no Firma) using their Titel/Vorname/Nachname as display name
     const customerCompanies = companies
-      .filter(company => company.Status === "Kunde" && company.Firma)
-      .map(company => ({
-        Firmen_ID: company.Firmen_ID || "",
-        Firma: (company.Firma || "").trim(),
-        Adresse: company.Adresse || "",
-        "E-mail": company["E-mail"] || "",
-        Titel: company.Titel || "",
-        Vorname: company.Vorname || "",
-        Nachname: company.Nachname || ""
-      }))
-      .filter(company => company.Firma); // Remove empty company names
+      .filter(company => company.Status === "Kunde")
+      .map(company => {
+        const displayName = (company.Firma && company.Firma.trim())
+          ? company.Firma.trim()
+          : [company.Titel, company.Vorname, company.Nachname].filter(Boolean).join(' ').trim();
+        return {
+          Firmen_ID: company.Firmen_ID || "",
+          Firma: displayName,
+          Adresse: company.Adresse || "",
+          "E-mail": company["E-mail"] || "",
+          Titel: company.Titel || "",
+          Vorname: company.Vorname || "",
+          Nachname: company.Nachname || ""
+        };
+      })
+      .filter(company => company.Firma); // Remove entries with no display name
     
-    // Sort by company name alphabetically
+    // Sort by display name alphabetically
     return customerCompanies.sort((a, b) => a.Firma.localeCompare(b.Firma));
   } catch (error) {
     console.error('Error loading customer companies:', error);
@@ -937,7 +943,8 @@ async function convertToInvoice() {
       if (firmenData) {
         try {
           const companies = JSON.parse(firmenData);
-          const company = companies.find(c => c.Firma === formData.Firma);
+          const company = companies.find(c =>
+            (formData.Firmen_ID && c.Firmen_ID === formData.Firmen_ID) || c.Firma === formData.Firma);
           if (company && company.Firmen_ID) {
             const now = new Date();
             const dateStr = now.getFullYear().toString() + 

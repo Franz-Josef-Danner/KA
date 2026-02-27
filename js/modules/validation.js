@@ -11,11 +11,12 @@ import { STORAGE_KEY as RECHNUNGEN_STORAGE_KEY } from './rechnungen-config.js';
  * Active orders are those with status "offen" or "in Bearbeitung".
  * Orders with status "abgeschlossen" or "storniert" are not considered active.
  * 
- * @param {string} firmaName - The company name to check (orders are linked by company name)
+ * @param {string} firmaName - The company/person display name to check
+ * @param {string} [firmenId] - Optional Firmen_ID for more reliable matching
  * @returns {boolean} - True if the company has active orders
  */
-export function hasActiveOrders(firmaName) {
-  if (!firmaName) return false;
+export function hasActiveOrders(firmaName, firmenId) {
+  if (!firmaName && !firmenId) return false;
   
   try {
     // Get orders data from localStorage
@@ -26,19 +27,17 @@ export function hasActiveOrders(firmaName) {
     if (!Array.isArray(orders)) return false;
     
     // Check if any order belongs to this company and has an active status
-    // Orders are linked by Firma name (company name)
-    // Only consider orders with active statuses as active
-    // Empty string and "offen" are included for backward compatibility (orders created before status field was standardized)
     const hasOrders = orders.some(order => {
       const orderFirma = (order.Firma || "").trim();
+      const orderFirmenId = order.Firmen_ID || "";
       const orderStatus = (order.Status || "").trim();
       
-      // Consider order active if it has one of the active statuses
-      // Note: Empty status and "offen" are treated as active for backward compatibility
-      // The load() function in auftraege-state.js normalizes these to "in Arbeit"
       const isActive = ACTIVE_ORDER_STATUSES.includes(orderStatus);
+      if (!isActive) return false;
       
-      return orderFirma && orderFirma === firmaName && isActive;
+      // Match by Firmen_ID (preferred) or by display name
+      if (firmenId && orderFirmenId) return orderFirmenId === firmenId;
+      return orderFirma && orderFirma === firmaName;
     });
     
     return hasOrders;
@@ -53,15 +52,15 @@ export function hasActiveOrders(firmaName) {
  * Note: Invoice system is not yet fully implemented. This is a placeholder
  * for future functionality.
  * 
- * @param {string} firmaName - The company name to check
+ * @param {string} firmaName - The company/person display name to check
+ * @param {string} [firmenId] - Optional Firmen_ID for more reliable matching
  * @returns {boolean} - True if the company has unpaid invoices
  */
-export function hasUnpaidInvoices(firmaName) {
-  if (!firmaName) return false;
+export function hasUnpaidInvoices(firmaName, firmenId) {
+  if (!firmaName && !firmenId) return false;
   
   try {
     // Get invoices data from localStorage
-    // Note: Invoice system is not yet fully implemented, so this is a placeholder
     const rechnungenData = localStorage.getItem(RECHNUNGEN_STORAGE_KEY);
     if (!rechnungenData) return false;
     
@@ -69,11 +68,15 @@ export function hasUnpaidInvoices(firmaName) {
     if (!Array.isArray(invoices)) return false;
     
     // Check if any unpaid invoice belongs to this company
-    // Invoices would be linked by Firma name and have a payment status
     const hasUnpaid = invoices.some(invoice => {
       const invoiceFirma = (invoice.Firma || "").trim();
+      const invoiceFirmenId = invoice.Firmen_ID || "";
       const bezahlt = invoice.Bezahlt || "unbezahlt";
-      return invoiceFirma && invoiceFirma === firmaName && bezahlt !== "bezahlt";
+      if (bezahlt === "bezahlt") return false;
+      
+      // Match by Firmen_ID (preferred) or by display name
+      if (firmenId && invoiceFirmenId) return invoiceFirmenId === firmenId;
+      return invoiceFirma && invoiceFirma === firmaName;
     });
     
     return hasUnpaid;
@@ -122,11 +125,11 @@ export function validateStatusChange(oldStatus, newStatus, firmenId, firmaName) 
     return { allowed: true, message: "", requiresConfirmation: false, confirmationMessage: "" };
   }
   
-  // Check if company has active orders (using company name)
-  const hasOrders = hasActiveOrders(firmaName);
+  // Check if company has active orders (using display name and Firmen_ID)
+  const hasOrders = hasActiveOrders(firmaName, firmenId);
   
-  // Check if company has unpaid invoices (using company name)
-  const hasInvoices = hasUnpaidInvoices(firmaName);
+  // Check if company has unpaid invoices (using display name and Firmen_ID)
+  const hasInvoices = hasUnpaidInvoices(firmaName, firmenId);
   
   // Block status change if there are orders or unpaid invoices
   if (hasOrders || hasInvoices) {

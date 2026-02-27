@@ -9,6 +9,7 @@ import { findDuplicates, getRowsWithDuplicates } from './duplicates.js';
 import { rowMatchesSearch } from './search.js';
 import { updateUndoRedoButtons } from './ui.js';
 import { validateStatusChange } from './validation.js';
+import { getCustomerDisplayName } from '../utils/helpers.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -432,7 +433,7 @@ export async function render() {
           const oldStatus = currentRows[idx][col];
           const newStatus = e.target.value;
           const firmenId = currentRows[idx]["Firmen_ID"] || "";
-          const firmaName = currentRows[idx]["Firma"] || "";
+          const firmaName = getCustomerDisplayName(currentRows[idx]);
           
           // Validate status change
           const validation = validateStatusChange(oldStatus, newStatus, firmenId, firmaName);

@@ -9,6 +9,7 @@ import { getSearchTerm } from './kundenbereiche-search.js';
 import { ACTIVE_ORDER_STATUSES } from './auftraege-config.js';
 import { getCustomerAccountByFirmenId, resetCustomerPassword } from './auth.js';
 import { sendCustomerWelcomeEmail } from './email-notifications.js';
+import { getCustomerDisplayName } from '../utils/helpers.js';
 
 
 export function render() {
@@ -21,10 +22,10 @@ export function render() {
   // Filter by search term
   if (searchTerm) {
     filteredCustomers = customers.filter(customer => {
-      const firma = (customer.Firma || '').toLowerCase();
+      const displayName = getCustomerDisplayName(customer).toLowerCase();
       const firmenId = (customer.Firmen_ID || '').toLowerCase();
       const email = (customer['E-mail'] || '').toLowerCase();
-      return firma.includes(searchTerm) || firmenId.includes(searchTerm) || email.includes(searchTerm);
+      return displayName.includes(searchTerm) || firmenId.includes(searchTerm) || email.includes(searchTerm);
     });
   }
 
@@ -46,7 +47,7 @@ export function render() {
   const invoices = getInvoices();
 
   tbody.innerHTML = filteredCustomers.map(customer => {
-    const firmenName = escapeHtml(customer.Firma || 'Unbekannt');
+    const firmenName = escapeHtml(getCustomerDisplayName(customer));
     const firmenId = escapeHtml(customer.Firmen_ID || '');
     const email = escapeHtml(customer['E-mail'] || 'Keine E-Mail');
 
@@ -130,7 +131,7 @@ export function render() {
         <td style="text-align: right;">${formattedTotal}</td>
         <td class="actions">
           <button class="btn-secondary view-customer-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}">Kundenbereich ansehen</button>
-          <button class="btn-primary credentials-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}" data-email="${escapeHtml(email)}" data-firma="${escapeHtml(customer.Firma || 'Unbekannt')}">Zugangsdaten</button>
+          <button class="btn-primary credentials-btn" data-firmen-id="${escapeHtml(customer.Firmen_ID || '')}" data-email="${escapeHtml(email)}" data-firma="${escapeHtml(getCustomerDisplayName(customer))}">Zugangsdaten</button>
         </td>
       </tr>
     `;
