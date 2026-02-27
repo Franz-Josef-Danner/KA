@@ -610,31 +610,47 @@ function populateForm(rowData) {
           input.appendChild(optionElement);
         });
         
-        // If the current value is not in the list, add it as an option
+        // Determine the effective Firma to select
         const currentFirma = rowData[col] || "";
+        let effectiveFirma = currentFirma;
+        
+        // If the stored Firma is no longer in the current customer list, try to find the
+        // correct current entry by Firmen_ID (e.g. when a company was converted to a
+        // private person in the Firmenliste after the order was already saved)
         if (currentFirma && !customerCompanies.some(c => c.Firma === currentFirma)) {
+          const storedFirmenId = rowData.Firmen_ID || "";
+          if (storedFirmenId) {
+            const matchById = customerCompanies.find(c => c.Firmen_ID === storedFirmenId);
+            if (matchById) {
+              effectiveFirma = matchById.Firma;
+            }
+          }
+        }
+        
+        // If the effective value is still not in the list (no Firmen_ID match), add it as a custom option
+        if (effectiveFirma && !customerCompanies.some(c => c.Firma === effectiveFirma)) {
           const customOption = document.createElement("option");
-          customOption.value = currentFirma;
-          customOption.textContent = currentFirma + " (nicht in Kundenliste)";
+          customOption.value = effectiveFirma;
+          customOption.textContent = effectiveFirma + " (nicht in Kundenliste)";
           input.appendChild(customOption);
         }
         
         // Set the value before cloning
-        input.value = currentFirma;
+        input.value = effectiveFirma;
         
         // Remove any existing event listeners by cloning and replacing the element
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
         
         // Set the value again after cloning (cloneNode doesn't preserve value property)
-        newInput.value = currentFirma;
+        newInput.value = effectiveFirma;
         
         // Add event listener for company selection change
         newInput.addEventListener("change", onCompanySelectionChange);
         
         // Trigger initial update if a company is already selected
-        if (currentFirma) {
-          updateCompanyInfo(currentFirma);
+        if (effectiveFirma) {
+          updateCompanyInfo(effectiveFirma);
         } else {
           hideCompanyInfo();
         }
@@ -942,13 +958,15 @@ async function convertToInvoice() {
     };
     
     // Generate invoice ID
-    if (formData.Firma) {
+    if (formData.Firmen_ID || formData.Firma) {
       // Use similar logic as in rechnungen-ui.js
+      // Look up by Firmen_ID first (works for private persons too), then fall back to Firma name
       const firmenData = localStorage.getItem("firmen_tabelle_v1");
       if (firmenData) {
         try {
           const companies = JSON.parse(firmenData);
-          const company = companies.find(c => c.Firma === formData.Firma);
+          const company = (formData.Firmen_ID && companies.find(c => c.Firmen_ID === formData.Firmen_ID))
+            || companies.find(c => c.Firma === formData.Firma);
           if (company && company.Firmen_ID) {
             const now = new Date();
             const dateStr = now.getFullYear().toString() + 
