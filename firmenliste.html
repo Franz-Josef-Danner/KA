@@ -61,12 +61,14 @@
     
     (() => {
       try {
-        // Require authentication and admin role
+        // Require authentication
         requireAuth();
-        requireAdmin();
 
-        // Initialize navigation only after successful authentication
+        // Initialize navigation for authenticated users
         initNavigation('firmenliste.html');
+
+        // Require admin role (redirects non-admins)
+        requireAdmin();
       } catch (error) {
         // Authentication failed or a redirect is in progress; avoid further DOM manipulation
         console.error('Authentication error on firmenliste page:', error);

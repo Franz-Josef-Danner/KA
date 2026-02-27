@@ -458,6 +458,7 @@ td.readonly:hover {
    Navigation Styles
    =========================== */
 .main-nav {
+  display: block;
   background: #fff;
   border-bottom: 2px solid #e5e5e5;
   margin: -24px -24px 24px;

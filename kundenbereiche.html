@@ -42,12 +42,14 @@
     
     (() => {
       try {
-        // Require authentication and admin role
+        // Require authentication
         requireAuth();
-        requireAdmin();
 
-        // Initialize navigation
+        // Initialize navigation for authenticated users
         initNavigation('kundenbereiche.html');
+
+        // Require admin role (redirects non-admins)
+        requireAdmin();
       } catch (error) {
         console.error('Authentication error on kundenbereiche page:', error);
       }
