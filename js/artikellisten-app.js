@@ -4,6 +4,7 @@
 import { getArtikellisten } from './modules/artikellisten-state.js';
 import { DEFAULT_ZAHLUNGSZIEL_TAGE } from './modules/artikellisten-config.js';
 import { getRows, ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
+import { getCustomerDisplayName } from './utils/helpers.js';
 
 let selectedFirmenId = null;
 let clickTimer = null;
@@ -140,7 +141,7 @@ async function render() {
     
     // Firma Name
     const tdName = document.createElement("td");
-    tdName.textContent = artikelliste.firmenName || firma.Firma || '-';
+    tdName.textContent = getCustomerDisplayName(firma);
     tr.appendChild(tdName);
     
     // Anzahl Items
