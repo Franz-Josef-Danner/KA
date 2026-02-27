@@ -275,41 +275,42 @@ async function applyBulkEdit(col, value) {
  * @param {number} pageEnd - Index after the last visible row (exclusive).
  */
 function renderPagination(total, pageStart, pageEnd) {
-  const paginationEl = document.getElementById('pagination');
-  if (!paginationEl) return;
+  const paginationEls = [
+    document.getElementById('pagination-top'),
+    document.getElementById('pagination'),
+  ];
 
-  paginationEl.innerHTML = '';
+  paginationEls.forEach(el => { if (el) el.innerHTML = ''; });
 
   const pageSize = getPageSize();
   const totalPages = Math.ceil(total / pageSize) || 1;
 
   if (totalPages <= 1) return;
 
-  const prevBtn = document.createElement('button');
-  prevBtn.textContent = '←';
-  prevBtn.title = 'Vorherige Seite';
-  prevBtn.disabled = currentPage === 0;
-  prevBtn.addEventListener('click', () => {
-    currentPage--;
-    render();
+  function buildControls() {
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '←';
+    prevBtn.title = 'Vorherige Seite';
+    prevBtn.disabled = currentPage === 0;
+    prevBtn.addEventListener('click', () => { currentPage--; render(); });
+
+    const rangeLabel = document.createElement('span');
+    rangeLabel.className = 'pagination-range';
+    rangeLabel.textContent = `${pageStart}–${pageEnd}`;
+
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = '→';
+    nextBtn.title = 'Nächste Seite';
+    nextBtn.disabled = currentPage >= totalPages - 1;
+    nextBtn.addEventListener('click', () => { currentPage++; render(); });
+
+    return [prevBtn, rangeLabel, nextBtn];
+  }
+
+  paginationEls.forEach(el => {
+    if (!el) return;
+    buildControls().forEach(node => el.appendChild(node));
   });
-
-  const rangeLabel = document.createElement('span');
-  rangeLabel.className = 'pagination-range';
-  rangeLabel.textContent = `${pageStart}–${pageEnd}`;
-
-  const nextBtn = document.createElement('button');
-  nextBtn.textContent = '→';
-  nextBtn.title = 'Nächste Seite';
-  nextBtn.disabled = currentPage >= totalPages - 1;
-  nextBtn.addEventListener('click', () => {
-    currentPage++;
-    render();
-  });
-
-  paginationEl.appendChild(prevBtn);
-  paginationEl.appendChild(rangeLabel);
-  paginationEl.appendChild(nextBtn);
 }
 
 export async function render() {
