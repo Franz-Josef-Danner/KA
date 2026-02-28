@@ -90,16 +90,9 @@ export function render() {
       td.dataset.row = String(idx);
       td.dataset.col = col;
 
-      // Special handling for Auftrags_ID column to include status badge
+      // Display Auftrags_ID
       if (col === "Auftrags_ID") {
-        const statusBadgeClass = isCompleted ? "status-badge-completed" : "status-badge-in-progress";
-        const statusText = isCompleted ? "Abgeschlossen" : "In Arbeit";
-        td.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>
-            <span class="status-badge ${statusBadgeClass}">${statusText}</span>
-          </div>
-        `;
+        td.innerHTML = `<span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>`;
       } else if (col === "Status") {
         // Display order status with color coding
         const statusColor = isCompleted ? '#10b981' : '#f59e0b';
