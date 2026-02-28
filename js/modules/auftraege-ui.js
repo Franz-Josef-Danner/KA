@@ -6,7 +6,7 @@ import { COLUMNS, ORDER_ITEM_COLUMNS, COMPLETED_STATUS } from './auftraege-confi
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { getRows as getRechnungenRows, setRows as setRechnungenRows, save as saveRechnungen, ensureInitialized as ensureRechnungenInitialized } from './rechnungen-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewOrder, notifyNewInvoice, showEmailNotificationWarning, showEmailNotificationQueued, sendOrderToCustomer } from './email-notifications.js';
+import { notifyNewOrder, notifyNewInvoice, notifyOrderUpdated, showEmailNotificationWarning, showEmailNotificationQueued, sendOrderToCustomer } from './email-notifications.js';
 import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 import { getCustomerDisplayName } from '../utils/helpers.js';
@@ -881,6 +881,21 @@ async function saveOrder() {
       } else {
         showEmailNotificationQueued('Der Auftrag');
       }
+    } else {
+      // Existing order was edited - automatically send email with current version
+      const orderItems = formData.items || [];
+      const total = calculateItemsTotal(orderItems);
+      
+      await notifyOrderUpdated({
+        orderId: formData.Auftrags_ID || 'N/A',
+        customerName: formData.Firma || 'Unbekannt',
+        contactPerson: formData.Ansprechpartner || '',
+        customerEmail: formData.Firmen_Email || '',
+        total: total,
+        items: orderItems,
+        project: formData.Projekt || '',
+        status: formData.Status || ''
+      }, formData);
     }
     
     // Trigger render event - avoid circular dependency by using custom event

@@ -234,6 +234,66 @@ Betrag: ${(data.amount || 0).toFixed(2)} €
 Zahlungsdatum: ${data.paymentDate}
 Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
 `,
+    orderUpdated: isPersoenlich ? `${greeting},
+
+ich habe den folgenden Auftrag aktualisiert.
+
+Auftragsnummer: ${data.orderId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+
+Die aktuelle Version ist als PDF beigefügt.
+
+Bei Unklarheiten bitte einfach melden.
+
+LG
+Franz` : `${greeting},
+
+Ihr Auftrag wurde aktualisiert. Die aktuelle Version finden Sie im beigefügten PDF.
+
+Auftragsnummer: ${data.orderId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}
+
+Bei Rückfragen antworten Sie bitte direkt auf diese E-Mail.
+
+Mit freundlichen Grüßen
+Franz Josef Danner`,
+    invoiceUpdated: isPersoenlich ? `${greeting},
+
+ich habe die folgende Rechnung aktualisiert.
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}${data.dueDate ? `
+Fälligkeitsdatum: ${data.dueDate}` : ''}
+
+Die aktuelle Version ist als PDF beigefügt.
+
+Bei Unklarheiten bitte einfach melden.
+
+LG
+Franz` : `${greeting},
+
+Ihre Rechnung wurde aktualisiert. Die aktuelle Version finden Sie im beigefügten PDF.
+
+Rechnungsnummer: ${data.invoiceId}
+Kunde: ${data.customerName}
+Gesamtsumme: ${(data.total || 0).toFixed(2)} €
+Anzahl Artikel: ${data.items?.length ?? 0}
+Zeitstempel: ${new Date(data.timestamp).toLocaleString('de-DE')}${data.dueDate ? `
+Fälligkeitsdatum: ${data.dueDate}` : ''}
+
+Bei Fragen stehen wir gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+Franz Josef Danner`,
     orderDeleted: `
 Auftrag gelöscht
 
@@ -288,7 +348,9 @@ export function getNotificationSubject(type, data) {
   const subjects = {
     newCustomer: `Neuer Kunde: ${data.customerName}`,
     newOrder: `Neuer Auftrag: ${data.orderId}`,
+    orderUpdated: `Aktualisierter Auftrag: ${data.orderId}`,
     newInvoice: `Neue Rechnung: ${data.invoiceId}`,
+    invoiceUpdated: `Aktualisierte Rechnung: ${data.invoiceId}`,
     paymentReceived: `Zahlung eingegangen: ${data.invoiceId}`,
     orderDeleted: `Auftrag gelöscht: ${data.orderId}`,
     invoiceDeleted: `Rechnung gelöscht: ${data.invoiceId}`,
@@ -610,6 +672,71 @@ export async function notifyNewInvoice(invoiceData, fullDocument = null) {
   }
   
   return result;
+}
+
+// Send notification when an existing order is updated
+export async function notifyOrderUpdated(orderData, fullDocument = null) {
+  if (!isEmailConfigured()) {
+    return false;
+  }
+
+  const customerEmail = orderData.customerEmail || '';
+  if (!customerEmail) {
+    return false;
+  }
+
+  const documentForPdf = fullDocument || {
+    Auftrags_ID: orderData.orderId,
+    Firma: orderData.customerName,
+    Ansprechpartner: orderData.contactPerson,
+    items: orderData.items,
+    Projekt: orderData.project,
+    Status: orderData.status
+  };
+  const pdfAttachment = await generatePDFAttachment('order', documentForPdf);
+
+  // Send automatically without asking for confirmation
+  return await queueAndSendImmediately('orderUpdated', {
+    orderId: orderData.orderId || '',
+    customerName: orderData.customerName || '',
+    customerEmail: customerEmail,
+    total: orderData.total || 0,
+    items: orderData.items || [],
+    timestamp: new Date().toISOString()
+  }, pdfAttachment);
+}
+
+// Send notification when an existing invoice is updated
+export async function notifyInvoiceUpdated(invoiceData, fullDocument = null) {
+  if (!isEmailConfigured()) {
+    return false;
+  }
+
+  const customerEmail = invoiceData.customerEmail || '';
+  if (!customerEmail) {
+    return false;
+  }
+
+  const documentForPdf = fullDocument || {
+    Rechnungs_ID: invoiceData.invoiceId,
+    Firma: invoiceData.customerName,
+    Ansprechpartner: invoiceData.contactPerson,
+    items: invoiceData.items,
+    Projekt: invoiceData.project,
+    Auftrags_ID: invoiceData.orderId
+  };
+  const pdfAttachment = await generatePDFAttachment('invoice', documentForPdf);
+
+  // Send automatically without asking for confirmation
+  return await queueAndSendImmediately('invoiceUpdated', {
+    invoiceId: invoiceData.invoiceId || '',
+    customerName: invoiceData.customerName || '',
+    customerEmail: customerEmail,
+    total: invoiceData.total || 0,
+    items: invoiceData.items || [],
+    dueDate: invoiceData.dueDate || '',
+    timestamp: new Date().toISOString()
+  }, pdfAttachment);
 }
 
 // Send notification when a payment is received
