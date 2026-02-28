@@ -235,6 +235,13 @@ td.readonly:hover {
   #grid th[data-col="Kategorie"],
   #grid td[data-col="Kategorie"] { display: none; }
 }
+/* Hide Gesamtsumme/Summe columns on viewports narrower than 600 px */
+@media (max-width: 599px) {
+  #grid th[data-col="Gesamtsumme"],
+  #grid td[data-col="Gesamtsumme"],
+  #grid th[data-col="Summe"],
+  #grid td[data-col="Summe"] { display: none; }
+}
 /* Hide Tell column on viewports narrower than 550 px */
 @media (max-width: 549px) {
   #grid th[data-col="Tell"],
