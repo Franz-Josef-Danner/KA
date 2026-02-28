@@ -27,6 +27,18 @@ const ROW_BOTTOM_PADDING = 2; // Bottom padding for rows with wrapped text in mm
 
 // VAT has been removed as the user is VAT exempt
 
+// Format a date string to DD.MM.YYYY (German format)
+// Accepts YYYY-MM-DD strings; values already in DD.MM.YYYY are returned unchanged
+function formatDateForDisplay(dateStr) {
+  if (!dateStr) return dateStr;
+  // Already in DD.MM.YYYY format
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateStr)) return dateStr;
+  // Convert YYYY-MM-DD to DD.MM.YYYY
+  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) return `${match[3]}.${match[2]}.${match[1]}`;
+  return dateStr;
+}
+
 // Generate PDF for an order or invoice
 // Parameters:
 // - documentType: 'order'/'auftrag' or 'invoice'/'rechnung'
@@ -591,7 +603,7 @@ function renderDocumentNumber(doc, x, y, width, documentType, documentData) {
   if (docDate) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text(`Datum: ${docDate}`, x, offsetY);
+    doc.text(`Datum: ${formatDateForDisplay(docDate)}`, x, offsetY);
     offsetY += 4;
     lineCount++;
   }
@@ -647,7 +659,7 @@ function renderDocumentHeader(doc, x, y, width, documentType, documentData) {
     doc.setFont('helvetica', 'bold');
     doc.text(`Datum:`, x, offsetY);
     doc.setFont('helvetica', 'normal');
-    doc.text(docDate, x + 20, offsetY);
+    doc.text(formatDateForDisplay(docDate), x + 20, offsetY);
     offsetY += 5;
   }
   
@@ -777,7 +789,7 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
   if (documentData.items && Array.isArray(documentData.items)) {
     // New format with items array
     items = documentData.items.map(item => ({
-      datum: item.datum || item.Datum || '',
+      datum: formatDateForDisplay(item.datum || item.Datum || ''),
       artikel: item.artikel || item.Artikel || '',
       beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
       menge: item.quantity || item.menge || item.Menge || '1',
@@ -805,8 +817,7 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
 
   // Calculate dynamic column widths based on content
   const colWidths = calculateColumnWidths(doc, items, width);
-  
-  // Table dimensions
+
   const headerHeight = 9; // Height of table header in mm
   const baseRowHeight = 8; // Base height of each table row in mm
   const newPageStartY = 20; // Starting Y position for content on new pages
@@ -951,7 +962,7 @@ function renderItemsTable(doc, x, y, width, height, documentData) {
     // - German Capitalized (UI forms): Artikel, Beschreibung, Menge, Einheit, Einzelpreis, Gesamtpreis
     // Priority: API name (if exists) → lowercase → Capitalized
     items = documentData.items.map(item => ({
-      datum: item.datum || item.Datum || '',
+      datum: formatDateForDisplay(item.datum || item.Datum || ''),
       artikel: item.artikel || item.Artikel || '',
       beschreibung: item.description || item.beschreibung || item.Beschreibung || '',
       menge: item.quantity || item.menge || item.Menge || '1',
