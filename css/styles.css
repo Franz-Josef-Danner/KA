@@ -216,10 +216,12 @@ td.readonly:hover {
   #grid th[data-col="Deadline"],
   #grid td[data-col="Deadline"] { display: none; }
 }
-/* Hide Status column on viewports narrower than 800 px */
-@media (max-width: 799px) {
+/* Hide Status and Bezahlt columns on viewports narrower than 700 px */
+@media (max-width: 699px) {
   #grid th[data-col="Status"],
-  #grid td[data-col="Status"] { display: none; }
+  #grid td[data-col="Status"],
+  #grid th[data-col="Bezahlt"],
+  #grid td[data-col="Bezahlt"] { display: none; }
 }
 /* Hide Kategorie column on viewports narrower than 650 px */
 @media (max-width: 649px) {
