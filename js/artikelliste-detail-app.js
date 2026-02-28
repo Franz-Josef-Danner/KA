@@ -4,6 +4,8 @@
 import { getArtikelliste, updateArtikelliste, deleteArtikelliste } from './modules/artikellisten-state.js';
 import { ARTIKELLISTEN_ITEM_COLUMNS, DEFAULT_ZAHLUNGSZIEL_TAGE } from './modules/artikellisten-config.js';
 import { sanitizeText } from './utils/sanitize.js';
+import { getRows, ensureInitialized as ensureFirmenlisteInitialized } from './modules/state.js';
+import { getCustomerDisplayName } from './utils/helpers.js';
 
 let currentFirmenId = null;
 let currentArtikelliste = null;
@@ -213,8 +215,14 @@ async function init() {
     return;
   }
   
+  // Resolve display name from company data (handles private customers without Firma)
+  await ensureFirmenlisteInitialized();
+  const firmenRows = getRows();
+  const firma = firmenRows.find(r => r.Firmen_ID === currentFirmenId);
+  const displayName = firma ? getCustomerDisplayName(firma) : currentArtikelliste.firmenName;
+  
   // Update title and subtitle
-  document.getElementById("detail-title").textContent = `Artikelliste: ${currentArtikelliste.firmenName}`;
+  document.getElementById("detail-title").textContent = `Artikelliste: ${displayName}`;
   document.getElementById("detail-subtitle").textContent = `Firmen-ID: ${currentFirmenId}`;
   
   // Initialize payment terms input

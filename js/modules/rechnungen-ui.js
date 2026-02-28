@@ -9,6 +9,7 @@ import { notifyNewInvoice, notifyPaymentReceived, showEmailNotificationWarning, 
 import { clearInvoiceFromNotified } from './overdue-invoice-checker.js';
 import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
+import { getCustomerDisplayName } from '../utils/helpers.js';
 
 // Helper function to add a custom option to a select element if it doesn't exist
 function addCustomOptionIfNeeded(selectElement, value, availableValues = null) {
@@ -41,17 +42,16 @@ function getCustomerCompanies() {
     
     // Filter companies with Status = "Kunde" and return full company objects
     const customerCompanies = companies
-      .filter(company => company.Status === "Kunde" && company.Firma)
+      .filter(company => company.Status === "Kunde")
       .map(company => ({
         Firmen_ID: company.Firmen_ID || "",
-        Firma: (company.Firma || "").trim(),
+        Firma: getCustomerDisplayName(company),
         Adresse: company.Adresse || "",
         "E-mail": company["E-mail"] || "",
         Titel: company.Titel || "",
         Vorname: company.Vorname || "",
         Nachname: company.Nachname || ""
-      }))
-      .filter(company => company.Firma); // Remove empty company names
+      }));
     
     // Sort by company name alphabetically
     return customerCompanies.sort((a, b) => a.Firma.localeCompare(b.Firma));
