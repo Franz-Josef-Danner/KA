@@ -186,11 +186,7 @@ td.readonly:hover {
   #grid th[data-col="Kommentare"],
   #grid td[data-col="Kommentare"] { display: none; }
 }
-/* Hide Aktion column on viewports narrower than 1400 px */
-@media (max-width: 1399px) {
-  #grid th.actions,
-  #grid td.actions { display: none; }
-}
+
 /* Hide Vorname column on viewports narrower than 1300 px */
 @media (max-width: 1299px) {
   #grid th[data-col="Vorname"],
