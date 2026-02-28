@@ -209,6 +209,13 @@ td.readonly:hover {
   #grid th[data-col="Adresse"],
   #grid td[data-col="Adresse"] { display: none; }
 }
+/* Hide Artikel and Deadline columns on viewports narrower than 900 px */
+@media (max-width: 899px) {
+  #grid th[data-col="Artikel"],
+  #grid td[data-col="Artikel"],
+  #grid th[data-col="Deadline"],
+  #grid td[data-col="Deadline"] { display: none; }
+}
 /* Hide Status column on viewports narrower than 800 px */
 @media (max-width: 799px) {
   #grid th[data-col="Status"],
