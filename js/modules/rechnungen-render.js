@@ -108,6 +108,16 @@ export async function render() {
 
     const tr = document.createElement("tr");
     
+    // Add payment-status-based CSS class for visual row indication
+    const bezahlt = (row.Bezahlt || "unbezahlt").toLowerCase();
+    const isCompleted = bezahlt === "bezahlt";
+    
+    if (isCompleted) {
+      tr.classList.add("order-completed");
+    } else {
+      tr.classList.add("order-in-progress");
+    }
+    
     // Add double-click handler to open edit modal
     tr.addEventListener("dblclick", () => {
       // Dispatch custom event to avoid circular dependency
@@ -190,13 +200,13 @@ export async function render() {
     
     // PDF View button
     const viewPdfBtn = document.createElement("button");
-    viewPdfBtn.textContent = "PDF anzeigen";
-    viewPdfBtn.className = "btn-secondary";
+    viewPdfBtn.innerHTML = "🔍";
+    viewPdfBtn.className = "btn-secondary btn-pdf-icon";
     viewPdfBtn.title = "PDF anzeigen";
     viewPdfBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       viewPdfBtn.disabled = true;
-      viewPdfBtn.textContent = 'PDF wird erstellt...';
+      viewPdfBtn.innerHTML = '⏳';
       try {
         // Enrich invoice data with payment terms from article list
         const enrichedRow = await enrichInvoiceWithPaymentTerms(row);
@@ -209,20 +219,20 @@ export async function render() {
         alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
       } finally {
         viewPdfBtn.disabled = false;
-        viewPdfBtn.textContent = 'PDF anzeigen';
+        viewPdfBtn.innerHTML = '🔍';
       }
     });
     act.appendChild(viewPdfBtn);
     
     // PDF Download button
     const downloadPdfBtn = document.createElement("button");
-    downloadPdfBtn.textContent = "PDF herunterladen";
-    downloadPdfBtn.className = "btn-primary";
+    downloadPdfBtn.innerHTML = "⬇";
+    downloadPdfBtn.className = "btn-primary btn-pdf-icon";
     downloadPdfBtn.title = "PDF herunterladen";
     downloadPdfBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       downloadPdfBtn.disabled = true;
-      downloadPdfBtn.textContent = 'PDF wird erstellt...';
+      downloadPdfBtn.innerHTML = '⏳';
       try {
         // Enrich invoice data with payment terms from article list
         const enrichedRow = await enrichInvoiceWithPaymentTerms(row);
@@ -236,7 +246,7 @@ export async function render() {
         alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
       } finally {
         downloadPdfBtn.disabled = false;
-        downloadPdfBtn.textContent = 'PDF herunterladen';
+        downloadPdfBtn.innerHTML = '⬇';
       }
     });
     act.appendChild(downloadPdfBtn);

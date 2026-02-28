@@ -17,7 +17,7 @@ const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
 // Columns that are stored but not displayed in the table
-const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Status', 'Budget', 'Rabatt'];
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Ansprechpartner', 'Budget', 'Rabatt'];
 
 // Helper function to create the Summe (total) cell
 function createSummeCell(row, idx) {
@@ -90,16 +90,14 @@ export function render() {
       td.dataset.row = String(idx);
       td.dataset.col = col;
 
-      // Special handling for Auftrags_ID column to include status badge
+      // Display Auftrags_ID
       if (col === "Auftrags_ID") {
-        const statusBadgeClass = isCompleted ? "status-badge-completed" : "status-badge-in-progress";
-        const statusText = isCompleted ? "Abgeschlossen" : "In Arbeit";
-        td.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>
-            <span class="status-badge ${statusBadgeClass}">${statusText}</span>
-          </div>
-        `;
+        td.innerHTML = `<span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>`;
+      } else if (col === "Status") {
+        // Display order status with color coding
+        const statusColor = isCompleted ? '#10b981' : '#f59e0b';
+        const statusLabel = isCompleted ? 'Abgeschlossen' : 'In Arbeit';
+        td.innerHTML = `<span style="font-weight: 500; color: ${statusColor};">${statusLabel}</span>`;
       } else if (col === "Artikel") {
         // Special handling for Artikel column to display items count
         const itemCount = row.items?.length || 0;
@@ -117,8 +115,8 @@ export function render() {
 
       tr.appendChild(td);
       
-      // Insert Summe column right after Artikel column
-      if (col === "Artikel") {
+      // Insert Summe column right after Firma column
+      if (col === "Firma") {
         tr.appendChild(createSummeCell(row, idx));
       }
     }
@@ -128,13 +126,13 @@ export function render() {
     
     // PDF View button
     const viewPdfBtn = document.createElement("button");
-    viewPdfBtn.textContent = "PDF anzeigen";
-    viewPdfBtn.className = "btn-secondary";
+    viewPdfBtn.innerHTML = "🔍";
+    viewPdfBtn.className = "btn-secondary btn-pdf-icon";
     viewPdfBtn.title = "PDF anzeigen";
     viewPdfBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       viewPdfBtn.disabled = true;
-      viewPdfBtn.textContent = 'PDF wird erstellt...';
+      viewPdfBtn.innerHTML = '⏳';
       try {
         const pdf = await generatePDF('order', row, false, null, true);
         if (pdf) {
@@ -145,20 +143,20 @@ export function render() {
         alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
       } finally {
         viewPdfBtn.disabled = false;
-        viewPdfBtn.textContent = 'PDF anzeigen';
+        viewPdfBtn.innerHTML = '🔍';
       }
     });
     act.appendChild(viewPdfBtn);
     
     // PDF Download button
     const downloadPdfBtn = document.createElement("button");
-    downloadPdfBtn.textContent = "PDF herunterladen";
-    downloadPdfBtn.className = "btn-primary";
+    downloadPdfBtn.innerHTML = "⬇";
+    downloadPdfBtn.className = "btn-primary btn-pdf-icon";
     downloadPdfBtn.title = "PDF herunterladen";
     downloadPdfBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       downloadPdfBtn.disabled = true;
-      downloadPdfBtn.textContent = 'PDF wird erstellt...';
+      downloadPdfBtn.innerHTML = '⏳';
       try {
         const pdf = await generatePDF('order', row, false, null, true);
         if (pdf) {
@@ -170,7 +168,7 @@ export function render() {
         alert('Fehler beim Generieren der PDF. Bitte versuchen Sie es erneut.');
       } finally {
         downloadPdfBtn.disabled = false;
-        downloadPdfBtn.textContent = 'PDF herunterladen';
+        downloadPdfBtn.innerHTML = '⬇';
       }
     });
     act.appendChild(downloadPdfBtn);

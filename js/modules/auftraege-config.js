@@ -10,13 +10,13 @@ export const COLUMNS = [
   "Firmenadresse",
   "Firmen_Email",
   "Ansprechpartner",
-  "Artikel",
   "Beschreibung",
   "Budget",
   "Projekt",
-  "Status",
   "Kommentare",
-  "Rabatt"
+  "Status",
+  "Rabatt",
+  "Artikel"
 ];
 
 // Status column dropdown options (currently hidden from UI, status is automated)

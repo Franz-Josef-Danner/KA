@@ -111,6 +111,48 @@ td.readonly:hover {
 /* Aktion column uses class="actions" (no data-col) */
 #grid th.actions,
 #grid td.actions { width: 50px; min-width: 50px; max-width: 50px; }
+/* ===========================
+   Rechnungen page column widths (proportional, total = 100%)
+   =========================== */
+#grid.rechnungen-grid th[data-col="Rechnungs_ID"],
+#grid.rechnungen-grid td[data-col="Rechnungs_ID"] { width: 16%; }
+#grid.rechnungen-grid th[data-col="Rechnungsdatum"],
+#grid.rechnungen-grid td[data-col="Rechnungsdatum"] { width: 10%; }
+#grid.rechnungen-grid th[data-col="Firma"],
+#grid.rechnungen-grid td[data-col="Firma"] { width: 9%; }
+#grid.rechnungen-grid th[data-col="Gesamtsumme"],
+#grid.rechnungen-grid td[data-col="Gesamtsumme"] { width: 9%; }
+#grid.rechnungen-grid th[data-col="Projekt"],
+#grid.rechnungen-grid td[data-col="Projekt"] { width: 14%; }
+#grid.rechnungen-grid th[data-col="Kommentare"],
+#grid.rechnungen-grid td[data-col="Kommentare"] { width: 15%; }
+#grid.rechnungen-grid th[data-col="Bezahlt"],
+#grid.rechnungen-grid td[data-col="Bezahlt"] { width: 7%; }
+#grid.rechnungen-grid th[data-col="Deadline"],
+#grid.rechnungen-grid td[data-col="Deadline"] { width: 6%; }
+#grid.rechnungen-grid th.actions,
+#grid.rechnungen-grid td.actions { width: 14%; min-width: 0; max-width: none; white-space: normal; }
+/* ===========================
+   Auftraege page column widths (proportional, total = 100%)
+   =========================== */
+#grid.auftraege-grid th[data-col="Auftrags_ID"],
+#grid.auftraege-grid td[data-col="Auftrags_ID"] { width: 16%; }
+#grid.auftraege-grid th[data-col="Auftragsdatum"],
+#grid.auftraege-grid td[data-col="Auftragsdatum"] { width: 10%; }
+#grid.auftraege-grid th[data-col="Firma"],
+#grid.auftraege-grid td[data-col="Firma"] { width: 9%; }
+#grid.auftraege-grid th[data-col="Summe"],
+#grid.auftraege-grid td[data-col="Summe"] { width: 9%; }
+#grid.auftraege-grid th[data-col="Projekt"],
+#grid.auftraege-grid td[data-col="Projekt"] { width: 14%; }
+#grid.auftraege-grid th[data-col="Kommentare"],
+#grid.auftraege-grid td[data-col="Kommentare"] { width: 15%; }
+#grid.auftraege-grid th[data-col="Status"],
+#grid.auftraege-grid td[data-col="Status"] { width: 7%; }
+#grid.auftraege-grid th[data-col="Artikel"],
+#grid.auftraege-grid td[data-col="Artikel"] { width: 6%; }
+#grid.auftraege-grid th.actions,
+#grid.auftraege-grid td.actions { width: 14%; min-width: 0; max-width: none; white-space: normal; }
 /* Adaptive columns: no explicit width → share all remaining space equally (table-layout: fixed) */
 #grid th:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions),
 #grid td:not([data-col="Kategorie"]):not([data-col="Status"]):not([data-col="Firmen_ID"]):not([data-col="Geschlecht"]):not([data-col="Persönlich"]):not(.actions) { min-width: 50px; }
@@ -144,11 +186,7 @@ td.readonly:hover {
   #grid th[data-col="Kommentare"],
   #grid td[data-col="Kommentare"] { display: none; }
 }
-/* Hide Aktion column on viewports narrower than 1400 px */
-@media (max-width: 1399px) {
-  #grid th.actions,
-  #grid td.actions { display: none; }
-}
+
 /* Hide Vorname column on viewports narrower than 1300 px */
 @media (max-width: 1299px) {
   #grid th[data-col="Vorname"],
@@ -159,13 +197,36 @@ td.readonly:hover {
   #grid th[data-col="Nachname"],
   #grid td[data-col="Nachname"] { display: none; }
 }
+/* Hide Auftrags-ID and Rechnungs-ID columns on viewports narrower than 1150 px */
+@media (max-width: 1149px) {
+  #grid th[data-col="Auftrags_ID"],
+  #grid td[data-col="Auftrags_ID"],
+  #grid th[data-col="Rechnungs_ID"],
+  #grid td[data-col="Rechnungs_ID"] { display: none; }
+}
 /* Hide Adresse column on viewports narrower than 1000 px */
 @media (max-width: 999px) {
   #grid th[data-col="Adresse"],
   #grid td[data-col="Adresse"] { display: none; }
 }
-/* Hide Status column on viewports narrower than 800 px */
-@media (max-width: 799px) {
+/* Hide Artikel and Deadline columns on viewports narrower than 900 px */
+@media (max-width: 899px) {
+  #grid th[data-col="Artikel"],
+  #grid td[data-col="Artikel"],
+  #grid th[data-col="Deadline"],
+  #grid td[data-col="Deadline"] { display: none; }
+}
+/* Hide Auftragsdatum and Rechnungsdatum columns on viewports narrower than 850 px */
+@media (max-width: 849px) {
+  #grid th[data-col="Auftragsdatum"],
+  #grid td[data-col="Auftragsdatum"],
+  #grid th[data-col="Rechnungsdatum"],
+  #grid td[data-col="Rechnungsdatum"] { display: none; }
+}
+/* Hide Bezahlt and Status columns on viewports narrower than 700 px */
+@media (max-width: 699px) {
+  #grid th[data-col="Bezahlt"],
+  #grid td[data-col="Bezahlt"],
   #grid th[data-col="Status"],
   #grid td[data-col="Status"] { display: none; }
 }
@@ -218,6 +279,26 @@ td.readonly:hover {
 .actions { white-space: nowrap; }
 .actions button { margin-right: 4px; }
 .actions button:last-child { margin-right: 0; }
+/* Icon-only PDF buttons */
+.btn-pdf-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+.btn-pdf-icon:last-of-type { margin-right: 0; }
+.btn-pdf-icon:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-pdf-icon.btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ccc; }
+.btn-pdf-icon.btn-secondary:hover { background: #e5e5e5; border-color: #999; }
+.btn-pdf-icon.btn-primary:hover { filter: brightness(1.1); }
 .danger { border-color: #ffb3b3 !important; }
 .danger:hover { background: #fff5f5; }
 .small { font-size: 12px; color: #666; }
