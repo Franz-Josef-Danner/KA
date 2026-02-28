@@ -17,7 +17,7 @@ const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
 // Columns that are stored but not displayed in the table
-const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Status', 'Budget', 'Rabatt'];
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Ansprechpartner', 'Budget', 'Rabatt'];
 
 // Helper function to create the Summe (total) cell
 function createSummeCell(row, idx) {
@@ -100,6 +100,11 @@ export function render() {
             <span class="status-badge ${statusBadgeClass}">${statusText}</span>
           </div>
         `;
+      } else if (col === "Status") {
+        // Display order status with color coding
+        const statusColor = isCompleted ? '#10b981' : '#f59e0b';
+        const statusLabel = isCompleted ? 'Abgeschlossen' : 'In Arbeit';
+        td.innerHTML = `<span style="font-weight: 500; color: ${statusColor};">${statusLabel}</span>`;
       } else if (col === "Artikel") {
         // Special handling for Artikel column to display items count
         const itemCount = row.items?.length || 0;
@@ -117,8 +122,8 @@ export function render() {
 
       tr.appendChild(td);
       
-      // Insert Summe column right after Artikel column
-      if (col === "Artikel") {
+      // Insert Summe column right after Firma column
+      if (col === "Firma") {
         tr.appendChild(createSummeCell(row, idx));
       }
     }

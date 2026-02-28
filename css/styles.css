@@ -115,11 +115,11 @@ td.readonly:hover {
    Rechnungen page column widths (proportional, total = 100%)
    =========================== */
 #grid.rechnungen-grid th[data-col="Rechnungs_ID"],
-#grid.rechnungen-grid td[data-col="Rechnungs_ID"] { width: 8%; }
+#grid.rechnungen-grid td[data-col="Rechnungs_ID"] { width: 16%; }
 #grid.rechnungen-grid th[data-col="Rechnungsdatum"],
 #grid.rechnungen-grid td[data-col="Rechnungsdatum"] { width: 10%; }
 #grid.rechnungen-grid th[data-col="Firma"],
-#grid.rechnungen-grid td[data-col="Firma"] { width: 17%; }
+#grid.rechnungen-grid td[data-col="Firma"] { width: 9%; }
 #grid.rechnungen-grid th[data-col="Gesamtsumme"],
 #grid.rechnungen-grid td[data-col="Gesamtsumme"] { width: 9%; }
 #grid.rechnungen-grid th[data-col="Projekt"],
@@ -136,21 +136,21 @@ td.readonly:hover {
    Auftraege page column widths (proportional, total = 100%)
    =========================== */
 #grid.auftraege-grid th[data-col="Auftrags_ID"],
-#grid.auftraege-grid td[data-col="Auftrags_ID"] { width: 12%; }
+#grid.auftraege-grid td[data-col="Auftrags_ID"] { width: 16%; }
 #grid.auftraege-grid th[data-col="Auftragsdatum"],
-#grid.auftraege-grid td[data-col="Auftragsdatum"] { width: 9%; }
+#grid.auftraege-grid td[data-col="Auftragsdatum"] { width: 10%; }
 #grid.auftraege-grid th[data-col="Firma"],
-#grid.auftraege-grid td[data-col="Firma"] { width: 14%; }
-#grid.auftraege-grid th[data-col="Ansprechpartner"],
-#grid.auftraege-grid td[data-col="Ansprechpartner"] { width: 10%; }
-#grid.auftraege-grid th[data-col="Artikel"],
-#grid.auftraege-grid td[data-col="Artikel"] { width: 8%; }
+#grid.auftraege-grid td[data-col="Firma"] { width: 9%; }
 #grid.auftraege-grid th[data-col="Summe"],
-#grid.auftraege-grid td[data-col="Summe"] { width: 8%; }
+#grid.auftraege-grid td[data-col="Summe"] { width: 9%; }
 #grid.auftraege-grid th[data-col="Projekt"],
-#grid.auftraege-grid td[data-col="Projekt"] { width: 11%; }
+#grid.auftraege-grid td[data-col="Projekt"] { width: 14%; }
 #grid.auftraege-grid th[data-col="Kommentare"],
-#grid.auftraege-grid td[data-col="Kommentare"] { width: 14%; }
+#grid.auftraege-grid td[data-col="Kommentare"] { width: 15%; }
+#grid.auftraege-grid th[data-col="Status"],
+#grid.auftraege-grid td[data-col="Status"] { width: 7%; }
+#grid.auftraege-grid th[data-col="Artikel"],
+#grid.auftraege-grid td[data-col="Artikel"] { width: 6%; }
 #grid.auftraege-grid th.actions,
 #grid.auftraege-grid td.actions { width: 14%; min-width: 0; max-width: none; white-space: normal; }
 /* Adaptive columns: no explicit width → share all remaining space equally (table-layout: fixed) */
