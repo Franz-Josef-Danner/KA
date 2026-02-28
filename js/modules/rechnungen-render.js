@@ -108,6 +108,16 @@ export async function render() {
 
     const tr = document.createElement("tr");
     
+    // Add payment-status-based CSS class for visual row indication
+    const bezahlt = (row.Bezahlt || "unbezahlt").toLowerCase();
+    const isCompleted = bezahlt === "bezahlt";
+    
+    if (isCompleted) {
+      tr.classList.add("order-completed");
+    } else {
+      tr.classList.add("order-in-progress");
+    }
+    
     // Add double-click handler to open edit modal
     tr.addEventListener("dblclick", () => {
       // Dispatch custom event to avoid circular dependency
