@@ -5,7 +5,7 @@ import { canUndo, canRedo, getRows, setRows, save, newEmptyRow, newEmptyInvoiceI
 import { COLUMNS } from './rechnungen-config.js';
 import { ARTIKELLISTEN_STORAGE_KEY } from './artikellisten-config.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { notifyNewInvoice, notifyPaymentReceived, showEmailNotificationWarning, showEmailNotificationQueued, sendInvoiceToCustomer } from './email-notifications.js';
+import { notifyNewInvoice, notifyInvoiceUpdated, showEmailNotificationWarning, showEmailNotificationQueued, sendInvoiceToCustomer } from './email-notifications.js';
 import { clearInvoiceFromNotified } from './overdue-invoice-checker.js';
 import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
@@ -835,27 +835,26 @@ async function saveInvoice() {
       } else {
         showEmailNotificationQueued('Die Rechnung');
       }
-    } else if (paymentStatusChanged) {
-      // Send payment received notification when invoice is marked as paid
+    } else {
+      // Existing invoice was edited - automatically send email with current version
       const invoiceItems = formData.items || [];
       const total = calculateItemsTotal(invoiceItems);
       
-      const notificationResult = await notifyPaymentReceived({
+      await notifyInvoiceUpdated({
         invoiceId: formData.Rechnungs_ID || 'N/A',
         customerName: formData.Firma || 'Unbekannt',
+        contactPerson: formData.Ansprechpartner || '',
         customerEmail: formData.Firmen_Email || '',
-        amount: total,
-        paymentDate: new Date().toLocaleDateString('de-DE')
-      });
+        total: total,
+        items: invoiceItems,
+        project: formData.Projekt || '',
+        orderId: formData.Auftrags_ID || '',
+        dueDate: formData.Deadline || ''
+      }, formData);
       
-      // Clear from overdue notifications list if it was there
-      clearInvoiceFromNotified(formData.Rechnungs_ID);
-      
-      // Show feedback about notification status
-      if (!notificationResult) {
-        showEmailNotificationWarning('Die Zahlung', 'paymentReceived');
-      } else {
-        showEmailNotificationQueued('Die Zahlung');
+      // Clear from overdue notifications list if payment status changed to paid
+      if (paymentStatusChanged) {
+        clearInvoiceFromNotified(formData.Rechnungs_ID);
       }
     }
     
