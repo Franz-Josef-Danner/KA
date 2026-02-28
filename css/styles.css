@@ -223,6 +223,13 @@ td.readonly:hover {
   #grid th[data-col="Rechnungsdatum"],
   #grid td[data-col="Rechnungsdatum"] { display: none; }
 }
+/* Hide Bezahlt and Status columns on viewports narrower than 700 px */
+@media (max-width: 699px) {
+  #grid th[data-col="Bezahlt"],
+  #grid td[data-col="Bezahlt"],
+  #grid th[data-col="Status"],
+  #grid td[data-col="Status"] { display: none; }
+}
 /* Hide Kategorie column on viewports narrower than 650 px */
 @media (max-width: 649px) {
   #grid th[data-col="Kategorie"],
