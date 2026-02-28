@@ -815,6 +815,9 @@ function renderItemsTableWithFooter(doc, x, y, width, height, documentData, foot
     }
   }
 
+  // Calculate dynamic column widths based on content
+  const colWidths = calculateColumnWidths(doc, items, width);
+
   const headerHeight = 9; // Height of table header in mm
   const baseRowHeight = 8; // Base height of each table row in mm
   const newPageStartY = 20; // Starting Y position for content on new pages
