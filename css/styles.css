@@ -197,6 +197,13 @@ td.readonly:hover {
   #grid th[data-col="Nachname"],
   #grid td[data-col="Nachname"] { display: none; }
 }
+/* Hide Auftrags-ID and Rechnungs-ID columns on viewports narrower than 1150 px */
+@media (max-width: 1149px) {
+  #grid th[data-col="Auftrags_ID"],
+  #grid td[data-col="Auftrags_ID"],
+  #grid th[data-col="Rechnungs_ID"],
+  #grid td[data-col="Rechnungs_ID"] { display: none; }
+}
 /* Hide Adresse column on viewports narrower than 1000 px */
 @media (max-width: 999px) {
   #grid th[data-col="Adresse"],
