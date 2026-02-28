@@ -216,12 +216,12 @@ td.readonly:hover {
   #grid th[data-col="Deadline"],
   #grid td[data-col="Deadline"] { display: none; }
 }
-/* Hide Status and Bezahlt columns on viewports narrower than 850 px */
+/* Hide Auftragsdatum and Rechnungsdatum columns on viewports narrower than 850 px */
 @media (max-width: 849px) {
-  #grid th[data-col="Status"],
-  #grid td[data-col="Status"],
-  #grid th[data-col="Bezahlt"],
-  #grid td[data-col="Bezahlt"] { display: none; }
+  #grid th[data-col="Auftragsdatum"],
+  #grid td[data-col="Auftragsdatum"],
+  #grid th[data-col="Rechnungsdatum"],
+  #grid td[data-col="Rechnungsdatum"] { display: none; }
 }
 /* Hide Kategorie column on viewports narrower than 650 px */
 @media (max-width: 649px) {
