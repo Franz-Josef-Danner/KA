@@ -215,8 +215,8 @@ async function loadFromServerOrLocalStorage() {
   // Try to load from server first
   const serverData = await loadFromServer();
   
-  if (serverData !== null) {
-    // Server responded (even if with empty data), use it
+  if (serverData !== null && Array.isArray(serverData) && serverData.length > 0) {
+    // Server has data - use it as the authoritative source
     console.log('Loaded company list from server');
     usingApiStorage = true;
     // Update localStorage cache
@@ -225,10 +225,10 @@ async function loadFromServerOrLocalStorage() {
     } catch (e) {
       console.warn('Failed to update localStorage cache:', e);
     }
-    return await normalizeAndSyncRows(serverData);
+    return normalizeRows(serverData);
   }
   
-  // Server failed to respond, check if we have data in localStorage
+  // Server responded with empty data or failed - check localStorage for existing data
   const localData = loadSync();
   if (localData && localData.length > 0) {
     console.log('Migrating company list from localStorage to server...');
@@ -246,7 +246,7 @@ async function loadFromServerOrLocalStorage() {
   
   // No data found anywhere, return empty array
   console.log('No existing company list found, starting fresh');
-  usingApiStorage = true; // Assume API is available for new data
+  usingApiStorage = serverData !== null; // Assume API is available if it responded
   return [];
 }
 
