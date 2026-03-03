@@ -227,9 +227,8 @@ for ($month = 1; $month <= 12; $month++) {
     $cumulativePaidExpenses[$month] = $runningExpenses;
 }
 
-// Calculate projections (actual + open items spread evenly over remaining months)
+// Calculate projections based on average monthly trend from actual paid data
 $currentMonth = (int)date('n');
-$remainingMonths = 12 - $currentMonth;
 
 $cumulativeProjectedRevenue = [];
 $cumulativeProjectedExpenses = [];
@@ -238,13 +237,9 @@ $cumulativeProjectedExpenses = [];
 $projectedRevenue = $runningRevenue;
 $projectedExpenses = $runningExpenses;
 
-// Calculate total open amounts
-$totalOpenRevenue = array_sum($monthlyOpenRevenue);
-$totalOpenExpenses = array_sum($monthlyOpenExpenses);
-
-// Distribute open amounts evenly over remaining months (only if there are remaining months)
-$monthlyProjectedOpenRevenue = ($remainingMonths > 0) ? $totalOpenRevenue / $remainingMonths : 0;
-$monthlyProjectedOpenExpenses = ($remainingMonths > 0) ? $totalOpenExpenses / $remainingMonths : 0;
+// Use average monthly trend from actual paid data for projection
+$avgMonthlyRevenue = ($currentMonth > 0) ? $runningRevenue / $currentMonth : 0;
+$avgMonthlyExpenses = ($currentMonth > 0) ? $runningExpenses / $currentMonth : 0;
 
 for ($month = 1; $month <= 12; $month++) {
     if ($month <= $currentMonth) {
@@ -252,9 +247,9 @@ for ($month = 1; $month <= 12; $month++) {
         $cumulativeProjectedRevenue[$month] = $cumulativePaidRevenue[$month];
         $cumulativeProjectedExpenses[$month] = $cumulativePaidExpenses[$month];
     } else {
-        // For future months, add projected amounts
-        $projectedRevenue += $monthlyProjectedOpenRevenue;
-        $projectedExpenses += $monthlyProjectedOpenExpenses;
+        // For future months, add projected amounts based on average monthly trend
+        $projectedRevenue += $avgMonthlyRevenue;
+        $projectedExpenses += $avgMonthlyExpenses;
         $cumulativeProjectedRevenue[$month] = $projectedRevenue;
         $cumulativeProjectedExpenses[$month] = $projectedExpenses;
     }
