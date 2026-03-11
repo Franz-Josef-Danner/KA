@@ -57,6 +57,7 @@
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     import { initEmailQueueManager } from './js/modules/email-queue-manager.js';
     import { checkOverdueInvoices } from './js/modules/overdue-invoice-checker.js';
+    import { checkBankEmails } from './js/modules/bank-email-checker.js';
     
     // Function to format numbers with German locale
     function formatCurrency(amount) {
@@ -684,6 +685,9 @@
         
         // Check for overdue invoices (runs once per day)
         checkOverdueInvoices();
+        
+        // Check inbox for bank payment emails (runs at most every 5 min)
+        checkBankEmails();
         
         // Trigger recurring expense generation (runs in background)
         triggerRecurringExpenses();

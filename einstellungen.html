@@ -222,6 +222,104 @@
       </form>
     </div>
 
+    <!-- ================================================================
+         IMAP – Automatische Zahlungseingangs-Prüfung
+         ============================================================== -->
+    <div class="settings-card" style="margin-top: 30px;">
+      <form id="imapConfigForm" class="settings-form">
+        <div class="form-section">
+          <h2>Automatische Bank-E-Mail Prüfung (IMAP)</h2>
+          <div class="form-hint" style="margin-bottom: 15px;">
+            Wenn aktiviert, prüft das System beim Öffnen des Dashboards automatisch
+            Ihren E-Mail-Posteingang auf Zahlungsbenachrichtigungen Ihrer Bank und markiert
+            erkannte Rechnungen ohne Ihr Zutun als <strong>bezahlt</strong>.
+            <br><br>
+            Die Zugangsdaten (E-Mail-Adresse und Passwort) werden aus der bestehenden
+            Backend-Konfiguration (<code>backend/config.json</code>) übernommen.
+            Hier konfigurieren Sie nur den IMAP-Server Ihres Postfachs.
+            <br><br>
+            <strong>Typische IMAP-Einstellungen:</strong>
+            <ul style="margin-top:5px;padding-left:20px;">
+              <li>World4You: <code>imap.world4you.com</code> · Port 993 · SSL</li>
+              <li>Gmail: <code>imap.gmail.com</code> · Port 993 · SSL (App-Passwort erforderlich)</li>
+              <li>Outlook: <code>outlook.office365.com</code> · Port 993 · SSL</li>
+            </ul>
+          </div>
+
+          <div id="imapStatusHint" style="display:none; margin-bottom:15px;"></div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="imapEnabled" name="imapEnabled" />
+              Automatische Prüfung aktivieren
+            </label>
+          </div>
+
+          <div id="imapConfigFields">
+            <div class="form-group">
+              <label for="imapHost">IMAP-Server (Host) *</label>
+              <input
+                type="text"
+                id="imapHost"
+                name="imapHost"
+                placeholder="z. B. imap.world4you.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="imapPort">Port</label>
+              <input
+                type="number"
+                id="imapPort"
+                name="imapPort"
+                value="993"
+                min="1"
+                max="65535"
+                style="width:120px;"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="imapSecure" name="imapSecure" checked />
+                SSL/TLS-Verschlüsselung (empfohlen, Port 993)
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label for="imapFolder">Postfach-Ordner</label>
+              <input
+                type="text"
+                id="imapFolder"
+                name="imapFolder"
+                value="INBOX"
+                placeholder="INBOX"
+              />
+              <div class="form-hint">
+                Ordner, in dem die Bank-E-Mails eingehen (meistens <code>INBOX</code>).
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="imapMarkAsRead" name="imapMarkAsRead" checked />
+                Gelesene E-Mails nach der Verarbeitung als „gelesen" markieren
+              </label>
+            </div>
+          </div>
+
+          <div id="imapSaveResult" style="display:none; margin-top:10px;"></div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">IMAP-Einstellungen speichern</button>
+            <button type="button" id="imapTestBtn" class="btn-secondary">
+              Jetzt prüfen
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
     <div class="settings-card" style="margin-top: 30px;">
       <div class="form-section">
         <h2>Bank-E-Mail verarbeiten</h2>
@@ -646,6 +744,136 @@ Liebe Grüße, Ihr George.</pre>
         } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
+        }
+      });
+    })();
+    // IMAP configuration form
+    (() => {
+      const form        = document.getElementById('imapConfigForm');
+      const enabledCb   = document.getElementById('imapEnabled');
+      const hostInput   = document.getElementById('imapHost');
+      const portInput   = document.getElementById('imapPort');
+      const secureCb    = document.getElementById('imapSecure');
+      const folderInput = document.getElementById('imapFolder');
+      const markReadCb  = document.getElementById('imapMarkAsRead');
+      const resultBox   = document.getElementById('imapSaveResult');
+      const testBtn     = document.getElementById('imapTestBtn');
+      const statusHint  = document.getElementById('imapStatusHint');
+
+      function showImapResult(message, isError) {
+        resultBox.textContent = message;
+        resultBox.className   = isError ? 'message error-message' : 'message success-message';
+        resultBox.style.display = 'block';
+      }
+
+      // Load current IMAP config on page load
+      (async () => {
+        try {
+          const res    = await fetch('api/load-imap-config.php');
+          const result = await res.json();
+
+          if (!result.imapAvailable) {
+            statusHint.innerHTML  = '⚠️ <strong>PHP IMAP-Erweiterung nicht verfügbar.</strong> ' +
+              'Wenden Sie sich an Ihren Hosting-Anbieter, um die Erweiterung zu aktivieren.';
+            statusHint.className  = 'form-hint';
+            statusHint.style.display = 'block';
+          } else if (!result.backendConfigured) {
+            statusHint.innerHTML  = 'ℹ️ Die Backend-Konfiguration (<code>backend/config.json</code>) ' +
+              'ist noch nicht eingerichtet. Konfigurieren Sie zunächst den E-Mail-Versand.';
+            statusHint.className  = 'form-hint';
+            statusHint.style.display = 'block';
+          }
+
+          const cfg = result.data;
+          if (cfg) {
+            enabledCb.checked   = !!cfg.enabled;
+            hostInput.value     = cfg.host       || result.suggestedImapHost || '';
+            portInput.value     = cfg.port       ?? 993;
+            secureCb.checked    = cfg.secure     !== false;
+            folderInput.value   = cfg.folder     || 'INBOX';
+            markReadCb.checked  = cfg.markAsRead !== false;
+          } else if (result.suggestedImapHost) {
+            hostInput.value = result.suggestedImapHost;
+          }
+        } catch (err) {
+          console.warn('Could not load IMAP config:', err.message);
+        }
+      })();
+
+      // Save IMAP config
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        resultBox.style.display = 'none';
+
+        const submitBtn      = form.querySelector('button[type="submit"]');
+        submitBtn.disabled   = true;
+        const originalText   = submitBtn.textContent;
+        submitBtn.textContent = 'Speichern …';
+
+        try {
+          const config = {
+            enabled:    enabledCb.checked,
+            host:       hostInput.value.trim(),
+            port:       parseInt(portInput.value, 10) || 993,
+            secure:     secureCb.checked,
+            folder:     folderInput.value.trim() || 'INBOX',
+            markAsRead: markReadCb.checked,
+          };
+
+          const res    = await fetch('api/save-imap-config.php', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(config),
+          });
+          const result = await res.json();
+
+          if (result.success) {
+            showImapResult('✅ ' + result.message, false);
+          } else {
+            showImapResult('❌ ' + (result.error || 'Fehler beim Speichern'), true);
+          }
+        } catch (err) {
+          showImapResult('❌ Netzwerkfehler: ' + err.message, true);
+        } finally {
+          submitBtn.disabled    = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+
+      // Manual "Jetzt prüfen" button – calls IMAP endpoint immediately
+      testBtn.addEventListener('click', async () => {
+        resultBox.style.display = 'none';
+        testBtn.disabled        = true;
+        testBtn.textContent     = 'Prüfe …';
+
+        try {
+          const res    = await fetch('api/check-bank-emails.php', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    '{}',
+          });
+          const result = await res.json();
+
+          if (result.success) {
+            const paidCount = (result.paid || []).length;
+            if (paidCount > 0) {
+              const ids = result.paid.map(p => p.invoiceId).join(', ');
+              showImapResult(
+                `✅ ${paidCount} Rechnung(en) als bezahlt markiert: ${ids}`,
+                false
+              );
+              window.dispatchEvent(new Event('invoicesChanged'));
+            } else {
+              showImapResult('ℹ️ Keine neuen Zahlungseingänge gefunden.', false);
+            }
+          } else {
+            showImapResult('❌ ' + (result.error || 'Unbekannter Fehler'), true);
+          }
+        } catch (err) {
+          showImapResult('❌ Netzwerkfehler: ' + err.message, true);
+        } finally {
+          testBtn.disabled    = false;
+          testBtn.textContent = 'Jetzt prüfen';
         }
       });
     })();

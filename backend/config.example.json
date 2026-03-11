@@ -18,5 +18,16 @@
       "World4You": "smtp.world4you.com (Port 587)",
       "1und1": "smtp.1und1.de (Port 587)"
     }
-  }
+  },
+  "_imap_note": [
+    "Die IMAP-Einstellungen für die automatische Zahlungseingangs-Prüfung",
+    "werden über die Einstellungs-Seite im KA-System konfiguriert und in",
+    "data/imap-config.json gespeichert. Die Zugangsdaten (email + password)",
+    "aus dieser Datei werden dabei wiederverwendet.",
+    "",
+    "Typische IMAP-Server:",
+    "  World4You : imap.world4you.com  Port 993  SSL",
+    "  Gmail     : imap.gmail.com      Port 993  SSL (App-Passwort)",
+    "  Outlook   : outlook.office365.com Port 993 SSL"
+  ]
 }
