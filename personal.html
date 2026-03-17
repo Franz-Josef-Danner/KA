@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Personal - KA System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* ── Department filter bar ─────────────────────────────────────────── */
+    #deptFilterBar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 12px 0 4px;
+    }
+    .dept-filter-btn {
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #d1d5db;
+      background: #f9fafb;
+      color: #374151;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .dept-filter-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+    .dept-filter-btn.active {
+      background: var(--dept-color, #6366f1);
+      border-color: var(--dept-color, #6366f1);
+      color: #fff;
+      font-weight: 600;
+    }
+    .dept-filter-btn:first-child.active {
+      background: #6366f1;
+      border-color: #6366f1;
+    }
+    /* ── Department badge in table ─────────────────────────────────────── */
+    .dept-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    /* ── Empty state ───────────────────────────────────────────────────── */
+    #personalEmpty {
+      display: none;
+      text-align: center;
+      padding: 48px 24px;
+      color: #9ca3af;
+      font-size: 15px;
+    }
+    #personalEmpty svg {
+      display: block;
+      margin: 0 auto 16px;
+      width: 48px;
+      height: 48px;
+      color: #d1d5db;
+    }
+    /* ── Personal modal form ───────────────────────────────────────────── */
+    #personalModal .modal-content {
+      max-width: 680px;
+    }
+    #personalModal .modal-header {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+    }
+    #personalModal .modal-header h2,
+    #personalModal .modal-header .modal-close {
+      color: #fff;
+    }
+    #personalModal #personalModalSave {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+    }
+    /* Tagessatz: numeric alignment */
+    td:nth-last-child(2) { text-align: right; }
+    /* Delete button */
+    .btn-danger {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      padding: 4px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+    /* Entry count */
+    #personalCount {
+      font-size: 13px;
+      color: #6b7280;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-container"></div>
+
+  <h1>Personal – Übersicht</h1>
+
+  <div class="bar">
+    <button id="newPersonalBtn" class="btn-primary">+ Person hinzufügen</button>
+    <input id="personalSearch" class="search" type="search" placeholder="Suchen (Name, Rolle, E-Mail …)" />
+    <span id="personalCount"></span>
+  </div>
+
+  <div class="hint">
+    Bedienung: Doppelklick auf einen Eintrag zum Bearbeiten. Departments über die Schaltflächen filtern.
+  </div>
+
+  <!-- Department filter pills -->
+  <div id="deptFilterBar"></div>
+
+  <!-- Personnel table -->
+  <div class="wrap">
+    <table id="personalTable">
+      <thead>
+        <tr>
+          <th>Vorname</th>
+          <th>Nachname</th>
+          <th>Department</th>
+          <th>Rolle</th>
+          <th>Telefon</th>
+          <th>E-Mail</th>
+          <th>Tagessatz (€/Tag)</th>
+          <th class="actions">Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="personalTbody"></tbody>
+    </table>
+
+    <div id="personalEmpty">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8z"/>
+      </svg>
+      Keine Einträge gefunden. Klicken Sie auf „+ Person hinzufügen" um den ersten Eintrag zu erstellen.
+    </div>
+  </div>
+
+  <!-- Add / Edit Modal -->
+  <div id="personalModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="personalModalTitle">Person hinzufügen</h2>
+        <button id="personalModalClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="personalForm">
+          <div class="form-group">
+            <label for="pm_Personal_ID">Personal-ID:</label>
+            <input type="text" id="pm_Personal_ID" name="Personal_ID" readonly
+                   style="background-color: #f5f5f5;" />
+          </div>
+          <div class="form-group">
+            <label for="pm_Department">Department: *</label>
+            <select id="pm_Department" name="Department">
+              <!-- populated by JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="pm_Vorname">Vorname: *</label>
+            <input type="text" id="pm_Vorname" name="Vorname" placeholder="Vorname" />
+          </div>
+          <div class="form-group">
+            <label for="pm_Nachname">Nachname: *</label>
+            <input type="text" id="pm_Nachname" name="Nachname" placeholder="Nachname" />
+          </div>
+          <div class="form-group">
+            <label for="pm_Rolle">Rolle / Funktion:</label>
+            <input type="text" id="pm_Rolle" name="Rolle" placeholder="z. B. Director of Photography" />
+          </div>
+          <div class="form-group">
+            <label for="pm_Telefon">Telefon:</label>
+            <input type="tel" id="pm_Telefon" name="Telefon" placeholder="+49 …" />
+          </div>
+          <div class="form-group">
+            <label for="pm_Email">E-Mail:</label>
+            <input type="email" id="pm_Email" name="Email" placeholder="name@beispiel.de" />
+          </div>
+          <div class="form-group">
+            <label for="pm_Tagessatz">Tagessatz (€/Tag):</label>
+            <input type="number" id="pm_Tagessatz" name="Tagessatz" min="0" step="0.01"
+                   placeholder="0.00" />
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="pm_Kommentare">Kommentare:</label>
+            <textarea id="pm_Kommentare" name="Kommentare" rows="3"
+                      placeholder="Notizen, Verfügbarkeit, besondere Kenntnisse …"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="personalModalCancel" class="btn-secondary">Abbrechen</button>
+        <button id="personalModalSave" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, requireAdmin } from './js/modules/auth.js';
+    import { initNavigation } from './js/modules/navigation.js';
+
+    (() => {
+      try {
+        requireAuth();
+        initNavigation('personal.html');
+        requireAdmin();
+      } catch (error) {
+        console.error('Authentication error on personal page:', error);
+      }
+    })();
+  </script>
+  <script type="module" src="js/personal-app.js"></script>
+</body>
+</html>

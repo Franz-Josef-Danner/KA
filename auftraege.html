@@ -13,6 +13,7 @@
 
   <div class="bar">
     <button id="newOrderBtn">+ Neuer Auftrag</button>
+    <button id="newGrossauftragBtn" style="background-color: #7c3aed; color: white; border-color: #7c3aed;">★ Großauftrag erstellen</button>
     <button id="undoBtn" title="Rückgängig (Strg+Z)">↶ Rückgängig</button>
     <button id="redoBtn" title="Wiederholen (Strg+Y)">↷ Wiederholen</button>
     <input id="search" class="search" type="search" placeholder="Suchen (Auftrags-ID, Firma, Beschreibung, Projekt …)" />
@@ -155,6 +156,248 @@
     </div>
   </div>
 
+  <!-- Großauftrag Modal -->
+  <div id="grossauftragModal" class="modal" style="display: none;">
+    <div class="modal-content order-modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #7c3aed, #5b21b6);">
+        <h2 id="grossauftragModalTitle" style="color: white;">Großauftrag erstellen</h2>
+        <button id="grossauftragModalClose" class="modal-close" style="color: white;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="grossauftragForm">
+
+          <!-- ── 1. PROJEKT BASIS (PFLICHT) ─────────────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-required">PFLICHT</span>
+              <span class="ga-section-title">1. Projekt Basis</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="form-group">
+                <label for="ga_Projekt">Projektname: <span class="ga-required-star">*</span></label>
+                <input type="text" id="ga_Projekt" name="Projekt" placeholder="z. B. Imagefilm Frühjahr 2026" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Firma">Kunde / Firma: <span class="ga-required-star">*</span></label>
+                <select id="ga_Firma" name="Firma">
+                  <!-- populated dynamically -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ga_Ansprechpartner">Ansprechpartner Name: <span class="ga-required-star">*</span></label>
+                <input type="text" id="ga_Ansprechpartner" name="Ansprechpartner" placeholder="Vor- und Nachname" />
+              </div>
+              <div class="form-group">
+                <label for="ga_AnsprechpartnerKontakt">Ansprechpartner Kontakt: <span class="ga-required-star">*</span></label>
+                <input type="text" id="ga_AnsprechpartnerKontakt" name="AnsprechpartnerKontakt" placeholder="Telefon oder E-Mail" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Projekttyp">Projekttyp: <span class="ga-required-star">*</span></label>
+                <select id="ga_Projekttyp" name="Projekttyp">
+                  <option value="">-- Projekttyp auswählen --</option>
+                  <option value="Imagefilm">Imagefilm</option>
+                  <option value="Recruiting Video">Recruiting Video</option>
+                  <option value="Eventvideo">Eventvideo</option>
+                  <option value="Social Media Content">Social Media Content</option>
+                  <option value="Produktvideo">Produktvideo</option>
+                  <option value="Interview">Interview</option>
+                  <option value="Werbespot">Werbespot</option>
+                  <option value="Sonstiges">Sonstiges</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 2. ZEIT & DEADLINES (PFLICHT) ──────────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-required">PFLICHT</span>
+              <span class="ga-section-title">2. Zeit &amp; Deadlines</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="form-group">
+                <label for="ga_Drehtage">Drehtage Anzahl: <span class="ga-required-star">*</span></label>
+                <input type="number" id="ga_Drehtage" name="Drehtage" min="1" max="30" step="1" placeholder="z. B. 3" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Abgabedatum">Abgabedatum: <span class="ga-required-star">*</span></label>
+                <input type="date" id="ga_Abgabedatum" name="Abgabedatum" />
+              </div>
+              <!-- Dynamic per-day date pickers are rendered here by JS -->
+              <div id="ga_drehtag_list" class="ga-drehtag-list"></div>
+              <div class="form-group">
+                <label for="ga_Ausweichtermin">Ausweichtermin: <span class="ga-optional-label">(optional)</span></label>
+                <input type="date" id="ga_Ausweichtermin" name="Ausweichtermin" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Drehbeginn">Drehbeginn (Uhrzeit): <span class="ga-optional-label">(optional)</span></label>
+                <input type="time" id="ga_Drehbeginn" name="Drehbeginn" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Drehende">Drehende (Uhrzeit): <span class="ga-optional-label">(optional)</span></label>
+                <input type="time" id="ga_Drehende" name="Drehende" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 3. DREHUMFANG (PFLICHT – KOMPAKT) ──────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-required">PFLICHT</span>
+              <span class="ga-section-title">3. Drehumfang</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="form-group">
+                <label for="ga_Drehorte">Anzahl Drehorte: <span class="ga-required-star">*</span></label>
+                <input type="number" id="ga_Drehorte" name="Drehorte" min="1" step="1" placeholder="z. B. 2" />
+              </div>
+              <div class="form-group">
+                <label for="ga_DrehortTyp">Innen / Außen / Beides: <span class="ga-required-star">*</span></label>
+                <select id="ga_DrehortTyp" name="DrehortTyp">
+                  <option value="">-- auswählen --</option>
+                  <option value="Innen">Innen</option>
+                  <option value="Außen">Außen</option>
+                  <option value="Beides">Beides</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ga_InterviewEnthalten">Interview enthalten: <span class="ga-required-star">*</span></label>
+                <select id="ga_InterviewEnthalten" name="InterviewEnthalten">
+                  <option value="">-- auswählen --</option>
+                  <option value="Ja">Ja</option>
+                  <option value="Nein">Nein</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ga_BRollBenoetigt">B-Roll benötigt: <span class="ga-required-star">*</span></label>
+                <select id="ga_BRollBenoetigt" name="BRollBenoetigt">
+                  <option value="">-- auswählen --</option>
+                  <option value="Ja">Ja</option>
+                  <option value="Nein">Nein</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ga_Drohne">Drohne: <span class="ga-required-star">*</span></label>
+                <select id="ga_Drohne" name="Drohne">
+                  <option value="">-- auswählen --</option>
+                  <option value="Ja">Ja</option>
+                  <option value="Nein">Nein</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ga_TonaufnahmeNotwendig">Tonaufnahme notwendig: <span class="ga-required-star">*</span></label>
+                <select id="ga_TonaufnahmeNotwendig" name="TonaufnahmeNotwendig">
+                  <option value="">-- auswählen --</option>
+                  <option value="Ja">Ja</option>
+                  <option value="Nein">Nein</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 4. EQUIPMENT LEVEL (PFLICHT – ABSTRAKTION) ─────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-required">PFLICHT</span>
+              <span class="ga-section-title">4. Equipment Level</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="ga-equipment-grid">
+                <div class="form-group">
+                  <label for="ga_KameraSetup">Kamera Setup: <span class="ga-required-star">*</span></label>
+                  <select id="ga_KameraSetup" name="KameraSetup">
+                    <option value="">-- auswählen --</option>
+                    <option value="Basic">Basic</option>
+                    <option value="Cinema">Cinema</option>
+                    <option value="Multi-Cam">Multi-Cam</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ga_LichtLevel">Licht: <span class="ga-required-star">*</span></label>
+                  <select id="ga_LichtLevel" name="LichtLevel">
+                    <option value="">-- auswählen --</option>
+                    <option value="kein">kein</option>
+                    <option value="klein">klein</option>
+                    <option value="groß">groß</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ga_TonLevel">Ton: <span class="ga-required-star">*</span></label>
+                  <select id="ga_TonLevel" name="TonLevel">
+                    <option value="">-- auswählen --</option>
+                    <option value="minimal">minimal</option>
+                    <option value="standard">standard</option>
+                    <option value="aufwendig">aufwendig</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ga_BewegungLevel">Bewegung: <span class="ga-required-star">*</span></label>
+                  <select id="ga_BewegungLevel" name="BewegungLevel">
+                    <option value="">-- auswählen --</option>
+                    <option value="statisch">statisch</option>
+                    <option value="Gimbal">Gimbal</option>
+                    <option value="komplex">komplex</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 5. DEPARTMENTS (PFLICHT) ────────────────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-required">PFLICHT</span>
+              <span class="ga-section-title">5. Departments</span>
+            </div>
+            <div class="ga-section-body">
+              <div id="ga_departments_container" class="ga-departments-grid" style="grid-column: 1 / -1;"></div>
+              <p id="ga_dept_error" class="ga-dept-error" style="display: none; grid-column: 1 / -1;">Bitte wählen Sie mindestens ein Department aus.</p>
+            </div>
+          </div>
+
+          <!-- ── Weitere Angaben (optional) ─────────────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-optional">OPTIONAL</span>
+              <span class="ga-section-title">Weitere Angaben</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="form-group">
+                <label for="ga_Auftrags_ID">Großauftrags-ID:</label>
+                <input type="text" id="ga_Auftrags_ID" name="Auftrags_ID" readonly style="background-color: #f5f5f5;" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Auftragsdatum">Auftragsdatum:</label>
+                <input type="date" id="ga_Auftragsdatum" name="Auftragsdatum" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Budget">Gesamtbudget:</label>
+                <input type="text" id="ga_Budget" name="Budget" placeholder="z. B. 50000" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Rabatt">Rabatt (%):</label>
+                <input type="number" id="ga_Rabatt" name="Rabatt" min="0" max="100" step="0.01" placeholder="0" />
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="ga_Beschreibung">Beschreibung / Leistungsumfang:</label>
+                <textarea id="ga_Beschreibung" name="Beschreibung" rows="4" placeholder="Beschreiben Sie den Leistungsumfang des Großauftrags …"></textarea>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="ga_Kommentare">Kommentare / Besondere Vereinbarungen:</label>
+                <textarea id="ga_Kommentare" name="Kommentare" rows="3" placeholder="Besondere Vereinbarungen, Zahlungsbedingungen, etc. …"></textarea>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="grossauftragModalCancel" class="btn-secondary">Abbrechen</button>
+        <button id="grossauftragModalSave" class="btn-primary" style="background: linear-gradient(135deg, #7c3aed, #5b21b6);">Großauftrag speichern</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { requireAuth, requireAdmin } from './js/modules/auth.js';
     import { initNavigation } from './js/modules/navigation.js';
@@ -176,5 +419,6 @@
     })();
   </script>
   <script type="module" src="js/auftraege-app.js"></script>
+  <script type="module" src="js/modules/grossauftrag-ui.js"></script>
 </body>
 </html>

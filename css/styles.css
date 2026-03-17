@@ -266,6 +266,12 @@ td.readonly:hover {
 .order-in-progress:hover {
   background-color: #fef3c7 !important;
 }
+.grossauftrag-row {
+  border-left: 4px solid #7c3aed !important;
+}
+.grossauftrag-row:hover {
+  background-color: #f5f3ff !important;
+}
 .status-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -2600,4 +2606,124 @@ td.readonly:hover {
   .invoice-modal-content .modal-footer {
     flex-direction: column;
   }
+}
+
+/* ── Großauftrag section layout ─────────────────────────────────────── */
+.ga-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.ga-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.ga-section-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2937;
+  letter-spacing: 0.02em;
+}
+.ga-section-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ga-badge-required {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.ga-badge-optional {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+.ga-section-body {
+  padding: 14px 14px 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+.ga-required-star {
+  color: #dc2626;
+}
+.ga-optional-label {
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 400;
+}
+/* Dynamic Drehtag date-picker list */
+.ga-drehtag-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+  margin-top: 4px;
+}
+.ga-drehtag-item label {
+  font-size: 13px;
+}
+/* Equipment level grid – 2×2 compact */
+.ga-equipment-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+/* Departments checkbox grid */
+.ga-departments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 16px;
+  padding: 4px 0 8px;
+}
+@media (max-width: 600px) {
+  .ga-departments-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.ga-dept-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1.5px solid #e5e7eb;
+  transition: background 0.12s, border-color 0.12s;
+  user-select: none;
+}
+.ga-dept-check:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+.ga-dept-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #7c3aed;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ga-dept-check:has(input:checked) {
+  background: #ede9fe;
+  border-color: #7c3aed;
+  color: #5b21b6;
+  font-weight: 600;
+}
+.ga-dept-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 4px 0 0;
 }
