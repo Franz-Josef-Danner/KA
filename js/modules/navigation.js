@@ -11,6 +11,7 @@ const ADMIN_NAV_ITEMS = [
   { label: 'Rechnungen', href: 'rechnungen.html' },
   { label: 'Ausgaben', href: 'ausgaben.html' },
   { label: 'Kampagnen', href: 'kampagnen.html' },
+  { label: 'Personal', href: 'personal.html' },
   { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
   { label: 'Einstellungen', href: 'einstellungen.html' }
 ];
@@ -20,6 +21,7 @@ const MOBILE_ADMIN_NAV_ITEMS = [
   { label: 'Firmenliste', href: 'firmenliste.html' },
   { label: 'Aufträge', href: 'auftraege.html' },
   { label: 'Rechnungen', href: 'rechnungen.html' },
+  { label: 'Personal', href: 'personal.html' },
   { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
   { label: 'Einstellungen', href: 'einstellungen.html' }
 ];
