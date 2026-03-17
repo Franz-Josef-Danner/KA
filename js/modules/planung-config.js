@@ -9,26 +9,30 @@ export const COLUMNS = [
   "Projekt",
   "Firma",
   "Abgabedatum",
-  "Drehbeginn",
-  "Drehende",
+  "Ausweichtermin",
+  "Ausweichtermine",
   "Drehtage",
   "DrehtagDaten",
+  "DrehtagDetails",
+  "TalentPool",
+  "Drehbeginn",
+  "Drehende",
   "Drehorte",
+  "DrehortTyp",
+  "InterviewEnthalten",
+  "BRollBenoetigt",
+  "Drohne",
+  "TonaufnahmeNotwendig",
+  "KameraSetup",
+  "LichtLevel",
+  "TonLevel",
+  "BewegungLevel",
   "BenoetigteDepartments",
-  "Planungsstatus",
-  "Verantwortlicher",
   "PersonalZugewiesen",
   "EquipmentBestaetigt",
   "LocationBestaetigt",
   "Notizen",
   "erstelltAm"
-];
-
-export const PLANUNGSSTATUS_OPTIONS = [
-  "Offen",
-  "In Vorbereitung",
-  "Bereit",
-  "Abgeschlossen"
 ];
 
 export const BESTAETIGT_OPTIONS = ["Ausstehend", "Ja", "Nein"];

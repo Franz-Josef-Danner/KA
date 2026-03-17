@@ -1179,7 +1179,15 @@ initModalHandlers();
 
 // Listen for custom events to avoid circular dependencies
 window.addEventListener('openOrderModal', (e) => {
-  openOrderModal(e.detail.rowIndex);
+  const rowIndex = e.detail.rowIndex;
+  if (Number.isInteger(rowIndex)) {
+    const row = getRows()[rowIndex];
+    if (row?.istGrossauftrag === true) {
+      window.dispatchEvent(new CustomEvent('openGrossauftragModal', { detail: { rowIndex } }));
+      return;
+    }
+  }
+  openOrderModal(rowIndex);
 });
 
 window.addEventListener('ordersChanged', () => {

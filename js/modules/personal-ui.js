@@ -5,6 +5,7 @@
 import { DEPARTMENTS, COLUMNS } from './personal-config.js';
 import { getRows, newEmptyRow, generateId, updateRow, setRows } from './personal-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
+import { getDepartmentMinimumRate } from './settings.js';
 import { render } from './personal-render.js';
 
 let currentEditIndex = null;
@@ -53,10 +54,38 @@ function openModal(rowIndex = null) {
     if (idEl) idEl.value = "";
     // Pre-select active dept filter
     if (activeDeptFilter && deptSelect) deptSelect.value = activeDeptFilter;
+
+    const tagessatzInput = document.getElementById('pm_Tagessatz');
+    if (tagessatzInput) {
+      tagessatzInput.dataset.manualEdited = 'false';
+    }
+
+    applyDepartmentDefaultRate();
   }
 
   modal.style.display = "flex";
   setTimeout(() => document.getElementById("pm_Vorname")?.focus(), 80);
+}
+
+function applyDepartmentDefaultRate() {
+  if (currentEditIndex !== null) return;
+
+  const deptSelect = document.getElementById('pm_Department');
+  const tagessatzInput = document.getElementById('pm_Tagessatz');
+  if (!deptSelect || !tagessatzInput) return;
+
+  const department = sanitizeText(deptSelect.value || '');
+  if (!department) return;
+
+  const currentValue = sanitizeText(tagessatzInput.value || '');
+  const isManual = tagessatzInput.dataset.manualEdited === 'true';
+  if (currentValue && isManual) return;
+
+  const rate = getDepartmentMinimumRate(department);
+  if (rate === null || rate === undefined || rate === '') return;
+
+  tagessatzInput.value = String(rate);
+  tagessatzInput.dataset.manualEdited = 'false';
 }
 
 function closeModal() {
@@ -75,6 +104,8 @@ function validateAndSave() {
   const vorname   = getField("pm_Vorname");
   const nachname  = getField("pm_Nachname");
   const dept      = getField("pm_Department");
+  const telefon   = getField('pm_Telefon');
+  const email     = getField('pm_Email');
 
   if (!vorname.trim()) {
     alert("Bitte geben Sie einen Vornamen ein.");
@@ -89,6 +120,25 @@ function validateAndSave() {
   if (!dept) {
     alert("Bitte wählen Sie ein Department aus.");
     document.getElementById("pm_Department")?.focus();
+    return;
+  }
+
+  if (!telefon.trim()) {
+    alert('Bitte geben Sie eine Telefonnummer ein.');
+    document.getElementById('pm_Telefon')?.focus();
+    return;
+  }
+
+  if (!email.trim()) {
+    alert('Bitte geben Sie eine E-Mail-Adresse ein.');
+    document.getElementById('pm_Email')?.focus();
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alert('Bitte geben Sie eine gueltige E-Mail-Adresse ein.');
+    document.getElementById('pm_Email')?.focus();
     return;
   }
 
@@ -130,6 +180,18 @@ export function initPersonalUI(deptFilterGetter, searchGetter) {
       activeDeptFilter = deptFilterGetter();
       activeSearch     = searchGetter();
       openModal(null);
+    });
+
+  document.getElementById('pm_Department')
+    ?.addEventListener('change', () => {
+      applyDepartmentDefaultRate();
+    });
+
+  document.getElementById('pm_Tagessatz')
+    ?.addEventListener('input', event => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement)) return;
+      input.dataset.manualEdited = sanitizeText(input.value || '') ? 'true' : 'false';
     });
 
   document.getElementById("personalModalClose")

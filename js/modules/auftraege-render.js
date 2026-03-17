@@ -12,6 +12,12 @@ import { generatePdfFilename } from '../utils/pdf-helpers.js';
 import { notifyOrderDeleted } from './email-notifications.js';
 import { calculateItemsTotal } from '../utils/invoice-helpers.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
+import {
+  ensureInitialized as ensurePlanungInitialized,
+  getRows as getPlanungRows,
+  setRows as setPlanungRows,
+  save as savePlanung,
+} from './planung-state.js';
 
 const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
@@ -230,6 +236,18 @@ export function render() {
         rows.splice(idx, 1);
         setRows(rows);
         save();
+
+        if (row.istGrossauftrag === true && row.Auftrags_ID) {
+          await ensurePlanungInitialized();
+          const planungRows = getPlanungRows();
+          const filtered = planungRows.filter(item => item.Auftrags_ID !== row.Auftrags_ID);
+          if (filtered.length !== planungRows.length) {
+            setPlanungRows(filtered);
+            await savePlanung();
+            window.dispatchEvent(new Event('planungChanged'));
+          }
+        }
+
         render();
       } finally {
         // Always hide loading overlay

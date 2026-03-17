@@ -156,6 +156,15 @@
         </div>
 
         <div class="form-section">
+          <h2>Mindest-Tagesgagen pro Department</h2>
+          <div class="form-hint" style="margin-bottom: 15px;">
+            Definieren Sie hier Standard-Tagessaetze je Department. Beim Anlegen neuer Personen
+            wird der passende Wert automatisch uebernommen, sofern das Tagessatz-Feld noch nicht manuell befuellt wurde.
+          </div>
+          <div id="departmentRatesGrid" class="department-rates-grid"></div>
+        </div>
+
+        <div class="form-section">
           <h2>E-Mail-Benachrichtigungen</h2>
           <div class="form-hint" style="margin-bottom: 15px;">
             <strong>ℹ️ Hinweis:</strong> Die Server-Verbindung (IMAP/SMTP) wird über das Backend verwaltet. 
@@ -405,6 +414,7 @@
       saveEmailConfigAsync,
       validateEmailConfig
     } from './js/modules/email-config.js';
+    import { DEPARTMENTS } from './js/modules/personal-config.js';
     import { initEmailErrorDisplay } from './js/modules/email-error-display.js';
     
     (() => {
@@ -451,6 +461,63 @@
       const resetBtn = document.getElementById('resetBtn');
       const emailEnabled = document.getElementById('emailEnabled');
       const emailConfigSection = document.getElementById('emailConfigSection');
+      const departmentRatesGrid = document.getElementById('departmentRatesGrid');
+
+      function buildDepartmentRateInputs() {
+        if (!departmentRatesGrid) return;
+        departmentRatesGrid.innerHTML = '';
+
+        DEPARTMENTS.forEach((department) => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'form-group';
+
+          const label = document.createElement('label');
+          label.setAttribute('for', `rate_${department}`);
+          label.textContent = department;
+
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.min = '0';
+          input.step = '0.01';
+          input.id = `rate_${department}`;
+          input.placeholder = 'z. B. 450';
+          input.dataset.rateInput = 'department';
+          input.dataset.department = department;
+
+          wrapper.appendChild(label);
+          wrapper.appendChild(input);
+          departmentRatesGrid.appendChild(wrapper);
+        });
+      }
+
+      function collectDepartmentRates(errors) {
+        const rates = {};
+        document.querySelectorAll('input[data-rate-input="department"]').forEach((input) => {
+          const department = input.dataset.department || '';
+          const rawValue = input.value.trim();
+          if (!department || !rawValue) return;
+
+          const numeric = Number(rawValue.replace(',', '.'));
+          if (!Number.isFinite(numeric) || numeric < 0) {
+            errors.push(`Ungueltiger Mindest-Tagessatz fuer Department \"${department}\".`);
+            return;
+          }
+
+          rates[department] = numeric;
+        });
+        return rates;
+      }
+
+      function applyDepartmentRates(rates) {
+        const safeRates = rates && typeof rates === 'object' ? rates : {};
+        document.querySelectorAll('input[data-rate-input="department"]').forEach((input) => {
+          const department = input.dataset.department || '';
+          const value = safeRates[department];
+          input.value = value !== undefined && value !== null && value !== '' ? String(value) : '';
+        });
+      }
+
+      buildDepartmentRateInputs();
       
       // Load current settings (async)
       let isLoading = false;
@@ -521,11 +588,13 @@
             bankName: document.getElementById('bankName').value.trim(),
             accountHolder: document.getElementById('accountHolder').value.trim(),
             iban: document.getElementById('iban').value.trim(),
-            bic: document.getElementById('bic').value.trim()
+            bic: document.getElementById('bic').value.trim(),
+            departmentMinimumRates: {}
           };
           
           // Validate settings
           const errors = validateSettings(settings);
+          settings.departmentMinimumRates = collectDepartmentRates(errors);
           
           // Get email configuration
           const emailConfig = {
@@ -598,6 +667,7 @@
           document.getElementById('accountHolder').value = settings.accountHolder || '';
           document.getElementById('iban').value = settings.iban || '';
           document.getElementById('bic').value = settings.bic || '';
+          applyDepartmentRates(settings.departmentMinimumRates);
           
           if (settings.logo) {
             logoImage.src = settings.logo;

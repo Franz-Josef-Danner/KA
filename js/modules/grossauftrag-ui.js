@@ -4,7 +4,6 @@
 import { getRows, setRows, save } from './auftraege-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { getCustomerDisplayName } from '../utils/helpers.js';
-import { DEPARTMENTS } from './personal-config.js';
 import {
   ensureInitialized as ensurePlanungInitialized,
   getRows as getPlanungRows,
@@ -15,6 +14,7 @@ import {
 
 // Storage key prefix used to distinguish Großaufträge from regular orders
 const GROSSAUFTRAG_PREFIX = "GA-";
+let currentGrossauftragEditIndex = null;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,6 +29,11 @@ function getCustomerCompanies() {
       .map(c => ({
         Firmen_ID: c.Firmen_ID || "",
         Firma: getCustomerDisplayName(c),
+        Titel: c.Titel || "",
+        Vorname: c.Vorname || "",
+        Nachname: c.Nachname || "",
+        Persoenlich: c["Persönlich"] || "",
+        Tell: c.Tell || "",
         Adresse: c.Adresse || "",
         "E-mail": c["E-mail"] || "",
       }))
@@ -41,6 +46,33 @@ function getCustomerCompanies() {
 
 function getCompanyByName(name) {
   return getCustomerCompanies().find(c => c.Firma === name) || null;
+}
+
+function buildCompanyContactName(company) {
+  if (!company) return "";
+  const parts = [company.Titel, company.Vorname, company.Nachname]
+    .map(value => (typeof value === "string" ? value.trim() : ""))
+    .filter(Boolean);
+  if (parts.length > 0) return parts.join(" ");
+  return typeof company.Persoenlich === "string" ? company.Persoenlich.trim() : "";
+}
+
+function buildCompanyContactInfo(company) {
+  if (!company) return "";
+  const phone = typeof company.Tell === "string" ? company.Tell.trim() : "";
+  const email = typeof company["E-mail"] === "string" ? company["E-mail"].trim() : "";
+  if (phone && email) return `${phone} | ${email}`;
+  return phone || email || "";
+}
+
+function applyCompanyContactToForm(companyName) {
+  const company = getCompanyByName(companyName);
+  const ansprechpartnerInput = document.getElementById("ga_Ansprechpartner");
+  const kontaktInput = document.getElementById("ga_AnsprechpartnerKontakt");
+  if (!ansprechpartnerInput || !kontaktInput) return;
+
+  ansprechpartnerInput.value = buildCompanyContactName(company);
+  kontaktInput.value = buildCompanyContactInfo(company);
 }
 
 function toDateStr(date) {
@@ -63,82 +95,6 @@ function generateGrossauftragId(firmaName) {
   return `${base}-${seq}`;
 }
 
-/** Read all checked department checkboxes. Returns a comma-separated string. */
-function readBenoetigteDepartments() {
-  const checked = Array.from(
-    document.querySelectorAll('input[name="BenoetigteDepartments"]:checked')
-  ).map(cb => cb.value);
-  return checked.join(", ");
-}
-
-/** Build department checkboxes dynamically from the shared DEPARTMENTS list. */
-function renderDepartmentCheckboxes() {
-  const container = document.getElementById("ga_departments_container");
-  if (!container) return;
-  container.innerHTML = "";
-  DEPARTMENTS.forEach(dept => {
-    const label = document.createElement("label");
-    label.className = "ga-dept-check";
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.name = "BenoetigteDepartments";
-    cb.value = dept;
-
-    label.appendChild(cb);
-    label.appendChild(document.createTextNode(" " + dept));
-    container.appendChild(label);
-  });
-}
-
-// ── Drehtag date-picker list ──────────────────────────────────────────────────
-
-/**
- * Render N date-picker inputs inside #ga_drehtag_list.
- * Existing values are preserved when re-rendering (e.g. user changed count).
- */
-function renderDrehtagList(count, existingDates = []) {
-  const container = document.getElementById("ga_drehtag_list");
-  if (!container) return;
-
-  // Collect current values before clearing so we don't lose user input
-  const currentValues = Array.from(
-    container.querySelectorAll("input[data-drehtag]")
-  ).map(i => i.value);
-
-  container.innerHTML = "";
-
-  const n = parseInt(count, 10);
-  if (!n || n < 1) return;
-
-  for (let i = 0; i < n; i++) {
-    const fg = document.createElement("div");
-    fg.className = "form-group ga-drehtag-item";
-
-    const label = document.createElement("label");
-    label.setAttribute("for", `ga_drehtag_${i}`);
-    label.textContent = `Drehtag ${i + 1}:`;
-
-    const input = document.createElement("input");
-    input.type = "date";
-    input.id = `ga_drehtag_${i}`;
-    input.dataset.drehtag = String(i);
-    // Prefer existing user input → then restored values → then provided dates
-    input.value = currentValues[i] || existingDates[i] || "";
-
-    fg.appendChild(label);
-    fg.appendChild(input);
-    container.appendChild(fg);
-  }
-}
-
-/** Read all Drehtag date values from the dynamic list. Returns an array of strings. */
-function readDrehtagDaten() {
-  const container = document.getElementById("ga_drehtag_list");
-  if (!container) return [];
-  return Array.from(container.querySelectorAll("input[data-drehtag]")).map(i => i.value);
-}
-
 // ── Dropdown population ───────────────────────────────────────────────────────
 
 function populateFirmaDropdown() {
@@ -155,29 +111,39 @@ function populateFirmaDropdown() {
 
 // ── Modal open / close ────────────────────────────────────────────────────────
 
-export function openGrossauftragModal() {
+export function openGrossauftragModal(rowIndex = null) {
   const modal = document.getElementById("grossauftragModal");
   if (!modal) return;
 
+  currentGrossauftragEditIndex = rowIndex;
   const form = document.getElementById("grossauftragForm");
+  const title = document.getElementById("grossauftragModalTitle");
+  const saveBtn = document.getElementById("grossauftragModalSave");
   if (form) form.reset();
 
-  // Clear dynamic drehtag list
-  const drehtag_list = document.getElementById("ga_drehtag_list");
-  if (drehtag_list) drehtag_list.innerHTML = "";
-
-  // Rebuild department checkboxes (fresh, all unchecked) and hide error
-  renderDepartmentCheckboxes();
-  const deptErr = document.getElementById("ga_dept_error");
-  if (deptErr) deptErr.style.display = "none";
-
   populateFirmaDropdown();
+  const drehtageInput = document.getElementById('ga_Drehtage');
 
-  const datumInput = document.getElementById("ga_Auftragsdatum");
-  if (datumInput) datumInput.value = new Date().toISOString().split("T")[0];
+  if (rowIndex === null) {
+    if (title) title.textContent = "Großauftrag erstellen";
+    if (saveBtn) saveBtn.textContent = "Großauftrag speichern";
 
-  const idInput = document.getElementById("ga_Auftrags_ID");
-  if (idInput) idInput.value = "";
+    const datumInput = document.getElementById("ga_Auftragsdatum");
+    if (datumInput) datumInput.value = new Date().toISOString().split("T")[0];
+
+    const idInput = document.getElementById("ga_Auftrags_ID");
+    if (idInput) idInput.value = "";
+
+    if (drehtageInput) {
+      drehtageInput.disabled = false;
+      drehtageInput.title = '';
+      drehtageInput.value = '1';
+    }
+  } else {
+    if (title) title.textContent = "Großauftrag bearbeiten";
+    if (saveBtn) saveBtn.textContent = "Änderungen speichern";
+    populateGrossauftragForm(getRows()[rowIndex] || {});
+  }
 
   modal.style.display = "flex";
 
@@ -187,6 +153,65 @@ export function openGrossauftragModal() {
 function closeGrossauftragModal() {
   const modal = document.getElementById("grossauftragModal");
   if (modal) modal.style.display = "none";
+  currentGrossauftragEditIndex = null;
+}
+
+function populateGrossauftragForm(row) {
+  const map = {
+    ga_Auftrags_ID: "Auftrags_ID",
+    ga_Auftragsdatum: "Auftragsdatum",
+    ga_Firma: "Firma",
+    ga_Ansprechpartner: "Ansprechpartner",
+    ga_AnsprechpartnerKontakt: "AnsprechpartnerKontakt",
+    ga_Projekt: "Projekt",
+    ga_Projekttyp: "Projekttyp",
+    ga_Drehtage: "Drehtage",
+    ga_Abgabedatum: "Abgabedatum",
+    ga_Budget: "Budget",
+    ga_Rabatt: "Rabatt",
+    ga_Beschreibung: "Beschreibung",
+    ga_Kommentare: "Kommentare",
+  };
+
+  Object.entries(map).forEach(([id, field]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = row?.[field] || "";
+  });
+
+  applyCompanyContactToForm(row?.Firma || "");
+
+  const drehtageInput = document.getElementById('ga_Drehtage');
+  if (drehtageInput) {
+    // After initial creation, Drehtage are managed only from the planning page.
+    drehtageInput.disabled = true;
+    drehtageInput.title = 'Drehtage werden nach Erstellung über die Planungsseite verwaltet.';
+  }
+}
+
+async function syncLinkedPlanungEntry(formData, oldOrderId = '') {
+  await ensurePlanungInitialized();
+  const planungRows = getPlanungRows();
+
+  const lookupId = oldOrderId || formData.Auftrags_ID;
+  const existingIndex = planungRows.findIndex(item => item.Auftrags_ID === lookupId);
+
+  if (existingIndex === -1) {
+    const newPlanungEntry = createPlanungFromGrossauftrag(formData);
+    planungRows.unshift(newPlanungEntry);
+  } else {
+    const existing = planungRows[existingIndex] || {};
+    planungRows[existingIndex] = {
+      ...existing,
+      Auftrags_ID: formData.Auftrags_ID || existing.Auftrags_ID || '',
+      Projekt: formData.Projekt || existing.Projekt || '',
+      Firma: formData.Firma || existing.Firma || '',
+      Abgabedatum: formData.Abgabedatum || existing.Abgabedatum || '',
+      Drehtage: formData.Drehtage || existing.Drehtage || '',
+    };
+  }
+
+  setPlanungRows(planungRows);
+  await savePlanung();
 }
 
 // ── Form data collection ──────────────────────────────────────────────────────
@@ -195,6 +220,11 @@ function getFormData() {
   const get = id => sanitizeText(document.getElementById(id)?.value || "");
   const firma = get("ga_Firma");
   const company = getCompanyByName(firma);
+  const drehtageRaw = get('ga_Drehtage');
+  const drehtageParsed = parseInt(drehtageRaw, 10);
+  const normalizedDrehtage = Number.isFinite(drehtageParsed) && drehtageParsed >= 1
+    ? String(drehtageParsed)
+    : '1';
 
   return {
     // Section 1 – Projekt Basis
@@ -208,26 +238,8 @@ function getFormData() {
     Projekt:                get("ga_Projekt"),
     Projekttyp:             get("ga_Projekttyp"),
     // Section 2 – Zeit & Deadlines
-    Drehtage:               get("ga_Drehtage"),
-    DrehtagDaten:           JSON.stringify(readDrehtagDaten()),
+    Drehtage:               normalizedDrehtage,
     Abgabedatum:            get("ga_Abgabedatum"),
-    Ausweichtermin:         get("ga_Ausweichtermin"),
-    Drehbeginn:             get("ga_Drehbeginn"),
-    Drehende:               get("ga_Drehende"),
-    // Section 3 – Drehumfang
-    Drehorte:               get("ga_Drehorte"),
-    DrehortTyp:             get("ga_DrehortTyp"),
-    InterviewEnthalten:     get("ga_InterviewEnthalten"),
-    BRollBenoetigt:         get("ga_BRollBenoetigt"),
-    Drohne:                 get("ga_Drohne"),
-    TonaufnahmeNotwendig:   get("ga_TonaufnahmeNotwendig"),
-    // Section 4 – Equipment Level
-    KameraSetup:            get("ga_KameraSetup"),
-    LichtLevel:             get("ga_LichtLevel"),
-    TonLevel:               get("ga_TonLevel"),
-    BewegungLevel:          get("ga_BewegungLevel"),
-    // Section 5 – Departments
-    BenoetigteDepartments:  readBenoetigteDepartments(),
     // Optional / system
     Budget:                 get("ga_Budget"),
     Rabatt:                 get("ga_Rabatt"),
@@ -252,20 +264,7 @@ function validateForm() {
     ["ga_AnsprechpartnerKontakt", "Bitte geben Sie den Kontakt des Ansprechpartners ein (Telefon oder E-Mail)."],
     ["ga_Projekttyp",             "Bitte wählen Sie einen Projekttyp aus."],
     // Section 2
-    ["ga_Drehtage",               "Bitte geben Sie die Anzahl der Drehtage ein."],
     ["ga_Abgabedatum",            "Bitte geben Sie ein Abgabedatum ein."],
-    // Section 3
-    ["ga_Drehorte",               "Bitte geben Sie die Anzahl der Drehorte ein."],
-    ["ga_DrehortTyp",             "Bitte wählen Sie Innen / Außen / Beides aus."],
-    ["ga_InterviewEnthalten",     "Bitte geben Sie an, ob ein Interview enthalten ist."],
-    ["ga_BRollBenoetigt",         "Bitte geben Sie an, ob B-Roll benötigt wird."],
-    ["ga_Drohne",                 "Bitte geben Sie an, ob eine Drohne eingesetzt wird."],
-    ["ga_TonaufnahmeNotwendig",   "Bitte geben Sie an, ob eine Tonaufnahme notwendig ist."],
-    // Section 4
-    ["ga_KameraSetup",            "Bitte wählen Sie ein Kamera-Setup aus."],
-    ["ga_LichtLevel",             "Bitte wählen Sie ein Licht-Level aus."],
-    ["ga_TonLevel",               "Bitte wählen Sie ein Ton-Level aus."],
-    ["ga_BewegungLevel",          "Bitte wählen Sie ein Bewegungs-Level aus."],
   ];
 
   for (const [id, msg] of checks) {
@@ -277,32 +276,6 @@ function validateForm() {
     }
   }
 
-  // Validate Drehtage ≥ 1
-  const drehtageVal = parseInt(document.getElementById("ga_Drehtage")?.value, 10);
-  if (!drehtageVal || drehtageVal < 1) {
-    alert("Die Anzahl der Drehtage muss mindestens 1 betragen.");
-    document.getElementById("ga_Drehtage")?.focus();
-    return false;
-  }
-
-  // Validate Drehorte ≥ 1
-  const drehorteVal = parseInt(document.getElementById("ga_Drehorte")?.value, 10);
-  if (!drehorteVal || drehorteVal < 1) {
-    alert("Die Anzahl der Drehorte muss mindestens 1 betragen.");
-    document.getElementById("ga_Drehorte")?.focus();
-    return false;
-  }
-
-  // Validate at least one department is selected
-  const checkedDepts = document.querySelectorAll('input[name="BenoetigteDepartments"]:checked');
-  const deptErr = document.getElementById("ga_dept_error");
-  if (checkedDepts.length === 0) {
-    if (deptErr) deptErr.style.display = "block";
-    deptErr?.scrollIntoView({ behavior: "smooth", block: "center" });
-    return false;
-  }
-  if (deptErr) deptErr.style.display = "none";
-
   return true;
 }
 
@@ -310,6 +283,14 @@ function validateForm() {
 
 async function saveGrossauftrag() {
   if (!validateForm()) return;
+
+  const drehtageInput = document.getElementById('ga_Drehtage');
+  if (drehtageInput) {
+    const drehtageVal = parseInt(drehtageInput.value, 10);
+    if (!Number.isFinite(drehtageVal) || drehtageVal < 1) {
+      drehtageInput.value = '1';
+    }
+  }
 
   const idInput = document.getElementById("ga_Auftrags_ID");
   if (idInput && !idInput.value) {
@@ -319,20 +300,31 @@ async function saveGrossauftrag() {
 
   const formData = getFormData();
   const rows = getRows();
-  // Prepend to match the behaviour of standard new-order creation (most recent first)
-  rows.unshift(formData);
+
+  if (currentGrossauftragEditIndex === null) {
+    // Prepend to match the behaviour of standard new-order creation (most recent first)
+    rows.unshift(formData);
+  } else {
+    const existing = rows[currentGrossauftragEditIndex] || {};
+    const previousId = existing.Auftrags_ID || '';
+    rows[currentGrossauftragEditIndex] = {
+      ...existing,
+      ...formData,
+      istGrossauftrag: true,
+      items: Array.isArray(existing.items) ? existing.items : [],
+    };
+    await syncLinkedPlanungEntry(rows[currentGrossauftragEditIndex], previousId);
+  }
+
   setRows(rows);
   await save();
 
-  // Automatically create a corresponding Planung entry
-  await ensurePlanungInitialized();
-  const planungRows = getPlanungRows();
-  const newPlanungEntry = createPlanungFromGrossauftrag(formData);
-  planungRows.unshift(newPlanungEntry);
-  setPlanungRows(planungRows);
-  await savePlanung();
+  if (currentGrossauftragEditIndex === null) {
+    await syncLinkedPlanungEntry(formData);
+  }
 
   window.dispatchEvent(new Event("ordersChanged"));
+  window.dispatchEvent(new Event("planungChanged"));
   closeGrossauftragModal();
 }
 
@@ -406,6 +398,22 @@ function initGrossauftragHandlers() {
   document.getElementById("newGrossauftragBtn")
     ?.addEventListener("click", () => openGrossauftragModal());
 
+  const drehtageInput = document.getElementById('ga_Drehtage');
+  if (drehtageInput) {
+    drehtageInput.addEventListener('blur', () => {
+      if (drehtageInput.disabled) return;
+      const val = parseInt(drehtageInput.value, 10);
+      if (!Number.isFinite(val) || val < 1) {
+        drehtageInput.value = '1';
+      }
+    });
+  }
+
+  window.addEventListener('openGrossauftragModal', event => {
+    const rowIndex = Number.isInteger(event?.detail?.rowIndex) ? event.detail.rowIndex : null;
+    openGrossauftragModal(rowIndex);
+  });
+
   // ✕ close button → ask first
   document.getElementById("grossauftragModalClose")
     ?.addEventListener("click", () => confirmDiscard());
@@ -425,12 +433,7 @@ function initGrossauftragHandlers() {
       const idInput = document.getElementById("ga_Auftrags_ID");
       const firma = document.getElementById("ga_Firma")?.value || "";
       if (idInput) idInput.value = firma ? generateGrossauftragId(firma) : "";
-    });
-
-  // Dynamic Drehtag date pickers: re-render when count changes
-  document.getElementById("ga_Drehtage")
-    ?.addEventListener("input", e => {
-      renderDrehtagList(e.target.value);
+      applyCompanyContactToForm(firma);
     });
 
   // Enter key in form (except textarea) submits

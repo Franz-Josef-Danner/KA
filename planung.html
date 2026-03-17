@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Planung - KA System</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <style>
     /* ── Planung page specifics ─────────────────────────────────── */
     #planungGrid th[data-col="Auftrags_ID"]         { width: 14%; }
@@ -17,17 +18,13 @@
     #planungGrid td[data-col="Abgabedatum"]         { width: 8%; }
     #planungGrid th[data-col="Drehtage"]            { width: 6%; }
     #planungGrid td[data-col="Drehtage"]            { width: 6%; text-align: center; }
-    #planungGrid th[data-col="Planungsstatus"]      { width: 10%; }
-    #planungGrid td[data-col="Planungsstatus"]      { width: 10%; }
-    #planungGrid th[data-col="Bestaetigung"]        { width: 12%; }
-    #planungGrid td[data-col="Bestaetigung"]        { width: 12%; }
     #planungGrid th.actions,
     #planungGrid td.actions                         { width: 8%; min-width: 0; max-width: none; }
 
     /* ── Planung modal ──────────────────────────────────────────── */
     #planungModal .modal-content {
-      max-width: 780px;
-      width: 95%;
+      width: 75%;
+      max-width: 1200px;
     }
     #planungModal .modal-header {
       background: linear-gradient(135deg, #0f766e, #0d9488);
@@ -73,6 +70,400 @@
       padding-bottom: 4px;
       border-bottom: 1px solid #e5e7eb;
     }
+
+    .drehtag-plan-list {
+      display: grid;
+      gap: 12px;
+      grid-column: 1 / -1;
+    }
+
+    .drehtag-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 10px;
+    }
+
+    .drehtag-plan-card {
+      border: 1px solid #dbe4f0;
+      border-radius: 10px;
+      background: #f8fafc;
+      padding: 14px 16px;
+    }
+
+    .drehtag-plan-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .drehtag-plan-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .drehtag-plan-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 16px;
+    }
+    .drehtag-plan-grid .form-group {
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .drehtag-plan-grid .form-group input {
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .drehtag-plan-summary {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .subdetail-list {
+      display: grid;
+      gap: 10px;
+      grid-column: 1 / -1;
+      margin-top: 4px;
+    }
+
+    .subdetail-card {
+      border: 1px solid #d8dee9;
+      border-radius: 10px;
+      background: white;
+      padding: 12px 14px;
+    }
+
+    .subdetail-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .subdetail-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .subdetail-summary {
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .department-assignment-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .department-assignment-item {
+      border: 1px solid #dbe4f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #f8fafc;
+    }
+
+    .department-assignment-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .department-assignment-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .department-assignment-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .department-assignment-summary {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .exclusive-checkbox-group {
+      display: grid;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .exclusive-checkbox-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #1e293b;
+    }
+
+    .personnel-picker-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .personnel-picker-item {
+      border: 1px solid #dbe4f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #f8fafc;
+    }
+
+    .personnel-picker-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .personnel-picker-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .personnel-picker-meta {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .personnel-picker-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #drehtagDetailModal .modal-content {
+      width: 75%;
+      max-width: 1200px;
+    }
+
+    #drehtagDetailModal .modal-header {
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      color: white;
+      border-radius: 12px 12px 0 0;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #drehtagDetailModal .modal-header h2 {
+      color: white;
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #drehtagDetailModal .modal-header .modal-close {
+      color: white;
+    }
+
+    #drehortDetailModal .modal-content {
+      width: 75%;
+      max-width: 1200px;
+    }
+
+    #drehortDetailModal .modal-header {
+      background: linear-gradient(135deg, #7c2d12, #9a3412);
+      color: white;
+      border-radius: 12px 12px 0 0;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #drehortDetailModal .modal-header h2 {
+      color: white;
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #drehortDetailModal .modal-header .modal-close {
+      color: white;
+    }
+
+    #departmentPersonnelModal .modal-content {
+      width: 75%;
+      max-width: 1200px;
+    }
+
+    #departmentPersonnelModal .modal-header {
+      background: linear-gradient(135deg, #0f766e, #0f766e);
+      color: white;
+      border-radius: 12px 12px 0 0;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #departmentPersonnelModal .modal-header h2 {
+      color: white;
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #departmentPersonnelModal .modal-header .modal-close {
+      color: white;
+    }
+
+    /* ── Ausweichtermine ─────────────────────────────────────── */
+    .ausweich-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .ausweich-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ausweich-row .ausweich-date-input {
+      flex: 1;
+      min-width: 0;
+    }
+    .btn-icon {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid #dbe4f0;
+      border-radius: 6px;
+      background: #f8fafc;
+      cursor: pointer;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #374151;
+      transition: background 0.15s;
+    }
+    .btn-icon:hover { background: #e2e8f0; }
+    .btn-icon-danger { color: #ef4444; border-color: #fecaca; }
+    .btn-icon-danger:hover { background: #fee2e2; }
+
+    .drehort-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flatpickr-day.flatpickr-day-drehtag-blocked {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #fff;
+    }
+
+    .flatpickr-day.flatpickr-day-ausweich-blocked {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: #fff;
+    }
+
+    /* ── Sun times ───────────────────────────────────────────── */
+    .sun-times-info {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #1e293b;
+    }
+    .location-hint {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .parking-field {
+      transition: all 0.2s ease;
+    }
+
+    /* ── Casting ─────────────────────────────────────────────── */
+    .casting-table-wrapper { overflow-x: auto; }
+    .casting-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .casting-table th {
+      background: #f1f5f9;
+      border: 1px solid #dbe4f0;
+      padding: 6px 8px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+    }
+    .casting-table td {
+      border: 1px solid #dbe4f0;
+      padding: 3px 5px;
+    }
+    .casting-table input.casting-field {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      padding: 2px 4px;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .casting-table input.casting-field:focus { background: #f0f9ff; border-radius: 3px; }
+    .casting-remove-btn {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #ef4444;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .casting-remove-btn:hover { color: #b91c1c; }
+
+    @media (max-width: 720px) {
+      .drehtag-plan-grid,
+      #pm_drehtag_cards,
+      #dd_drehort_cards,
+      #dl_departments_container,
+      .personnel-picker-head {
+        grid-template-columns: 1fr;
+      }
+
+      .personnel-picker-head {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
@@ -82,7 +473,7 @@
 
   <div class="bar">
     <input id="planungSearch" class="search" type="search"
-           placeholder="Suchen (Auftrags-ID, Projekt, Firma, Status …)" />
+           placeholder="Suchen (Auftrags-ID, Projekt, Firma, Details …)" />
   </div>
 
   <div class="hint">
@@ -99,8 +490,6 @@
           <th data-col="Firma">Firma</th>
           <th data-col="Abgabedatum">Abgabedatum</th>
           <th data-col="Drehtage">Drehtage</th>
-          <th data-col="Planungsstatus">Planungsstatus</th>
-          <th data-col="Bestaetigung">Bestätigung</th>
           <th class="actions">Aktion</th>
         </tr>
       </thead>
@@ -137,51 +526,21 @@
             <span id="pm_Abgabedatum"></span>
           </div>
           <div class="planung-info-item">
-            <label>Drehbeginn</label>
-            <span id="pm_Drehbeginn"></span>
-          </div>
-          <div class="planung-info-item">
-            <label>Drehende</label>
-            <span id="pm_Drehende"></span>
-          </div>
-          <div class="planung-info-item">
             <label>Anzahl Drehtage</label>
             <span id="pm_Drehtage"></span>
-          </div>
-          <div class="planung-info-item">
-            <label>Benötigte Departments</label>
-            <span id="pm_Departments"></span>
-          </div>
-          <div class="planung-info-item" style="grid-column: 1 / -1;">
-            <label>Drehtag-Daten</label>
-            <div id="pm_drehtagList"></div>
           </div>
         </div>
 
         <!-- Editable planning fields -->
         <p class="section-title">Planungsdetails</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
-          <div class="form-group">
-            <label for="pm_Planungsstatus">Planungsstatus:</label>
-            <select id="pm_Planungsstatus" name="Planungsstatus"></select>
-          </div>
-          <div class="form-group">
-            <label for="pm_Verantwortlicher">Verantwortlicher:</label>
-            <input type="text" id="pm_Verantwortlicher" name="Verantwortlicher"
-                   placeholder="Name der verantwortlichen Person" />
-          </div>
-          <div class="form-group">
-            <label for="pm_PersonalZugewiesen">Personal zugewiesen:</label>
-            <input type="text" id="pm_PersonalZugewiesen" name="PersonalZugewiesen"
-                   placeholder="Zugewiesene Mitarbeiter (Komma-getrennt)" />
-          </div>
-          <div class="form-group">
-            <label for="pm_EquipmentBestaetigt">Equipment bestätigt:</label>
-            <select id="pm_EquipmentBestaetigt" name="EquipmentBestaetigt"></select>
-          </div>
-          <div class="form-group">
-            <label for="pm_LocationBestaetigt">Location bestätigt:</label>
-            <select id="pm_LocationBestaetigt" name="LocationBestaetigt"></select>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Drehtage im Detail:</label>
+            <div class="drehtag-toolbar">
+              <button id="planungTalentBtn" type="button" class="page-primary-action">Talent</button>
+              <button id="planungAddDrehtagBtn" type="button" class="page-primary-action">+ Drehtag hinzufügen</button>
+            </div>
+            <div id="pm_drehtag_cards" class="drehtag-plan-list"></div>
           </div>
           <div class="form-group" style="grid-column: 1 / -1;">
             <label for="pm_Notizen">Notizen:</label>
@@ -194,6 +553,182 @@
         <button id="planungModalCancel" class="btn-secondary">Abbrechen</button>
         <button id="planungModalSave" class="btn-primary"
                 style="background: linear-gradient(135deg,#0f766e,#0d9488);">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="drehtagDetailModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="drehtagDetailTitle">Drehtag konfigurieren</h2>
+        <button id="drehtagDetailClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+          <!-- Sonnenzeiten -->
+          <div class="form-group" style="grid-column:1 / -1;">
+            <label>Sonnenzeiten (primärer Drehort):</label>
+            <div class="sun-times-info">
+              <span>Lokal Sonnenaufgang: <strong id="dd_sonnenaufgang">—</strong></span>
+              <span>Lokal Sonnenuntergang: <strong id="dd_sonnenuntergang">—</strong></span>
+              <span>Referenz MEZ/MESZ Sonnenaufgang: <strong id="dd_sonnenaufgang_cet">—</strong></span>
+              <span>Referenz MEZ/MESZ Sonnenuntergang: <strong id="dd_sonnenuntergang_cet">—</strong></span>
+            </div>
+            <div class="location-hint" id="dd_sonnen_ref">Referenz: noch kein Drehort definiert</div>
+          </div>
+          <div class="form-group">
+            <label for="dd_Drehbeginn">Drehbeginn (Uhrzeit):</label>
+            <input type="time" id="dd_Drehbeginn" name="Drehbeginn" />
+          </div>
+          <div class="form-group">
+            <label for="dd_Drehende">Drehende (Uhrzeit):</label>
+            <input type="time" id="dd_Drehende" name="Drehende" />
+          </div>
+          <div class="form-group" style="grid-column:1 / -1;">
+            <label>Drehorte im Detail:</label>
+            <div class="drehort-toolbar">
+              <span class="location-hint">Reihenfolge kann direkt per Pfeilen angepasst werden.</span>
+              <button id="dd_add_drehort_btn" type="button" class="btn-secondary">+ Drehort hinzufügen</button>
+            </div>
+            <div id="dd_drehort_cards" class="subdetail-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="drehtagDetailCancel" class="btn-secondary">Abbrechen</button>
+        <button id="drehtagDetailSave" class="btn-primary" style="background: linear-gradient(135deg,#1d4ed8,#1e40af);">Drehtag speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="drehortDetailModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="drehortDetailTitle">Drehort konfigurieren</h2>
+        <button id="drehortDetailClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+          <div class="form-group" style="grid-column:1 / -1;">
+            <label for="dl_Adresse">Adresse (Drehort):</label>
+            <input type="text" id="dl_Adresse" name="Adresse"
+                   placeholder="z.B. Musterstraße 1, 1010 Wien oder 48.2082, 16.3738" />
+            <div class="location-hint">Akzeptiert klassische Adressen und Google-Maps-Koordinaten.</div>
+          </div>
+          <div class="form-group">
+            <label for="dl_AnzahlFahrzeuge">Anzahl Fahrzeuge:</label>
+            <input type="number" id="dl_AnzahlFahrzeuge" name="AnzahlFahrzeuge" min="0" step="1" value="0" />
+          </div>
+          <div id="dl_parkplatz_group" class="form-group parking-field" style="display:none;">
+            <label for="dl_ParkplatzAdresse">Parkplatz-Adresse:</label>
+            <input type="text" id="dl_ParkplatzAdresse" name="ParkplatzAdresse"
+                   placeholder="z.B. Parkplatz Hauptstraße 12 oder 48.2105, 16.3609" />
+            <div class="location-hint">Akzeptiert klassische Adressen und Google-Maps-Koordinaten.</div>
+          </div>
+          <div class="form-group">
+            <label>Innen / Außen / Beides:</label>
+            <div id="dl_DrehortTyp" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Interview enthalten:</label>
+            <div id="dl_InterviewEnthalten" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>B-Roll benötigt:</label>
+            <div id="dl_BRollBenoetigt" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Drohne:</label>
+            <div id="dl_Drohne" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Tonaufnahme notwendig:</label>
+            <div id="dl_TonaufnahmeNotwendig" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Kamera Setup:</label>
+            <div id="dl_KameraSetup" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Licht:</label>
+            <div id="dl_LichtLevel" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Ton:</label>
+            <div id="dl_TonLevel" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Bewegung:</label>
+            <div id="dl_BewegungLevel" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group">
+            <label>Locationsbestätigung:</label>
+            <div id="dl_LocationBestaetigt" class="exclusive-checkbox-group"></div>
+          </div>
+          <div class="form-group" style="grid-column:1 / -1;">
+            <label>Benötigte Departments:</label>
+            <div id="dl_departments_container" class="department-assignment-list"></div>
+          </div>
+          <div class="form-group" style="grid-column:1 / -1;">
+            <label>Zugewiesene Talente:</label>
+            <div id="dl_talent_mini_table" class="casting-table-wrapper"></div>
+            <button id="dl_add_talent_assignment_btn" type="button" class="btn-secondary" style="margin-top:8px;">+ Talent zuweisen</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="drehortDetailCancel" class="btn-secondary">Abbrechen</button>
+        <button id="drehortDetailSave" class="btn-primary" style="background: linear-gradient(135deg,#7c2d12,#9a3412);">Drehort speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="departmentPersonnelModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="departmentPersonnelTitle">Department-Personal auswählen</h2>
+        <button id="departmentPersonnelClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="departmentPersonnelHint" class="hint" style="margin-top:0;"></p>
+        <div id="departmentPersonnelList" class="personnel-picker-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="departmentPersonnelCancel" class="btn-secondary">Abbrechen</button>
+        <button id="departmentPersonnelSave" class="btn-primary" style="background: linear-gradient(135deg,#0f766e,#0d9488);">Personal übernehmen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="talentSettingsModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #14532d, #166534); color: white; border-radius: 12px 12px 0 0; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="color:white;margin:0;font-size:16px;">Talent verwalten</h2>
+        <button id="talentSettingsClose" class="modal-close" style="color:white;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="talentSettingsTableWrap" class="casting-table-wrapper"></div>
+        <button id="talentSettingsAddRow" type="button" class="btn-secondary" style="margin-top:10px;">+ Zeile hinzufügen</button>
+      </div>
+      <div class="modal-footer">
+        <button id="talentSettingsCancel" class="btn-secondary">Abbrechen</button>
+        <button id="talentSettingsSave" class="btn-primary" style="background: linear-gradient(135deg,#14532d,#166534);">Übernehmen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="talentPickerModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1f2937, #111827); color: white; border-radius: 12px 12px 0 0; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="color:white;margin:0;font-size:16px;">Talent auswählen</h2>
+        <button id="talentPickerClose" class="modal-close" style="color:white;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="talentPickerList" class="personnel-picker-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="talentPickerCancel" class="btn-secondary">Abbrechen</button>
+        <button id="talentPickerAdd" class="btn-primary" style="background: linear-gradient(135deg,#1f2937,#111827);">Auswahl übernehmen</button>
       </div>
     </div>
   </div>
@@ -212,6 +747,7 @@
       }
     })();
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script type="module" src="./js/planung-app.js"></script>
 </body>
 </html>

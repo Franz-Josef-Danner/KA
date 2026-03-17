@@ -106,7 +106,7 @@
   <h1>Personal – Übersicht</h1>
 
   <div class="bar">
-    <button id="newPersonalBtn" class="btn-primary">+ Person hinzufügen</button>
+    <button id="newPersonalBtn" class="page-primary-action">+ Person hinzufügen</button>
     <input id="personalSearch" class="search" type="search" placeholder="Suchen (Name, Rolle, E-Mail …)" />
     <span id="personalCount"></span>
   </div>
@@ -178,12 +178,12 @@
             <input type="text" id="pm_Rolle" name="Rolle" placeholder="z. B. Director of Photography" />
           </div>
           <div class="form-group">
-            <label for="pm_Telefon">Telefon:</label>
-            <input type="tel" id="pm_Telefon" name="Telefon" placeholder="+49 …" />
+            <label for="pm_Telefon">Telefon: *</label>
+            <input type="tel" id="pm_Telefon" name="Telefon" placeholder="+49 …" required />
           </div>
           <div class="form-group">
-            <label for="pm_Email">E-Mail:</label>
-            <input type="email" id="pm_Email" name="Email" placeholder="name@beispiel.de" />
+            <label for="pm_Email">E-Mail: *</label>
+            <input type="email" id="pm_Email" name="Email" placeholder="name@beispiel.de" required />
           </div>
           <div class="form-group">
             <label for="pm_Tagessatz">Tagessatz (€/Tag):</label>

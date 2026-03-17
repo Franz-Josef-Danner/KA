@@ -41,8 +41,28 @@ function getDefaultSettings() {
     bankName: '',
     accountHolder: '',
     iban: '',
-    bic: ''
+    bic: '',
+    departmentMinimumRates: {}
   };
+}
+
+export function getDepartmentMinimumRate(department) {
+  const safeDepartment = typeof department === 'string' ? department.trim() : '';
+  if (!safeDepartment) return null;
+
+  const settings = getCompanySettings();
+  const rates = settings?.departmentMinimumRates;
+  if (!rates || typeof rates !== 'object') return null;
+
+  const raw = rates[safeDepartment];
+  if (raw === null || raw === undefined || raw === '') return null;
+
+  const normalized = typeof raw === 'string'
+    ? Number(raw.replace(',', '.'))
+    : Number(raw);
+
+  if (!Number.isFinite(normalized) || normalized < 0) return null;
+  return normalized;
 }
 
 // Save company settings to localStorage

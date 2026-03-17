@@ -4,19 +4,6 @@
 import { getRows, setRows, save } from './planung-state.js';
 import { debounce } from '../utils/helpers.js';
 
-const STATUS_COLORS = {
-  'Offen':           '#f59e0b',
-  'In Vorbereitung': '#3b82f6',
-  'Bereit':          '#10b981',
-  'Abgeschlossen':   '#6b7280',
-};
-
-const BESTAETIGT_COLORS = {
-  'Ja':          '#10b981',
-  'Nein':        '#ef4444',
-  'Ausstehend':  '#f59e0b',
-};
-
 export function render() {
   const tbody = document.getElementById('planungTbody');
   const searchInput = document.getElementById('planungSearch');
@@ -30,7 +17,7 @@ export function render() {
   if (rows.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 8;
+    td.colSpan = 6;
     td.style.textAlign = 'center';
     td.style.padding = '32px';
     td.style.color = '#9ca3af';
@@ -66,20 +53,6 @@ export function render() {
     // Drehtage
     appendTd(tr, row.Drehtage || '—', { textAlign: 'center' });
 
-    // Planungsstatus
-    const statusColor = STATUS_COLORS[row.Planungsstatus] || '#6b7280';
-    appendTdHtml(tr,
-      `<span style="font-weight:600;color:${statusColor};">${row.Planungsstatus || 'Offen'}</span>`
-    );
-
-    // Equipment / Location confirmed
-    const eqColor  = BESTAETIGT_COLORS[row.EquipmentBestaetigt] || '#f59e0b';
-    const locColor = BESTAETIGT_COLORS[row.LocationBestaetigt]  || '#f59e0b';
-    appendTdHtml(tr,
-      `<span title="Equipment" style="color:${eqColor};font-size:12px;">Equip: ${row.EquipmentBestaetigt || 'Ausstehend'}</span><br>` +
-      `<span title="Location"  style="color:${locColor};font-size:12px;">Loc:   ${row.LocationBestaetigt  || 'Ausstehend'}</span>`
-    );
-
     // Actions
     const act = document.createElement('td');
     act.className = 'actions';
@@ -93,22 +66,6 @@ export function render() {
       window.dispatchEvent(new CustomEvent('openPlanungModal', { detail: { rowIndex: idx } }));
     });
     act.appendChild(editBtn);
-
-    const delBtn = document.createElement('button');
-    delBtn.textContent = '−';
-    delBtn.title = 'Eintrag löschen';
-    delBtn.className = 'danger';
-    delBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const ok = confirm(`Planungseintrag „${row.Projekt || row.Auftrags_ID}" wirklich löschen?`);
-      if (!ok) return;
-      const r = getRows();
-      r.splice(idx, 1);
-      setRows(r);
-      save();
-      render();
-    });
-    act.appendChild(delBtn);
 
     tr.appendChild(act);
     tbody.appendChild(tr);
@@ -133,10 +90,35 @@ function appendTdHtml(tr, html) {
 }
 
 function rowMatchesSearch(row, q) {
+  let dailyDetailText = '';
+  try {
+    const details = JSON.parse(row.DrehtagDetails || '[]');
+    if (Array.isArray(details)) {
+      dailyDetailText = details
+        .map(detail => flattenSearchValues(detail))
+        .join(' ');
+    }
+  } catch {
+    dailyDetailText = '';
+  }
+
   const fields = [
     row.Auftrags_ID, row.Projekt, row.Firma,
-    row.Planungsstatus, row.Verantwortlicher,
-    row.BenoetigteDepartments, row.Notizen
+    row.Notizen, dailyDetailText
   ];
   return fields.some(f => (f || '').toLowerCase().includes(q));
+}
+
+function flattenSearchValues(value) {
+  if (Array.isArray(value)) {
+    return value.map(item => flattenSearchValues(item)).join(' ');
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.values(value)
+      .map(item => flattenSearchValues(item))
+      .join(' ');
+  }
+
+  return value == null ? '' : String(value);
 }

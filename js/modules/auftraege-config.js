@@ -21,22 +21,7 @@ export const COLUMNS = [
   "Artikel",
   "Laufzeit",
   "Drehtage",
-  "DrehtagDaten",
-  "Abgabedatum",
-  "Ausweichtermin",
-  "Drehbeginn",
-  "Drehende",
-  "Drehorte",
-  "DrehortTyp",
-  "InterviewEnthalten",
-  "BRollBenoetigt",
-  "Drohne",
-  "TonaufnahmeNotwendig",
-  "KameraSetup",
-  "LichtLevel",
-  "TonLevel",
-  "BewegungLevel",
-  "BenoetigteDepartments"
+  "Abgabedatum"
 ];
 
 // Status column dropdown options (currently hidden from UI, status is automated)
