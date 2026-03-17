@@ -223,7 +223,6 @@ function getFormData() {
     BenoetigteDepartments:  readBenoetigteDepartments(),
     // Optional / system
     Budget:                 get("ga_Budget"),
-    Laufzeit:               get("ga_Laufzeit"),
     Rabatt:                 get("ga_Rabatt"),
     Beschreibung:           get("ga_Beschreibung"),
     Kommentare:             get("ga_Kommentare"),
@@ -322,28 +321,88 @@ async function saveGrossauftrag() {
   closeGrossauftragModal();
 }
 
+// ── Discard confirmation ──────────────────────────────────────────────────────
+
+/**
+ * Ask the user what to do when trying to leave the modal with unsaved data.
+ * Returns true if the modal was ultimately closed (user discarded or saved),
+ * false if the user chose to stay.
+ */
+async function confirmDiscard() {
+  // Build a modal-style in-page dialog instead of browser confirm() so it
+  // respects the same visual style and can offer a "Speichern" shortcut.
+  return new Promise(resolve => {
+    // Reuse an existing overlay if one exists (e.g. double-click of close btn)
+    const existing = document.getElementById("gaDiscardDialog");
+    if (existing) { existing.remove(); }
+
+    const overlay = document.createElement("div");
+    overlay.id = "gaDiscardDialog";
+    overlay.style.cssText =
+      "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10001;" +
+      "display:flex;align-items:center;justify-content:center;";
+
+    const box = document.createElement("div");
+    box.style.cssText =
+      "background:#fff;border-radius:12px;padding:28px 32px;max-width:380px;width:90%;" +
+      "box-shadow:0 8px 32px rgba(0,0,0,.22);text-align:center;";
+
+    box.innerHTML =
+      `<p style="font-size:15px;font-weight:600;color:#1f2937;margin:0 0 8px;">Großauftrag verlassen?</p>` +
+      `<p style="font-size:13px;color:#6b7280;margin:0 0 20px;">` +
+      `Nicht gespeicherte Eingaben gehen verloren.</p>` +
+      `<div style="display:flex;gap:10px;justify-content:center;">` +
+      `<button id="gaDiscardStay"  style="padding:8px 18px;border-radius:6px;border:1.5px solid #d1d5db;background:#fff;font-size:13px;cursor:pointer;font-weight:600;color:#374151;">Weiterarbeiten</button>` +
+      `<button id="gaDiscardSave"  style="padding:8px 18px;border-radius:6px;border:none;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;font-size:13px;cursor:pointer;font-weight:600;">Speichern</button>` +
+      `<button id="gaDiscardLeave" style="padding:8px 18px;border-radius:6px;border:none;background:#ef4444;color:#fff;font-size:13px;cursor:pointer;font-weight:600;">Verwerfen</button>` +
+      `</div>`;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    document.getElementById("gaDiscardStay").addEventListener("click", () => {
+      overlay.remove();
+      resolve(false);
+    });
+
+    document.getElementById("gaDiscardSave").addEventListener("click", async () => {
+      // Remove the dialog overlay first so the user can see the form and any
+      // validation error highlights that saveGrossauftrag() may surface.
+      overlay.remove();
+      await saveGrossauftrag();
+      // saveGrossauftrag closes the modal on success; if it stays open, validation
+      // failed and the user should fix the form — so we resolve(false) to keep it open.
+      const modalStillOpen =
+        document.getElementById("grossauftragModal")?.style.display !== "none";
+      resolve(!modalStillOpen);
+    });
+
+    document.getElementById("gaDiscardLeave").addEventListener("click", () => {
+      overlay.remove();
+      closeGrossauftragModal();
+      resolve(true);
+    });
+  });
+}
+
 // ── Event wiring ──────────────────────────────────────────────────────────────
 
 function initGrossauftragHandlers() {
   document.getElementById("newGrossauftragBtn")
     ?.addEventListener("click", () => openGrossauftragModal());
 
+  // ✕ close button → ask first
   document.getElementById("grossauftragModalClose")
-    ?.addEventListener("click", closeGrossauftragModal);
+    ?.addEventListener("click", () => confirmDiscard());
 
+  // "Abbrechen" button → ask first
   document.getElementById("grossauftragModalCancel")
-    ?.addEventListener("click", closeGrossauftragModal);
+    ?.addEventListener("click", () => confirmDiscard());
 
   document.getElementById("grossauftragModalSave")
     ?.addEventListener("click", async () => saveGrossauftrag());
 
-  // Close on backdrop click
-  document.getElementById("grossauftragModal")
-    ?.addEventListener("click", e => {
-      if (e.target === document.getElementById("grossauftragModal")) {
-        closeGrossauftragModal();
-      }
-    });
+  // Backdrop click: intentionally does nothing (data-loss prevention)
 
   // Auto-generate ID when Firma changes
   document.getElementById("ga_Firma")
