@@ -322,45 +322,6 @@
     </div>
 
     <div class="settings-card" style="margin-top: 30px;">
-      <div class="form-section">
-        <h2>Bank-E-Mail verarbeiten</h2>
-        <div class="form-hint" style="margin-bottom: 15px;">
-          Fügen Sie den Text einer Zahlungsbenachrichtigung Ihrer Bank ein. Das System
-          erkennt automatisch die Rechnungsnummer und den überwiesenen Betrag und markiert
-          die Rechnung als <strong>bezahlt</strong>, sobald Betrag und Rechnungsnummer
-          übereinstimmen.
-          <br><br>
-          <strong>Beispiel einer Bank-E-Mail:</strong>
-          <pre style="background:#f3f4f6;padding:10px;border-radius:4px;font-size:0.85em;margin-top:6px;white-space:pre-wrap;">Hallo Franz Josef Danner,
-
-Sie haben soeben 744,00 EUR auf Ihr Konto 5484 erhalten.
-Buchungstext: Rechnung F-02035-20260228-001.
-
-Liebe Grüße, Ihr George.</pre>
-        </div>
-
-        <div class="form-group">
-          <label for="bankEmailBody">E-Mail-Text einfügen</label>
-          <textarea
-            id="bankEmailBody"
-            name="bankEmailBody"
-            rows="8"
-            placeholder="Hier den vollständigen Text der Bank-E-Mail einfügen …"
-            style="font-family: monospace; font-size: 0.9em;"
-          ></textarea>
-        </div>
-
-        <div id="bankEmailResult" style="display: none; margin-top: 10px;"></div>
-
-        <div class="form-actions">
-          <button type="button" id="processBankEmailBtn" class="btn-primary">
-            Rechnung als bezahlt markieren
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="settings-card" style="margin-top: 30px;">
       <form id="adminCredentialsForm" class="settings-form">
         <div class="form-section">
           <h2>Administrator-Zugangsdaten ändern</h2>
@@ -875,59 +836,6 @@ Liebe Grüße, Ihr George.</pre>
         } finally {
           testBtn.disabled    = false;
           testBtn.textContent = 'Jetzt prüfen';
-        }
-      });
-    })();
-    // Bank email processing
-    (() => {
-      const btn        = document.getElementById('processBankEmailBtn');
-      const textarea   = document.getElementById('bankEmailBody');
-      const resultBox  = document.getElementById('bankEmailResult');
-
-      function showBankResult(message, isError) {
-        resultBox.textContent = message;
-        resultBox.className   = isError ? 'message error-message' : 'message success-message';
-        resultBox.style.display = 'block';
-      }
-
-      btn.addEventListener('click', async () => {
-        const emailBody = textarea.value.trim();
-        if (!emailBody) {
-          showBankResult('Bitte fügen Sie den E-Mail-Text ein.', true);
-          return;
-        }
-
-        btn.disabled       = true;
-        btn.textContent    = 'Verarbeite …';
-        resultBox.style.display = 'none';
-
-        try {
-          const response = await fetch('api/process-bank-email.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ emailBody }),
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            const msg = result.alreadyPaid
-              ? result.message
-              : `✅ ${result.message}`;
-            showBankResult(msg, false);
-            if (!result.alreadyPaid) {
-              textarea.value = '';
-              // Notify other open tabs / the invoice list to reload
-              window.dispatchEvent(new Event('invoicesChanged'));
-            }
-          } else {
-            showBankResult(`❌ ${result.error || 'Unbekannter Fehler'}`, true);
-          }
-        } catch (err) {
-          showBankResult(`❌ Netzwerkfehler: ${err.message}`, true);
-        } finally {
-          btn.disabled    = false;
-          btn.textContent = 'Rechnung als bezahlt markieren';
         }
       });
     })();
