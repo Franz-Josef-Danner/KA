@@ -160,7 +160,10 @@ export function initPlanungModalHandlers() {
 
   // Escape key closes modal
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closePlanungModal();
+    const modal = document.getElementById('planungModal');
+    if (e.key === 'Escape' && modal && modal.style.display !== 'none') {
+      closePlanungModal();
+    }
   });
 
   // Listen for table row double-clicks forwarded via custom event
