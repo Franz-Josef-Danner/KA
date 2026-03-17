@@ -35,7 +35,8 @@ export const COLUMNS = [
   "KameraSetup",
   "LichtLevel",
   "TonLevel",
-  "BewegungLevel"
+  "BewegungLevel",
+  "BenoetigteDepartments"
 ];
 
 // Status column dropdown options (currently hidden from UI, status is automated)

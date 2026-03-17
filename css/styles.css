@@ -2680,3 +2680,50 @@ td.readonly:hover {
   grid-template-columns: 1fr 1fr;
   gap: 0 16px;
 }
+/* Departments checkbox grid */
+.ga-departments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 16px;
+  padding: 4px 0 8px;
+}
+@media (max-width: 600px) {
+  .ga-departments-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.ga-dept-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1.5px solid #e5e7eb;
+  transition: background 0.12s, border-color 0.12s;
+  user-select: none;
+}
+.ga-dept-check:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+.ga-dept-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #7c3aed;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ga-dept-check:has(input:checked) {
+  background: #ede9fe;
+  border-color: #7c3aed;
+  color: #5b21b6;
+  font-weight: 600;
+}
+.ga-dept-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 4px 0 0;
+}

@@ -23,7 +23,8 @@ const HIDDEN_COLUMNS = [
   'Projekttyp', 'Drehtage', 'DrehtagDaten', 'Abgabedatum', 'Ausweichtermin',
   'Drehbeginn', 'Drehende', 'Drehorte', 'DrehortTyp',
   'InterviewEnthalten', 'BRollBenoetigt', 'Drohne', 'TonaufnahmeNotwendig',
-  'KameraSetup', 'LichtLevel', 'TonLevel', 'BewegungLevel'
+  'KameraSetup', 'LichtLevel', 'TonLevel', 'BewegungLevel',
+  'BenoetigteDepartments'
 ];
 
 // Helper function to create the Summe (total) cell

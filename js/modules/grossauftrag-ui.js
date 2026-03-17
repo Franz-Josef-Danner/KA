@@ -4,6 +4,7 @@
 import { getRows, setRows, save } from './auftraege-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { getCustomerDisplayName } from '../utils/helpers.js';
+import { DEPARTMENTS } from './personal-config.js';
 
 // Storage key prefix used to distinguish Großaufträge from regular orders
 const GROSSAUFTRAG_PREFIX = "GA-";
@@ -53,6 +54,34 @@ function generateGrossauftragId(firmaName) {
   const existing = rows.filter(r => r.Auftrags_ID && r.Auftrags_ID.startsWith(base));
   const seq = (existing.length + 1).toString().padStart(3, "0");
   return `${base}-${seq}`;
+}
+
+/** Read all checked department checkboxes. Returns a comma-separated string. */
+function readBenoetigteDepartments() {
+  const checked = Array.from(
+    document.querySelectorAll('input[name="BenoetigteDepartments"]:checked')
+  ).map(cb => cb.value);
+  return checked.join(", ");
+}
+
+/** Build department checkboxes dynamically from the shared DEPARTMENTS list. */
+function renderDepartmentCheckboxes() {
+  const container = document.getElementById("ga_departments_container");
+  if (!container) return;
+  container.innerHTML = "";
+  DEPARTMENTS.forEach(dept => {
+    const label = document.createElement("label");
+    label.className = "ga-dept-check";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.name = "BenoetigteDepartments";
+    cb.value = dept;
+
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(" " + dept));
+    container.appendChild(label);
+  });
 }
 
 // ── Drehtag date-picker list ──────────────────────────────────────────────────
@@ -130,6 +159,11 @@ export function openGrossauftragModal() {
   const drehtag_list = document.getElementById("ga_drehtag_list");
   if (drehtag_list) drehtag_list.innerHTML = "";
 
+  // Rebuild department checkboxes (fresh, all unchecked) and hide error
+  renderDepartmentCheckboxes();
+  const deptErr = document.getElementById("ga_dept_error");
+  if (deptErr) deptErr.style.display = "none";
+
   populateFirmaDropdown();
 
   const datumInput = document.getElementById("ga_Auftragsdatum");
@@ -185,6 +219,8 @@ function getFormData() {
     LichtLevel:             get("ga_LichtLevel"),
     TonLevel:               get("ga_TonLevel"),
     BewegungLevel:          get("ga_BewegungLevel"),
+    // Section 5 – Departments
+    BenoetigteDepartments:  readBenoetigteDepartments(),
     // Optional / system
     Budget:                 get("ga_Budget"),
     Laufzeit:               get("ga_Laufzeit"),
@@ -250,6 +286,16 @@ function validateForm() {
     document.getElementById("ga_Drehorte")?.focus();
     return false;
   }
+
+  // Validate at least one department is selected
+  const checkedDepts = document.querySelectorAll('input[name="BenoetigteDepartments"]:checked');
+  const deptErr = document.getElementById("ga_dept_error");
+  if (checkedDepts.length === 0) {
+    if (deptErr) deptErr.style.display = "block";
+    deptErr?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return false;
+  }
+  if (deptErr) deptErr.style.display = "none";
 
   return true;
 }
