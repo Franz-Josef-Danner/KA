@@ -5,6 +5,13 @@ import { getRows, setRows, save } from './auftraege-state.js';
 import { sanitizeText } from '../utils/sanitize.js';
 import { getCustomerDisplayName } from '../utils/helpers.js';
 import { DEPARTMENTS } from './personal-config.js';
+import {
+  ensureInitialized as ensurePlanungInitialized,
+  getRows as getPlanungRows,
+  setRows as setPlanungRows,
+  save as savePlanung,
+  createPlanungFromGrossauftrag
+} from './planung-state.js';
 
 // Storage key prefix used to distinguish Großaufträge from regular orders
 const GROSSAUFTRAG_PREFIX = "GA-";
@@ -316,6 +323,14 @@ async function saveGrossauftrag() {
   rows.unshift(formData);
   setRows(rows);
   await save();
+
+  // Automatically create a corresponding Planung entry
+  await ensurePlanungInitialized();
+  const planungRows = getPlanungRows();
+  const newPlanungEntry = createPlanungFromGrossauftrag(formData);
+  planungRows.unshift(newPlanungEntry);
+  setPlanungRows(planungRows);
+  await savePlanung();
 
   window.dispatchEvent(new Event("ordersChanged"));
   closeGrossauftragModal();
