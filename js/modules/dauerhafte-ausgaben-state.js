@@ -114,7 +114,6 @@ async function loadFromServerOrLocalStorage() {
   }
   
   // Fall back to localStorage
-  console.log('Falling back to localStorage for recurring expenses');
   usingApiStorage = false;
   const stored = localStorage.getItem(STORAGE_KEY);
   return stored ? JSON.parse(stored) : [];

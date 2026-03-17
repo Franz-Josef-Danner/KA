@@ -44,11 +44,9 @@ function updateLastCheckTime() {
  */
 export async function checkBankEmails(force = false) {
   if (!force && !shouldRunCheck()) {
-    console.log('Bank email check skipped – too soon since last check');
     return null;
   }
 
-  console.log('Running automatic bank email check …');
   updateLastCheckTime();
 
   try {
@@ -78,18 +76,11 @@ export async function checkBankEmails(force = false) {
     const paidCount = (result.paid || []).length;
 
     if (paidCount > 0) {
-      console.log(
-        `Bank email check: ${paidCount} invoice(s) automatically marked as paid:`,
-        result.paid.map(p => p.invoiceId)
-      );
-
       // Notify other modules (e.g., invoice list) to reload
       window.dispatchEvent(new Event('invoicesChanged'));
 
       // Show a brief, non-intrusive notification on the dashboard
       showPaidNotification(result.paid);
-    } else {
-      console.log('Bank email check: No new payments found.');
     }
 
     return result;
@@ -172,6 +163,5 @@ function formatAmount(amount) {
 export function resetBankEmailCheckTime() {
   try {
     localStorage.removeItem(BANK_EMAIL_CHECK_KEY);
-    console.log('Bank email check timer reset.');
   } catch { /* ignore */ }
 }

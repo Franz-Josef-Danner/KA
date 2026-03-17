@@ -119,7 +119,6 @@ async function loadCustomerAccountsFromServerOrLocalStorage() {
   
   if (serverData !== null) {
     // Server responded (even if with empty data), use it
-    console.log('Loaded customer accounts from server');
     usingApiStorage = true;
     // Update localStorage cache
     try {
@@ -133,11 +132,9 @@ async function loadCustomerAccountsFromServerOrLocalStorage() {
   // Server failed to respond, check if we have data in localStorage
   const localData = getCustomerAccountsSync();
   if (localData && localData.length > 0) {
-    console.log('Migrating customer accounts from localStorage to server...');
     // Try to save to server
     const migrationSuccess = await saveCustomerAccountsToServer(localData);
     if (migrationSuccess) {
-      console.log('✓ Successfully migrated customer accounts to server');
       usingApiStorage = true;
     } else {
       console.warn('⚠ Failed to migrate customer accounts to server, will continue using localStorage');
@@ -147,7 +144,6 @@ async function loadCustomerAccountsFromServerOrLocalStorage() {
   }
   
   // No data found anywhere, return empty array
-  console.log('No existing customer accounts found, starting fresh');
   usingApiStorage = true; // Assume API is available for new data
   return [];
 }
@@ -252,7 +248,6 @@ async function loadAdminUsersFromServerOrLocalStorage() {
 
   if (serverData !== null && serverData.length > 0) {
     // Server has actual data – use it as the authoritative source
-    console.log('Loaded admin users from server');
     usingApiStorageForAdmin = true;
     try {
       localStorage.setItem(USERS_KEY, JSON.stringify(serverData));
@@ -268,10 +263,8 @@ async function loadAdminUsersFromServerOrLocalStorage() {
   // are not silently lost and can be migrated to the server.
   const localData = getUsersSync();
   if (localData && localData.length > 0) {
-    console.log('Migrating admin users from localStorage to server...');
     const migrationSuccess = await saveAdminUsersToServer(localData);
     if (migrationSuccess) {
-      console.log('✓ Successfully migrated admin users to server');
       usingApiStorageForAdmin = true;
     } else {
       console.warn('⚠ Failed to migrate admin users to server, will continue using localStorage');
@@ -281,7 +274,6 @@ async function loadAdminUsersFromServerOrLocalStorage() {
   }
 
   // No data found anywhere, return empty array
-  console.log('No existing admin users found, starting fresh');
   usingApiStorageForAdmin = true;
   return [];
 }

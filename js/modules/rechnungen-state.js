@@ -108,7 +108,6 @@ async function loadFromServerOrLocalStorage() {
   
   if (serverData !== null) {
     // Server responded (even if with empty data), use it
-    console.log('Loaded invoices from server');
     usingApiStorage = true;
     // Normalize and update localStorage cache
     const normalized = normalizeData(serverData);
@@ -123,11 +122,9 @@ async function loadFromServerOrLocalStorage() {
   // Server failed to respond, check if we have data in localStorage
   const localData = loadSync();
   if (localData && localData.length > 0) {
-    console.log('Migrating invoices from localStorage to server...');
     // Try to save to server
     const migrationSuccess = await saveToServer(localData);
     if (migrationSuccess) {
-      console.log('✓ Successfully migrated invoices to server');
       usingApiStorage = true;
     } else {
       console.warn('⚠ Failed to migrate invoices to server, will continue using localStorage');
@@ -137,7 +134,6 @@ async function loadFromServerOrLocalStorage() {
   }
   
   // No data found anywhere, return empty array
-  console.log('No existing invoices found, starting fresh');
   usingApiStorage = true; // Assume API is available for new data
   return [];
 }

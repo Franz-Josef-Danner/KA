@@ -125,7 +125,6 @@ export async function loadEmailConfigAsync() {
   
   // Fallback to localStorage
   usingApiStorage = false;
-  console.log('Falling back to localStorage for email config');
   return getEmailConfig();
 }
 
@@ -220,8 +219,6 @@ export function queueEmailNotification(type, data, bypassNotificationSettings = 
   });
   saveEmailQueue(queue);
   
-  console.log(`Email notification queued: ${type}`, data);
-  console.log(`Recipient: ${customerEmail}`);
   return id; // Return ID for tracking
 }
 

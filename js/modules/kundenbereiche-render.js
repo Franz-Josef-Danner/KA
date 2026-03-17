@@ -351,9 +351,7 @@ async function showCredentialsModal(firmenId, email, firma) {
         customerName: firma
       });
       
-      if (welcomeEmailSent) {
-        console.log(`Welcome email with new password sent to ${email}`);
-      } else {
+      if (!welcomeEmailSent) {
         console.warn(`Failed to send welcome email to ${email}`);
       }
       

@@ -163,7 +163,6 @@ function loadJsPDF() {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     script.onload = () => {
-      console.log('jsPDF library loaded successfully');
       resolve();
     };
     script.onerror = () => {
@@ -185,7 +184,6 @@ function loadQRCodeLibrary() {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
     script.onload = () => {
-      console.log('QRCode.js library loaded successfully');
       resolve();
     };
     script.onerror = () => {

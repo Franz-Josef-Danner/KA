@@ -429,7 +429,6 @@ async function queueAndSendImmediately(type, data, attachment = null) {
     if (response.ok && result.success) {
       // Mark as sent
       markNotificationAsSent(notificationId);
-      console.log(`Email sent successfully: ${type}`, data);
       return true;
     } else {
       // Email sending failed - leave in queue as pending so user can try again from dashboard
@@ -557,7 +556,6 @@ export async function sendCustomerWelcomeEmail(customerData) {
     const result = await response.json();
     
     if (response.ok && result.success) {
-      console.log(`Welcome email sent successfully to ${customerEmail}`);
       return true;
     } else {
       const errorMessage = result.error || result.message || 'Fehler beim Versenden der E-Mail.';
