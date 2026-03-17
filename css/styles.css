@@ -266,6 +266,12 @@ td.readonly:hover {
 .order-in-progress:hover {
   background-color: #fef3c7 !important;
 }
+.grossauftrag-row {
+  border-left: 4px solid #7c3aed !important;
+}
+.grossauftrag-row:hover {
+  background-color: #f5f3ff !important;
+}
 .status-badge {
   display: inline-block;
   padding: 2px 8px;

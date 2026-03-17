@@ -17,7 +17,7 @@ const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
 // Columns that are stored but not displayed in the table
-const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Ansprechpartner', 'Budget', 'Rabatt'];
+const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Ansprechpartner', 'Budget', 'Rabatt', 'Laufzeit'];
 
 // Helper function to create the Summe (total) cell
 function createSummeCell(row, idx) {
@@ -64,11 +64,16 @@ export function render() {
     // Add status-based CSS class for visual indication
     const status = row.Status || "in Arbeit";
     const isCompleted = status.toLowerCase() === "abgeschlossen";
+    const isGrossauftrag = row.istGrossauftrag === true;
     
     if (isCompleted) {
       tr.classList.add("order-completed");
     } else {
       tr.classList.add("order-in-progress");
+    }
+    
+    if (isGrossauftrag) {
+      tr.classList.add("grossauftrag-row");
     }
     
     // Add double-click handler to open edit modal
@@ -92,7 +97,10 @@ export function render() {
 
       // Display Auftrags_ID
       if (col === "Auftrags_ID") {
-        td.innerHTML = `<span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>`;
+        const badge = isGrossauftrag
+          ? ' <span style="font-size: 10px; background: #7c3aed; color: white; padding: 1px 5px; border-radius: 8px; vertical-align: middle;">GA</span>'
+          : '';
+        td.innerHTML = `<span style="font-weight: 500;">${toCellDisplay(col, row[col])}</span>${badge}`;
       } else if (col === "Status") {
         // Display order status with color coding
         const statusColor = isCompleted ? '#10b981' : '#f59e0b';

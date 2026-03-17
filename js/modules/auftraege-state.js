@@ -171,6 +171,8 @@ function normalizeData(data) {
     }
     // Initialize items array if not present (backward compatibility)
     row.items = Array.isArray(r?.items) ? r.items : [];
+    // Preserve Großauftrag flag
+    row.istGrossauftrag = r?.istGrossauftrag === true;
     return row;
   });
 }

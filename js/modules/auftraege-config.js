@@ -16,7 +16,8 @@ export const COLUMNS = [
   "Kommentare",
   "Status",
   "Rabatt",
-  "Artikel"
+  "Artikel",
+  "Laufzeit"
 ];
 
 // Status column dropdown options (currently hidden from UI, status is automated)
