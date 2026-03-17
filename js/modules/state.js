@@ -328,7 +328,6 @@ async function syncFirmenIds(rowsToSync) {
             if (!welcomeEmailSent) {
               console.warn(`Failed to send welcome email to ${email}`);
             }
-            }
           }
         }
       }
