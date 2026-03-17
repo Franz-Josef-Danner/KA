@@ -2607,3 +2607,76 @@ td.readonly:hover {
     flex-direction: column;
   }
 }
+
+/* ── Großauftrag section layout ─────────────────────────────────────── */
+.ga-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.ga-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.ga-section-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2937;
+  letter-spacing: 0.02em;
+}
+.ga-section-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ga-badge-required {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.ga-badge-optional {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+.ga-section-body {
+  padding: 14px 14px 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+.ga-required-star {
+  color: #dc2626;
+}
+.ga-optional-label {
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 400;
+}
+/* Dynamic Drehtag date-picker list */
+.ga-drehtag-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+  margin-top: 4px;
+}
+.ga-drehtag-item label {
+  font-size: 13px;
+}
+/* Equipment level grid – 2×2 compact */
+.ga-equipment-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}

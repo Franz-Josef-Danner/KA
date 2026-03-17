@@ -31,7 +31,11 @@ export const COLUMNS = [
   "InterviewEnthalten",
   "BRollBenoetigt",
   "Drohne",
-  "TonaufnahmeNotwendig"
+  "TonaufnahmeNotwendig",
+  "KameraSetup",
+  "LichtLevel",
+  "TonLevel",
+  "BewegungLevel"
 ];
 
 // Status column dropdown options (currently hidden from UI, status is automated)
