@@ -10,14 +10,28 @@ export const COLUMNS = [
   "Firmenadresse",
   "Firmen_Email",
   "Ansprechpartner",
+  "AnsprechpartnerKontakt",
   "Beschreibung",
   "Budget",
   "Projekt",
+  "Projekttyp",
   "Kommentare",
   "Status",
   "Rabatt",
   "Artikel",
-  "Laufzeit"
+  "Laufzeit",
+  "Drehtage",
+  "DrehtagDaten",
+  "Abgabedatum",
+  "Ausweichtermin",
+  "Drehbeginn",
+  "Drehende",
+  "Drehorte",
+  "DrehortTyp",
+  "InterviewEnthalten",
+  "BRollBenoetigt",
+  "Drohne",
+  "TonaufnahmeNotwendig"
 ];
 
 // Status column dropdown options (currently hidden from UI, status is automated)

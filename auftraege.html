@@ -164,54 +164,118 @@
         <button id="grossauftragModalClose" class="modal-close" style="color: white;">&times;</button>
       </div>
       <div class="modal-body">
-        <div style="padding: 12px; background-color: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 6px; margin-bottom: 16px;">
-          <p style="margin: 0; color: #5b21b6; font-size: 14px;">
-            <strong>Großauftrag:</strong> Ein Großauftrag umfasst mehrere Teilaufträge oder besondere Konditionen. Bitte füllen Sie die nachfolgenden Felder aus.
-          </p>
-        </div>
         <form id="grossauftragForm">
-          <div class="form-group">
-            <label for="ga_Firma">Firma:</label>
-            <select id="ga_Firma" name="Firma">
-              <!-- Options will be populated dynamically from companies with "Kunde" status -->
-            </select>
+
+          <!-- ── 1. PROJEKT BASIS (PFLICHT) ─────────────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-required">PFLICHT</span>
+              <span class="ga-section-title">1. Projekt Basis</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="form-group">
+                <label for="ga_Projekt">Projektname: <span class="ga-required-star">*</span></label>
+                <input type="text" id="ga_Projekt" name="Projekt" placeholder="z. B. Imagefilm Frühjahr 2026" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Firma">Kunde / Firma: <span class="ga-required-star">*</span></label>
+                <select id="ga_Firma" name="Firma">
+                  <!-- Options will be populated dynamically from companies with "Kunde" status -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ga_Ansprechpartner">Ansprechpartner Name: <span class="ga-required-star">*</span></label>
+                <input type="text" id="ga_Ansprechpartner" name="Ansprechpartner" placeholder="Vor- und Nachname" />
+              </div>
+              <div class="form-group">
+                <label for="ga_AnsprechpartnerKontakt">Ansprechpartner Kontakt: <span class="ga-required-star">*</span></label>
+                <input type="text" id="ga_AnsprechpartnerKontakt" name="AnsprechpartnerKontakt" placeholder="Telefon oder E-Mail" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Projekttyp">Projekttyp: <span class="ga-required-star">*</span></label>
+                <select id="ga_Projekttyp" name="Projekttyp">
+                  <option value="">-- Projekttyp auswählen --</option>
+                  <option value="Imagefilm">Imagefilm</option>
+                  <option value="Recruiting Video">Recruiting Video</option>
+                  <option value="Eventvideo">Eventvideo</option>
+                  <option value="Social Media Content">Social Media Content</option>
+                  <option value="Produktvideo">Produktvideo</option>
+                  <option value="Interview">Interview</option>
+                  <option value="Werbespot">Werbespot</option>
+                  <option value="Sonstiges">Sonstiges</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="ga_Auftrags_ID">Großauftrags-ID:</label>
-            <input type="text" id="ga_Auftrags_ID" name="Auftrags_ID" readonly style="background-color: #f5f5f5;" />
+
+          <!-- ── 2. ZEIT & DEADLINES (PFLICHT) ──────────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-required">PFLICHT</span>
+              <span class="ga-section-title">2. Zeit &amp; Deadlines</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="form-group">
+                <label for="ga_Drehtage">Drehtage Anzahl: <span class="ga-required-star">*</span></label>
+                <input type="number" id="ga_Drehtage" name="Drehtage" min="1" step="1" placeholder="z. B. 3" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Abgabedatum">Abgabedatum: <span class="ga-required-star">*</span></label>
+                <input type="date" id="ga_Abgabedatum" name="Abgabedatum" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Ausweichtermin">Ausweichtermin: <span class="ga-optional-label">(optional)</span></label>
+                <input type="date" id="ga_Ausweichtermin" name="Ausweichtermin" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Drehbeginn">Drehbeginn (Uhrzeit): <span class="ga-optional-label">(optional)</span></label>
+                <input type="time" id="ga_Drehbeginn" name="Drehbeginn" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Drehende">Drehende (Uhrzeit): <span class="ga-optional-label">(optional)</span></label>
+                <input type="time" id="ga_Drehende" name="Drehende" />
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="ga_Auftragsdatum">Auftragsdatum:</label>
-            <input type="date" id="ga_Auftragsdatum" name="Auftragsdatum" />
+
+          <!-- ── Weitere Angaben (optional) ─────────────────────────────── -->
+          <div class="ga-section" style="grid-column: 1 / -1;">
+            <div class="ga-section-header">
+              <span class="ga-section-badge ga-badge-optional">OPTIONAL</span>
+              <span class="ga-section-title">Weitere Angaben</span>
+            </div>
+            <div class="ga-section-body">
+              <div class="form-group">
+                <label for="ga_Auftrags_ID">Großauftrags-ID:</label>
+                <input type="text" id="ga_Auftrags_ID" name="Auftrags_ID" readonly style="background-color: #f5f5f5;" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Auftragsdatum">Auftragsdatum:</label>
+                <input type="date" id="ga_Auftragsdatum" name="Auftragsdatum" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Budget">Gesamtbudget:</label>
+                <input type="text" id="ga_Budget" name="Budget" placeholder="z. B. 50000" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Laufzeit">Laufzeit:</label>
+                <input type="text" id="ga_Laufzeit" name="Laufzeit" placeholder="z. B. 12 Monate" />
+              </div>
+              <div class="form-group">
+                <label for="ga_Rabatt">Rabatt (%):</label>
+                <input type="number" id="ga_Rabatt" name="Rabatt" min="0" max="100" step="0.01" placeholder="0" />
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="ga_Beschreibung">Beschreibung / Leistungsumfang:</label>
+                <textarea id="ga_Beschreibung" name="Beschreibung" rows="4" placeholder="Beschreiben Sie den Leistungsumfang des Großauftrags …"></textarea>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="ga_Kommentare">Kommentare / Besondere Vereinbarungen:</label>
+                <textarea id="ga_Kommentare" name="Kommentare" rows="3" placeholder="Besondere Vereinbarungen, Zahlungsbedingungen, etc. …"></textarea>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="ga_Ansprechpartner">Ansprechpartner:</label>
-            <input type="text" id="ga_Ansprechpartner" name="Ansprechpartner" />
-          </div>
-          <div class="form-group">
-            <label for="ga_Projekt">Projekt:</label>
-            <input type="text" id="ga_Projekt" name="Projekt" />
-          </div>
-          <div class="form-group">
-            <label for="ga_Budget">Gesamtbudget:</label>
-            <input type="text" id="ga_Budget" name="Budget" placeholder="z. B. 50000" />
-          </div>
-          <div class="form-group">
-            <label for="ga_Laufzeit">Laufzeit:</label>
-            <input type="text" id="ga_Laufzeit" name="Laufzeit" placeholder="z. B. 12 Monate" />
-          </div>
-          <div class="form-group">
-            <label for="ga_Rabatt">Rabatt (%):</label>
-            <input type="number" id="ga_Rabatt" name="Rabatt" min="0" max="100" step="0.01" placeholder="0" />
-          </div>
-          <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="ga_Beschreibung">Beschreibung / Leistungsumfang:</label>
-            <textarea id="ga_Beschreibung" name="Beschreibung" rows="4" placeholder="Beschreiben Sie den Leistungsumfang des Großauftrags …"></textarea>
-          </div>
-          <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="ga_Kommentare">Kommentare / Besondere Vereinbarungen:</label>
-            <textarea id="ga_Kommentare" name="Kommentare" rows="3" placeholder="Besondere Vereinbarungen, Zahlungsbedingungen, etc. …"></textarea>
-          </div>
+
         </form>
       </div>
       <div class="modal-footer">

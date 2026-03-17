@@ -17,7 +17,13 @@ const tbody = document.getElementById("tbody");
 const searchInput = document.getElementById("search");
 
 // Columns that are stored but not displayed in the table
-const HIDDEN_COLUMNS = ['Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Ansprechpartner', 'Budget', 'Rabatt', 'Laufzeit'];
+const HIDDEN_COLUMNS = [
+  'Firmenadresse', 'Firmen_Email', 'Beschreibung', 'Ansprechpartner',
+  'AnsprechpartnerKontakt', 'Budget', 'Rabatt', 'Laufzeit',
+  'Projekttyp', 'Drehtage', 'DrehtagDaten', 'Abgabedatum', 'Ausweichtermin',
+  'Drehbeginn', 'Drehende', 'Drehorte', 'DrehortTyp',
+  'InterviewEnthalten', 'BRollBenoetigt', 'Drohne', 'TonaufnahmeNotwendig'
+];
 
 // Helper function to create the Summe (total) cell
 function createSummeCell(row, idx) {
