@@ -108,7 +108,6 @@ async function loadFromServerOrLocalStorage() {
   
   if (serverData !== null) {
     // Server responded (even if with empty data), use it
-    console.log('Loaded article lists from server');
     usingApiStorage = true;
     // Update localStorage cache
     try {
@@ -122,11 +121,9 @@ async function loadFromServerOrLocalStorage() {
   // Server failed to respond, check if we have data in localStorage
   const localData = loadSync();
   if (localData && Object.keys(localData).length > 0) {
-    console.log('Migrating article lists from localStorage to server...');
     // Try to save to server
     const migrationSuccess = await saveToServer(localData);
     if (migrationSuccess) {
-      console.log('✓ Successfully migrated article lists to server');
       usingApiStorage = true;
     } else {
       console.warn('⚠ Failed to migrate article lists to server, will continue using localStorage');
@@ -136,7 +133,6 @@ async function loadFromServerOrLocalStorage() {
   }
   
   // No data found anywhere, return empty object
-  console.log('No existing article lists found, starting fresh');
   usingApiStorage = true; // Assume API is available for new data
   return {};
 }

@@ -217,7 +217,6 @@ async function loadFromServerOrLocalStorage() {
   
   if (serverData !== null && Array.isArray(serverData) && serverData.length > 0) {
     // Server has data - use it as the authoritative source
-    console.log('Loaded company list from server');
     usingApiStorage = true;
     // Update localStorage cache
     try {
@@ -231,11 +230,9 @@ async function loadFromServerOrLocalStorage() {
   // Server responded with empty data or failed - check localStorage for existing data
   const localData = loadSync();
   if (localData && localData.length > 0) {
-    console.log('Migrating company list from localStorage to server...');
     // Try to save to server
     const migrationSuccess = await saveToServer(localData);
     if (migrationSuccess) {
-      console.log('✓ Successfully migrated data to server');
       usingApiStorage = true;
     } else {
       console.warn('⚠ Failed to migrate data to server, will continue using localStorage');
@@ -245,7 +242,6 @@ async function loadFromServerOrLocalStorage() {
   }
   
   // No data found anywhere, return empty array
-  console.log('No existing company list found, starting fresh');
   usingApiStorage = serverData !== null; // Assume API is available if it responded
   return [];
 }
@@ -300,9 +296,7 @@ async function syncFirmenIds(rowsToSync) {
               customerName: firmenName
             });
             
-            if (welcomeEmailSent) {
-              console.log(`Welcome email sent to ${email}`);
-            } else {
+            if (!welcomeEmailSent) {
               console.warn(`Failed to send welcome email to ${email}`);
             }
           }
@@ -331,10 +325,9 @@ async function syncFirmenIds(rowsToSync) {
               customerName: getCustomerDisplayName(row)
             });
             
-            if (welcomeEmailSent) {
-              console.log(`Welcome email sent to ${email}`);
-            } else {
+            if (!welcomeEmailSent) {
               console.warn(`Failed to send welcome email to ${email}`);
+            }
             }
           }
         }

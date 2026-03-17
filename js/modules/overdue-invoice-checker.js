@@ -141,15 +141,11 @@ function updateLastCheckTime() {
 export function checkOverdueInvoices(force = false) {
   // Check if we should run (respects interval unless forced)
   if (!force && !shouldRunCheck()) {
-    console.log('Overdue invoice check skipped - too soon since last check');
     return 0;
   }
   
-  console.log('Running overdue invoice check...');
-  
   const invoices = getRows();
   if (!invoices || invoices.length === 0) {
-    console.log('No invoices to check');
     updateLastCheckTime();
     return 0;
   }
@@ -201,14 +197,12 @@ export function checkOverdueInvoices(force = false) {
     });
     
     if (notificationResult) {
-      console.log(`Overdue notification sent for invoice ${invoiceId} (${daysPastDue} days overdue)`);
       markInvoiceNotified(invoiceId);
       overdueCount++;
     }
   });
   
   updateLastCheckTime();
-  console.log(`Overdue invoice check completed. Found ${overdueCount} new overdue invoices.`);
   return overdueCount;
 }
 
@@ -218,7 +212,6 @@ export function checkOverdueInvoices(force = false) {
 export function clearNotifiedInvoices() {
   try {
     localStorage.removeItem(OVERDUE_NOTIFIED_KEY);
-    console.log('Cleared notified invoices list');
   } catch (error) {
     console.error('Error clearing notified invoices:', error);
   }
@@ -230,7 +223,6 @@ export function clearNotifiedInvoices() {
 export function resetLastCheckTime() {
   try {
     localStorage.removeItem(OVERDUE_CHECK_KEY);
-    console.log('Reset last check time');
   } catch (error) {
     console.error('Error resetting last check time:', error);
   }
@@ -246,7 +238,6 @@ export function clearInvoiceFromNotified(invoiceId) {
     if (notified.has(invoiceId)) {
       notified.delete(invoiceId);
       saveNotifiedInvoices(notified);
-      console.log(`Removed invoice ${invoiceId} from overdue notification list`);
     }
   } catch (error) {
     console.error('Error clearing invoice from notified list:', error);

@@ -127,7 +127,6 @@ export async function loadCompanySettingsAsync() {
   
   // Fallback to localStorage
   usingApiStorage = false;
-  console.log('Falling back to localStorage for company settings');
   return getCompanySettings();
 }
 
