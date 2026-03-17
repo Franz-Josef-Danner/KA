@@ -292,11 +292,12 @@
                 type="text"
                 id="imapFolder"
                 name="imapFolder"
-                value="INBOX"
-                placeholder="INBOX"
+                value="INBOX/finanzen"
+                placeholder="INBOX/finanzen"
               />
               <div class="form-hint">
-                Ordner, in dem die Bank-E-Mails eingehen (meistens <code>INBOX</code>).
+                Ordner, in dem die Bank-E-Mails eingehen. Unterordner werden mit
+                <code>/</code> getrennt angegeben (z. B. <code>INBOX/finanzen</code>).
               </div>
             </div>
 
@@ -790,7 +791,7 @@ Liebe Grüße, Ihr George.</pre>
             hostInput.value     = cfg.host       || result.suggestedImapHost || '';
             portInput.value     = cfg.port       ?? 993;
             secureCb.checked    = cfg.secure     !== false;
-            folderInput.value   = cfg.folder     || 'INBOX';
+            folderInput.value   = cfg.folder     || 'INBOX/finanzen';
             markReadCb.checked  = cfg.markAsRead !== false;
           } else if (result.suggestedImapHost) {
             hostInput.value = result.suggestedImapHost;
@@ -816,7 +817,7 @@ Liebe Grüße, Ihr George.</pre>
             host:       hostInput.value.trim(),
             port:       parseInt(portInput.value, 10) || 993,
             secure:     secureCb.checked,
-            folder:     folderInput.value.trim() || 'INBOX',
+            folder:     folderInput.value.trim() || 'INBOX/finanzen',
             markAsRead: markReadCb.checked,
           };
 

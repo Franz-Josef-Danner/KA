@@ -11,7 +11,7 @@
  *   "host":       "imap.world4you.com",
  *   "port":       993,
  *   "secure":     true,
- *   "folder":     "INBOX",
+ *   "folder":     "INBOX/finanzen",
  *   "markAsRead": true
  * }
  */
@@ -47,12 +47,12 @@ $config = [
     'host'       => trim((string) ($data['host']  ?? '')),
     'port'       => (int)   ($data['port']        ?? 993),
     'secure'     => (bool)  ($data['secure']      ?? true),
-    'folder'     => trim((string) ($data['folder'] ?? 'INBOX')),
+    'folder'     => trim((string) ($data['folder'] ?? 'INBOX/finanzen')),
     'markAsRead' => (bool)  ($data['markAsRead']  ?? true),
 ];
 
 if (empty($config['folder'])) {
-    $config['folder'] = 'INBOX';
+    $config['folder'] = 'INBOX/finanzen';
 }
 if ($config['port'] < 1 || $config['port'] > 65535) {
     $config['port'] = 993;

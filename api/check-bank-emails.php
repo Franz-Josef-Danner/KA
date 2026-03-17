@@ -107,7 +107,7 @@ if (empty($imapHost)) {
 
 $imapPort    = (int)   ($imapConfig['port']    ?? 993);
 $imapSecure  = (bool)  ($imapConfig['secure']  ?? true);
-$imapFolder  = trim(    $imapConfig['folder']  ?? 'INBOX');
+$imapFolder  = trim(    $imapConfig['folder']  ?? 'INBOX/finanzen');
 $markAsRead  = (bool)  ($imapConfig['markAsRead'] ?? true);
 
 // -------------------------------------------------------------------------
