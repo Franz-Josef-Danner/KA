@@ -602,11 +602,29 @@ td.readonly:hover {
    Navigation Styles
    =========================== */
 .main-nav {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: #fff;
   border-bottom: 2px solid #e5e5e5;
   margin: -24px -24px 24px;
   padding: 0 24px;
+}
+
+.nav-logo-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 4px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-logo {
+  display: block;
+  width: 180px;
+  height: auto;
+  max-height: 66px;
 }
 
 .nav-list {
@@ -616,10 +634,93 @@ td.readonly:hover {
   display: flex;
   gap: 4px;
   align-items: center;
+  flex: 1;
 }
 
 .nav-item {
   position: relative;
+}
+
+.nav-item .nav-trigger {
+  display: block;
+  padding: 16px 20px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s, background 0.2s;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  cursor: default;
+}
+
+.nav-item.has-dropdown > .nav-trigger:hover {
+  background: #f8f8f8;
+  color: #667eea;
+}
+
+.nav-item .nav-trigger:focus {
+  outline: none;
+}
+
+.nav-item .nav-trigger:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: -2px;
+  background: #f8f8f8;
+  color: #667eea;
+}
+
+.nav-item.active > .nav-trigger {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 0;
+  min-width: 220px;
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: none;
+  z-index: 100;
+}
+
+.nav-item.has-dropdown:hover > .nav-dropdown,
+.nav-item.has-dropdown:focus-within > .nav-dropdown {
+  display: block;
+}
+
+.nav-dropdown-item {
+  margin: 0;
+  padding: 0;
+}
+
+.nav-dropdown-item a {
+  display: block;
+  padding: 10px 16px;
+  color: #333;
+  font-size: 14px;
+  text-decoration: none;
+  border: none;
+}
+
+.nav-dropdown-item a:hover {
+  background: #f8f8f8;
+  color: #667eea;
+}
+
+.nav-dropdown-item.active a {
+  background: #f0f3ff;
+  color: #667eea;
+  font-weight: 600;
 }
 
 .nav-item a {
@@ -2574,6 +2675,18 @@ td.readonly:hover {
     border-bottom: none;
     margin: 0;
     padding: 56px 0 0;
+    display: block;
+  }
+
+  .main-nav.mobile .nav-logo-link {
+    display: inline-flex;
+    margin: 0 20px 12px;
+    padding: 16px 0;
+  }
+
+  .main-nav.mobile .nav-logo {
+    width: 165px;
+    max-height: 60px;
   }
 
   .main-nav.mobile.open {
@@ -2594,6 +2707,47 @@ td.readonly:hover {
     border-bottom: 1px solid #f0f0f0;
     border-top: none;
     display: block;
+  }
+
+  .main-nav.mobile .nav-item .nav-trigger {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    border-top: none;
+    background: #f9f9f9;
+    color: #555;
+    cursor: default;
+  }
+
+  .main-nav.mobile .nav-item.active > .nav-trigger {
+    color: #667eea;
+    background: #f0f3ff;
+    border-left: 3px solid #667eea;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .main-nav.mobile .nav-dropdown {
+    position: static;
+    display: block;
+    min-width: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    background: #fff;
+  }
+
+  .main-nav.mobile .nav-dropdown-item a {
+    padding: 12px 30px;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .main-nav.mobile .nav-dropdown-item.active a {
+    border-left: 3px solid #667eea;
+    padding-left: 27px;
   }
 
   .main-nav.mobile .nav-item a:hover {

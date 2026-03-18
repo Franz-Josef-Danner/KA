@@ -4,26 +4,27 @@
 import { logout, isAdmin } from './auth.js';
 
 const ADMIN_NAV_ITEMS = [
-  { label: 'Dashboard', href: 'dashboard.html' },
-  { label: 'Firmenliste', href: 'firmenliste.html' },
-  { label: 'Artikellisten', href: 'artikellisten.html' },
-  { label: 'Aufträge', href: 'auftraege.html' },
-  { label: 'Planung', href: 'planung.html' },
-  { label: 'Rechnungen', href: 'rechnungen.html' },
-  { label: 'Ausgaben', href: 'ausgaben.html' },
-  { label: 'Kampagnen', href: 'kampagnen.html' },
-  { label: 'Personal', href: 'personal.html' },
-  { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
-  { label: 'Einstellungen', href: 'einstellungen.html' }
-];
-
-const MOBILE_ADMIN_NAV_ITEMS = [
-  { label: 'Dashboard', href: 'dashboard.html' },
-  { label: 'Firmenliste', href: 'firmenliste.html' },
-  { label: 'Aufträge', href: 'auftraege.html' },
-  { label: 'Planung', href: 'planung.html' },
-  { label: 'Rechnungen', href: 'rechnungen.html' },
-  { label: 'Personal', href: 'personal.html' },
+  {
+    label: 'Buchhaltung',
+    type: 'group',
+    children: [
+      { label: 'Artikellisten', href: 'artikellisten.html' },
+      { label: 'Rechnungen', href: 'rechnungen.html' },
+      { label: 'Ausgaben', href: 'ausgaben.html' }
+    ]
+  },
+  {
+    label: 'Produktion',
+    type: 'group',
+    children: [
+      { label: 'Firmenliste', href: 'firmenliste.html' },
+      { label: 'Aufträge', href: 'auftraege.html' },
+      { label: 'Planung', href: 'planung.html' },
+      { label: 'Kampagnen', href: 'kampagnen.html' },
+      { label: 'Personal', href: 'personal.html' }
+    ]
+  },
+  { label: 'Entwicklung', href: 'dashboard.html' },
   { label: 'Kundenbereiche', href: 'kundenbereiche.html' },
   { label: 'Einstellungen', href: 'einstellungen.html' }
 ];
@@ -138,6 +139,19 @@ export function renderNavigation(currentPage = '') {
   const nav = document.createElement('nav');
   nav.className = 'main-nav';
   nav.setAttribute('aria-label', 'Hauptnavigation');
+
+  const logoLink = document.createElement('a');
+  logoLink.className = 'nav-logo-link';
+  logoLink.href = 'dashboard.html';
+  logoLink.setAttribute('aria-label', 'Zum Dashboard');
+
+  const logoImg = document.createElement('img');
+  logoImg.className = 'nav-logo';
+  logoImg.src = 'data/path10.svg';
+  logoImg.alt = 'KA Logo';
+
+  logoLink.appendChild(logoImg);
+  nav.appendChild(logoLink);
   
   const navList = document.createElement('ul');
   navList.className = 'nav-list';
@@ -147,26 +161,63 @@ export function renderNavigation(currentPage = '') {
   if (mobile) {
     nav.classList.add('mobile');
   }
-  const navItems = isAdmin()
-    ? (mobile ? MOBILE_ADMIN_NAV_ITEMS : ADMIN_NAV_ITEMS)
-    : CUSTOMER_NAV_ITEMS;
+  const navItems = isAdmin() ? ADMIN_NAV_ITEMS : CUSTOMER_NAV_ITEMS;
   
   // Add menu items
   navItems.forEach(item => {
     const li = document.createElement('li');
     li.className = 'nav-item';
-    
-    const a = document.createElement('a');
-    a.href = item.href;
-    a.textContent = item.label;
-    
-    // Mark current page as active
-    if (currentPage && item.href === currentPage) {
-      li.classList.add('active');
-      a.setAttribute('aria-current', 'page');
+
+    if (item.type === 'group' && Array.isArray(item.children)) {
+      li.classList.add('has-dropdown');
+
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'nav-trigger';
+      trigger.textContent = item.label;
+      trigger.setAttribute('aria-haspopup', 'true');
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.tabIndex = mobile ? -1 : 0;
+
+      const dropdown = document.createElement('ul');
+      dropdown.className = 'nav-dropdown';
+
+      let hasActiveChild = false;
+      item.children.forEach(child => {
+        const childLi = document.createElement('li');
+        childLi.className = 'nav-dropdown-item';
+
+        const childLink = document.createElement('a');
+        childLink.href = child.href;
+        childLink.textContent = child.label;
+
+        if (currentPage && child.href === currentPage) {
+          childLi.classList.add('active');
+          li.classList.add('active');
+          childLink.setAttribute('aria-current', 'page');
+          hasActiveChild = true;
+        }
+
+        childLi.appendChild(childLink);
+        dropdown.appendChild(childLi);
+      });
+
+      li.appendChild(trigger);
+      li.appendChild(dropdown);
+    } else {
+      const a = document.createElement('a');
+      a.href = item.href;
+      a.textContent = item.label;
+
+      // Mark current page as active
+      if (currentPage && item.href === currentPage) {
+        li.classList.add('active');
+        a.setAttribute('aria-current', 'page');
+      }
+
+      li.appendChild(a);
     }
-    
-    li.appendChild(a);
+
     navList.appendChild(li);
   });
   
