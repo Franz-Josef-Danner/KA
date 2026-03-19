@@ -16,8 +16,34 @@ export function render() {
 
   const rows = getRows();
 
-  rows.forEach((row, idx) => {
-    if (!rowMatchesSearch(row, q)) return;
+  const parseDate = (str) => {
+    if (!str) return 0;
+    // ISO format: YYYY-MM-DD
+    const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]).getTime();
+    // German format: DD.MM.YYYY
+    const de = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (de) return new Date(+de[3], +de[2] - 1, +de[1]).getTime();
+    // Slash format: DD/MM/YYYY
+    const sl = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (sl) return new Date(+sl[3], +sl[2] - 1, +sl[1]).getTime();
+    return Date.parse(str) || 0;
+  };
+
+  const indexedRows = rows
+    .map((row, idx) => ({ row, idx }))
+    .filter(({ row }) => rowMatchesSearch(row, q))
+    .sort((a, b) => {
+      const dateA = parseDate(a.row.Datum);
+      const dateB = parseDate(b.row.Datum);
+      if (dateA !== dateB) {
+        return dateB - dateA;
+      }
+      // Stable fallback: newer insertions usually have higher source index.
+      return b.idx - a.idx;
+    });
+
+  indexedRows.forEach(({ row, idx }) => {
 
     const tr = document.createElement("tr");
     

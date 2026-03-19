@@ -12,7 +12,10 @@
  *   "port":       993,
  *   "secure":     true,
  *   "folder":     "INBOX/finanzen",
- *   "markAsRead": true
+ *   "markAsRead": true,
+ *   "deleteProcessed": false,
+ *   "archiveProcessed": false,
+ *   "archiveFolder": "INBOX.finanzen.archiv"
  * }
  */
 
@@ -49,10 +52,16 @@ $config = [
     'secure'     => (bool)  ($data['secure']      ?? true),
     'folder'     => trim((string) ($data['folder'] ?? 'INBOX/finanzen')),
     'markAsRead' => (bool)  ($data['markAsRead']  ?? true),
+    'deleteProcessed' => (bool) ($data['deleteProcessed'] ?? false),
+    'archiveProcessed' => (bool) ($data['archiveProcessed'] ?? false),
+    'archiveFolder' => trim((string) ($data['archiveFolder'] ?? 'INBOX.finanzen.archiv')),
 ];
 
 if (empty($config['folder'])) {
     $config['folder'] = 'INBOX/finanzen';
+}
+if (empty($config['archiveFolder'])) {
+    $config['archiveFolder'] = 'INBOX.finanzen.archiv';
 }
 if ($config['port'] < 1 || $config['port'] > 65535) {
     $config['port'] = 993;

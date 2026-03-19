@@ -56,12 +56,32 @@ export async function checkBankEmails(force = false) {
       body: '{}',
     });
 
+    const rawText = await response.text();
+    let result = null;
+
+    if (rawText && rawText.trim() !== '') {
+      try {
+        result = JSON.parse(rawText);
+      } catch (parseError) {
+        const preview = rawText.slice(0, 200).replace(/\s+/g, ' ');
+        console.warn('Bank email check: invalid JSON response', {
+          status: response.status,
+          preview,
+          parseError: parseError.message,
+        });
+        return null;
+      }
+    }
+
     if (!response.ok) {
-      console.warn('Bank email check: server returned HTTP', response.status);
+      console.warn('Bank email check: server returned HTTP', response.status, result?.error || 'no JSON body');
       return null;
     }
 
-    const result = await response.json();
+    if (!result) {
+      console.warn('Bank email check: empty response body from server');
+      return null;
+    }
 
     if (!result.success) {
       // IMAP not configured / not available → log quietly, do not bother the user
@@ -74,13 +94,15 @@ export async function checkBankEmails(force = false) {
     }
 
     const paidCount = (result.paid || []).length;
+    const importedExpenses = result.expensesImported || [];
+    const importedCount = importedExpenses.length;
 
-    if (paidCount > 0) {
+    if (paidCount > 0 || importedCount > 0) {
       // Notify other modules (e.g., invoice list) to reload
       window.dispatchEvent(new Event('invoicesChanged'));
 
       // Show a brief, non-intrusive notification on the dashboard
-      showPaidNotification(result.paid);
+      showBankImportNotification(result.paid || [], importedExpenses);
     }
 
     return result;
@@ -97,7 +119,7 @@ export async function checkBankEmails(force = false) {
  *
  * @param {Array} paidList - Array of { invoiceId, amount, subject }
  */
-function showPaidNotification(paidList) {
+function showBankImportNotification(paidList, importedExpenses) {
   try {
     // Find or create a container near the top of the dashboard
     let container = document.getElementById('bank-email-notification');
@@ -121,14 +143,26 @@ function showPaidNotification(paidList) {
       anchor.insertAdjacentElement('afterbegin', container);
     }
 
-    const lines = paidList.map(p =>
+    const paidLines = paidList.map(p =>
       `• Rechnung <strong>${p.invoiceId}</strong> – ${formatAmount(p.amount)} EUR`
     );
+    const expenseLines = importedExpenses.map(e =>
+      `• Ausgabe <strong>${e.recipient}</strong> – ${formatAmount(e.amount)} EUR`
+    );
 
-    container.innerHTML =
-      `✅ <strong>${paidList.length} Rechnung${paidList.length === 1 ? '' : 'en'} ` +
-      `automatisch als bezahlt markiert:</strong><br>` +
-      lines.join('<br>');
+    const blocks = [];
+    if (paidList.length > 0) {
+      blocks.push(
+        `✅ <strong>${paidList.length} Rechnung${paidList.length === 1 ? '' : 'en'} automatisch als bezahlt markiert:</strong><br>${paidLines.join('<br>')}`
+      );
+    }
+    if (importedExpenses.length > 0) {
+      blocks.push(
+        `💸 <strong>${importedExpenses.length} Ausgabe(n) automatisch erfasst:</strong><br>${expenseLines.join('<br>')}`
+      );
+    }
+
+    container.innerHTML = blocks.join('<br><br>');
 
     container.style.display = 'block';
 

@@ -316,6 +316,37 @@
                 Gelesene E-Mails nach der Verarbeitung als „gelesen" markieren
               </label>
             </div>
+
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="imapDeleteProcessed" name="imapDeleteProcessed" />
+                Erfolgreich verbuchte Bank-E-Mails nach der Verarbeitung löschen
+              </label>
+              <div class="form-hint">
+                Hinweis: Die E-Mail wird per IMAP als gelöscht markiert und aus dem Ordner entfernt.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="imapArchiveProcessed" name="imapArchiveProcessed" />
+                Erfolgreich verbuchte Bank-E-Mails stattdessen in Archivordner verschieben
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label for="imapArchiveFolder">Archiv-Ordner</label>
+              <input
+                type="text"
+                id="imapArchiveFolder"
+                name="imapArchiveFolder"
+                value="INBOX.finanzen.archiv"
+                placeholder="INBOX.finanzen.archiv"
+              />
+              <div class="form-hint">
+                Wird genutzt, wenn „in Archivordner verschieben" aktiviert ist. Fallback auf Löschen bleibt möglich.
+              </div>
+            </div>
           </div>
 
           <div id="imapSaveResult" style="display:none; margin-top:10px;"></div>
@@ -788,9 +819,29 @@
       const secureCb    = document.getElementById('imapSecure');
       const folderInput = document.getElementById('imapFolder');
       const markReadCb  = document.getElementById('imapMarkAsRead');
+      const deleteProcessedCb = document.getElementById('imapDeleteProcessed');
+      const archiveProcessedCb = document.getElementById('imapArchiveProcessed');
+      const archiveFolderInput = document.getElementById('imapArchiveFolder');
       const resultBox   = document.getElementById('imapSaveResult');
       const testBtn     = document.getElementById('imapTestBtn');
       const statusHint  = document.getElementById('imapStatusHint');
+
+      function updateImapPostProcessUi() {
+        const archiveEnabled = archiveProcessedCb.checked;
+
+        // Archiving and deleting at the same time is confusing for users.
+        // If archive is enabled, force-delete is disabled in the UI.
+        if (archiveEnabled) {
+          deleteProcessedCb.checked = false;
+          deleteProcessedCb.disabled = true;
+        } else {
+          deleteProcessedCb.disabled = false;
+        }
+
+        archiveFolderInput.disabled = !archiveEnabled;
+      }
+
+      archiveProcessedCb.addEventListener('change', updateImapPostProcessUi);
 
       function showImapResult(message, isError) {
         resultBox.textContent = message;
@@ -824,9 +875,14 @@
             secureCb.checked    = cfg.secure     !== false;
             folderInput.value   = cfg.folder     || 'INBOX/finanzen';
             markReadCb.checked  = cfg.markAsRead !== false;
+            deleteProcessedCb.checked = cfg.deleteProcessed === true;
+            archiveProcessedCb.checked = cfg.archiveProcessed === true;
+            archiveFolderInput.value = cfg.archiveFolder || 'INBOX.finanzen.archiv';
           } else if (result.suggestedImapHost) {
             hostInput.value = result.suggestedImapHost;
           }
+
+          updateImapPostProcessUi();
         } catch (err) {
           console.warn('Could not load IMAP config:', err.message);
         }
@@ -850,6 +906,9 @@
             secure:     secureCb.checked,
             folder:     folderInput.value.trim() || 'INBOX/finanzen',
             markAsRead: markReadCb.checked,
+            deleteProcessed: deleteProcessedCb.checked,
+            archiveProcessed: archiveProcessedCb.checked,
+            archiveFolder: archiveFolderInput.value.trim() || 'INBOX.finanzen.archiv',
           };
 
           const res    = await fetch('api/save-imap-config.php', {
@@ -882,21 +941,86 @@
           const res    = await fetch('api/check-bank-emails.php', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    '{}',
+            body:    JSON.stringify({ debug: true }),
           });
-          const result = await res.json();
+          const rawText = await res.text();
+          let result = null;
+
+          if (rawText && rawText.trim() !== '') {
+            try {
+              result = JSON.parse(rawText);
+            } catch (parseErr) {
+              const preview = rawText.slice(0, 500);
+              showImapResult(
+                `❌ Ungültige Server-Antwort (kein JSON). HTTP ${res.status}.\n\nAntwortvorschau:\n${preview}`,
+                true
+              );
+              return;
+            }
+          }
+
+          if (!res.ok) {
+            showImapResult(`❌ Serverfehler HTTP ${res.status}: ${result?.error || 'Keine Details'}`, true);
+            return;
+          }
+
+          if (!result) {
+            showImapResult(`❌ Leere Server-Antwort (HTTP ${res.status}).`, true);
+            return;
+          }
 
           if (result.success) {
             const paidCount = (result.paid || []).length;
-            if (paidCount > 0) {
+            const importedExpenses = result.expensesImported || [];
+            const importedCount = importedExpenses.length;
+            const archivedCount = result.archived || 0;
+            const deletedCount = result.deleted || 0;
+            const archiveFailures = result.archiveFailures || 0;
+            const archiveUsedFolders = Array.isArray(result.archiveUsedFolders) ? result.archiveUsedFolders : [];
+            const skipped = result.skipped || [];
+            const searchModeText = result.searchMode ? ` (Suchmodus: ${result.searchMode})` : '';
+            const debug = result.debug || null;
+            let debugText = '';
+            const postProcessInfo = [
+              archivedCount > 0 ? `Archivierte E-Mails: ${archivedCount}` : '',
+              archiveUsedFolders.length > 0 ? `Archiv-Ordner: ${archiveUsedFolders.join(', ')}` : '',
+              deletedCount > 0 ? `Gelöschte E-Mails: ${deletedCount}` : '',
+              archiveFailures > 0 ? `Archiv-Fehler: ${archiveFailures}` : '',
+            ].filter(Boolean).join('\n');
+
+            if (debug) {
+              const mailboxStats = debug.mailboxStats || {};
+              const total = mailboxStats.totalMessages ?? 'n/a';
+              const unseen = mailboxStats.unseenCount ?? 'n/a';
+              const recent = mailboxStats.recentCount ?? 'n/a';
+              const matched = debug.matchedMessageCount ?? 'n/a';
+              const folders = Array.isArray(debug.successfulFolders) ? debug.successfulFolders : [];
+              const folderPreview = folders.slice(0, 8).map(f => `  - ${f.folder}: ${f.messages} gesamt, ${f.unseen} unseen`).join('\n');
+              const folderText = folderPreview ? `\n- Erreichbare Ordner:\n${folderPreview}` : '';
+              debugText = `\n\nDebug:\n- Ordner: ${result.folderUsed || 'n/a'}\n- Mailbox: ${result.mailbox || 'n/a'}\n- Gesamt: ${total}, Unseen: ${unseen}, Recent: ${recent}\n- Treffer für Suche: ${matched}${folderText}`;
+            }
+
+            if (paidCount > 0 || importedCount > 0) {
               const ids = result.paid.map(p => p.invoiceId).join(', ');
+              const importedPreview = importedExpenses.slice(0, 3).map(e => `- ${e.recipient}: ${Number(e.amount || 0).toFixed(2)} EUR`).join('\n');
+              let extra = '';
+              if (skipped.length > 0) {
+                const preview = skipped.slice(0, 3).map(s => `- ${s.subject || 'Ohne Betreff'}: ${s.reason || 'Übersprungen'}`).join('\n');
+                extra = `\n\nZusätzlich übersprungen (${skipped.length}):\n${preview}`;
+              }
               showImapResult(
-                `✅ ${paidCount} Rechnung(en) als bezahlt markiert: ${ids}`,
+                `✅ ${paidCount} Rechnung(en) als bezahlt markiert${paidCount > 0 ? `: ${ids}` : ''}${searchModeText}${importedCount > 0 ? `\nAusgaben importiert: ${importedCount}${importedPreview ? `\n${importedPreview}` : ''}` : ''}${postProcessInfo ? `\n${postProcessInfo}` : ''}${extra}${debugText}`,
                 false
               );
               window.dispatchEvent(new Event('invoicesChanged'));
+            } else if (skipped.length > 0) {
+              const preview = skipped.slice(0, 5).map(s => `- ${s.subject || 'Ohne Betreff'}: ${s.reason || 'Übersprungen'}`).join('\n');
+              showImapResult(
+                `ℹ️ Keine Rechnung verbucht, aber ${skipped.length} E-Mail(s) erkannt${searchModeText}.\n\nGründe:\n${preview}${debugText}`,
+                false
+              );
             } else {
-              showImapResult('ℹ️ Keine neuen Zahlungseingänge gefunden.', false);
+              showImapResult(`ℹ️ Keine neuen Zahlungseingänge gefunden.${searchModeText}${debugText}`, false);
             }
           } else {
             showImapResult('❌ ' + (result.error || 'Unbekannter Fehler'), true);
